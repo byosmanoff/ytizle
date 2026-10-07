@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birlikdə İzlə 💞</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#14101c;color:#f1eaff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh}
+#join{margin:auto;padding:24px;width:min(92vw,380px);background:#1f1830;border-radius:18px;text-align:center}
+#join h1{font-size:22px;margin-bottom:16px}
+input,button{font-size:16px;border:0;border-radius:10px;padding:12px}
+input{background:#2b2142;color:#fff;width:100%;margin-bottom:10px}
+button{background:#ff5c93;color:#fff;font-weight:600;cursor:pointer}
+#join button{width:100%}
+#app{display:none;flex-direction:column;height:100dvh}
+#status{font-size:12px;padding:6px 10px;background:#1f1830;text-align:center;color:#c9b8ff}
+#player{background:#000;width:100%}
+#ytbox{width:100%;aspect-ratio:16/9;display:none}
+#ytbox iframe{width:100%;height:100%}
+#vid{width:100%;max-height:45dvh;display:none;background:#000}
+#web{display:none;width:100%;height:46dvh;border:0;background:#fff}
+.big #web{height:76dvh}
+.big #vid{max-height:70dvh}
+.bar{display:flex;gap:6px;padding:8px;background:#1f1830}
+.bar input{margin:0;flex:1;min-width:0}
+.bar button{padding:12px 14px;background:#3a2d5c}
+.bar button.pink{background:#ff5c93}
+#chat{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:80%;padding:8px 12px;border-radius:14px;background:#2b2142;word-break:break-word;font-size:15px}
+.m b{display:block;font-size:11px;color:#c9b8ff;margin-bottom:2px}
+.m.me{align-self:flex-end;background:#ff5c93}
+.m.me b{color:#ffe0ea}
+.sys{align-self:center;font-size:12px;color:#9a8cc0}
+</style>
+</head>
+<body>
+
+<div id="join">
+  <h1>💞 Birlikdə İzlə</h1>
+  <input id="name" placeholder="Adın" maxlength="20">
+  <input id="room" placeholder="Otaq kodu (ikiniz eyni yazın)" maxlength="30">
+  <button id="go">Daxil ol</button>
+</div>
+
+<div id="app">
+  <div id="status">Qoşulur...</div>
+  <div id="player">
+    <div id="ytbox"><div id="yt"></div></div>
+    <video id="vid" controls playsinline></video>
+    <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+  </div>
+  <div class="bar">
+    <button id="back">◀</button>
+    <input id="url" placeholder="Link yaz və ya axtar..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
+    <button id="load" class="pink">▶</button>
+    <button id="big">⇕</button>
+  </div>
+  <div id="chat"></div>
+  <div class="bar">
+    <input id="msg" placeholder="Mesaj yaz...">
+    <button id="send" class="pink">➤</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const $ = id => document.getElementById(id);
+let peer, conn, myName = 'Mən', kind = null, curUrl = null;
+let yt = null, ytReady = false, ignore = false, lastT = 0, hls = null;
+const hist = [];
+const vid = $('vid'), web = $('web');
+
+window.onYouTubeIframeAPIReady = () => { ytReady = true; };
+
+function setStatus(t){ $('status').textContent = t; }
+function sysMsg(t){
+  const d = document.createElement('div'); d.className = 'sys'; d.textContent = t;
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+function addMsg(name, text, me){
+  const d = document.createElement('div'); d.className = 'm' + (me ? ' me' : '');
+  const b = document.createElement('b'); b.textContent = name;
+  const s = document.createElement('span'); s.textContent = text;
+  d.appendChild(b); d.appendChild(s);
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+function send(o){ if(conn && conn.open) conn.send(o); }
+
+function ytId(u){
+  if(!/youtu\.?be/i.test(u)) return null;
+  const m = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/|live\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function norm(s){
+  s = s.trim();
+  if(!s) return null;
+  if(/^https?:\/\//i.test(s)) return s;
+  if(!/\s/.test(s) && /\.[a-z]{2,}(\/|\?|$)/i.test(s)) return 'https://' + s;
+  return 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(s);
+}
+
+/* ---------- Rejim ---------- */
+function showMode(m){
+  ignore = true;
+  setTimeout(() => { ignore = false; }, 700);
+  if(m !== 'yt'){ try{ yt && yt.pauseVideo && yt.pauseVideo(); }catch(e){} }
+  if(m !== 'file'){
+    vid.pause();
+    if(hls){ hls.destroy(); hls = null; }
+    vid.removeAttribute('src'); vid.load();
+  }
+  if(m !== 'web') web.src = 'about:blank';
+  $('ytbox').style.display = m === 'yt' ? 'block' : 'none';
+  vid.style.display = m === 'file' ? 'block' : 'none';
+  web.style.display = m === 'web' ? 'block' : 'none';
+  kind = m;
+}
+function setFile(url){
+  if(hls){ hls.destroy(); hls = null; }
+  if(/\.m3u8/i.test(url) && !vid.canPlayType('application/vnd.apple.mpegurl') && window.Hls && Hls.isSupported()){
+    hls = new Hls(); hls.loadSource(url); hls.attachMedia(vid);
+  } else {
+    vid.src = url;
+  }
+}
+
+function loadPage(url, remote){
+  const id = ytId(url);
+  curUrl = url;
+  $('url').value = url;
+  if(hist[hist.length - 1] !== url) hist.push(url);
+
+  if(id){
+    if(!ytReady){ setTimeout(() => loadPage(url, remote), 500); return; }
+    showMode('yt');
+    if(yt && yt.loadVideoById){ yt.loadVideoById(id); }
+    else {
+      yt = new YT.Player('yt', {
+        videoId: id,
+        playerVars: { playsinline: 1, rel: 0 },
+        events: { onStateChange: ytState }
+      });
+    }
+  } else if(/\.(mp4|webm|ogg|mov|m3u8)(\?|#|$)/i.test(url)){
+    showMode('file');
+    setFile(url);
+  } else {
+    showMode('web');
+    web.src = '/p?u=' + encodeURIComponent(url);
+  }
+  if(!remote){ send({t:'load', url}); sysMsg('Səhifə açdın'); }
+  else sysMsg('Səhifə dəyişdi');
+}
+function goBack(){
+  if(hist.length < 2) return;
+  hist.pop();
+  loadPage(hist.pop(), false);
+}
+
+/* ---------- Video sinxron (YouTube / fayl) ---------- */
+function getTime(){ try{ return kind === 'yt' ? yt.getCurrentTime() : vid.currentTime; }catch(e){ return 0; } }
+function seekTo(t){ try{ kind === 'yt' ? yt.seekTo(t, true) : (vid.currentTime = t); }catch(e){} }
+function doPlay(){ try{ kind === 'yt' ? yt.playVideo() : vid.play(); }catch(e){} }
+function doPause(){ try{ kind === 'yt' ? yt.pauseVideo() : vid.pause(); }catch(e){} }
+
+function applyRemote(m){
+  if(kind !== 'yt' && kind !== 'file') return;
+  ignore = true;
+  if(m.t === 'play'){ if(Math.abs(getTime() - m.time) > 1.5) seekTo(m.time); doPlay(); }
+  else if(m.t === 'pause'){ doPause(); if(Math.abs(getTime() - m.time) > 1) seekTo(m.time); }
+  else if(m.t === 'seek'){ seekTo(m.time); }
+  setTimeout(() => { ignore = false; }, 900);
+}
+function ytState(e){
+  if(ignore || !conn) return;
+  if(e.data === 1) send({t:'play', time: yt.getCurrentTime()});
+  else if(e.data === 2) send({t:'pause', time: yt.getCurrentTime()});
+}
+vid.addEventListener('play',   () => { if(!ignore) send({t:'play',  time: vid.currentTime}); });
+vid.addEventListener('pause',  () => { if(!ignore) send({t:'pause', time: vid.currentTime}); });
+vid.addEventListener('seeked', () => { if(!ignore) send({t:'seek',  time: vid.currentTime}); });
+
+setInterval(() => {
+  if(kind !== 'yt' || !yt || !yt.getPlayerState || ignore) return;
+  if(yt.getPlayerState() === 1){
+    const t = yt.getCurrentTime();
+    if(Math.abs(t - lastT - 1) > 2.5) send({t:'seek', time: t});
+    lastT = t;
+  }
+}, 1000);
+
+/* ---------- Veb səhifədən gələn hadisələr ---------- */
+window.addEventListener('message', e => {
+  const m = e.data;
+  if(!m || kind !== 'web') return;
+  if(m.t === 'nav' && m.url) loadPage(m.url, false);
+  else if(m.t === 'v') send({t:'wv', e:m.e, time:m.time});
+});
+
+/* ---------- Bağlantı ---------- */
+function setup(c){
+  conn = c;
+  c.on('open', () => {
+    setStatus('💞 Qoşuldunuz!');
+    sysMsg('Bağlantı quruldu');
+    send({t:'hello', name: myName});
+    if(curUrl) send({t:'load', url: curUrl});
+  });
+  c.on('data', m => {
+    if(m.t === 'chat') addMsg(m.name, m.text, false);
+    else if(m.t === 'hello') sysMsg(m.name + ' qoşuldu');
+    else if(m.t === 'load') loadPage(m.url, true);
+    else if(m.t === 'wv'){
+      if(kind === 'web' && web.contentWindow) web.contentWindow.postMessage({t:'cmd', e:m.e, time:m.time}, '*');
+    }
+    else applyRemote(m);
+  });
+  c.on('close', () => { setStatus('Bağlantı kəsildi'); sysMsg('Qarşı tərəf çıxdı'); conn = null; });
+}
+
+function start(){
+  myName = $('name').value.trim() || 'Mən';
+  const room = $('room').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if(!room){ alert('Otaq kodu yaz (hərf/rəqəm)'); return; }
+  $('join').style.display = 'none';
+  $('app').style.display = 'flex';
+  const hostId = 'bizimwt-' + room;
+  setStatus('Otaq yoxlanılır...');
+
+  peer = new Peer(hostId);
+  peer.on('open', () => setStatus('⏳ Gözləyirəm... sevgilin eyni kodla girsin'));
+  peer.on('connection', setup);
+  peer.on('error', err => {
+    if(err.type === 'unavailable-id'){
+      peer = new Peer();
+      peer.on('open', () => { setStatus('Qoşulur...'); setup(peer.connect(hostId, {reliable:true})); });
+      peer.on('error', e2 => setStatus('Xəta: ' + e2.type));
+    } else {
+      setStatus('Xəta: ' + err.type);
+    }
+  });
+}
+
+/* ---------- UI ---------- */
+function openInput(){ const u = norm($('url').value); if(u) loadPage(u, false); }
+$('go').onclick = start;
+$('load').onclick = openInput;
+$('back').onclick = goBack;
+$('big').onclick = () => document.body.classList.toggle('big');
+$('url').addEventListener('keydown', e => { if(e.key === 'Enter') openInput(); });
+function sendChat(){
+  const t = $('msg').value.trim();
+  if(!t) return;
+  addMsg(myName, t, true);
+  send({t:'chat', name: myName, text: t});
+  $('msg').value = '';
+}
+$('send').onclick = sendChat;
+$('msg').addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
+$('room').addEventListener('keydown', e => { if(e.key === 'Enter') start(); });
+</script>
+</body>
+</html>
