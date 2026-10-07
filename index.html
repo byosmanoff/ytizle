@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birlikdə İzlə 💞</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#14101c;color:#f1eaff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh}
+#join{margin:auto;padding:24px;width:min(92vw,380px);background:#1f1830;border-radius:18px;text-align:center}
+#join h1{font-size:22px;margin-bottom:16px}
+input,button{font-size:16px;border:0;border-radius:10px;padding:12px}
+input{background:#2b2142;color:#fff;width:100%;margin-bottom:10px}
+button{background:#ff5c93;color:#fff;font-weight:600;cursor:pointer}
+#join button{width:100%}
+#app{display:none;flex-direction:column;height:100dvh}
+#status{font-size:12px;padding:6px 10px;background:#1f1830;text-align:center;color:#c9b8ff}
+#player{background:#000;width:100%;position:relative}
+#ytbox{width:100%;aspect-ratio:16/9;display:none}
+#ytbox iframe{width:100%;height:100%}
+#vid{width:100%;max-height:45dvh;display:none;background:#000}
+#web{display:none;width:100%;height:46dvh;border:0;background:#fff}
+#ytres,#home{display:none;width:100%;height:46dvh;overflow-y:auto;background:#14101c}
+#tap{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;padding:14px 20px;font-size:17px;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+.big #web,.big #ytres,.big #home{height:76dvh}
+.big #vid{max-height:70dvh}
+.hint{padding:18px;color:#c9b8ff;font-size:15px;line-height:1.5}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
+.tile{background:#2b2142;border-radius:12px;padding:16px 8px;text-align:center;font-size:15px;cursor:pointer}
+.tile span{display:block;font-size:26px;margin-bottom:4px}
+.r{display:flex;gap:10px;padding:8px 10px;border-bottom:1px solid #2b2142;cursor:pointer}
+.r img{width:130px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none;background:#2b2142}
+.r div{min-width:0;font-size:14px;line-height:1.3}
+.r small{display:block;margin-top:4px;color:#9a8cc0;font-size:12px}
+.bar{display:flex;gap:6px;padding:8px;background:#1f1830}
+.bar input{margin:0;flex:1;min-width:0}
+.bar button{padding:12px 11px;background:#3a2d5c}
+.bar button.pink{background:#ff5c93}
+#chat{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:80%;padding:8px 12px;border-radius:14px;background:#2b2142;word-break:break-word;font-size:15px}
+.m b{display:block;font-size:11px;color:#c9b8ff;margin-bottom:2px}
+.m.me{align-self:flex-end;background:#ff5c93}
+.m.me b{color:#ffe0ea}
+.sys{align-self:center;font-size:12px;color:#9a8cc0}
+</style>
+</head>
+<body>
+
+<div id="join">
+  <h1>💞 Birlikdə İzlə</h1>
+  <input id="name" placeholder="Adın" maxlength="20">
+  <input id="room" placeholder="Otaq kodu (ikiniz eyni yazın)" maxlength="30">
+  <button id="go">Daxil ol</button>
+</div>
+
+<div id="app">
+  <div id="status">Qoşulur...</div>
+  <div id="player">
+    <div id="ytbox"><div id="yt"></div></div>
+    <video id="vid" controls playsinline></video>
+    <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+    <div id="ytres"></div>
+    <div id="home"></div>
+    <button id="tap">▶ Videonu başlat</button>
+  </div>
+  <div class="bar">
+    <button id="back">◀</button>
+    <button id="homebtn">🏠</button>
+    <input id="url" placeholder="Link yaz və ya axtar..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
+    <button id="load" class="pink">▶</button>
+    <button id="big">⇕</button>
+  </div>
+  <div id="chat"></div>
+  <div class="bar">
+    <input id="msg" placeholder="Mesaj yaz...">
+    <button id="send" class="pink">➤</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const $ = id => document.getElementById(id);
+let myName = 'Mən', kind = null, curUrl = null;
+let yt = null, ytReady = false, ytIsReady = false, ytPending = null;
+let ignore = false, lastT = 0, hls = null;
+let wantPlay = false, lastRemote = {time: 0, at: 0};
+let room = '', me = Math.random().toString(36).slice(2, 10);
+let since = 0, pc = 0, connected = false, sendQ = Promise.resolve();
+const hist = [];
+const vid = $('vid'), web = $('web');
+
+window.onYouTubeIframeAPIReady = () => { ytReady = true; };
+
+function setStatus(t){ $('status').textContent = t; }
+function sysMsg(t){
+  const d = document.createElement('div'); d.className = 'sys'; d.textContent = t;
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+function addMsg(name, text, mine){
+  const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
+  const b = document.createElement('b'); b.textContent = name;
+  const s = document.createElement('span'); s.textContent = text;
+  d.appendChild(b); d.appendChild(s);
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+
+/* ---------- Server vasitəsilə əlaqə ---------- */
+function send(o){
+  if(!room) return;
+  sendQ = sendQ.then(() => fetch('/api/send', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({room, id: me, msg: o})
+  })).catch(() => {});
+}
+
+function updatePeers(n){
+  pc = n;
+  if(n > 0 && !connected){
+    connected = true;
+    setStatus('💞 Qoşuldunuz!');
+    sysMsg('Qarşı tərəf qoşuldu');
+    if(curUrl) send({t:'load', url: curUrl});
+  } else if(n === 0 && connected){
+    connected = false;
+    setStatus('⏳ Gözləyirəm... sevgilin eyni kodla girsin');
+    sysMsg('Qarşı tərəf çıxdı');
+  }
+}
+
+function handle(m){
+  if(m.t === 'chat') addMsg(m.name, m.text, false);
+  else if(m.t === 'load') loadPage(m.url, true);
+  else if(m.t === 'wv'){
+    if(kind === 'web' && web.contentWindow) web.contentWindow.postMessage({t:'cmd', e:m.e, time:m.time}, '*');
+  }
+  else applyRemote(m);
+}
+
+async function pollLoop(){
+  while(true){
+    try{
+      const r = await fetch('/api/poll?room=' + encodeURIComponent(room) + '&id=' + me +
+        '&since=' + since + '&pc=' + pc, {cache: 'no-store'});
+      if(!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      since = d.seq;
+      (d.msgs || []).forEach(handle);
+      updatePeers(d.peers);
+    }catch(e){
+      setStatus('Əlaqə problemi, yenidən cəhd edilir...');
+      connected = false; pc = 0;
+      await new Promise(res => setTimeout(res, 2000));
+    }
+  }
+}
+
+async function start(){
+  myName = $('name').value.trim() || 'Mən';
+  room = $('room').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if(!room){ alert('Otaq kodu yaz (hərf/rəqəm)'); return; }
+  $('join').style.display = 'none';
+  $('app').style.display = 'flex';
+  showHome();
+  setStatus('Serverə qoşulur... (ilk dəfə 30-50 san çəkə bilər)');
+  while(true){
+    try{
+      const r = await fetch('/api/join', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({room, id: me})
+      });
+      if(!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      since = d.seq;
+      break;
+    }catch(e){
+      await new Promise(res => setTimeout(res, 2500));
+    }
+  }
+  setStatus('⏳ Gözləyirəm... sevgilin eyni kodla girsin');
+  pollLoop();
+}
+
+/* ---------- Link / axtarış ---------- */
+function ytId(u){
+  if(!/youtu\.?be/i.test(u)) return null;
+  const m = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/|live\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function norm(s){
+  s = s.trim();
+  if(!s) return null;
+  if(/^https?:\/\//i.test(s)) return s;
+  if(!/\s/.test(s) && /\.[a-z]{2,}(\/|\?|$)/i.test(s)) return 'https://' + s;
+  return 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(s);
+}
+function ytSearchFromUrl(raw){
+  if(!/youtu\.?be|youtube\.com/i.test(raw)) return false;
+  if(ytId(raw)) return false;
+  let u;
+  try{ u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw); }catch(e){ return false; }
+  if(!/(^|\.)youtube\.com$/i.test(u.hostname)) return false;
+  if(u.pathname === '/results'){ ytSearch(u.searchParams.get('search_query') || ''); return true; }
+  if(u.pathname === '/' || u.pathname === ''){ ytSearch(''); return true; }
+  return false;
+}
+
+/* ---------- Rejim ---------- */
+function showMode(m){
+  ignore = true;
+  setTimeout(() => { ignore = false; }, 700);
+  wantPlay = false;
+  $('tap').style.display = 'none';
+  if(m !== 'yt'){ try{ yt && yt.pauseVideo && ytIsReady && yt.pauseVideo(); }catch(e){} }
+  if(m !== 'file'){
+    vid.pause();
+    if(hls){ hls.destroy(); hls = null; }
+    vid.removeAttribute('src'); vid.load();
+  }
+  if(m !== 'web') web.src = 'about:blank';
+  $('ytbox').style.display = m === 'yt' ? 'block' : 'none';
+  vid.style.display = m === 'file' ? 'block' : 'none';
+  web.style.display = m === 'web' ? 'block' : 'none';
+  $('ytres').style.display = m === 'ytres' ? 'block' : 'none';
+  $('home').style.display = m === 'home' ? 'block' : 'none';
+  kind = m;
+}
+function setFile(url){
+  if(hls){ hls.destroy(); hls = null; }
+  if(/\.m3u8/i.test(url) && !vid.canPlayType('application/vnd.apple.mpegurl') && window.Hls && Hls.isSupported()){
+    hls = new Hls(); hls.loadSource(url); hls.attachMedia(vid);
+  } else {
+    vid.src = url;
+  }
+}
+
+/* ---------- Başlanğıc səhifə ---------- */
+const TILES = [
+  {i: '▶️', t: 'YouTube axtarışı', f: () => { ytSearch(''); $('url').value = 'yt '; $('url').focus(); }},
+  {i: '🔎', t: 'DuckDuckGo', u: 'https://html.duckduckgo.com/html/'},
+  {i: '🌐', t: 'Bing', u: 'https://www.bing.com/'},
+  {i: '📚', t: 'Wikipedia', u: 'https://az.wikipedia.org/'},
+  {i: '🎞️', t: 'Pulsuz filmlər (Archive)', u: 'https://archive.org/details/movies'},
+  {i: '📺', t: 'Dailymotion', u: 'https://www.dailymotion.com/'}
+];
+function showHome(){
+  showMode('home');
+  const box = $('home');
+  box.textContent = '';
+  const h = document.createElement('div'); h.className = 'hint';
+  h.innerHTML = '';
+  [
+    '🔗 Sayt linki yaz: həmin sayta girir',
+    '🔎 Adi söz yaz: internetdə axtarır',
+    '▶️ yt söz yaz: YouTube-da axtarır'
+  ].forEach(s => {
+    const p = document.createElement('div'); p.textContent = s; h.appendChild(p);
+  });
+  box.appendChild(h);
+  const g = document.createElement('div'); g.className = 'tiles';
+  TILES.forEach(x => {
+    const el = document.createElement('div'); el.className = 'tile';
+    const ic = document.createElement('span'); ic.textContent = x.i;
+    el.appendChild(ic); el.appendChild(document.createTextNode(x.t));
+    el.onclick = () => { if(x.f) x.f(); else loadPage(x.u, false); };
+    g.appendChild(el);
+  });
+  box.appendChild(g);
+}
+
+/* YouTube pleyeri: hazır olmamış gələn video növbəyə qoyulur */
+function ytLoad(id){
+  if(yt && ytIsReady){
+    yt.loadVideoById(id);
+  } else if(yt){
+    ytPending = id;
+  } else {
+    yt = new YT.Player('yt', {
+      videoId: id,
+      playerVars: { playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => {
+          ytIsReady = true;
+          if(ytPending){ yt.loadVideoById(ytPending); ytPending = null; }
+        },
+        onStateChange: ytState
+      }
+    });
+  }
+}
+
+async function ytSearch(q){
+  showMode('ytres');
+  const box = $('ytres');
+  box.scrollTop = 0;
+  if(!q){
+    box.innerHTML = '';
+    box.className = '';
+    const h = document.createElement('div'); h.className = 'hint';
+    h.textContent = 'YouTube-da axtarmaq üçün yuxarıdakı xanaya yt və axtarış sözünü yaz. Məsələn: yt dəniz səsi';
+    box.appendChild(h);
+    return;
+  }
+  box.textContent = 'Axtarılır...';
+  box.className = 'hint';
+  try{
+    const r = await fetch('/api/yt?q=' + encodeURIComponent(q));
+    const d = await r.json();
+    box.className = '';
+    if(!Array.isArray(d) || !d.length){ box.className = 'hint'; box.textContent = 'Nəticə tapılmadı'; return; }
+    box.textContent = '';
+    d.forEach(v => {
+      const el = document.createElement('div'); el.className = 'r';
+      const img = document.createElement('img'); img.src = v.thumb; img.loading = 'lazy';
+      const t = document.createElement('div'); t.textContent = v.title;
+      const s = document.createElement('small'); s.textContent = v.channel + (v.len ? ' · ' + v.len : '');
+      t.appendChild(s);
+      el.appendChild(img); el.appendChild(t);
+      el.onclick = () => loadPage('https://www.youtube.com/watch?v=' + v.id, false);
+      box.appendChild(el);
+    });
+  }catch(e){
+    box.className = 'hint';
+    box.textContent = 'Axtarış alınmadı, bir az sonra yenidən yoxla';
+  }
+}
+
+function loadPage(url, remote){
+  const id = ytId(url);
+  curUrl = url;
+  $('url').value = url;
+  if(hist[hist.length - 1] !== url) hist.push(url);
+
+  if(id){
+    if(!ytReady){ setTimeout(() => loadPage(url, remote), 500); return; }
+    showMode('yt');
+    ytLoad(id);
+  } else if(/\.(mp4|webm|ogg|mov|m3u8)(\?|#|$)/i.test(url)){
+    showMode('file');
+    setFile(url);
+  } else {
+    showMode('web');
+    web.src = '/p?u=' + encodeURIComponent(url);
+  }
+  if(!remote){ send({t:'load', url}); sysMsg('Səhifə açdın'); }
+  else sysMsg('Səhifə dəyişdi');
+}
+function goBack(){
+  if(kind === 'ytres' || kind === 'home'){
+    if(hist.length) loadPage(hist[hist.length - 1], false);
+    return;
+  }
+  if(hist.length < 2){ showHome(); return; }
+  hist.pop();
+  loadPage(hist.pop(), false);
+}
+
+/* ---------- Video sinxron (YouTube / fayl) ---------- */
+function getTime(){ try{ return kind === 'yt' ? yt.getCurrentTime() : vid.currentTime; }catch(e){ return 0; } }
+function seekTo(t){ try{ kind === 'yt' ? yt.seekTo(t, true) : (vid.currentTime = t); }catch(e){} }
+function doPlay(){ try{ kind === 'yt' ? yt.playVideo() : vid.play(); }catch(e){} }
+function doPause(){ try{ kind === 'yt' ? yt.pauseVideo() : vid.pause(); }catch(e){} }
+
+function isPlaying(){
+  try{ return kind === 'yt' ? yt.getPlayerState() === 1 : !vid.paused; }catch(e){ return false; }
+}
+/* Brauzer avtomatik oynatmanı bloklayıbsa, toxunma düyməsi göstər */
+function checkPlaying(){
+  if(!wantPlay || (kind !== 'yt' && kind !== 'file')) return;
+  if(!isPlaying()) $('tap').style.display = 'block';
+}
+$('tap').onclick = () => {
+  $('tap').style.display = 'none';
+  ignore = true;
+  const t = lastRemote.time + (Date.now() - lastRemote.at) / 1000;
+  if(Math.abs(getTime() - t) > 1.5) seekTo(t);
+  doPlay();
+  setTimeout(() => { ignore = false; }, 900);
+};
+
+function applyRemote(m){
+  if(kind !== 'yt' && kind !== 'file') return;
+  ignore = true;
+  if(m.t === 'play'){
+    wantPlay = true;
+    lastRemote = {time: m.time, at: Date.now()};
+    if(Math.abs(getTime() - m.time) > 1.5) seekTo(m.time);
+    doPlay();
+    setTimeout(checkPlaying, 1500);
+  }
+  else if(m.t === 'pause'){
+    wantPlay = false;
+    $('tap').style.display = 'none';
+    doPause();
+    if(Math.abs(getTime() - m.time) > 1) seekTo(m.time);
+  }
+  else if(m.t === 'seek'){ seekTo(m.time); }
+  setTimeout(() => { ignore = false; }, 900);
+}
+function ytState(e){
+  if(e.data === 1) $('tap').style.display = 'none';
+  if(ignore) return;
+  if(e.data === 1) send({t:'play', time: yt.getCurrentTime()});
+  else if(e.data === 2) send({t:'pause', time: yt.getCurrentTime()});
+}
+vid.addEventListener('playing', () => { $('tap').style.display = 'none'; });
+vid.addEventListener('play',   () => { if(!ignore) send({t:'play',  time: vid.currentTime}); });
+vid.addEventListener('pause',  () => { if(!ignore) send({t:'pause', time: vid.currentTime}); });
+vid.addEventListener('seeked', () => { if(!ignore) send({t:'seek',  time: vid.currentTime}); });
+
+setInterval(() => {
+  if(kind !== 'yt' || !yt || !ytIsReady || !yt.getPlayerState || ignore) return;
+  if(yt.getPlayerState() === 1){
+    const t = yt.getCurrentTime();
+    if(Math.abs(t - lastT - 1) > 2.5) send({t:'seek', time: t});
+    lastT = t;
+  }
+}, 1000);
+
+/* ---------- Veb səhifədən gələn hadisələr ---------- */
+window.addEventListener('message', e => {
+  const m = e.data;
+  if(!m || kind !== 'web') return;
+  if(m.t === 'nav' && m.url) loadPage(m.url, false);
+  else if(m.t === 'v') send({t:'wv', e:m.e, time:m.time});
+});
+
+/* ---------- UI ---------- */
+function openInput(){
+  const raw = $('url').value.trim();
+  if(!raw) return;
+  const m = raw.match(/^(?:yt|youtube)\s+(.+)$/i);
+  if(m){ ytSearch(m[1]); return; }
+  if(ytSearchFromUrl(raw)) return;
+  const u = norm(raw);
+  if(u) loadPage(u, false);
+}
+$('go').onclick = start;
+$('load').onclick = openInput;
+$('back').onclick = goBack;
+$('homebtn').onclick = showHome;
+$('big').onclick = () => document.body.classList.toggle('big');
+$('url').addEventListener('keydown', e => { if(e.key === 'Enter') openInput(); });
+function sendChat(){
+  const t = $('msg').value.trim();
+  if(!t) return;
+  addMsg(myName, t, true);
+  send({t:'chat', name: myName, text: t});
+  $('msg').value = '';
+}
+$('send').onclick = sendChat;
+$('msg').addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
+$('room').addEventListener('keydown', e => { if(e.key === 'Enter') start(); });
+</script>
+</body>
+</html>
