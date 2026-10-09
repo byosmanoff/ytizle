@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin — Birlikdə İzlə</title>
+<style>
+  :root{--velvet:#1c0f18;--paper:#2b0f26;--ink:#f5e9f0;--rose:#ff7a9c;--rose-deep:#e23a63;
+        --line:rgba(255,255,255,.1);--muted:#c9a9bd;--ok:#4fd18b;--bad:#ff6b6b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--velvet);color:var(--ink);
+       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .box{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:28px;width:100%;max-width:340px}
+  .box h1{font-size:18px;margin:0 0 18px}
+  input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+        background:rgba(255,255,255,.06);color:var(--ink);font-size:15px;margin-bottom:12px}
+  button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--rose-deep);color:#fff;
+         font-size:15px;font-weight:600;cursor:pointer}
+  button:hover{background:#d94870}
+  #err{color:var(--bad);font-size:13px;min-height:18px;margin-top:4px}
+  #app{display:none;max-width:1000px;margin:0 auto;padding:18px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0}
+  #logout{width:auto;padding:8px 16px;font-size:13px;background:rgba(255,255,255,.08)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:22px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card b{display:block;font-size:22px}
+  .card span{font-size:12px;color:var(--muted)}
+  section{margin-bottom:26px}
+  section h2{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;background:rgba(255,255,255,.03)}
+  tr:last-child td{border-bottom:0}
+  .ok{color:var(--ok)}
+  .bad{color:var(--bad)}
+  .muted{color:var(--muted)}
+  code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="box" id="loginForm">
+    <h1>Admin girişi</h1>
+    <input type="password" id="pw" placeholder="Şifrə" autocomplete="current-password" required>
+    <button type="submit">Daxil ol</button>
+    <div id="err"></div>
+  </form>
+</div>
+
+<div id="app">
+  <header>
+    <h1>Admin panel</h1>
+    <button id="logout">Çıxış</button>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>İstifadəçilər</h2>
+    <div class="tablewrap"><table id="tUsers">
+      <thead><tr><th>Ad</th><th>İstifadəçi adı</th><th>E-poçt</th><th>Təsdiqli</th><th>Qeydiyyat</th><th>Son giriş</th><th>Son IP</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Giriş / qeydiyyat cəhdləri</h2>
+    <div class="tablewrap"><table id="tLogins">
+      <thead><tr><th>Vaxt</th><th>Növ</th><th>E-poçt</th><th>IP</th><th>Nəticə</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Sayt ziyarətləri (ana səhifə)</h2>
+    <div class="tablewrap"><table id="tVisits">
+      <thead><tr><th>Vaxt</th><th>IP</th><th>User-Agent</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+function fmt(ts){ if(!ts) return '—'; return new Date(ts*1000).toLocaleString('az-AZ'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function api(path, opts){
+  const r = await fetch(path, Object.assign({credentials:'same-origin'}, opts||{}));
+  if(r.status === 401){ showLogin(); throw new Error('unauth'); }
+  if(!r.ok) throw new Error('http '+r.status);
+  return r.json();
+}
+
+function showLogin(){
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+function showApp(){
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('err');
+  err.textContent = '';
+  try{
+    const r = await fetch('/api/admin/login', {method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: pw})});
+    if(!r.ok){ err.textContent = 'Yanlış şifrə'; return; }
+    document.getElementById('pw').value = '';
+    showApp();
+  }catch(x){ err.textContent = 'Xəta baş verdi'; }
+});
+
+document.getElementById('logout').addEventListener('click', async () => {
+  await fetch('/api/admin/logout', {method:'POST', credentials:'same-origin'});
+  showLogin();
+});
+
+async function loadAll(){
+  try{
+    const [ov, us, lg, vs] = await Promise.all([
+      api('/api/admin/overview'),
+      api('/api/admin/users?limit=200'),
+      api('/api/admin/logins?limit=200'),
+      api('/api/admin/visits?limit=200'),
+    ]);
+
+    document.getElementById('cards').innerHTML = `
+      <div class="card"><b>${ov.people_live}</b><span>canlı istifadəçi</span></div>
+      <div class="card"><b>${ov.rooms_live}</b><span>aktiv otaq</span></div>
+      <div class="card"><b>${ov.users_total}</b><span>qeydiyyatlı hesab</span></div>
+      <div class="card"><b>${ov.visits_24h}</b><span>ziyarət (24s)</span></div>
+      <div class="card"><b>${ov.logins_24h}</b><span>uğurlu giriş (24s)</span></div>
+      <div class="card"><b>${ov.fails_24h}</b><span>uğursuz cəhd (24s)</span></div>`;
+
+    document.querySelector('#tUsers tbody').innerHTML = us.users.map(u => `
+      <tr>
+        <td>${esc(u.name)}</td>
+        <td>${u.username ? '@'+esc(u.username) : '—'}</td>
+        <td>${esc(u.email||'—')}</td>
+        <td>${u.verified ? '<span class="ok">bəli</span>' : '<span class="bad">yox</span>'}</td>
+        <td class="muted">${fmt(u.created)}</td>
+        <td class="muted">${fmt(u.last_login)}</td>
+        <td><code>${esc(u.last_ip||'—')}</code></td>
+      </tr>`).join('') || '<tr><td colspan="7" class="muted">Məlumat yoxdur</td></tr>';
+
+    document.querySelector('#tLogins tbody').innerHTML = lg.logins.map(l => `
+      <tr>
+        <td class="muted">${fmt(l.ts)}</td>
+        <td>${esc(l.kind)}</td>
+        <td>${esc(l.email)}</td>
+        <td><code>${esc(l.ip)}</code></td>
+        <td>${l.ok ? '<span class="ok">uğurlu</span>' : '<span class="bad">rədd</span>'}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="muted">Məlumat yoxdur</td></tr>';
+
+    document.querySelector('#tVisits tbody').innerHTML = vs.visits.map(v => `
+      <tr>
+        <td class="muted">${fmt(v.ts)}</td>
+        <td><code>${esc(v.ip)}</code></td>
+        <td class="muted">${esc(v.ua||'—')}</td>
+      </tr>`).join('') || '<tr><td colspan="3" class="muted">Məlumat yoxdur</td></tr>';
+  }catch(x){ /* 401 artıq login ekranını göstərir */ }
+}
+
+(async () => {
+  try{
+    const r = await fetch('/api/admin/check', {credentials:'same-origin'});
+    const d = await r.json();
+    if(d.authed) showApp(); else showLogin();
+  }catch(x){ showLogin(); }
+})();
+</script>
+</body>
+</html>
