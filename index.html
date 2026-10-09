@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#150a1d">
+<title>Birlikdə İzlə</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --velvet:#150a1d; --velvet-2:#1e1029; --seat:#2a1739; --seat-2:#37204a;
+  --rose:#ff7a9c; --rose-deep:#e8567d; --amber:#ffc46b;
+  --paper:#f8e7e1; --ink:#2b0f26; --ink-soft:#7a5469;
+  --text:#f6ecf7; --muted:#b7a2cf; --line:rgba(255,255,255,.09);
+  --font:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--velvet);color:var(--text);font-family:var(--font);
+  font-size:16px;line-height:1.35;display:flex;flex-direction:column;height:100dvh;
+  -webkit-tap-highlight-color:transparent;overflow:hidden;
+}
+button,input{font:inherit;font-size:16px;border:0;color:inherit}
+button{cursor:pointer;transition:transform .12s ease,background-color .15s ease,opacity .15s ease}
+button:active:not(:disabled){transform:scale(.96)}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input{outline:none}
+
+/* ================= JOIN: the ticket ================= */
+#join{
+  position:relative;margin:0;flex:1;display:flex;align-items:center;justify-content:center;
+  padding:20px 16px;overflow-y:auto;text-align:left;
+}
+#join::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(255,196,107,.20), transparent 60%),
+    radial-gradient(90% 60% at 50% 120%, rgba(232,86,125,.22), transparent 60%),
+    var(--velvet);
+  transition:opacity .55s ease .25s;
+}
+.ticket{position:relative;z-index:1;width:min(100%,360px);margin:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.55))}
+.t-main,.t-stub{background:var(--paper);color:var(--ink);padding:24px 22px;position:relative}
+.t-main{
+  border-radius:22px 22px 0 0;
+  -webkit-mask:radial-gradient(circle 12px at 0 100%,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 100%,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+          mask:radial-gradient(circle 12px at 0 100%,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 100%,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+}
+.t-stub{
+  border-radius:0 0 22px 22px;padding-top:26px;
+  -webkit-mask:radial-gradient(circle 12px at 0 0,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 0,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+          mask:radial-gradient(circle 12px at 0 0,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 0,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+}
+.t-stub::before{ /* perforation */
+  content:"";position:absolute;left:22px;right:22px;top:-1px;
+  border-top:2px dashed rgba(43,15,38,.28);
+}
+.pair{display:block;width:44px;height:46px;margin-bottom:12px}
+#join h1{font-size:40px;line-height:.98;font-weight:800;letter-spacing:-.02em;margin:0 0 8px;font-variation-settings:"wdth" 85}
+.tagline{color:var(--ink-soft);font-size:15px;margin-bottom:20px}
+.field{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+#join input{
+  width:100%;margin:0 0 12px;padding:13px 14px;border-radius:12px;
+  background:#fff7f4;color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(43,15,38,.16);
+  transition:box-shadow .15s ease;
+}
+#join input::placeholder{color:#b49aa9}
+#join input:focus{box-shadow:inset 0 0 0 2px var(--rose-deep)}
+#join button{width:100%;padding:14px;border-radius:12px;font-weight:700}
+#create{background:var(--rose-deep);color:#fff}
+#create:hover:not(:disabled){background:#d94870}
+#join button.alt{background:var(--ink);color:var(--paper)}
+#join button.alt:hover:not(:disabled){background:#43203a}
+.or{margin:0 0 14px;color:var(--ink);font-size:15px;font-weight:600}
+#codein{
+  text-align:center;letter-spacing:.45em;text-indent:.45em;text-transform:uppercase;
+  font-weight:800;font-size:22px;padding:12px 14px;
+}
+#joinmsg{margin-top:12px;font-size:14px;color:#b02a52;min-height:18px;font-weight:500}
+
+/* ================= APP shell ================= */
+#app{display:none;flex-direction:column;height:100dvh;
+  background:radial-gradient(100% 40% at 50% 0,rgba(255,196,107,.07),transparent 70%),var(--velvet)}
+
+/* top bar */
+#top{display:flex;align-items:center;gap:10px;padding:10px 12px 6px 16px;flex:none}
+#status{
+  flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--muted);line-height:1.25;
+  display:flex;align-items:center;gap:8px;padding:0;background:none;text-align:left;
+}
+#status::before{
+  content:"";flex:none;width:9px;height:9px;border-radius:50%;
+  background:var(--seat-2);box-shadow:0 0 0 2px rgba(255,255,255,.08);
+}
+#status[data-on="1"]{color:var(--text)}
+#status[data-on="1"]::before{background:var(--rose);box-shadow:0 0 0 2px rgba(255,122,156,.35),0 0 12px 2px rgba(255,122,156,.7)}
+#codebar{
+  display:flex;align-items:center;gap:4px;flex:none;padding:3px 4px 3px 12px;
+  background:var(--paper);color:var(--ink);border-radius:999px;font-size:12px;font-weight:600;
+}
+#codebar b{font-size:16px;font-weight:800;letter-spacing:.2em;color:var(--ink);margin-right:2px}
+#codebar button{
+  padding:6px 9px;font-size:12px;font-weight:700;border-radius:999px;
+  background:rgba(43,15,38,.1);color:var(--ink);
+}
+#codebar button:hover{background:rgba(43,15,38,.18)}
+#codebar .lbl{display:none}
+
+/* the screen */
+#player{
+  position:relative;flex:none;margin:4px 12px 0;width:auto;background:#000;border-radius:16px;overflow:hidden;
+  box-shadow:0 0 0 1px var(--line),0 10px 50px -8px rgba(255,122,156,.38),0 0 90px -20px rgba(255,196,107,.35);
+}
+#ytbox{width:100%;aspect-ratio:16/9;display:none}
+#ytbox iframe{width:100%;height:100%}
+#vid{width:100%;max-height:45dvh;display:none;background:#000}
+#web{display:none;width:100%;height:46dvh;border:0;background:#fff}
+#ytres,#home{display:none;width:100%;height:46dvh;overflow-y:auto;background:var(--velvet-2);overscroll-behavior:contain}
+#tap{
+  display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;
+  padding:14px 22px;font-size:17px;font-weight:700;border-radius:999px;
+  background:var(--rose);color:var(--ink);box-shadow:0 8px 30px rgba(0,0,0,.6);
+}
+#tap:active{transform:translate(-50%,-50%) scale(.96)}
+.big #web,.big #ytres,.big #home{height:76dvh}
+.big #vid{max-height:70dvh}
+
+/* home & search */
+.hint{padding:18px 18px 8px;color:var(--muted);font-size:15px;line-height:1.5}
+#home .hint{display:flex;flex-direction:column;gap:6px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 14px 14px}
+.tile{
+  background:var(--seat);border-radius:16px;padding:18px 10px 16px;text-align:center;
+  font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line);
+  transition:background-color .15s ease,transform .12s ease;
+}
+.tile:hover{background:var(--seat-2)}
+.tile:active{transform:scale(.97)}
+.tile span{display:grid;place-items:center;width:46px;height:46px;margin:0 auto 10px;border-radius:50%;background:var(--velvet);color:var(--rose)}
+.tile span svg{width:22px;height:22px}
+.r{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;transition:background-color .15s ease}
+.r:hover{background:var(--seat)}
+.r img{width:132px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none;background:var(--seat)}
+.r div{min-width:0;font-size:14px;line-height:1.3;font-weight:500}
+.r small{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:400}
+
+/* url bar */
+.bar{display:flex;align-items:center;gap:6px;padding:10px 12px;flex:none;background:none}
+.bar button{
+  flex:none;display:grid;place-items:center;width:42px;height:42px;padding:0;border-radius:50%;
+  background:var(--seat);color:var(--text);
+}
+.bar button:hover{background:var(--seat-2)}
+.bar button svg{width:20px;height:20px}
+.bar button.pink{background:var(--rose);color:var(--ink)}
+.bar button.pink:hover{background:#ff93ae}
+.bar input{
+  margin:0;flex:1;min-width:0;height:42px;padding:0 16px;border-radius:999px;
+  background:var(--seat);color:var(--text);box-shadow:inset 0 0 0 1.5px transparent;transition:box-shadow .15s ease;
+}
+.bar input::placeholder{color:#8f7aa8}
+.bar input:focus{box-shadow:inset 0 0 0 1.5px var(--rose)}
+
+/* chat */
+#chat{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 14px 10px;display:flex;flex-direction:column;gap:6px;overscroll-behavior:contain}
+.m{max-width:80%;padding:8px 13px 9px;border-radius:18px 18px 18px 5px;background:var(--seat);word-break:break-word;font-size:15px;line-height:1.35}
+.m b{display:block;font-size:12px;font-weight:700;color:var(--amber);margin-bottom:1px}
+.m.me{align-self:flex-end;background:var(--rose);color:var(--ink);border-radius:18px 18px 5px 18px}
+.m.me b{color:rgba(43,15,38,.65)}
+.sys{align-self:center;font-size:12px;color:var(--muted);padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.04)}
+.composer{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+
+
+/* ---- message extras: reply, time, receipts ---- */
+.m{position:relative;touch-action:pan-y;transition:transform .18s ease}
+.m.drag{transition:none;user-select:none}
+.m.armed{box-shadow:0 0 0 2px var(--amber)}
+.m.flash{animation:flash 1.3s ease-out}
+@keyframes flash{0%,55%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:0 0 0 3px transparent}}
+.q{display:block;margin:3px 0 6px;padding:5px 9px;border-left:3px solid var(--amber);border-radius:8px;background:rgba(0,0,0,.2);cursor:pointer;font-size:13px;line-height:1.3}
+.m.me .q{border-left-color:var(--ink);background:rgba(43,15,38,.13)}
+.q strong{display:block;font-size:12px;font-weight:700;color:var(--amber)}
+.m.me .q strong{color:var(--ink)}
+.q span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:.85}
+.meta{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin-top:3px;font-size:11px;line-height:1;opacity:.75}
+.lab{font-weight:600}
+.tick{display:inline-flex}
+.tick svg{width:17px;height:17px;display:block}
+.m.me .tick{color:rgba(43,15,38,.45)}
+.m.me[data-st="3"] .tick{color:var(--ink)}
+.rp{position:absolute;top:50%;width:28px;height:28px;margin-top:-14px;padding:0;border-radius:50%;display:grid;place-items:center;
+  background:var(--seat);color:var(--muted);opacity:.55;right:-34px}
+.m.me .rp{right:auto;left:-34px}
+.rp:hover{opacity:1;background:var(--seat-2)}
+.rp svg{width:15px;height:15px}
+#replybar{display:flex;align-items:center;gap:10px;margin:0 12px;padding:7px 6px 7px 12px;flex:none;
+  background:var(--seat);border-left:3px solid var(--amber);border-radius:12px 12px 0 0}
+#replybar[hidden]{display:none}
+.rb-body{flex:1;min-width:0;font-size:13px}
+#rbName{display:block;color:var(--amber);font-weight:700;font-size:12px}
+#rbText{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+#rbX{width:30px;height:30px;padding:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center}
+#rbX:hover{background:var(--seat-2)}
+
+/* ---- voice room ---- */
+#voice{display:flex;align-items:center;gap:10px;margin:0 12px 6px;padding:8px 10px;flex:none;
+  background:var(--seat);border-radius:16px;box-shadow:inset 0 0 0 1px var(--line)}
+#voice[hidden]{display:none}
+.vps{display:flex;flex:none;padding-left:3px}
+.vp{position:relative;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  font-weight:800;font-size:16px;color:var(--ink);background:var(--rose);transition:opacity .2s ease}
+.vp+.vp{margin-left:-8px;background:var(--amber);box-shadow:0 0 0 2px var(--seat)}
+.vp.off{opacity:.3}
+.vp::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--rose);opacity:0}
+.vp+.vp::after{border-color:var(--amber)}
+.vp.talk::after{opacity:1;animation:ring 1s ease-out infinite}
+@keyframes ring{from{transform:scale(.95);opacity:.95}to{transform:scale(1.4);opacity:0}}
+.vp.muted::before{content:"";position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;z-index:1;
+  background:var(--velvet) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a9c' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14'/%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3C/svg%3E") center/11px no-repeat}
+#vtext{flex:1;min-width:0;font-size:14px;font-weight:600;line-height:1.25}
+#voice[data-st="fail"] #vtext{color:var(--amber)}
+#voice button{flex:none;height:38px;border-radius:999px;font-weight:700;font-size:14px}
+.vbtn{width:38px;padding:0;display:grid;place-items:center;background:var(--seat-2);color:var(--text)}
+.vbtn svg{width:19px;height:19px}
+.vbtn .slash{display:none}
+.vbtn.off{background:var(--paper);color:var(--ink)}
+.vbtn.off .slash{display:block}
+#vleave{padding:0 15px;background:#b8325a;color:#fff}
+#vleave:hover{background:#cc3d68}
+.vjoin{padding:0 16px;background:var(--rose);color:var(--ink)}
+.vjoin:hover{background:#ff93ae}
+#voice [hidden]{display:none}
+body.invoice #vmic{display:none}
+@media (prefers-reduced-motion:reduce){
+  .vp.talk::after{animation:none;transform:scale(1.12)}
+  .m.flash{animation:none;box-shadow:0 0 0 3px var(--amber)}
+}
+
+
+/* ---- ticket tear (on successful join) ---- */
+#join.tearing{position:fixed;inset:0;z-index:60;overflow:hidden;pointer-events:none}
+#join.tearing::before{opacity:0}
+#join.tearing .t-main,#join.tearing .t-stub{will-change:transform}
+#join.tearing .t-main{
+  clip-path:polygon(0 0,100% 0,100.000% 100%,92.857% calc(100% - 9px),85.714% 100%,78.571% calc(100% - 9px),71.429% 100%,64.286% calc(100% - 9px),57.143% 100%,50.000% calc(100% - 9px),42.857% 100%,35.714% calc(100% - 9px),28.571% 100%,21.429% calc(100% - 9px),14.286% 100%,7.143% calc(100% - 9px),0.000% 100%);
+  transform-origin:0% 100%;animation:tearTop .95s cubic-bezier(.5,.05,.85,.45) forwards;
+}
+#join.tearing .t-stub{
+  clip-path:polygon(0.000% 9px,7.143% 0,14.286% 9px,21.429% 0,28.571% 9px,35.714% 0,42.857% 9px,50.000% 0,57.143% 9px,64.286% 0,71.429% 9px,78.571% 0,85.714% 9px,92.857% 0,100.000% 9px,100% 100%,0 100%);
+  transform-origin:100% 0%;animation:tearBot .95s cubic-bezier(.5,.05,.85,.45) forwards;
+}
+@keyframes tearTop{
+  0%{transform:none;opacity:1}
+  16%{transform:translateY(-5px) rotate(-1.4deg)}
+  80%{opacity:1}
+  100%{transform:translate(-34px,-90vh) rotate(-17deg);opacity:0}
+}
+@keyframes tearBot{
+  0%{transform:none;opacity:1}
+  16%{transform:translateY(4px) rotate(1.6deg)}
+  80%{opacity:1}
+  100%{transform:translate(54px,90vh) rotate(22deg);opacity:0}
+}
+.scrap{position:absolute;z-index:3;pointer-events:none;background:var(--paper);border-radius:1px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+
+@media (prefers-reduced-motion:no-preference){
+  .ticket{animation:drop .7s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes drop{from{opacity:0;transform:translateY(-26px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (min-width:700px){
+  #app{max-width:520px;margin:0 auto;width:100%}
+}
+@media (max-height:640px){
+  #join h1{font-size:32px}.pair{display:none}.tagline{margin-bottom:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="join">
+  <div class="ticket">
+    <div class="t-main">
+      <svg class="pair" viewBox="-1 -4 34 36" overflow="visible" aria-hidden="true"><path d="M16 28C4 19 1 12 1 8a7 7 0 0 1 15-3 7 7 0 0 1 15 3c0 4-3 11-15 20z" fill="#e8567d"/><path d="M13 9.5v10l8.5-5z" fill="var(--paper)"/></svg>
+      <h1>Birlikdə İzlə</h1>
+      <p class="tagline">Uzaqda olsanız da, eyni kadrdasınız.</p>
+      <label class="field" for="name">Adın</label>
+      <input id="name" placeholder="Məsələn, Aysel" maxlength="20" autocomplete="given-name">
+      <button id="create">Otaq aç</button>
+    </div>
+    <div class="t-stub">
+      <div class="or">Kodun var? Buradan gir</div>
+      <input id="codein" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Otaq kodu">
+      <button id="enter" class="alt">Kodla gir</button>
+      <div id="joinmsg" role="status"></div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="top">
+    <div id="status" data-on="0">Qoşulur...</div>
+    <div id="codebar"><span class="lbl">Otaq kodu:</span> <b id="code"></b> <button id="copy">Kopyala</button> <button id="lock">Kilidlə</button></div>
+  </div>
+  <div id="player">
+    <div id="ytbox"><div id="yt"></div></div>
+    <video id="vid" controls playsinline></video>
+    <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+    <div id="ytres"></div>
+    <div id="home"></div>
+    <button id="tap">▶ Videonu başlat</button>
+  </div>
+  <div class="bar">
+    <button id="back" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button id="homebtn" aria-label="Ana səhifə"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></svg></button>
+    <input id="url" placeholder="Link yaz və ya axtar..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
+    <button id="load" class="pink" aria-label="Aç"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
+    <button id="big" aria-label="Ekranı böyüt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4"/><path d="M8 15l4 4 4-4"/></svg></button>
+  </div>
+  <div id="voice" hidden data-st="off">
+    <div class="vps">
+      <div class="vp off" id="vpMe"><span id="avMe">M</span></div>
+      <div class="vp off" id="vpPeer"><span id="avPeer">?</span></div>
+    </div>
+    <div id="vtext">Səsli otaq</div>
+    <button id="vunmute" class="vjoin" hidden>Səsi aç</button>
+    <button id="vjoin" class="vjoin" hidden>Qoşul</button>
+    <button id="vmute" class="vbtn" aria-label="Mikrofonu söndür" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path class="slash" d="M4 4l16 16"/></svg></button>
+    <button id="vleave" hidden>Çıx</button>
+  </div>
+  <div id="chat"></div>
+  <div id="replybar" hidden>
+    <div class="rb-body"><strong id="rbName"></strong><span id="rbText"></span></div>
+    <button id="rbX" aria-label="Yanıtı ləğv et"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" width="18" height="18"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <audio id="raudio" autoplay playsinline></audio>
+  <div class="bar composer">
+    <button id="vmic" aria-label="Səsli söhbətə qoşul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <input id="msg" placeholder="Mesaj yaz..." autocomplete="off" maxlength="400" enterkeyhint="send">
+    <button id="send" class="pink" aria-label="Göndər"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-3-7z"/></svg></button>
+  </div>
+</div>
+
+<script>window.__ytReady = false; window.onYouTubeIframeAPIReady = function(){ window.__ytReady = true; };</script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const $ = id => document.getElementById(id);
+let myName = 'Mən', kind = null, curUrl = null;
+let yt = null, ytReady = false, ytIsReady = false, ytPending = null;
+let ignoreUntil = 0, lastT = null, hls = null;
+let wantPlay = false, lastRemote = {time: 0, at: 0};
+let room = '', me = Math.random().toString(36).slice(2, 10);
+let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resolve();
+let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
+const hist = [];
+const vid = $('vid'), web = $('web');
+function mute(ms){ ignoreUntil = Math.max(ignoreUntil, Date.now() + ms); }
+function ignoring(){ return Date.now() < ignoreUntil; }
+
+if(window.__ytReady || (window.YT && YT.Player)) ytReady = true;
+window.onYouTubeIframeAPIReady = () => { ytReady = true; };
+
+function setStatus(t){ $('status').textContent = t; $('status').dataset.on = connected ? '1' : '0'; }
+function sysMsg(t){
+  const d = document.createElement('div'); d.className = 'sys'; d.textContent = t;
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+}
+
+/* ---------- Server vasitəsilə əlaqə ---------- */
+function send(o){
+  if(!room) return;
+  sendQ = sendQ.then(() => fetch('/api/send', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({room, id: me, msg: o})
+  })).catch(() => {});
+}
+
+function refreshStatus(){
+  setStatus(connected ? 'Birlikdəsiniz' : 'Sevgilini gözləyirəm...');
+}
+
+function updatePeers(n){
+  pc = n;
+  if(n > 0 && !connected){
+    connected = true;
+    setStatus('Birlikdəsiniz');
+    sysMsg('Qarşı tərəf qoşuldu');
+    if(curUrl) send({t:'load', url: curUrl, hello: true, at: navAt});
+    if(voiceOn) voiceHello(false);
+  } else if(n === 0 && connected){
+    connected = false;
+    setStatus('Sevgilini gözləyirəm...');
+    sysMsg('Qarşı tərəf çıxdı');
+    peerVoice = false; closeRtc(); setVoiceUI();
+  }
+}
+
+function handle(m){
+  if(m.t === 'chat'){
+    const el = addMsg(m.name, m.text, false, {id: m.id, reply: m.reply});
+    if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
+  }
+  else if(m.t === 'dlv' || m.t === 'read'){
+    (Array.isArray(m.ids) ? m.ids : []).forEach(id => setReceipt(id, m.t === 'read' ? 3 : 2));
+  }
+  else if(m.t === 'voice' || m.t === 'vmute' || m.t === 'rtc') voiceMsg(m);
+  else if(m.t === 'load' && typeof m.url === 'string' && m.url){
+    if(m.hello && (m.url === curUrl || (m.at || 0) <= navAt)) return;
+    loadPage(m.url, true);
+  }
+  else if(m.t === 'wv'){
+    if(kind === 'web' && web.contentWindow) web.contentWindow.postMessage({t:'cmd', e:m.e, time:m.time}, '*');
+  }
+  else applyRemote(m);
+}
+
+function updateLockUI(){ $('lock').textContent = isLocked ? 'Kilidli' : 'Kilidlə'; }
+function applyLock(v){
+  if(v === isLocked) return;
+  isLocked = v; updateLockUI();
+  sysMsg(v ? '🔒 Otaq kilidləndi, yeni nəfər girə bilməz' : '🔓 Otaq açıldı');
+}
+async function lockCall(v){
+  try{
+    const r = await fetch('/api/lock', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({room, id: me, locked: v})
+    });
+    if(!r.ok) throw new Error('lock ' + r.status);
+    applyLock(!!(await r.json()).locked);
+  }catch(e){ sysMsg('Kilid dəyişmədi, yenidən cəhd et'); }
+}
+
+async function pollLoop(){
+  while(true){
+    const ac = new AbortController();
+    const to = setTimeout(() => ac.abort(), 35000); // server 20 san gözləyir; ondan uzun asılıbsa kəs
+    try{
+      const r = await fetch('/api/poll?room=' + encodeURIComponent(room) + '&id=' + me +
+        '&since=' + since + '&pc=' + pc + '&lk=' + (isLocked ? 1 : 0), {cache: 'no-store', signal: ac.signal});
+      if(r.status === 403){
+        setStatus('Otaq kilidlidir, bu cihaz üzv deyil');
+        sysMsg('Otaq kilidlənib, bu cihaz içəri buraxılmadı');
+        return;
+      }
+      if(!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      since = d.seq;
+      if(offline){ offline = false; refreshStatus(); }
+      if(roomEpoch !== null && d.epoch !== roomEpoch){
+        roomEpoch = d.epoch;               // server yenidən başlayıb, kilid itib: bərpa et
+        if(isLocked) lockCall(true);
+      } else {
+        roomEpoch = d.epoch;
+        applyLock(!!d.locked);
+      }
+      (d.msgs || []).forEach(handle);
+      updatePeers(d.peers);
+    }catch(e){
+      // connected/pc sıfırlanmır: əks halda hər qısa kəsilmədə səhifə qarşı tərəfdə yenidən yüklənir
+      offline = true;
+      setStatus('Əlaqə problemi, yenidən cəhd edilir...');
+      await new Promise(res => setTimeout(res, 2000));
+    }finally{
+      clearTimeout(to);
+    }
+  }
+}
+
+
+/* ---------- Bilet cırılır ---------- */
+function tearTicket(){
+  const j = $('join'), tk = j.querySelector('.ticket'), top = j.querySelector('.t-main'), bot = j.querySelector('.t-stub');
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce || !tk || !bot || !bot.animate){ j.style.display = 'none'; return; }
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const seam = top.offsetHeight, w = tk.offsetWidth;
+  j.classList.add('tearing');
+  const scraps = [];
+  for(let i = 0; i < 16; i++){
+    const p = document.createElement('i'); p.className = 'scrap';
+    p.style.cssText = 'left:' + (8 + Math.random() * (w - 16)) + 'px;top:' + (seam - 2) + 'px;width:' + (4 + Math.random() * 8) + 'px;height:' + (3 + Math.random() * 5) + 'px';
+    tk.appendChild(p); scraps.push(p);
+    p.animate([
+      {transform: 'translate(0,0) rotate(0deg)', opacity: 1},
+      {transform: 'translate(' + ((Math.random() - .5) * 150) + 'px,' + (80 + Math.random() * 260) + 'px) rotate(' + ((Math.random() - .5) * 600) + 'deg)', opacity: 0}
+    ], {duration: 650 + Math.random() * 500, delay: 80 + Math.random() * 140, easing: 'cubic-bezier(.25,.6,.4,1)', fill: 'both'});
+  }
+  try{ if(navigator.vibrate) navigator.vibrate([18, 30, 12]); }catch(e){}
+  let done = false;
+  const fin = () => {
+    if(done) return; done = true;
+    j.style.display = 'none'; j.classList.remove('tearing');
+    scraps.forEach(p => p.remove());
+  };
+  bot.addEventListener('animationend', fin, {once: true});
+  setTimeout(fin, 1500);
+}
+
+/* ---------- Otaq aç / kodla gir ---------- */
+function joinMsg(t){ $('joinmsg').textContent = t; }
+function lockJoin(v){ $('create').disabled = v; $('enter').disabled = v; }
+
+async function enterRoom(code, create){
+  myName = $('name').value.trim() || 'Mən';
+  lockJoin(true);
+  joinMsg('Qoşulur... ilk dəfə 30-50 saniyə çəkə bilər');
+  while(true){
+    try{
+      if(create){
+        const rc = await fetch('/api/create', {method: 'POST'});
+        if(!rc.ok) throw new Error('create ' + rc.status);
+        code = (await rc.json()).room;
+        create = false;
+      }
+      try{ const sv = localStorage.getItem('wt_me_' + code); if(sv) me = sv; }catch(e){}
+      const r = await fetch('/api/join', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({room: code, id: me})
+      });
+      if(r.status === 404){
+        joinMsg('Belə otaq tapılmadı. Kodu yoxla.');
+        lockJoin(false);
+        return;
+      }
+      if(r.status === 403){
+        joinMsg('Otaq kilidlidir, girmək olmur.');
+        lockJoin(false);
+        return;
+      }
+      if(!r.ok) throw new Error('join ' + r.status);
+      const d = await r.json();
+      since = d.seq;
+      roomEpoch = d.epoch;
+      isLocked = !!d.locked;
+      room = code;
+      try{ localStorage.setItem('wt_me_' + code, me); }catch(e){}
+      break;
+    }catch(e){
+      await new Promise(res => setTimeout(res, 2500));
+    }
+  }
+  const tearing = $('join').style.display !== 'none';
+  if(tearing) tearTicket();          // biletin cırılması başlayır, arxada sayt açılır
+  $('app').style.display = 'flex';
+  $('code').textContent = room.toUpperCase();
+  updateLockUI();
+  showHome();
+  setStatus('Sevgilini gözləyirəm...');
+  pollLoop();
+}
+
+/* ---------- Link / axtarış ---------- */
+function ytId(u){
+  let x;
+  try{ x = new URL(String(u)); }catch(e){ return null; }
+  const h = x.hostname.toLowerCase().replace(/^(www|m)\./, '');
+  let id = null;
+  if(h === 'youtu.be') id = x.pathname.split('/')[1];
+  else if(h === 'youtube.com' || h === 'youtube-nocookie.com'){
+    const p = x.pathname.split('/');
+    if(x.pathname === '/watch') id = x.searchParams.get('v');
+    else if(['embed', 'shorts', 'live', 'v'].includes(p[1])) id = p[2];
+  }
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
+function norm(s){
+  s = s.trim();
+  if(!s) return null;
+  if(/^https?:\/\//i.test(s)) return s;
+  if(!/\s/.test(s) && /\.[a-z]{2,}(:\d+)?([\/?#]|$)/i.test(s)) return 'https://' + s;
+  return 'https://www.google.com/search?q=' + encodeURIComponent(s);
+}
+function ytSearchFromUrl(raw){
+  if(!/youtu\.?be|youtube\.com/i.test(raw)) return false;
+  if(ytId(raw)) return false;
+  let u;
+  try{ u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw); }catch(e){ return false; }
+  if(!/(^|\.)youtube\.com$/i.test(u.hostname)) return false;
+  if(u.pathname === '/results'){ ytSearch(u.searchParams.get('search_query') || ''); return true; }
+  if(u.pathname === '/' || u.pathname === ''){ ytSearch(''); return true; }
+  return false;
+}
+
+/* ---------- Rejim ---------- */
+function showMode(m){
+  mute(700);
+  lastT = null; remoteSt = null; leader = false;
+  wantPlay = false;
+  $('tap').style.display = 'none';
+  if(m !== 'yt'){ try{ yt && yt.pauseVideo && ytIsReady && yt.pauseVideo(); }catch(e){} }
+  if(m !== 'file'){
+    vid.pause();
+    if(hls){ hls.destroy(); hls = null; }
+    vid.removeAttribute('src'); vid.load();
+  }
+  if(m !== 'web') web.src = 'about:blank';
+  $('ytbox').style.display = m === 'yt' ? 'block' : 'none';
+  vid.style.display = m === 'file' ? 'block' : 'none';
+  web.style.display = m === 'web' ? 'block' : 'none';
+  $('ytres').style.display = m === 'ytres' ? 'block' : 'none';
+  $('home').style.display = m === 'home' ? 'block' : 'none';
+  kind = m;
+}
+function setFile(url){
+  if(hls){ hls.destroy(); hls = null; }
+  if(/\.m3u8/i.test(url) && !vid.canPlayType('application/vnd.apple.mpegurl') && window.Hls && Hls.isSupported()){
+    hls = new Hls(); hls.loadSource(url); hls.attachMedia(vid);
+  } else {
+    vid.src = url;
+  }
+}
+
+/* ---------- Başlanğıc səhifə ---------- */
+const TILES = [
+  {i: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>', t: 'YouTube axtarışı', f: () => { ytSearch(''); $('url').value = 'yt '; $('url').focus(); }},
+  {i: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>', t: 'Google', u: 'https://www.google.com/?hl=az'}
+];
+function showHome(){
+  showMode('home');
+  const box = $('home');
+  box.textContent = '';
+  const h = document.createElement('div'); h.className = 'hint';
+  [
+    'Sayt linki yaz: həmin sayta girir',
+    'Adi söz yaz: internetdə axtarır',
+    'yt söz yaz: YouTube-da axtarır. Məsələn: yt dəniz səsi'
+  ].forEach(s => {
+    const p = document.createElement('div'); p.textContent = s; h.appendChild(p);
+  });
+  box.appendChild(h);
+  const g = document.createElement('div'); g.className = 'tiles';
+  TILES.forEach(x => {
+    const el = document.createElement('div'); el.className = 'tile';
+    const ic = document.createElement('span'); ic.innerHTML = x.i;
+    el.appendChild(ic); el.appendChild(document.createTextNode(x.t));
+    el.onclick = () => { if(x.f) x.f(); else loadPage(x.u, false); };
+    g.appendChild(el);
+  });
+  box.appendChild(g);
+}
+
+/* YouTube pleyeri: hazır olmamış gələn video növbəyə qoyulur */
+function ytLoad(id){
+  if(yt && ytIsReady){
+    yt.loadVideoById(id);
+  } else if(yt){
+    ytPending = id;
+  } else {
+    yt = new YT.Player('yt', {
+      videoId: id,
+      playerVars: { playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => {
+          ytIsReady = true;
+          if(ytPending){ yt.loadVideoById(ytPending); ytPending = null; }
+        },
+        onStateChange: ytState
+      }
+    });
+  }
+}
+
+let ytSeq = 0;
+async function ytSearch(q){
+  const my = ++ytSeq;
+  showMode('ytres');
+  const box = $('ytres');
+  box.scrollTop = 0;
+  if(!q){
+    box.innerHTML = '';
+    box.className = '';
+    const h = document.createElement('div'); h.className = 'hint';
+    h.textContent = 'YouTube-da axtarmaq üçün yuxarıdakı xanaya yt və axtarış sözünü yaz. Məsələn: yt dəniz səsi';
+    box.appendChild(h);
+    return;
+  }
+  box.textContent = 'Axtarılır...';
+  box.className = 'hint';
+  try{
+    const r = await fetch('/api/yt?q=' + encodeURIComponent(q));
+    const d = await r.json();
+    if(my !== ytSeq) return;
+    if(!r.ok) throw new Error('yt ' + r.status);
+    box.className = '';
+    if(!Array.isArray(d) || !d.length){ box.className = 'hint'; box.textContent = 'Nəticə tapılmadı'; return; }
+    box.textContent = '';
+    d.forEach(v => {
+      const el = document.createElement('div'); el.className = 'r';
+      const img = document.createElement('img'); img.src = v.thumb; img.loading = 'lazy';
+      const t = document.createElement('div'); t.textContent = v.title;
+      const s = document.createElement('small'); s.textContent = v.channel + (v.len ? ' · ' + v.len : '');
+      t.appendChild(s);
+      el.appendChild(img); el.appendChild(t);
+      el.onclick = () => loadPage('https://www.youtube.com/watch?v=' + v.id, false);
+      box.appendChild(el);
+    });
+  }catch(e){
+    if(my !== ytSeq) return;
+    box.className = 'hint';
+    box.textContent = 'Axtarış alınmadı, bir az sonra yenidən yoxla';
+  }
+}
+
+let navSeq = 0;
+function loadPage(url, remote, tries = 0){
+  if(typeof url !== 'string' || !url) return;
+  const my = tries ? navSeq : ++navSeq;
+  const id = ytId(url);
+  curUrl = url;
+  navAt = Date.now();
+  $('url').value = url;
+  if(hist[hist.length - 1] !== url) hist.push(url);
+
+  if(id){
+    if(!ytReady){
+      if(tries >= 20){ sysMsg('YouTube pleyeri yüklənmədi (bloklanmış ola bilər)'); return; }
+      setTimeout(() => { if(my === navSeq) loadPage(url, remote, tries + 1); }, 500);
+      return;
+    }
+    showMode('yt');
+    ytLoad(id);
+  } else if(/\.(mp4|webm|ogg|mov|m3u8)(\?|#|$)/i.test(url)){
+    showMode('file');
+    setFile(url);
+  } else {
+    showMode('web');
+    web.src = '/p?u=' + encodeURIComponent(url);
+  }
+  if(!remote){ send({t:'load', url}); sysMsg('Səhifə açdın'); }
+  else sysMsg('Səhifə dəyişdi');
+}
+function goBack(){
+  if(kind === 'ytres' || kind === 'home'){
+    if(hist.length) loadPage(hist[hist.length - 1], false);
+    return;
+  }
+  if(hist.length < 2){ showHome(); return; }
+  hist.pop();
+  loadPage(hist.pop(), false);
+}
+
+/* ---------- Video sinxron (YouTube / fayl) ---------- */
+function getTime(){ try{ return kind === 'yt' ? yt.getCurrentTime() : vid.currentTime; }catch(e){ return 0; } }
+function seekTo(t){ try{ kind === 'yt' ? yt.seekTo(t, true) : (vid.currentTime = t); }catch(e){} }
+function doPlay(){ try{ kind === 'yt' ? yt.playVideo() : vid.play(); }catch(e){} }
+function doPause(){ try{ kind === 'yt' ? yt.pauseVideo() : vid.pause(); }catch(e){} }
+
+function isPlaying(){
+  try{ return kind === 'yt' ? yt.getPlayerState() === 1 : !vid.paused; }catch(e){ return false; }
+}
+/* Brauzer avtomatik oynatmanı bloklayıbsa, toxunma düyməsi göstər */
+function checkPlaying(){
+  if(!wantPlay || (kind !== 'yt' && kind !== 'file')) return;
+  if(!isPlaying()) $('tap').style.display = 'block';
+}
+$('tap').onclick = () => {
+  $('tap').style.display = 'none';
+  mute(900);
+  const t = lastRemote.time + (Date.now() - lastRemote.at) / 1000;
+  if(Math.abs(getTime() - t) > 1.5) seekTo(t);
+  doPlay();
+};
+
+/* Qarşı tərəfdən gələn əmrin əks-sədasını (echo) geri göndərmirik: vaxt+vəziyyət uyğundursa */
+function isEcho(playing, time){
+  if(!remoteSt || Date.now() - remoteSt.at > 6000) return false;
+  const exp = remoteSt.time + (remoteSt.playing ? (Date.now() - remoteSt.at) / 1000 : 0);
+  return remoteSt.playing === playing && Math.abs(time - exp) < 1.5;
+}
+function sendLocal(o){ leader = true; send(o); }
+
+function applyRemote(m){
+  if(kind !== 'yt' && kind !== 'file') return;
+  mute(600);
+  leader = false;
+  lastT = null;
+  const now = Date.now();
+  if(m.t === 'play'){
+    wantPlay = true;
+    lastRemote = {time: m.time, at: now};
+    remoteSt = {playing: true, time: m.time, at: now};
+    if(Math.abs(getTime() - m.time) > 0.8) seekTo(m.time);
+    doPlay();
+    setTimeout(checkPlaying, 1500);
+  }
+  else if(m.t === 'pause'){
+    wantPlay = false;
+    $('tap').style.display = 'none';
+    remoteSt = {playing: false, time: m.time, at: now};
+    doPause();
+    if(Math.abs(getTime() - m.time) > 0.5) seekTo(m.time);
+  }
+  else if(m.t === 'seek'){
+    const pl = typeof m.playing === 'boolean' ? m.playing : isPlaying();
+    wantPlay = pl;
+    lastRemote = {time: m.time, at: now};
+    remoteSt = {playing: pl, time: m.time, at: now};
+    seekTo(m.time);
+  }
+  else if(m.t === 'sync' && m.playing){
+    wantPlay = true;
+    lastRemote = {time: m.time, at: now};
+    remoteSt = {playing: true, time: m.time, at: now};
+    if(Math.abs(getTime() - m.time) > 2) seekTo(m.time + 0.4);
+    if(!isPlaying()){ doPlay(); setTimeout(checkPlaying, 1500); }
+  }
+}
+function ytState(e){
+  if(e.data === 1) $('tap').style.display = 'none';
+  if(ignoring()) return;
+  if(e.data !== 1 && e.data !== 2) return;
+  const t = yt.getCurrentTime(), pl = e.data === 1;
+  if(isEcho(pl, t)) return;
+  sendLocal({t: pl ? 'play' : 'pause', time: t});
+}
+vid.addEventListener('playing', () => { $('tap').style.display = 'none'; });
+['play', 'pause', 'seeked'].forEach(ev => vid.addEventListener(ev, () => {
+  if(ignoring()) return;
+  const pl = !vid.paused, t = vid.currentTime;
+  if(isEcho(pl, t)) return;
+  sendLocal(ev === 'seeked' ? {t: 'seek', time: t, playing: pl} : {t: ev, time: t});
+}));
+
+/* YouTube-da "seek" hadisəsi yoxdur: vaxtın gözlənilməz tullanmasını özümüz tuturuq (oynayanda da, pauzada da) */
+setInterval(() => {
+  if(kind !== 'yt' || !yt || !ytIsReady || !yt.getPlayerState) return;
+  const st = yt.getPlayerState();
+  if(st !== 1 && st !== 2){ lastT = null; return; }
+  const t = yt.getCurrentTime(), now = Date.now();
+  if(lastT !== null && !ignoring()){
+    const rate = st === 1 ? (yt.getPlaybackRate ? yt.getPlaybackRate() : 1) : 0;
+    const exp = lastT + (now - lastAt) / 1000 * rate;
+    if(Math.abs(t - exp) > 1.2 && !isEcho(st === 1, t)) sendLocal({t: 'seek', time: t, playing: st === 1});
+  }
+  lastT = t; lastAt = now;
+}, 500);
+
+/* Aparıcı tərəf (son toxunan) hər 3 san vaxtı göndərir, digər tərəf 2 san-dən çox fərq olsa düzəldir */
+setInterval(() => {
+  if(!leader || !connected || ignoring() || (kind !== 'yt' && kind !== 'file') || !isPlaying()) return;
+  send({t: 'sync', time: getTime(), playing: true});
+}, 3000);
+
+/* ---------- Veb səhifədən gələn hadisələr ---------- */
+let autoNavs = [], autoWarned = false;
+window.addEventListener('message', e => {
+  const m = e.data;
+  if(!m || kind !== 'web') return;
+  if(m.t === 'nav' && m.url && e.source === web.contentWindow){
+    if(!m.auto){ autoNavs = []; autoWarned = false; loadPage(m.url, false); return; }
+    // Saytın öz skriptinin yönləndirməsi: qarşı tərəfə göndərilmir (o da eyni yönləndirməni özü edir),
+    // qısa müddətdə 3-dən çox olarsa döngü sayılıb dayandırılır
+    const now = Date.now();
+    autoNavs = autoNavs.filter(t => now - t < 10000);
+    if(m.url === curUrl) return;
+    if(autoNavs.length >= 3){
+      if(!autoWarned){ autoWarned = true; sysMsg('Sayt öz-özünə yönləndirir, dayandırıldı'); }
+      return;
+    }
+    autoNavs.push(now);
+    loadPage(m.url, true);
+  }
+  else if(m.t === 'v') send({t:'wv', e:m.e, time:m.time});
+});
+
+
+/* ---------- Mesajlar: yanıt, saat, görüldü / oxundu ---------- */
+const msgEls = new Map(), ownState = new Map();
+const LABELS = {1: 'Göndərildi', 2: 'Görüldü', 3: 'Oxundu'};
+let replyTo = null, mseq = 0;
+const newId = () => me.slice(0, 4) + Date.now().toString(36) + (mseq++).toString(36);
+const fmtTime = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+function tickSvg(n){
+  const a = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  return n < 2 ? '<svg ' + a + '><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+               : '<svg ' + a + '><path d="M2 12.5l4.5 4.5L16 7.5"/><path d="M11.5 16.2l1.3 1.3L22 7.5"/></svg>';
+}
+const REPLY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 6 6v1"/></svg>';
+
+function addMsg(name, text, mine, o){
+  o = o || {};
+  const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
+  d.dataset.name = name; d.dataset.text = text;
+  if(mine) d.dataset.st = '1';
+  if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
+  const b = document.createElement('b'); b.textContent = name; d.appendChild(b);
+  if(o.reply && o.reply.id){
+    const q = document.createElement('div'); q.className = 'q';
+    const qn = document.createElement('strong'); qn.textContent = String(o.reply.name || '').slice(0, 20);
+    const qt = document.createElement('span'); qt.textContent = String(o.reply.text || '').slice(0, 90);
+    q.appendChild(qn); q.appendChild(qt);
+    q.onclick = () => jumpTo(o.reply.id);
+    d.appendChild(q);
+  }
+  const s = document.createElement('span'); s.textContent = text; d.appendChild(s);
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const tm = document.createElement('span'); tm.textContent = fmtTime(); meta.appendChild(tm);
+  if(mine){
+    const lb = document.createElement('span'); lb.className = 'lab';
+    const tk = document.createElement('span'); tk.className = 'tick'; tk.innerHTML = tickSvg(1);
+    meta.appendChild(lb); meta.appendChild(tk);
+  }
+  d.appendChild(meta);
+  if(o.id){
+    const rp = document.createElement('button'); rp.className = 'rp'; rp.innerHTML = REPLY_ICON;
+    rp.setAttribute('aria-label', 'Yanıt ver'); rp.onclick = () => setReply(o.id);
+    d.appendChild(rp);
+    bindSwipe(d, o.id);
+  }
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+  refreshLabels();
+  return d;
+}
+function refreshLabels(){
+  const mine = $('chat').querySelectorAll('.m.me');
+  mine.forEach((el, i) => {
+    const lb = el.querySelector('.lab');
+    if(lb) lb.textContent = i === mine.length - 1 ? LABELS[el.dataset.st || 1] : '';
+  });
+}
+function setReceipt(id, st){
+  const cur = ownState.get(id);
+  if(cur === undefined || cur >= st) return;
+  ownState.set(id, st);
+  const el = msgEls.get(id); if(!el) return;
+  el.dataset.st = String(st);
+  const tk = el.querySelector('.tick'); if(tk) tk.innerHTML = tickSvg(st);
+  refreshLabels();
+}
+function jumpTo(id){
+  const el = msgEls.get(id); if(!el) return;
+  el.scrollIntoView({block: 'center', behavior: 'smooth'});
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+function setReply(id){
+  const el = msgEls.get(id); if(!el) return;
+  replyTo = {id, name: el.dataset.name, text: el.dataset.text.slice(0, 80)};
+  $('rbName').textContent = replyTo.name; $('rbText').textContent = replyTo.text;
+  $('replybar').hidden = false; $('msg').focus();
+}
+function clearReply(){ replyTo = null; $('replybar').hidden = true; }
+$('rbX').onclick = clearReply;
+
+/* sağa sürüşdür: yanıt ver */
+function bindSwipe(d, id){
+  let sx = 0, sy = 0, act = false, drag = false, pid = null;
+  d.addEventListener('pointerdown', e => {
+    if(e.target.closest('.rp, .q')) return;
+    act = true; drag = false; sx = e.clientX; sy = e.clientY; pid = e.pointerId;
+  });
+  d.addEventListener('pointermove', e => {
+    if(!act || e.pointerId !== pid) return;
+    const mx = e.clientX - sx, my = e.clientY - sy;
+    if(!drag){
+      if(mx > 10 && mx > Math.abs(my) * 1.5){ drag = true; d.classList.add('drag'); try{ d.setPointerCapture(pid); }catch(_){} }
+      else { if(Math.abs(my) > 12) act = false; return; }
+    }
+    const dx = Math.max(0, Math.min(mx, 72));
+    d.style.transform = 'translateX(' + dx + 'px)';
+    d.classList.toggle('armed', dx >= 56);
+  });
+  const end = () => {
+    if(!act) return;
+    act = false; d.classList.remove('drag'); d.style.transform = '';
+    const fire = drag && d.classList.contains('armed');
+    d.classList.remove('armed'); drag = false;
+    if(fire) setReply(id);
+  };
+  d.addEventListener('pointerup', end); d.addEventListener('pointercancel', end);
+}
+
+/* "Oxundu": mesaj ekranda görünəndə və səhifə aktiv olanda göndərilir */
+const pendingRead = new Set();
+const pageActive = () => document.visibilityState === 'visible' && document.hasFocus();
+function flushRead(){
+  if(!pendingRead.size || !pageActive()) return;
+  send({t: 'read', ids: [...pendingRead]}); pendingRead.clear();
+}
+const readIO = 'IntersectionObserver' in window ? new IntersectionObserver(ents => {
+  ents.forEach(e => {
+    if(e.isIntersecting && (e.intersectionRatio >= .5 || e.intersectionRect.height >= 100)){
+      readIO.unobserve(e.target); pendingRead.add(e.target.dataset.mid); flushRead();
+    }
+  });
+}, {root: $('chat'), threshold: [0, .25, .5, .75, 1]}) : null;
+function watchRead(el, id){ if(readIO) readIO.observe(el); else { pendingRead.add(id); flushRead(); } }
+window.addEventListener('focus', () => setTimeout(flushRead, 150));
+document.addEventListener('visibilitychange', () => setTimeout(flushRead, 150));
+
+function sendChat(){
+  const t = $('msg').value.trim();
+  if(!t) return;
+  const id = newId();
+  const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
+  addMsg(myName, t, true, {id, reply: rp});
+  ownState.set(id, 1);
+  send({t: 'chat', id, name: myName, text: t, reply: rp});
+  $('msg').value = ''; clearReply();
+}
+
+/* ---------- Səsli otaq (WebRTC; siqnal mövcud otaq kanalından keçir) ---------- */
+// Bəzi mobil şəbəkələr yalnız STUN ilə qoşulmur. Belə olsa bura TURN server əlavə et:
+// {urls: 'turn:server:3478', username: '...', credential: '...'}
+const ICE_SERVERS = [{urls: 'stun:stun.l.google.com:19302'}, {urls: 'stun:stun1.l.google.com:19302'}];
+let voiceOn = false, peerVoice = false, peerId = '', peerName = '', voiceMuted = false;
+let rtc = null, localStream = null, pendingIce = [], vctx = null;
+let vLive = false, vFail = false, vStart = 0, vTimer = null, restarted = false;
+const raud = $('raudio'), levels = new Map();
+
+const initial = n => (String(n || '').trim()[0] || '?').toLocaleUpperCase('az');
+const mmss = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+
+function setVoiceUI(){
+  const st = voiceOn ? (!peerVoice ? 'wait' : vFail ? 'fail' : vLive ? 'live' : 'conn') : (peerVoice ? 'invite' : 'off');
+  const box = $('voice');
+  box.hidden = st === 'off'; box.dataset.st = st;
+  document.body.classList.toggle('invoice', voiceOn);
+  $('avMe').textContent = initial(myName);
+  $('avPeer').textContent = initial(peerName);
+  $('vpMe').classList.toggle('off', !voiceOn);
+  $('vpPeer').classList.toggle('off', !peerVoice);
+  $('vjoin').hidden = st !== 'invite';
+  $('vmute').hidden = !voiceOn; $('vleave').hidden = !voiceOn;
+  if(!voiceOn || !peerVoice) $('vunmute').hidden = true;
+  $('vtext').textContent = {
+    invite: (peerName || 'Qarşı tərəf') + ' səsli otaqdadır',
+    wait: 'Qarşı tərəfi gözləyirəm...',
+    conn: 'Qoşulur...',
+    live: 'Səsli söhbət ' + mmss(vStart ? Date.now() - vStart : 0),
+    fail: 'Səs qoşulmadı. Çıx və yenidən gir',
+    off: ''
+  }[st];
+}
+function watchLevel(stream, el){
+  stopLevel(el);
+  try{
+    vctx = vctx || new (window.AudioContext || window.webkitAudioContext)();
+    const src = vctx.createMediaStreamSource(stream), an = vctx.createAnalyser();
+    an.fftSize = 256; src.connect(an);
+    const buf = new Uint8Array(an.frequencyBinCount);
+    const iv = setInterval(() => {
+      an.getByteTimeDomainData(buf);
+      let sum = 0; for(let i = 0; i < buf.length; i++){ const x = (buf[i] - 128) / 128; sum += x * x; }
+      el.classList.toggle('talk', Math.sqrt(sum / buf.length) > 0.035);
+    }, 110);
+    levels.set(el, {iv, src});
+  }catch(e){}
+}
+function stopLevel(el){
+  const l = levels.get(el);
+  if(l){ clearInterval(l.iv); try{ l.src.disconnect(); }catch(e){} levels.delete(el); }
+  el.classList.remove('talk');
+}
+function voiceHello(re){
+  send({t: 'voice', on: true, from: me, name: myName, muted: voiceMuted, re: !!re});
+}
+
+async function joinVoice(){
+  if(voiceOn) return;
+  if(!window.RTCPeerConnection || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    sysMsg('Mikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.'); return;
+  }
+  try{
+    localStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}, video: false});
+  }catch(e){
+    sysMsg('Mikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.'); return;
+  }
+  voiceOn = true; voiceMuted = false;
+  $('vmute').classList.remove('off'); $('vpMe').classList.remove('muted');
+  try{ vctx = vctx || new (window.AudioContext || window.webkitAudioContext)(); vctx.resume(); }catch(e){}
+  watchLevel(localStream, $('vpMe'));
+  voiceHello(false);
+  sysMsg('Səsli otağa girdin. Qulaqlıq tax ki, videonun səsi mikrofona düşməsin');
+  setVoiceUI();
+  maybeCall();
+}
+function leaveVoice(){
+  if(!voiceOn) return;
+  voiceOn = false;
+  closeRtc();
+  if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  stopLevel($('vpMe'));
+  $('vpMe').classList.remove('muted');
+  send({t: 'voice', on: false, from: me});
+  sysMsg('Səsli otaqdan çıxdın');
+  setVoiceUI();
+}
+function closeRtc(){
+  if(rtc){ const r = rtc; rtc = null; try{ r.close(); }catch(e){} }
+  pendingIce = []; vLive = false; vFail = false; vStart = 0; restarted = false;
+  if(vTimer){ clearInterval(vTimer); vTimer = null; }
+  raud.srcObject = null; stopLevel($('vpPeer')); $('vunmute').hidden = true;
+}
+function maybeCall(){
+  if(!voiceOn || !peerVoice || !peerId || rtc || !localStream) return;
+  makeRtc();
+  if(me < peerId) offer(false);     // id-si kiçik olan təklif göndərir
+}
+function makeRtc(){
+  const my = rtc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+  localStream.getTracks().forEach(t => my.addTrack(t, localStream));
+  my.onicecandidate = e => {
+    if(rtc === my && e.candidate) send({t: 'rtc', from: me, to: peerId, k: 'ice', d: e.candidate.toJSON()});
+  };
+  my.ontrack = e => {
+    if(rtc !== my) return;
+    raud.srcObject = e.streams[0];
+    raud.play().then(() => { $('vunmute').hidden = true; }).catch(() => { $('vunmute').hidden = false; });
+    watchLevel(e.streams[0], $('vpPeer'));
+  };
+  my.onconnectionstatechange = () => {
+    if(rtc !== my) return;
+    const st = my.connectionState;
+    if(st === 'connected'){
+      vLive = true; vFail = false;
+      if(!vStart){ vStart = Date.now(); vTimer = setInterval(setVoiceUI, 1000); }
+    } else if(st === 'disconnected'){
+      vLive = false;
+    } else if(st === 'failed'){
+      vLive = false;
+      if(me < peerId && !restarted){ restarted = true; offer(true); } else vFail = true;
+    }
+    setVoiceUI();
+  };
+}
+async function offer(iceRestart){
+  const my = rtc; if(!my) return;
+  try{
+    const o = await my.createOffer({iceRestart: !!iceRestart});
+    await my.setLocalDescription(o);
+    if(rtc !== my) return;
+    send({t: 'rtc', from: me, to: peerId, k: 'offer', d: {type: o.type, sdp: o.sdp}});
+  }catch(e){ vFail = true; setVoiceUI(); }
+}
+async function rtcMsg(m){
+  if(!voiceOn || m.to !== me) return;
+  try{
+    if(m.k === 'offer'){
+      peerId = String(m.from || peerId); peerVoice = true;
+      if(!rtc) makeRtc();
+      const my = rtc;
+      await my.setRemoteDescription(m.d);
+      for(const c of pendingIce.splice(0)) await my.addIceCandidate(c).catch(() => {});
+      const a = await my.createAnswer();
+      await my.setLocalDescription(a);
+      if(rtc !== my) return;
+      send({t: 'rtc', from: me, to: peerId, k: 'answer', d: {type: a.type, sdp: a.sdp}});
+      setVoiceUI();
+    } else if(m.k === 'answer'){
+      if(!rtc) return;
+      const my = rtc;
+      await my.setRemoteDescription(m.d);
+      for(const c of pendingIce.splice(0)) await my.addIceCandidate(c).catch(() => {});
+    } else if(m.k === 'ice'){
+      if(rtc && rtc.remoteDescription) await rtc.addIceCandidate(m.d).catch(() => {});
+      else pendingIce.push(m.d);
+    }
+  }catch(e){ vFail = true; setVoiceUI(); }
+}
+function voiceMsg(m){
+  if(m.t === 'rtc'){ rtcMsg(m); return; }
+  if(m.t === 'vmute'){ $('vpPeer').classList.toggle('muted', !!m.on); return; }
+  if(m.on){
+    if(!m.re && rtc) closeRtc();               // qarşı tərəf yenidən girib: köhnə bağlantını at
+    peerVoice = true; peerId = String(m.from || ''); peerName = String(m.name || '').slice(0, 20);
+    $('vpPeer').classList.toggle('muted', !!m.muted);
+    if(!m.re && !voiceOn) sysMsg((peerName || 'Qarşı tərəf') + ' səsli otağa girdi');
+    if(voiceOn && !m.re) voiceHello(true);     // mən də buradayam
+    setVoiceUI();
+    maybeCall();
+  } else {
+    if(m.from && peerId && m.from !== peerId) return;
+    peerVoice = false; closeRtc();
+    $('vpPeer').classList.remove('muted');
+    sysMsg('Qarşı tərəf səsli otaqdan çıxdı');
+    setVoiceUI();
+  }
+}
+$('vmic').onclick = joinVoice;
+$('vjoin').onclick = joinVoice;
+$('vleave').onclick = leaveVoice;
+$('vunmute').onclick = () => { raud.play().then(() => { $('vunmute').hidden = true; }).catch(() => {}); };
+$('vmute').onclick = () => {
+  if(!localStream) return;
+  voiceMuted = !voiceMuted;
+  localStream.getAudioTracks().forEach(t => { t.enabled = !voiceMuted; });
+  $('vmute').classList.toggle('off', voiceMuted);
+  $('vmute').setAttribute('aria-label', voiceMuted ? 'Mikrofonu aç' : 'Mikrofonu söndür');
+  $('vpMe').classList.toggle('muted', voiceMuted);
+  send({t: 'vmute', on: voiceMuted});
+};
+window.addEventListener('pagehide', () => {
+  if(!voiceOn || !room) return;
+  try{ navigator.sendBeacon('/api/send', new Blob([JSON.stringify({room, id: me, msg: {t: 'voice', on: false, from: me}})], {type: 'application/json'})); }catch(e){}
+});
+
+/* ---------- UI ---------- */
+function openInput(){
+  const raw = $('url').value.trim();
+  if(!raw) return;
+  const m = raw.match(/^(?:yt|youtube)\s+(.+)$/i);
+  if(m){ ytSearch(m[1]); return; }
+  if(ytSearchFromUrl(raw)) return;
+  const u = norm(raw);
+  if(u) loadPage(u, false);
+}
+function enterByCode(){
+  const c = $('codein').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if(!c){ joinMsg('Kodu yaz'); return; }
+  enterRoom(c, false);
+}
+$('create').onclick = () => enterRoom(null, true);
+$('enter').onclick = enterByCode;
+$('codein').addEventListener('keydown', e => { if(e.key === 'Enter') enterByCode(); });
+$('lock').onclick = () => lockCall(!isLocked);
+$('copy').onclick = async () => {
+  const c = room.toUpperCase();
+  try{
+    await navigator.clipboard.writeText(c);
+    $('copy').textContent = 'Kopyalandı';
+    setTimeout(() => { $('copy').textContent = 'Kopyala'; }, 1500);
+  }catch(e){
+    prompt('Kodu kopyala:', c);
+  }
+};
+$('load').onclick = openInput;
+$('back').onclick = goBack;
+$('homebtn').onclick = showHome;
+$('big').onclick = () => document.body.classList.toggle('big');
+$('url').addEventListener('keydown', e => { if(e.key === 'Enter') openInput(); });
+$('send').onclick = sendChat;
+$('msg').addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
+</script>
+</body>
+</html>
