@@ -677,6 +677,29 @@ body.invoice #vmic{display:none}
 .tip div{min-width:0;font-size:14px;line-height:1.35;color:var(--muted)}
 .tip strong{display:block;color:var(--text);font-size:14.5px;font-weight:700}
 @media (min-width:900px){.hhead{padding:24px 22px 4px}.hhead b{font-size:21px}.tips{margin:4px 18px 20px}}
+#fq{width:100%;height:46px;padding:0 14px;margin-bottom:6px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line);transition:box-shadow .15s ease}
+#fq:focus{box-shadow:inset 0 0 0 2px var(--rose)}
+.fr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fr:last-child{border-bottom:0}
+.fr .av{width:40px;height:40px;font-size:17px}
+.fr .tx{flex:1;min-width:0;font-size:13px;line-height:1.3;color:var(--muted)}
+.fr .tx b{display:block;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fb{flex:none;padding:8px 13px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:13px}
+.fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
+.ftag{flex:none;color:var(--muted);font-size:12px;font-weight:600}
+.fsub{margin:12px 0 2px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.fempty{padding:8px 2px}
+#fres:empty,#freqs:empty{display:none}
+#invfr{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+#invfr:empty{display:none}
+.chip{padding:7px 12px;border-radius:99px;background:var(--seat-2);color:var(--text);font-size:13px;font-weight:600}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer}
+.swrow b{display:block;font-size:15px}
+.swrow small{display:block;margin-top:3px;color:var(--muted);font-size:13px;line-height:1.35}
+.sw{-webkit-appearance:none;appearance:none;flex:none;position:relative;width:48px;height:28px;border-radius:99px;background:var(--seat-2);transition:background-color .15s;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--rose-deep)}
+.sw:checked::after{transform:translateX(20px)}
 </style>
 </head>
 <body>
@@ -755,6 +778,13 @@ body.invoice #vmic{display:none}
     <div class="stat now"><b id="stl">0</b><small><i class="fa-solid fa-circle live-dot" aria-hidden="true"></i>indi izləyir</small></div>
   </div>
   </div><div class="mcol mright">
+  <div class="card" id="friendsCard">
+    <h2><i class="fa-solid fa-user-group" aria-hidden="true"></i>Dostlar</h2>
+    <input id="fq" placeholder="İstifadəçi adı ilə axtar" maxlength="21" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı ilə axtar">
+    <div id="fres"></div>
+    <div id="freqs"></div>
+    <div id="flist"></div>
+  </div>
   <div class="card"><h2><i class="fa-solid fa-film" aria-hidden="true"></i>İzlədiklərin</h2><div id="hvids"></div></div>
   <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
   <p class="mquote" id="mquote"></p>
@@ -786,6 +816,13 @@ body.invoice #vmic{display:none}
       <div class="frow"><span class="at">@</span><input id="puser" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pbtn" id="pusersave" disabled>Saxla</button></div>
       <div class="hint" id="puserhint">Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.</div>
     </div>
+  </div>
+  <div class="card">
+    <h2>Gizlilik</h2>
+    <label class="swrow" for="pinv">
+      <span><b>Otağa dəvətlər</b><small id="pinvhint">Açıq: hər kəs səni otağa dəvət edə bilər.</small></span>
+      <input type="checkbox" id="pinv" class="sw" checked>
+    </label>
   </div>
   <div class="card">
     <h2>E-poçt</h2>
@@ -887,6 +924,7 @@ body.invoice #vmic{display:none}
   <div class="lv-card">
     <h2 id="invTitle">Dəvət et</h2>
     <p>Dostunun istifadəçi adını yaz. O, ana menyuda dəvətini görüb bir toxunuşla otağa qoşulacaq.</p>
+    <div id="invfr"></div>
     <input id="invuser" placeholder="@istifadəçi_adı" maxlength="21" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı">
     <div id="invmsg" role="status"></div>
     <div class="lv-btns">
@@ -1562,7 +1600,7 @@ function tickSvg(n){
 }
 const REPLY_ICON = '<i class="fa-solid fa-reply" aria-hidden="true"></i>';
 
-const VB_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const VB_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 0.10 L14.61 2.24 L17.95 1.69 L19.14 4.86 L22.31 6.05 L21.76 9.39 L23.90 12.00 L21.76 14.61 L22.31 17.95 L19.14 19.14 L17.95 22.31 L14.61 21.76 L12.00 23.90 L9.39 21.76 L6.05 22.31 L4.86 19.14 L1.69 17.95 L2.24 14.61 L0.10 12.00 L2.24 9.39 L1.69 6.05 L4.86 4.86 L6.05 1.69 L9.39 2.24Z" fill="currentColor"/><path d="M7.1 12.4l3.4 3.4 6.6-6.8" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="miter"/></svg>';
 function vbEl(){
   const s = document.createElement('span'); s.className = 'vb'; s.title = 'Təsdiqlənmiş hesab'; s.innerHTML = VB_SVG;
   return s;
@@ -2425,7 +2463,7 @@ function track(o){ if(token) api('/api/activity', {method: 'POST', body: JSON.st
 
 /* ---------- İstifadəçi adı ilə dəvət (otaqdan) ---------- */
 function invMsg(t, ok){ const e = $('invmsg'); e.textContent = t || ''; e.className = ok ? 'ok' : ''; }
-$('invite').onclick = () => { invMsg(''); $('invuser').value = ''; $('invbox').hidden = false; setTimeout(() => $('invuser').focus(), 60); };
+$('invite').onclick = () => { invMsg(''); $('invuser').value = ''; $('invbox').hidden = false; fillInvFriends(); setTimeout(() => $('invuser').focus(), 60); };
 $('invNo').onclick = () => { $('invbox').hidden = true; };
 $('invbox').addEventListener('click', e => { if(e.target === $('invbox')) $('invbox').hidden = true; });
 async function sendInvite(){
@@ -2436,6 +2474,7 @@ async function sendInvite(){
   try{
     const r = await api('/api/invite', {method: 'POST', body: JSON.stringify({username: u, room})});
     if(r.ok){ invMsg('Dəvət göndərildi. @' + u + ' ana menyuda görəcək.', true); $('invuser').value = ''; setTimeout(() => { $('invbox').hidden = true; }, 1600); }
+    else if(r.status === 403) invMsg('Bu istifadəçi otaq dəvətlərini bağlayıb');
     else if(r.status === 404){ const d = await r.json().catch(() => ({})); invMsg(d.error === 'room' ? 'Otaq tapılmadı' : 'Belə istifadəçi tapılmadı'); }
     else if(r.status === 429) invMsg('Çox dəvət göndərdin, bir az sonra yenidən yoxla');
     else if(r.status === 400) invMsg('Özünü dəvət edə bilməzsən');
@@ -2447,12 +2486,124 @@ $('invYes').onclick = sendInvite;
 $('invuser').addEventListener('keydown', e => { if(e.key === 'Enter') sendInvite(); if(e.key === 'Escape') $('invbox').hidden = true; });
 $('invuser').addEventListener('input', () => { const el = $('invuser'), v = el.value.toLowerCase().replace(/[^a-z0-9._@]/g, ''); if(v !== el.value) el.value = v; });
 
+/* ---------- Dostlar: axtar, sorğu göndər, qəbul et ---------- */
+const AV_RE = /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/;
+function frBtn(html, cls, fn, label){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'fb ' + (cls || ''); b.innerHTML = html;
+  if(label) b.setAttribute('aria-label', label);
+  b.onclick = fn; return b;
+}
+function frTag(t){ const s = document.createElement('span'); s.className = 'ftag'; s.textContent = t; return s; }
+function frRow(p, sub, btns){
+  const r = document.createElement('div'); r.className = 'fr';
+  const av = document.createElement('div'); av.className = 'av'; av.textContent = initial(p.name);
+  if(p.avatar && AV_RE.test(p.avatar)){ av.style.backgroundImage = 'url("' + p.avatar + '")'; av.textContent = ''; }
+  const tx = document.createElement('div'); tx.className = 'tx';
+  const b = document.createElement('b'); b.textContent = p.name; if(p.badge) b.appendChild(vbEl());
+  const s = document.createElement('span'); s.textContent = sub || ('@' + p.username);
+  tx.appendChild(b); tx.appendChild(s);
+  r.appendChild(av); r.appendChild(tx); (btns || []).forEach(x => r.appendChild(x));
+  return r;
+}
+let frNoteT = null;
+function frNote(t){ const e = $('menumsg'); e.textContent = t; clearTimeout(frNoteT); frNoteT = setTimeout(() => { e.textContent = ''; }, 3500); }
+async function frAct(path, body){
+  try{
+    const r = await api(path, {method: 'POST', body: JSON.stringify(body)});
+    if(r.status === 429) frNote('Çox sorğu göndərdin, bir az gözlə');
+    else if(!r.ok) frNote('Alınmadı, yenidən cəhd et');
+  }catch(e){ frNote('Əlaqə problemi, yenidən cəhd et'); }
+  loadFriends(); if($('fq').value.trim().replace(/^@/, '').length >= 2) doSearch();
+}
+function searchBtns(p){
+  if(p.rel === 'friend') return [frTag('Dostsunuz')];
+  if(p.rel === 'out') return [frTag('Göndərildi')];
+  if(p.rel === 'in') return [frBtn('Qəbul et', '', () => frAct('/api/friend/respond', {username: p.username, accept: true}))];
+  return [frBtn('<i class="fa-solid fa-user-plus" aria-hidden="true"></i> Əlavə et', '', () => frAct('/api/friend/request', {username: p.username}))];
+}
+let fqTimer = null, fqSeq = 0;
+async function doSearch(){
+  const q = $('fq').value.trim().replace(/^@/, ''), box = $('fres'), my = ++fqSeq;
+  if(q.length < 2){ box.textContent = ''; return; }
+  try{
+    const r = await api('/api/users/search?q=' + encodeURIComponent(q));
+    if(my !== fqSeq) return;
+    box.textContent = '';
+    if(!r.ok) return;
+    const list = (await r.json()).users || [];
+    if(!list.length){ const e = document.createElement('div'); e.className = 'empty fempty'; e.textContent = 'Belə istifadəçi tapılmadı'; box.appendChild(e); return; }
+    list.forEach(p => box.appendChild(frRow(p, null, searchBtns(p))));
+  }catch(e){}
+}
+$('fq').addEventListener('input', () => {
+  const el = $('fq'), v = el.value.toLowerCase().replace(/[^a-z0-9._@]/g, ''); if(v !== el.value) el.value = v;
+  clearTimeout(fqTimer); fqTimer = setTimeout(doSearch, 300);
+});
+function frSection(box, title){ const t = document.createElement('div'); t.className = 'fsub'; t.textContent = title; box.appendChild(t); }
+function renderFriends(d){
+  const rq = $('freqs'); rq.textContent = '';
+  const inc = d.incoming || [], fr = d.friends || [], out = d.outgoing || [];
+  if(inc.length){
+    frSection(rq, 'Dostluq sorğuları');
+    inc.forEach(p => rq.appendChild(frRow(p, 'dost olmaq istəyir', [
+      frBtn('Qəbul et', '', () => frAct('/api/friend/respond', {username: p.username, accept: true})),
+      frBtn('<i class="fa-solid fa-xmark" aria-hidden="true"></i>', 'no', () => frAct('/api/friend/respond', {username: p.username, accept: false}), 'Rədd et')])));
+  }
+  const fl = $('flist'); fl.textContent = '';
+  if(fr.length){
+    frSection(fl, 'Dostların');
+    fr.forEach(p => fl.appendChild(frRow(p, null, [
+      frBtn('<i class="fa-solid fa-user-minus" aria-hidden="true"></i>', 'no', () => { if(confirm('@' + p.username + ' dostlardan çıxarılsın?')) frAct('/api/friend/remove', {username: p.username}); }, 'Dostlardan çıxar')])));
+  }
+  if(out.length){
+    frSection(fl, 'Göndərilən sorğular');
+    out.forEach(p => fl.appendChild(frRow(p, 'sorğu göndərilib', [
+      frBtn('<i class="fa-solid fa-xmark" aria-hidden="true"></i>', 'no', () => frAct('/api/friend/remove', {username: p.username}), 'Sorğunu ləğv et')])));
+  }
+  if(!fr.length && !inc.length && !out.length){
+    const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Hələ dostun yoxdur. Dostunun istifadəçi adını yuxarıda axtar.'; fl.appendChild(e);
+  }
+}
+async function loadFriends(){
+  if(!token) return;
+  try{
+    const r = await api('/api/friends');
+    if(r.ok) renderFriends(await r.json());
+  }catch(e){}
+}
+async function fillInvFriends(){
+  const box = $('invfr'); box.textContent = '';
+  if(!token) return;
+  try{
+    const r = await api('/api/friends');
+    if(!r.ok) return;
+    ((await r.json()).friends || []).slice(0, 12).forEach(p => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = p.name;
+      b.onclick = () => { $('invuser').value = p.username; sendInvite(); };
+      box.appendChild(b);
+    });
+  }catch(e){}
+}
+function pinvHint(){
+  $('pinvhint').textContent = $('pinv').checked ? 'Açıq: hər kəs səni otağa dəvət edə bilər.' : 'Bağlı: heç kim səni otağa dəvət edə bilməz.';
+}
+$('pinv').onchange = async () => {
+  const on = $('pinv').checked; pinvHint();
+  try{
+    const r = await api('/api/settings/invites', {method: 'POST', body: JSON.stringify({open: on})});
+    if(!r.ok) throw new Error('x');
+    if(account) account.invites_open = on;
+    pmsg(on ? 'Dəvətlər açıqdır' : 'Dəvətlər bağlandı', true);
+  }catch(e){ $('pinv').checked = !on; pinvHint(); pmsg('Dəyişmədi, yenidən cəhd et'); }
+};
+
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
 let invTimer = null;
-function startInvitePoll(){ loadInvites(); if(!invTimer) invTimer = setInterval(loadInvites, 8000); }
+function startInvitePoll(){ loadInvites(); loadFriends(); if(!invTimer) invTimer = setInterval(loadInvites, 8000); }
 async function loadInvites(){
   if(!token || $('menu').style.display === 'none' || !$('profile').hidden || document.visibilityState !== 'visible') return;
+  loadFriends();
   try{
     const r = await api('/api/invites');
     if(!r.ok) return;
@@ -2507,6 +2658,7 @@ function fillProfile(){
   $('pcurrow').hidden = !account.has_pw;
   $('pwtitle').textContent = account.has_pw ? 'Şifrəni dəyiş' : 'Şifrə qoy';
   $('pusersave').disabled = true;
+  $('pinv').checked = account.invites_open !== false; pinvHint();
 }
 function openProfile(){
   if(!account) return;

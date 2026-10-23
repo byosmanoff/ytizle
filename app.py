@@ -372,10 +372,15 @@ CREATE TABLE IF NOT EXISTS logins(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL 
 CREATE INDEX IF NOT EXISTS logins_ts ON logins(ts);
 CREATE TABLE IF NOT EXISTS visits(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, ip TEXT NOT NULL, ua TEXT);
 CREATE INDEX IF NOT EXISTS visits_ts ON visits(ts);
+CREATE TABLE IF NOT EXISTS friends(a TEXT NOT NULL, b TEXT NOT NULL, status INTEGER NOT NULL DEFAULT 0, ts REAL NOT NULL,
+  PRIMARY KEY(a, b));
+CREATE INDEX IF NOT EXISTS friends_b ON friends(b);
 """)
             ucols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
             if "username" not in ucols:   # köhnə baza: istifadəçi adı sonradan avtomatik verilir
                 c.execute("ALTER TABLE users ADD COLUMN username TEXT")
+            if "invites_open" not in ucols:   # otağa dəvətlər: 1 = hamı göndərə bilər (standart), 0 = bağlı
+                c.execute("ALTER TABLE users ADD COLUMN invites_open INTEGER NOT NULL DEFAULT 1")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -724,13 +729,13 @@ def is_owner(sub):
 
 
 def profile_json(sub):
-    u = dbq("SELECT name, username FROM users WHERE sub=?", (sub,), one=True)
+    u = dbq("SELECT name, username, invites_open FROM users WHERE sub=?", (sub,), one=True)
     if not u:
         abort(401)
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
-    return dict(name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub),
+    return dict(name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0),
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -741,6 +746,9 @@ def merge_users(old, new):
     dbq("UPDATE sessions SET sub=? WHERE sub=?", (new, old))
     dbq("DELETE FROM avatars WHERE sub=? AND EXISTS(SELECT 1 FROM avatars WHERE sub=?)", (old, new))
     dbq("UPDATE OR IGNORE avatars SET sub=? WHERE sub=?", (new, old))
+    dbq("UPDATE OR IGNORE friends SET a=? WHERE a=?", (new, old))
+    dbq("UPDATE OR IGNORE friends SET b=? WHERE b=?", (new, old))
+    dbq("DELETE FROM friends WHERE a=b OR a=? OR b=?", (old, old))
     dbq("DELETE FROM users WHERE sub=?", (old,))
 
 
@@ -1071,6 +1079,7 @@ def api_account_delete():
     for tbl in ("creds", "sessions", "activity", "avatars"):
         dbq("DELETE FROM %s WHERE sub=?" % tbl, (sub,))
     dbq("DELETE FROM invites WHERE to_sub=? OR from_sub=?", (sub, sub))
+    dbq("DELETE FROM friends WHERE a=? OR b=?", (sub, sub))
     dbq("DELETE FROM users WHERE sub=?", (sub,))
     LOGIN_FAILS.pop(key, None)
     return jsonify(ok=True)
@@ -1086,11 +1095,13 @@ def api_invite():
         abort(400)
     if not rate_hit("invite", sub, 10, 600):
         abort(429)
-    row = dbq("SELECT sub FROM users WHERE username=?", (u,), one=True)
+    row = dbq("SELECT sub, invites_open FROM users WHERE username=?", (u,), one=True)
     if not row:
         return jsonify(error="user"), 404
     if row["sub"] == sub:
         abort(400)
+    if row["invites_open"] == 0:
+        return jsonify(error="closed"), 403   # istifadəçi otaq dəvətlərini bağlayıb
     with CV:
         exists = code in ROOMS
     if not exists:
@@ -1126,6 +1137,125 @@ def api_invite_dismiss():
     except (TypeError, ValueError):
         abort(400)
     dbq("DELETE FROM invites WHERE id=? AND to_sub=?", (iid, sub))
+    return jsonify(ok=True)
+
+
+@app.route("/api/settings/invites", methods=["POST"])
+def api_settings_invites():
+    sub, _ = auth_sub()
+    on = bool((request.get_json(silent=True) or {}).get("open"))
+    dbq("UPDATE users SET invites_open=? WHERE sub=?", (1 if on else 0, sub))
+    if not on:
+        dbq("DELETE FROM invites WHERE to_sub=?", (sub,))   # bağlananda gözləyən dəvətlər də silinir
+    return jsonify(ok=True, invites_open=on)
+
+
+# ---------------------------------------------------------------
+#  Dostluq: istifadəçi adı ilə axtar, sorğu göndər, qəbul et
+# ---------------------------------------------------------------
+def _av_url(username, ts):
+    return ("/api/avatar/%s?v=%d" % (username, int(ts))) if ts and username else ""
+
+
+def _friend_rel(me, other):
+    row = dbq("SELECT a, status FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)",
+              (me, other, other, me), one=True)
+    if not row:
+        return "none"
+    if row["status"] == 1:
+        return "friend"
+    return "out" if row["a"] == me else "in"
+
+
+def _user_by_name(raw):
+    u = norm_username(raw)
+    if not username_valid(u):
+        abort(400)
+    row = dbq("SELECT sub FROM users WHERE username=?", (u,), one=True)
+    if not row:
+        abort(404)
+    return row["sub"]
+
+
+@app.route("/api/users/search")
+def api_users_search():
+    sub, _ = auth_sub()
+    q = re.sub(r"[^a-z0-9._]", "", str(request.args.get("q") or "").lower().lstrip("@"))[:20]
+    if len(q) < 2:
+        return jsonify(users=[])
+    if not rate_hit("usearch", sub, 40, 60):
+        abort(429)
+    like = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    rows = dbq("SELECT u.sub, u.name, u.username, (SELECT ts FROM avatars a WHERE a.sub=u.sub) AS av \
+FROM users u WHERE u.username LIKE ? ESCAPE '\\' AND u.sub<>? ORDER BY (u.username=?) DESC, u.username LIMIT 8",
+               (like, sub, q), many=True)
+    out = [dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
+                badge=is_owner(r["sub"]), rel=_friend_rel(sub, r["sub"])) for r in rows]
+    return jsonify(users=out)
+
+
+@app.route("/api/friends")
+def api_friends():
+    sub, _ = auth_sub()
+    rows = dbq("SELECT f.a, f.b, f.status, u.sub AS osub, u.name, u.username, "
+               "(SELECT ts FROM avatars a WHERE a.sub=u.sub) AS av "
+               "FROM friends f JOIN users u ON u.sub = CASE WHEN f.a=? THEN f.b ELSE f.a END "
+               "WHERE f.a=? OR f.b=? ORDER BY f.ts DESC", (sub, sub, sub), many=True)
+    friends, incoming, outgoing = [], [], []
+    for r in rows:
+        if not r["username"]:
+            continue
+        it = dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
+                  badge=is_owner(r["osub"]))
+        if r["status"] == 1:
+            friends.append(it)
+        elif r["b"] == sub:
+            incoming.append(it)
+        else:
+            outgoing.append(it)
+    friends.sort(key=lambda x: x["name"].lower())
+    resp = jsonify(friends=friends, incoming=incoming, outgoing=outgoing)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/api/friend/request", methods=["POST"])
+def api_friend_request():
+    sub, _ = auth_sub()
+    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
+    if other == sub:
+        abort(400)
+    if not rate_hit("freq", sub, 20, 600):
+        abort(429)
+    rel = _friend_rel(sub, other)
+    if rel in ("friend", "out"):
+        return jsonify(ok=True, rel=rel)
+    if rel == "in":   # o artıq sənə sorğu göndərib: dərhal dost olursunuz
+        dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=?", (time.time(), other, sub))
+        return jsonify(ok=True, rel="friend")
+    if dbq("SELECT COUNT(*) FROM friends WHERE a=? AND status=0", (sub,), one=True)[0] >= 50:
+        abort(429)
+    dbq("INSERT OR IGNORE INTO friends(a,b,status,ts) VALUES(?,?,0,?)", (sub, other, time.time()))
+    return jsonify(ok=True, rel="out")
+
+
+@app.route("/api/friend/respond", methods=["POST"])
+def api_friend_respond():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    other = _user_by_name(d.get("username"))
+    if d.get("accept"):
+        dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=? AND status=0", (time.time(), other, sub))
+    else:
+        dbq("DELETE FROM friends WHERE a=? AND b=? AND status=0", (other, sub))
+    return jsonify(ok=True)
+
+
+@app.route("/api/friend/remove", methods=["POST"])
+def api_friend_remove():
+    sub, _ = auth_sub()
+    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
+    dbq("DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", (sub, other, other, sub))
     return jsonify(ok=True)
 
 
