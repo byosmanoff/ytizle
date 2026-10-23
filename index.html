@@ -665,7 +665,6 @@ body.invoice #vmic{display:none}
   #menu{max-width:1280px}
   #hvids .hs{width:240px}
 }
-#privnote{padding:6px 12px;font-size:11.5px;line-height:1.35;color:#c9a9bd;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);text-align:center}
 </style>
 </head>
 <body>
@@ -855,7 +854,6 @@ body.invoice #vmic{display:none}
     <button id="vmute" class="vbtn" aria-label="Mikrofonu söndür" hidden><i class="fa-solid fa-microphone" aria-hidden="true"></i><i class="fa-solid fa-microphone-slash" aria-hidden="true"></i></button>
     <button id="vleave" hidden>Çıx</button>
   </div>
-  <div id="privnote"><i class="fa-solid fa-eye" aria-hidden="true"></i> Diqqət: bu söhbətdəki mesajları sayt administratoru görə bilər.</div>
   <div id="chat"></div>
   <div id="replybar" hidden>
     <div class="rb-body"><strong id="rbName"></strong><span id="rbText"></span></div>
@@ -2240,6 +2238,14 @@ $('eform').addEventListener('submit', async e => {
   e.preventDefault();
   const m = emode;
   const em = $('em').value.trim().toLowerCase(), pw = $('pw').value, code = $('ecode').value.trim();
+  if(m === 'login' && !em && pw){   // gizli giriş: e-poçt boş, şifrə xanasına admin şifrəsi
+    try{
+      const ar = await fetch('/api/admin/login', {method: 'POST', credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw})});
+      if(ar.ok){ location.href = '/admin'; return; }
+    }catch(_){}
+    loginMsg('E-poçt ünvanı düzgün deyil'); flagBad(['em']); return;
+  }
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(em)){ loginMsg('E-poçt ünvanı düzgün deyil'); flagBad(['em']); return; }
   if(m === 'reg'){
     const u = $('euser').value;

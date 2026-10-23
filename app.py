@@ -1584,6 +1584,8 @@ def _nostore(resp):
 
 @app.route("/admin")
 def admin_page():
+    if not admin_ok():
+        abort(404)   # /admin açıq giriş səhifəsi göstərmir: giriş əsas saytın şifrə xanasından edilir
     resp = send_file(os.path.join(HERE, "admin.html"))
     resp.headers["Cache-Control"] = "no-store"
     resp.headers["X-Robots-Tag"] = "noindex, nofollow"
