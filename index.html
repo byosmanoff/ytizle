@@ -309,6 +309,16 @@ body.invoice #vmic{display:none}
 }
 .scrap{position:absolute;z-index:3;pointer-events:none;background:var(--paper);border-radius:1px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 
+/* ---- pərdə açılır (Otaq aç basanda) ---- */
+.cfx{position:fixed;inset:0;z-index:60;overflow:hidden;pointer-events:none}
+.cfx i{position:absolute;top:0;bottom:0;width:50.5%;will-change:transform;
+  background:repeating-linear-gradient(90deg,#6b0f2a 0,#a8173f 7%,#4d0a1e 14%,#8f1236 21%);
+  box-shadow:inset 0 0 50px rgba(0,0,0,.55),0 0 30px rgba(0,0,0,.5)}
+.cfx .cl{left:0;border-right:3px solid #2e0512}
+.cfx .cr{right:0;border-left:3px solid #2e0512}
+.cfx .cv{left:0;right:0;width:auto;bottom:auto;height:46px;border-bottom:3px solid var(--amber);
+  background:linear-gradient(#3a0712,#7d1030);box-shadow:0 6px 16px rgba(0,0,0,.6)}
+
 
 /* ---- code chip: icon buttons + leave ---- */
 #codebar{gap:3px;padding-left:12px}
@@ -1080,33 +1090,19 @@ function tearTicket(){
   setTimeout(fin, 1500);
 }
 
-/* ---------- Menyudakı bilet cırılır (otağa qoşulanda) ---------- */
+/* ---------- Pərdə açılır (otağa qoşulanda, kinoteatr kimi) ---------- */
 function tearMenuTicket(){
-  const tk = document.querySelector('.mticket');
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce || !tk || !tk.animate || $('menu').style.display === 'none' || $('join').style.display !== 'none') return;
-  const r = tk.getBoundingClientRect(), w = tk.offsetWidth, h = tk.offsetHeight;
-  if(!w || !h) return;
-  const box = document.createElement('div'); box.className = 'mtear'; box.setAttribute('aria-hidden', 'true');
-  const c = tk.cloneNode(true);
-  c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
-  c.style.cssText = 'position:absolute;margin:0;width:' + w + 'px;left:' + (r.left + r.width / 2 - w / 2) + 'px;top:' + (r.top + r.height / 2 - h / 2) + 'px;animation:none';
-  box.appendChild(c); document.body.appendChild(box);
-  const top = c.querySelector('.t-main'), bot = c.querySelector('.t-stub'), seam = top.offsetHeight, scraps = [];
-  for(let i = 0; i < 16; i++){
-    const p = document.createElement('i'); p.className = 'scrap';
-    p.style.cssText = 'left:' + (8 + Math.random() * (w - 16)) + 'px;top:' + (seam - 2) + 'px;width:' + (4 + Math.random() * 8) + 'px;height:' + (3 + Math.random() * 5) + 'px';
-    c.appendChild(p); scraps.push(p);
-    p.animate([
-      {transform: 'translate(0,0) rotate(0deg)', opacity: 1},
-      {transform: 'translate(' + ((Math.random() - .5) * 150) + 'px,' + (80 + Math.random() * 260) + 'px) rotate(' + ((Math.random() - .5) * 600) + 'deg)', opacity: 0}
-    ], {duration: 650 + Math.random() * 500, delay: 80 + Math.random() * 140, easing: 'cubic-bezier(.25,.6,.4,1)', fill: 'both'});
-  }
+  if(reduce || !document.body.animate || $('menu').style.display === 'none' || $('join').style.display !== 'none') return;
+  const box = document.createElement('div'); box.className = 'cfx'; box.setAttribute('aria-hidden', 'true');
+  box.innerHTML = '<i class="cl"></i><i class="cr"></i><i class="cv"></i>';
+  document.body.appendChild(box);
+  const ease = 'cubic-bezier(.6,.05,.25,1)', dur = 1500, delay = 350;
+  box.querySelector('.cl').animate([{transform: 'translateX(0)'}, {transform: 'translateX(-102%)'}], {duration: dur, delay, easing: ease, fill: 'both'});
+  box.querySelector('.cr').animate([{transform: 'translateX(0)'}, {transform: 'translateX(102%)'}], {duration: dur, delay, easing: ease, fill: 'both'});
+  box.querySelector('.cv').animate([{transform: 'translateY(0)', opacity: 1}, {transform: 'translateY(0)', opacity: 1, offset: .7}, {transform: 'translateY(-100%)', opacity: 0}], {duration: delay + dur + 500, easing: 'ease-in', fill: 'both'});
   try{ if(navigator.vibrate) navigator.vibrate([18, 30, 12]); }catch(e){}
-  let done = false;
-  const fin = () => { if(done) return; done = true; box.remove(); };
-  bot.addEventListener('animationend', fin, {once: true});
-  setTimeout(fin, 1600);
+  setTimeout(() => box.remove(), delay + dur + 700);
 }
 
 /* ---------- Otaq aç / kodla gir ---------- */
