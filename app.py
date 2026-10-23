@@ -149,6 +149,15 @@ def api_send():
         abort(400)
     if len(json.dumps(msg)) > 4000:
         abort(400)
+    msg.pop("vf", None)   # tik yalnız serverdə təyin olunur, müştəridən gələn nəzərə alınmır
+    tok = request.headers.get("X-Token", "")[:100]
+    if tok:
+        try:
+            srow = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True)
+            if srow and time.time() - srow["created"] <= SESSION_DAYS * 86400 and is_owner(srow["sub"]):
+                msg["vf"] = 1
+        except Exception:
+            pass
     now = time.time()
     with CV:
         r = get_room(code)
@@ -160,7 +169,6 @@ def api_send():
         del r["msgs"][:-100]
         alive_mark(r, pid, now)
         CV.notify_all()
-    log_chat(code, msg)
     return jsonify(ok=True)
 
 
@@ -364,10 +372,6 @@ CREATE TABLE IF NOT EXISTS logins(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL 
 CREATE INDEX IF NOT EXISTS logins_ts ON logins(ts);
 CREATE TABLE IF NOT EXISTS visits(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, ip TEXT NOT NULL, ua TEXT);
 CREATE INDEX IF NOT EXISTS visits_ts ON visits(ts);
-CREATE TABLE IF NOT EXISTS chatlog(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, room TEXT NOT NULL,
-  kind TEXT NOT NULL, name TEXT, username TEXT, text TEXT, ip TEXT);
-CREATE INDEX IF NOT EXISTS chatlog_ts ON chatlog(ts);
-CREATE INDEX IF NOT EXISTS chatlog_room ON chatlog(room, ts);
 """)
             ucols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
             if "username" not in ucols:   # köhnə baza: istifadəçi adı sonradan avtomatik verilir
@@ -707,6 +711,18 @@ def primary_cred(sub):
     return dbq("SELECT email, pw FROM creds WHERE sub=? ORDER BY verified DESC, rowid LIMIT 1", (sub,), one=True)
 
 
+OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "murikosmanov@gmail.com").strip().lower()
+
+
+def is_owner(sub):
+    """Çəhrayı tik: yalnız OWNER_EMAIL ilə (təsdiqlənmiş) açılan hesaba."""
+    try:
+        return bool(OWNER_EMAIL and dbq("SELECT 1 FROM creds WHERE sub=? AND email=? AND verified=1",
+                                        (sub, OWNER_EMAIL), one=True))
+    except Exception:
+        return False
+
+
 def profile_json(sub):
     u = dbq("SELECT name, username FROM users WHERE sub=?", (sub,), one=True)
     if not u:
@@ -714,7 +730,7 @@ def profile_json(sub):
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
-    return dict(name=u["name"], username=uname, email=cr["email"] if cr else "",
+    return dict(name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub),
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -1486,7 +1502,7 @@ def safe(url):
 
 
 # ---------------------------------------------------------------
-#  Admin panel: /admin
+#  Admin panel: giriş əsas saytın şifrə xanasından (e-poçt boş, şifrə = ADMIN_PASSWORD)
 #  Mühit dəyişəni:  ADMIN_PASSWORD=güclü-şifrə   (təyin olunmayıbsa panel söndürülüb)
 #  Giriş, uğursuz cəhd və ziyarətlər bazada saxlanır, 90 gündən köhnələr silinir.
 # ---------------------------------------------------------------
@@ -1515,32 +1531,6 @@ def log_visit():
         pass
 
 
-def log_chat(room, msg):
-    """Otaq mesajlarını admin panel üçün bazaya yaz (yalnız yazışma və açılan səhifələr)."""
-    try:
-        t = msg.get("t")
-        if t == "chat":
-            kind = "chat"
-            text = str(msg.get("text") or "")[:400]
-            if msg.get("img"):
-                text = (text + " " if text else "") + "[şəkil göndərildi]"
-        elif t == "load" and not msg.get("hello"):
-            kind = "open"
-            text = str(msg.get("url") or "")[:500]
-        elif t == "uploading":
-            kind = "upload"
-            text = str(msg.get("name") or "")[:120]
-        else:
-            return
-        if not text:
-            return
-        dbq("INSERT INTO chatlog(ts,room,kind,name,username,text,ip) VALUES(?,?,?,?,?,?,?)",
-            (time.time(), room, kind, str(msg.get("name") or "")[:60], str(msg.get("u") or "")[:20],
-             text, client_ip()))
-    except Exception:
-        pass   # jurnal xətası mesajın getməsini pozmasın
-
-
 def purge_logs():
     now = time.time()
     if now - LAST_LOG_PURGE[0] < 3600:
@@ -1549,7 +1539,6 @@ def purge_logs():
     cut = now - LOG_KEEP_DAYS * 86400
     dbq("DELETE FROM logins WHERE ts<?", (cut,))
     dbq("DELETE FROM visits WHERE ts<?", (cut,))
-    dbq("DELETE FROM chatlog WHERE ts<?", (cut,))
 
 
 def _admin_pw():
@@ -1582,10 +1571,10 @@ def _nostore(resp):
     return resp
 
 
-@app.route("/admin")
+@app.route("/api/admin/panel")
 def admin_page():
     if not admin_ok():
-        abort(404)   # /admin açıq giriş səhifəsi göstərmir: giriş əsas saytın şifrə xanasından edilir
+        abort(404)   # giriş olmadan heç nə göstərmir; /admin ünvanı yoxdur
     resp = send_file(os.path.join(HERE, "admin.html"))
     resp.headers["Cache-Control"] = "no-store"
     resp.headers["X-Robots-Tag"] = "noindex, nofollow"
@@ -1685,20 +1674,6 @@ def admin_visits():
     admin_guard()
     rows = dbq("SELECT ts, ip, ua FROM visits ORDER BY ts DESC LIMIT ?", (_lim(),), many=True)
     return _nostore(jsonify(visits=[dict(ts=r["ts"], ip=r["ip"], ua=r["ua"]) for r in rows]))
-
-
-@app.route("/api/admin/chats")
-def admin_chats():
-    admin_guard()
-    room = clean_room(request.args.get("room")) if request.args.get("room") else None
-    if room:
-        rows = dbq("SELECT ts,room,kind,name,username,text FROM chatlog WHERE room=? ORDER BY id DESC LIMIT ?",
-                   (room, _lim(300)), many=True)
-    else:
-        rows = dbq("SELECT ts,room,kind,name,username,text FROM chatlog ORDER BY id DESC LIMIT ?",
-                   (_lim(300),), many=True)
-    return _nostore(jsonify(chats=[dict(ts=r["ts"], room=r["room"], kind=r["kind"], name=r["name"],
-                                        username=r["username"], text=r["text"]) for r in rows]))
 
 
 @app.route("/")

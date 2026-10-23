@@ -665,6 +665,18 @@ body.invoice #vmic{display:none}
   #menu{max-width:1280px}
   #hvids .hs{width:240px}
 }
+.vb{display:inline-block;width:1.05em;height:1.05em;margin-left:4px;color:var(--rose);vertical-align:-.17em;flex:none}
+.vb svg{display:block;width:100%;height:100%}
+.hhead{padding:20px 18px 4px;display:flex;flex-direction:column;gap:3px}
+.hhead b{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.hhead span{color:var(--muted);font-size:14px}
+.tips{margin:2px 14px 16px;padding:4px;border-radius:16px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--line)}
+.tip{display:flex;align-items:center;gap:12px;padding:10px 12px}
+.tip+.tip{border-top:1px solid var(--line)}
+.tip i{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--velvet);color:var(--rose);font-size:14px}
+.tip div{min-width:0;font-size:14px;line-height:1.35;color:var(--muted)}
+.tip strong{display:block;color:var(--text);font-size:14.5px;font-weight:700}
+@media (min-width:900px){.hhead{padding:24px 22px 4px}.hhead b{font-size:21px}.tips{margin:4px 18px 20px}}
 </style>
 </head>
 <body>
@@ -926,7 +938,7 @@ function send(o){
   if(!room) return;
   sendQ = sendQ.then(() => fetch('/api/send', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {'Content-Type': 'application/json', 'X-Token': token || ''},
     body: JSON.stringify({room, id: me, msg: o})
   })).catch(() => {});
 }
@@ -976,7 +988,7 @@ function handle(m){
   else if(m.t === 'chat'){
     clearTyping(); bumpUnread();
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
-    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens});
+    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
   }
   else if(m.t === 'dlv' || m.t === 'read'){
@@ -1276,15 +1288,10 @@ function showHome(){
   showMode('home');
   const box = $('home');
   box.textContent = '';
-  const h = document.createElement('div'); h.className = 'hint';
-  [
-    'Sayt linki yaz: həmin sayta girir',
-    'yt söz yaz: YouTube-da axtarır. Məsələn: yt dəniz səsi',
-    'Telefondan video: bir nəfər yükləyir, hər ikiniz birlikdə izləyirsiniz'
-  ].forEach(s => {
-    const p = document.createElement('div'); p.textContent = s; h.appendChild(p);
-  });
-  box.appendChild(h);
+  const hd = document.createElement('div'); hd.className = 'hhead';
+  const ht = document.createElement('b'); ht.textContent = 'Birlikdə nə izləyək?';
+  const hs = document.createElement('span'); hs.textContent = 'Birini seç və ya aşağıdakı xanaya yaz';
+  hd.appendChild(ht); hd.appendChild(hs); box.appendChild(hd);
   const g = document.createElement('div'); g.className = 'tiles';
   TILES.forEach(x => {
     const el = document.createElement('div'); el.className = 'tile';
@@ -1294,6 +1301,20 @@ function showHome(){
     g.appendChild(el);
   });
   box.appendChild(g);
+  const tips = document.createElement('div'); tips.className = 'tips';
+  [
+    ['fa-link', 'Sayt linki', 'yaz, həmin sayta girir'],
+    ['fa-magnifying-glass', 'yt söz', 'YouTube-da axtarır. Məsələn: yt dəniz səsi'],
+    ['fa-mobile-screen', 'Telefondan video', 'bir nəfər yükləyir, ikiniz birlikdə izləyirsiniz']
+  ].forEach(t => {
+    const row = document.createElement('div'); row.className = 'tip';
+    const ic = document.createElement('i'); ic.className = 'fa-solid ' + t[0]; ic.setAttribute('aria-hidden', 'true');
+    const tx = document.createElement('div');
+    const st = document.createElement('strong'); st.textContent = t[1];
+    tx.appendChild(st); tx.appendChild(document.createTextNode(t[2]));
+    row.appendChild(ic); row.appendChild(tx); tips.appendChild(row);
+  });
+  box.appendChild(tips);
 }
 
 /* YouTube pleyeri: hazır olmamış gələn video növbəyə qoyulur */
@@ -1541,13 +1562,18 @@ function tickSvg(n){
 }
 const REPLY_ICON = '<i class="fa-solid fa-reply" aria-hidden="true"></i>';
 
+const VB_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function vbEl(){
+  const s = document.createElement('span'); s.className = 'vb'; s.title = 'Təsdiqlənmiş hesab'; s.innerHTML = VB_SVG;
+  return s;
+}
 function addMsg(name, text, mine, o){
   o = o || {};
   const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
   d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : '');
   if(mine) d.dataset.st = '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
-  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); d.appendChild(b);
+  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); d.appendChild(b);
   if(o.reply && o.reply.id){
     const q = document.createElement('div'); q.className = 'q';
     const qn = document.createElement('strong'); qn.textContent = String(o.reply.name || '').slice(0, 20);
@@ -1745,7 +1771,7 @@ function sendChat(){
   const id = newId();
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
-  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV});
+  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge)});
   ownState.set(id, 1);
   send({t: 'chat', id, name: myName, text: t, reply: rp, u: myU, av: myV});
   $('msg').value = ''; clearReply();
@@ -2238,11 +2264,11 @@ $('eform').addEventListener('submit', async e => {
   e.preventDefault();
   const m = emode;
   const em = $('em').value.trim().toLowerCase(), pw = $('pw').value, code = $('ecode').value.trim();
-  if(m === 'login' && !em && pw){   // gizli giriş: e-poçt boş, şifrə xanasına admin şifrəsi
+  if(m === 'login' && !em && pw){   // admin girişi: e-poçt boş, şifrə xanasına admin şifrəsi
     try{
       const ar = await fetch('/api/admin/login', {method: 'POST', credentials: 'same-origin',
         headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw})});
-      if(ar.ok){ location.href = '/admin'; return; }
+      if(ar.ok){ location.href = '/api/admin/panel'; return; }
     }catch(_){}
     loginMsg('E-poçt ünvanı düzgün deyil'); flagBad(['em']); return;
   }
@@ -2342,6 +2368,7 @@ function setAvatar(el, url, name){
 }
 function renderName(){
   $('mname').textContent = account ? account.name : '';
+  if(account && account.badge) $('mname').appendChild(vbEl());
   const hr = new Date().getHours();
   $('mgreet').textContent = hr < 5 ? 'Gecən xeyir' : hr < 12 ? 'Sabahın xeyir' : hr < 18 ? 'Günün xeyir' : 'Axşamın xeyir';
   $('muser').textContent = account && account.username ? '@' + account.username : '';
