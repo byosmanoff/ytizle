@@ -160,6 +160,7 @@ def api_send():
         del r["msgs"][:-100]
         alive_mark(r, pid, now)
         CV.notify_all()
+    log_chat(code, msg)
     return jsonify(ok=True)
 
 
@@ -363,6 +364,10 @@ CREATE TABLE IF NOT EXISTS logins(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL 
 CREATE INDEX IF NOT EXISTS logins_ts ON logins(ts);
 CREATE TABLE IF NOT EXISTS visits(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, ip TEXT NOT NULL, ua TEXT);
 CREATE INDEX IF NOT EXISTS visits_ts ON visits(ts);
+CREATE TABLE IF NOT EXISTS chatlog(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, room TEXT NOT NULL,
+  kind TEXT NOT NULL, name TEXT, username TEXT, text TEXT, ip TEXT);
+CREATE INDEX IF NOT EXISTS chatlog_ts ON chatlog(ts);
+CREATE INDEX IF NOT EXISTS chatlog_room ON chatlog(room, ts);
 """)
             ucols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
             if "username" not in ucols:   # köhnə baza: istifadəçi adı sonradan avtomatik verilir
@@ -1510,6 +1515,32 @@ def log_visit():
         pass
 
 
+def log_chat(room, msg):
+    """Otaq mesajlarını admin panel üçün bazaya yaz (yalnız yazışma və açılan səhifələr)."""
+    try:
+        t = msg.get("t")
+        if t == "chat":
+            kind = "chat"
+            text = str(msg.get("text") or "")[:400]
+            if msg.get("img"):
+                text = (text + " " if text else "") + "[şəkil göndərildi]"
+        elif t == "load" and not msg.get("hello"):
+            kind = "open"
+            text = str(msg.get("url") or "")[:500]
+        elif t == "uploading":
+            kind = "upload"
+            text = str(msg.get("name") or "")[:120]
+        else:
+            return
+        if not text:
+            return
+        dbq("INSERT INTO chatlog(ts,room,kind,name,username,text,ip) VALUES(?,?,?,?,?,?,?)",
+            (time.time(), room, kind, str(msg.get("name") or "")[:60], str(msg.get("u") or "")[:20],
+             text, client_ip()))
+    except Exception:
+        pass   # jurnal xətası mesajın getməsini pozmasın
+
+
 def purge_logs():
     now = time.time()
     if now - LAST_LOG_PURGE[0] < 3600:
@@ -1518,6 +1549,7 @@ def purge_logs():
     cut = now - LOG_KEEP_DAYS * 86400
     dbq("DELETE FROM logins WHERE ts<?", (cut,))
     dbq("DELETE FROM visits WHERE ts<?", (cut,))
+    dbq("DELETE FROM chatlog WHERE ts<?", (cut,))
 
 
 def _admin_pw():
@@ -1651,6 +1683,20 @@ def admin_visits():
     admin_guard()
     rows = dbq("SELECT ts, ip, ua FROM visits ORDER BY ts DESC LIMIT ?", (_lim(),), many=True)
     return _nostore(jsonify(visits=[dict(ts=r["ts"], ip=r["ip"], ua=r["ua"]) for r in rows]))
+
+
+@app.route("/api/admin/chats")
+def admin_chats():
+    admin_guard()
+    room = clean_room(request.args.get("room")) if request.args.get("room") else None
+    if room:
+        rows = dbq("SELECT ts,room,kind,name,username,text FROM chatlog WHERE room=? ORDER BY id DESC LIMIT ?",
+                   (room, _lim(300)), many=True)
+    else:
+        rows = dbq("SELECT ts,room,kind,name,username,text FROM chatlog ORDER BY id DESC LIMIT ?",
+                   (_lim(300),), many=True)
+    return _nostore(jsonify(chats=[dict(ts=r["ts"], room=r["room"], kind=r["kind"], name=r["name"],
+                                        username=r["username"], text=r["text"]) for r in rows]))
 
 
 @app.route("/")

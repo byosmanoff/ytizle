@@ -61,6 +61,18 @@
   <div class="cards" id="cards"></div>
 
   <section>
+    <h2>Söhbətlər və açılan səhifələr</h2>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <input id="roomFilter" placeholder="Otaq kodu (boş = hamısı)" style="max-width:220px;margin:0" maxlength="30">
+      <button id="chatRefresh" style="width:auto;padding:0 18px">Yenilə</button>
+    </div>
+    <div class="tablewrap"><table id="tChats">
+      <thead><tr><th>Vaxt</th><th>Otaq</th><th>Kim</th><th>Növ</th><th>Mətn</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section>
     <h2>İstifadəçilər</h2>
     <div class="tablewrap"><table id="tUsers">
       <thead><tr><th>Ad</th><th>İstifadəçi adı</th><th>E-poçt</th><th>Təsdiqli</th><th>Qeydiyyat</th><th>Son giriş</th><th>Son IP</th></tr></thead>
@@ -126,6 +138,7 @@ document.getElementById('logout').addEventListener('click', async () => {
 });
 
 async function loadAll(){
+  loadChats();
   try{
     const [ov, us, lg, vs] = await Promise.all([
       api('/api/admin/overview'),
@@ -170,6 +183,25 @@ async function loadAll(){
       </tr>`).join('') || '<tr><td colspan="3" class="muted">Məlumat yoxdur</td></tr>';
   }catch(x){ /* 401 artıq login ekranını göstərir */ }
 }
+
+async function loadChats(){
+  const room = document.getElementById('roomFilter').value.trim().toLowerCase();
+  try{
+    const d = await api('/api/admin/chats?limit=300' + (room ? '&room=' + encodeURIComponent(room) : ''));
+    const kinds = {chat:'mesaj', open:'səhifə açdı', upload:'video yüklədi'};
+    document.querySelector('#tChats tbody').innerHTML = d.chats.map(c => `
+      <tr>
+        <td class="muted">${fmt(c.ts)}</td>
+        <td><code>${esc(c.room)}</code></td>
+        <td>${esc(c.name||'—')}${c.username ? ' <span class="muted">@'+esc(c.username)+'</span>' : ''}</td>
+        <td class="muted">${kinds[c.kind]||esc(c.kind)}</td>
+        <td style="white-space:normal;min-width:240px;max-width:520px;word-break:break-word">${esc(c.text)}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="muted">Hələ yazışma yoxdur</td></tr>';
+  }catch(x){}
+}
+document.getElementById('chatRefresh').addEventListener('click', loadChats);
+document.getElementById('roomFilter').addEventListener('keydown', e => { if(e.key === 'Enter') loadChats(); });
+setInterval(() => { if(document.getElementById('app').style.display === 'block') loadChats(); }, 15000);
 
 (async () => {
   try{
