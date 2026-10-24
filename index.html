@@ -2717,7 +2717,7 @@ $('chat').addEventListener('click', e => {
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
 let invTimer = null;
-function startInvitePoll(){ loadInvites(); loadFriends(); if(!invTimer) invTimer = setInterval(loadInvites, 8000); }
+function startInvitePoll(){ loadInvites(); loadFriends(); if(!invTimer) invTimer = setInterval(loadInvites, 4000); }
 async function loadInvites(){
   if(!token || $('menu').style.display === 'none' || !$('profile').hidden || document.visibilityState !== 'visible') return;
   loadFriends();
