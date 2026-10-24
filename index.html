@@ -19,7 +19,7 @@
 }
 :root{--H:100dvh}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior:none}
 body{
   background:var(--velvet);color:var(--text);font-family:var(--font);
   font-size:16px;line-height:1.35;display:flex;flex-direction:column;height:var(--H);
@@ -1014,6 +1014,7 @@ function refreshStatus(){
 }
 
 let peerSet = new Map(), peerList = [];
+function peerNm(){ return peerName || (peerList[0] && peerList[0].name) || 'Qarşı tərəf'; }
 function peerLabel(w){ return w && w.name ? String(w.name).slice(0, 20) : 'Qarşı tərəf'; }
 function announcePeers(who){
   if(!Array.isArray(who)) return;
@@ -1859,7 +1860,7 @@ function sendChat(){
 let typingTimer = null, typingOn = false, lastTypingSent = 0;
 function showTyping(name){
   typingOn = true;
-  setStatus(String(name || 'Qarşı tərəf').slice(0, 20) + ' yazır...');
+  setStatus(String(name || peerNm()).slice(0, 20) + ' yazır...');
   clearTimeout(typingTimer);
   typingTimer = setTimeout(() => clearTyping(), 4000);
 }
@@ -1941,7 +1942,7 @@ function setVoiceUI(){
   $('vmute').hidden = !voiceOn; $('vleave').hidden = !voiceOn;
   if(!voiceOn || !peerVoice) $('vunmute').hidden = true;
   $('vtext').textContent = {
-    invite: (peerName || 'Qarşı tərəf') + ' səsli otaqdadır',
+    invite: peerNm() + ' səsli otaqdadır',
     wait: 'Qarşı tərəfi gözləyirəm...',
     conn: 'Qoşulur...',
     live: 'Səsli söhbət ' + mmss(vStart ? Date.now() - vStart : 0),
@@ -2083,7 +2084,7 @@ function voiceMsg(m){
     peerVoice = true; peerId = String(m.from || ''); peerName = String(m.name || '').slice(0, 20);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
     $('vpPeer').classList.toggle('muted', !!m.muted);
-    if(!m.re && !voiceOn) sysMsg((peerName || 'Qarşı tərəf') + ' səsli otağa girdi');
+    if(!m.re && !voiceOn) sysMsg(peerNm() + ' səsli otağa girdi');
     if(voiceOn && !m.re) voiceHello(true);     // mən də buradayam
     setVoiceUI();
     maybeCall();
@@ -2091,7 +2092,7 @@ function voiceMsg(m){
     if(m.from && peerId && m.from !== peerId) return;
     peerVoice = false; closeRtc();
     $('vpPeer').classList.remove('muted');
-    sysMsg('Qarşı tərəf səsli otaqdan çıxdı');
+    sysMsg(peerNm() + ' səsli otaqdan çıxdı');
     setVoiceUI();
   }
 }
@@ -2939,18 +2940,25 @@ async function boot(){
 boot();
 </script>
 <script>
-/* Klaviatura açılanda ekran yuxarı sürüşməsin: hündürlük görünən sahəyə bərabərləşir */
+/* Klaviatura açılanda ekran yuxarı sürüşməsin: otaq həmişə görünən sahəyə yapışır (Android + iPhone) */
 (function(){
-  var vv = window.visualViewport, root = document.documentElement;
+  var vv = window.visualViewport, root = document.documentElement, app = document.getElementById('app');
   function fit(){
-    var h = (vv && vv.scale <= 1.02) ? vv.height : window.innerHeight;
+    var zoomed = vv && vv.scale > 1.02;
+    var h = (vv && !zoomed) ? vv.height : window.innerHeight;
     root.style.setProperty('--H', Math.round(h) + 'px');
     var se = document.scrollingElement;
     if(window.scrollY || (se && se.scrollTop)) window.scrollTo(0, 0);
+    /* iPhone: brauzer görünən sahəni yuxarı sürüşdürür (offsetTop), otağı eyni qədər aşağı çəkirik */
+    var t = (vv && !zoomed) ? Math.round(vv.offsetTop) : 0;
+    if(app) app.style.transform = t > 0 ? 'translateY(' + t + 'px)' : '';
   }
   fit();
   window.addEventListener('resize', fit);
+  window.addEventListener('scroll', fit, {passive: true});
   window.addEventListener('orientationchange', function(){ setTimeout(fit, 250); });
+  document.addEventListener('focusin', function(){ fit(); setTimeout(fit, 120); setTimeout(fit, 400); });
+  document.addEventListener('focusout', function(){ setTimeout(fit, 120); setTimeout(fit, 400); });
   if(vv){ vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 })();
 </script>
