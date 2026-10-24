@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#150a1d">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Birlikdə İzlə">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Birlikdə İzlə</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -715,6 +721,65 @@ body.invoice #vmic{display:none}
 #pbAct:disabled{opacity:.55}
 .m:not(.me) b{cursor:pointer}
 #status[data-on="1"]{cursor:pointer}
+
+/* ================= Rollar, stiker/GIF, statistika, seanslar, PWA ================= */
+#codebar button[hidden]{display:none}
+@media (max-width:420px){#codebar button{width:27px;height:27px}#codebar b{letter-spacing:.12em;font-size:15px}}
+.composer{gap:5px}
+.composer button{width:38px;height:38px}
+#ctlock{display:none;position:absolute;inset:0;z-index:4;background:transparent}
+#ctbadge{display:none;position:absolute;left:10px;top:10px;z-index:5;padding:4px 10px;border-radius:999px;background:rgba(20,8,29,.78);color:#fff;font-size:12px;font-weight:700;pointer-events:none}
+body.viewer-lock #ctlock,body.viewer-lock #ctbadge{display:block}
+body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-lock #homebtn{opacity:.45;pointer-events:none}
+#rolebox,#planbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+  background:rgba(10,4,16,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#rolebox[hidden],#planbox[hidden]{display:none}
+@media (min-width:700px){#rolebox,#planbox{align-items:center}}
+#rolebox .lv-card,#planbox .lv-card{max-height:86dvh;overflow-y:auto}
+.lv-btns button.alt{background:var(--seat-2);color:var(--text)}
+.fb.sec{background:var(--seat-2);color:var(--text)}
+#planbox input{width:100%;height:48px;padding:0 14px;margin-bottom:8px;border-radius:12px;background:var(--velvet-2);color:var(--text);
+  box-shadow:inset 0 0 0 1.5px var(--line);color-scheme:dark;transition:box-shadow .15s ease}
+#planbox input:focus{box-shadow:inset 0 0 0 2px var(--rose)}
+#plmsg{min-height:20px;margin-bottom:10px;font-size:14px;font-weight:500;color:#ff8fae}
+.chip.on{background:var(--rose-deep);color:#fff}
+#stkpanel{flex:none;margin:0 12px 6px;border-radius:16px;background:var(--seat);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+#stkpanel[hidden],#gifwrap[hidden],#stkgrid[hidden]{display:none}
+.stabs{display:flex;gap:6px;padding:8px 8px 0}
+.stabs button{flex:1;padding:8px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:14px}
+.stabs button.on{background:var(--seat-2);color:var(--text)}
+#stkgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:8px;max-height:190px;overflow-y:auto}
+#stkgrid button{font-size:30px;line-height:1;padding:6px 0;border-radius:12px;background:transparent}
+#stkgrid button:hover{background:var(--seat-2)}
+#gifwrap{padding:8px}
+#gifq{width:100%;height:40px;padding:0 14px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line);margin-bottom:8px}
+#gifgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:170px;overflow-y:auto}
+#gifgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;background:var(--velvet-2)}
+.m.stkm,.m.stkm.me{background:none;padding:2px 6px}
+.m.stkm.me b{color:var(--muted)}
+.stk{display:block;font-size:56px;line-height:1.15}
+@media (min-width:1024px){.side #stkpanel{margin:0 14px 6px}}
+#pbbio{color:var(--text);font-size:14px;line-height:1.4;margin:0 0 10px;opacity:.9}
+#pbbio:empty{display:none}
+.wsum{font-size:17px;font-weight:700;line-height:1.35;margin-bottom:14px}
+.wsum em{font-style:normal;color:var(--rose)}
+.wbars{display:flex;align-items:flex-end;gap:6px;height:64px;margin-bottom:6px}
+.wbars div{flex:1;display:flex;align-items:flex-end;height:100%}
+.wbars i{display:block;width:100%;min-height:3px;border-radius:6px 6px 3px 3px;background:linear-gradient(var(--rose),var(--rose-deep))}
+.wlab{display:flex;gap:6px;font-size:11px;color:var(--muted);text-align:center}
+.wlab span{flex:1}
+.wmini{margin-top:10px;font-size:13px;color:var(--muted)}
+.wmini b{color:var(--text)}
+.pl{padding:10px 0;border-bottom:1px solid var(--line)}
+.pl:last-child{border-bottom:0}
+.pl-h{display:flex;align-items:center;gap:12px}
+.pl-d{flex:none;min-width:54px;text-align:center;padding:6px 8px;border-radius:12px;background:var(--paper);color:var(--ink);font-weight:800;font-size:12px;line-height:1.2;text-transform:uppercase}
+.pl-d b{display:block;font-size:20px}
+.pl.soon .pl-d{background:var(--amber)}
+.pl-t{flex:1;min-width:0;font-size:15px;font-weight:700;overflow-wrap:anywhere}
+.pl-t small{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted)}
+.pl-g{margin-top:6px;font-size:12px;color:var(--muted)}
+.pl-b{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -792,7 +857,26 @@ body.invoice #vmic{display:none}
     <div class="stat"><b id="str">0</b><small><i class="fa-solid fa-door-open" aria-hidden="true"></i>otaq</small></div>
     <div class="stat now"><b id="stl">0</b><small><i class="fa-solid fa-circle live-dot" aria-hidden="true"></i>indi izləyir</small></div>
   </div>
-  </div><div class="mcol mright">
+  <div class="card" id="pwacard" hidden>
+    <h2><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>Tətbiq kimi quraşdır</h2>
+    <div class="hint" id="pwahint"></div>
+    <button class="pbtn" id="pwainst" hidden style="width:100%;padding:13px">Ana ekrana əlavə et</button>
+  </div></div><div class="mcol mright">
+  <div class="card" id="plansCard">
+    <h2><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Planlı seanslar</h2>
+    <div id="plans"></div>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <button class="pbtn" id="plnew" style="flex:1"><i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni seans</button>
+      <button class="pbtn alt" id="plnotif" hidden><i class="fa-solid fa-bell" aria-hidden="true"></i> Bildirişlər</button>
+    </div>
+  </div>
+  <div class="card" id="statsCard">
+    <h2><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>İzləmə statistikası</h2>
+    <div class="wsum" id="wsum"></div>
+    <div class="wbars" id="wbars"></div>
+    <div class="wlab" id="wlab"></div>
+    <div class="wmini" id="wmini"></div>
+  </div>
   <div class="card" id="friendsCard">
     <h2><i class="fa-solid fa-user-group" aria-hidden="true"></i>Dostlar</h2>
     <input id="fq" placeholder="İstifadəçi adı ilə axtar" maxlength="21" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı ilə axtar">
@@ -830,6 +914,10 @@ body.invoice #vmic{display:none}
       <label for="puser">İstifadəçi adı</label>
       <div class="frow"><span class="at">@</span><input id="puser" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pbtn" id="pusersave" disabled>Saxla</button></div>
       <div class="hint" id="puserhint">Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.</div>
+    </div>
+    <div class="fld">
+      <label for="pbio">Haqqında</label>
+      <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave">Saxla</button></div>
     </div>
   </div>
   <div class="card">
@@ -877,7 +965,7 @@ body.invoice #vmic{display:none}
 <div class="stage">
   <div id="top">
     <div id="status" data-on="0">Qoşulur...</div>
-    <div id="codebar"><span class="lbl">Otaq kodu:</span> <b id="code"></b> <button id="copy" aria-label="Dəvət linkini göndər" title="Dəvət linkini göndər"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i></button> <button id="invite" aria-label="İstifadəçi adı ilə dəvət et" title="İstifadəçi adı ilə dəvət et"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></button> <button id="lock" aria-label="Otağı kilidlə" title="Otağı kilidlə"><i class="fa-solid fa-lock" aria-hidden="true"></i></button> <button id="leave" aria-label="Otaqdan çıx" title="Otaqdan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button></div>
+    <div id="codebar"><span class="lbl">Otaq kodu:</span> <b id="code"></b> <button id="copy" aria-label="Dəvət linkini göndər" title="Dəvət linkini göndər"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i></button> <button id="invite" aria-label="İstifadəçi adı ilə dəvət et" title="İstifadəçi adı ilə dəvət et"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></button> <button id="members" aria-label="Otaqdakılar və rollar" title="Otaqdakılar və rollar"><i class="fa-solid fa-users" aria-hidden="true"></i></button> <button id="lock" aria-label="Otağı kilidlə" title="Otağı kilidlə"><i class="fa-solid fa-lock" aria-hidden="true"></i></button> <button id="leave" aria-label="Otaqdan çıx" title="Otaqdan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button></div>
   </div>
   <div id="player">
     <div id="ytbox"><div id="yt"></div></div>
@@ -886,6 +974,8 @@ body.invoice #vmic{display:none}
       sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
     <div id="ytres"></div>
     <div id="home"></div>
+    <div id="ctlock"></div>
+    <div id="ctbadge"><i class="fa-solid fa-crown" aria-hidden="true"></i> Yalnız host idarə edir</div>
     <button id="tap"><i class="fa-solid fa-play" aria-hidden="true"></i> Videonu başlat</button>
     <button id="pickfile" type="button"></button>
     <input type="file" id="lfile" accept="video/*,.mp4,.m4v,.mov,.webm" hidden>
@@ -923,11 +1013,22 @@ body.invoice #vmic{display:none}
     <div class="rb-body"><strong id="rbName"></strong><span id="rbText"></span></div>
     <button id="rbX" aria-label="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </div>
+  <div id="stkpanel" hidden>
+    <div class="stabs"><button id="tabStk" class="on" type="button">Stikerlər</button><button id="tabGif" type="button">GIF</button></div>
+    <div id="stkgrid"></div>
+    <div id="gifwrap" hidden>
+      <input id="gifq" placeholder="GIF axtar" maxlength="50" autocomplete="off" aria-label="GIF axtar">
+      <div id="gifgrid"></div>
+      <div class="hint" id="gifhint"></div>
+      <button class="pbtn alt" id="gifup" type="button" style="width:100%;margin-top:6px">Qalereyadan GIF göndər</button>
+    </div>
+  </div>
   <input type="file" id="imgfile" accept="image/*" hidden>
   <audio id="raudio" autoplay playsinline></audio>
   <div class="bar composer">
     <button id="vmic" aria-label="Səsli söhbətə qoşul"><i class="fa-solid fa-microphone" aria-hidden="true"></i></button>
     <button id="imgbtn" aria-label="Şəkil göndər"><i class="fa-solid fa-image" aria-hidden="true"></i></button>
+    <button id="stkbtn" aria-label="Stiker və GIF"><i class="fa-regular fa-face-smile" aria-hidden="true"></i></button>
     <input id="msg" placeholder="Mesaj yaz..." autocomplete="off" maxlength="400" enterkeyhint="send">
     <button id="send" class="pink" aria-label="Göndər"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
   </div>
@@ -940,6 +1041,7 @@ body.invoice #vmic{display:none}
     <div class="av big" id="pbav">?</div>
     <h2 id="pbname"></h2>
     <div id="pbuser"></div>
+    <div id="pbbio"></div>
     <div id="pbrel" role="status"></div>
     <div class="lv-btns">
       <button id="pbClose">Bağla</button>
@@ -959,6 +1061,31 @@ body.invoice #vmic{display:none}
       <button id="invNo">Bağla</button>
       <button id="invYes">Göndər</button>
     </div>
+  </div>
+</div>
+
+<div id="rolebox" hidden role="dialog" aria-modal="true" aria-labelledby="rbTitle">
+  <div class="lv-card">
+    <h2 id="rbTitle">Otaqdakılar</h2>
+    <div id="rolelist"></div>
+    <label class="swrow" for="honly" style="margin-top:14px">
+      <span><b>Yalnız host idarə edir</b><small id="honlyhint"></small></span>
+      <input type="checkbox" id="honly" class="sw">
+    </label>
+    <div class="lv-btns" style="margin-top:16px"><button class="alt" id="roleClose">Bağla</button></div>
+  </div>
+</div>
+
+<div id="planbox" hidden role="dialog" aria-modal="true" aria-labelledby="plTitle">
+  <div class="lv-card">
+    <h2 id="plTitle">Yeni seans</h2>
+    <p>Tarix seç, dostlarını dəvət et. Vaxtı çatanda otağı sən başladırsan, dostlara dəvət gedir.</p>
+    <input id="pltitle" maxlength="40" placeholder="Nə izləyirik? (məs. Cümə filmi)" autocomplete="off">
+    <input id="pldate" type="datetime-local" aria-label="Tarix və saat">
+    <div class="fsub">Dostları dəvət et</div>
+    <div id="plfr" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px"></div>
+    <div id="plmsg" role="status"></div>
+    <div class="lv-btns"><button class="alt" id="plNo">Bağla</button><button id="plYes" style="background:var(--rose-deep);color:#fff">Planla</button></div>
   </div>
 </div>
 
@@ -986,6 +1113,9 @@ let room = '', me = Math.random().toString(36).slice(2, 10);
 let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resolve();
 let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
 const hist = [];
+let myRole = 'viewer', hostOnly = false, rv = -1, roleMap = {};
+const CTRL_T = ['play', 'pause', 'seek', 'sync', 'load', 'wv'];
+const canCtl = () => !hostOnly || myRole !== 'viewer';
 const vid = $('vid'), web = $('web');
 function mute(ms){ ignoreUntil = Math.max(ignoreUntil, Date.now() + ms); }
 function ignoring(){ return Date.now() < ignoreUntil; }
@@ -1002,6 +1132,7 @@ function sysMsg(t){
 /* ---------- Server vasitəsilə əlaqə ---------- */
 function send(o){
   if(!room) return;
+  if(CTRL_T.includes(o.t) && !canCtl()) return;   // yalnız host idarə edir rejimi
   sendQ = sendQ.then(() => fetch('/api/send', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'X-Token': token || ''},
@@ -1078,9 +1209,10 @@ function handle(m){
   if(m.t === 'typing'){ learnPeerName(m.name); showTyping(m.name); }
   else if(m.t === 'fly'){ if(REACTS.includes(m.e)) flyEmoji(m.e); }
   else if(m.t === 'chat'){
+    if(m.id && msgEls.has(m.id)) return;
     clearTyping(); bumpUnread(); learnPeerName(m.name);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
-    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1});
+    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
   }
   else if(m.t === 'dlv' || m.t === 'read'){
@@ -1131,7 +1263,7 @@ async function pollLoop(){
     const to = setTimeout(() => ac.abort(), 35000); // server 20 san gözləyir; ondan uzun asılıbsa kəs
     try{
       const r = await fetch('/api/poll?room=' + encodeURIComponent(room) + '&id=' + me +
-        '&since=' + since + '&pc=' + pc + '&lk=' + (isLocked ? 1 : 0) + '&nm=' + encodeURIComponent(String(myName || '').slice(0, 20)),
+        '&since=' + since + '&pc=' + pc + '&rv=' + rv + '&lk=' + (isLocked ? 1 : 0) + '&nm=' + encodeURIComponent(String(myName || '').slice(0, 20)),
         {cache: 'no-store', signal: ac.signal, headers: {'X-Token': token || ''}});
       if(r.status === 403){
         setStatus('Otaq kilidlidir, bu cihaz üzv deyil');
@@ -1142,6 +1274,7 @@ async function pollLoop(){
       const d = await r.json();
       if(gen !== pollGen) return;
       since = d.seq;
+      applyRoles(d);
       if(typeof d.video === 'string' && !curUrl && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(d.video)) loadPage(location.origin + d.video, true);
       if(offline){ offline = false; refreshStatus(); }
       if(roomEpoch !== null && d.epoch !== roomEpoch){
@@ -1231,7 +1364,7 @@ async function enterRoom(code, create){
   while(true){
     try{
       if(create){
-        const rc = await fetch('/api/create', {method: 'POST'});
+        const rc = await fetch('/api/create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: me})});
         if(!rc.ok) throw new Error('create ' + rc.status);
         code = (await rc.json()).room;
         create = false;
@@ -1257,6 +1390,7 @@ async function enterRoom(code, create){
       since = d.seq;
       roomEpoch = d.epoch;
       isLocked = !!d.locked;
+      myRole = d.role || 'viewer'; hostOnly = !!d.hostonly; rv = typeof d.rv === 'number' ? d.rv : -1; roleMap = {};
       joinVideo = typeof d.video === 'string' ? d.video : null;
       room = code;
       try{ localStorage.setItem('wt_me_' + code, me); }catch(e){}
@@ -1275,6 +1409,7 @@ async function enterRoom(code, create){
   showHome();
   setStatus('Sevgilini gözləyirəm...');
   if(joinVideo && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(joinVideo)) loadPage(location.origin + joinVideo, true);
+  await wait(loadChatHistory(), 4000);
   pollLoop();
 }
 
@@ -1329,6 +1464,7 @@ function showMode(m){
   $('ytres').style.display = m === 'ytres' ? 'block' : 'none';
   $('home').style.display = m === 'home' ? 'block' : 'none';
   kind = m;
+  updateRoleUI();
 }
 function setFile(url){
   if(hls){ hls.destroy(); hls = null; }
@@ -1344,6 +1480,7 @@ let upXhr = null;
 function uploadLocal(f){
   if(!f) return;
   if(!room){ sysMsg('Əvvəlcə otağa qoşul'); return; }
+  if(!canCtl()){ sysMsg('Yalnız host və moderatorlar video yükləyə bilər'); return; }
   if(upXhr){ sysMsg('Başqa video hələ yüklənir'); return; }
   const b = $('pickfile'), xhr = new XMLHttpRequest();
   upXhr = xhr;
@@ -1476,6 +1613,7 @@ async function ytSearch(q){
 let navSeq = 0;
 function loadPage(url, remote, tries = 0){
   if(typeof url !== 'string' || !url) return;
+  if(!remote && !canCtl()){ sysMsg('Yalnız host və moderatorlar video seçə bilər'); return; }
   const my = tries ? navSeq : ++navSeq;
   const id = ytId(url);
   curUrl = url;
@@ -1650,7 +1788,7 @@ const msgEls = new Map(), ownState = new Map();
 const LABELS = {1: 'Göndərildi', 2: 'Görüldü', 3: 'Oxundu'};
 let replyTo = null, mseq = 0;
 const newId = () => me.slice(0, 4) + Date.now().toString(36) + (mseq++).toString(36);
-const fmtTime = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const fmtTime = ts => { const d = ts ? new Date(ts * 1000) : new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 function tickSvg(n){
   return n < 2 ? '<i class="fa-solid fa-check" aria-hidden="true"></i>' : '<i class="fa-solid fa-check-double" aria-hidden="true"></i>';
 }
@@ -1664,8 +1802,8 @@ function vbEl(){
 function addMsg(name, text, mine, o){
   o = o || {};
   const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
-  d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : '');
-  if(mine) d.dataset.st = '1';
+  d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : o.gif ? 'GIF' : o.stk ? String(o.stk) : '');
+  if(mine) d.dataset.st = o.hist ? '3' : '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
   const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); d.appendChild(b);
   if(!mine) b.onclick = () => openPeerCard(peerForMsg(o.u, name));
@@ -1678,12 +1816,17 @@ function addMsg(name, text, mine, o){
     d.appendChild(q);
   }
   if(o.img && (o.local || IMG_URL_RE.test(o.img))) d.appendChild(imgBox(o.img, !!o.sens, mine));
+  if(typeof o.gif === 'string' && GIF_RE.test(o.gif)) d.appendChild(imgBox(o.gif, false, mine));
+  if(typeof o.stk === 'string' && o.stk && o.stk.length <= 8){
+    d.classList.add('stkm');
+    const sk = document.createElement('span'); sk.className = 'stk'; sk.textContent = o.stk; d.appendChild(sk);
+  }
   if(text){ const s = document.createElement('span'); s.textContent = text; d.appendChild(s); }
   const meta = document.createElement('div'); meta.className = 'meta';
-  const tm = document.createElement('span'); tm.textContent = fmtTime(); meta.appendChild(tm);
+  const tm = document.createElement('span'); tm.textContent = fmtTime(o.ts); meta.appendChild(tm);
   if(mine){
     const lb = document.createElement('span'); lb.className = 'lab';
-    const tk = document.createElement('span'); tk.className = 'tick'; tk.innerHTML = tickSvg(1);
+    const tk = document.createElement('span'); tk.className = 'tick'; tk.innerHTML = tickSvg(o.hist ? 3 : 1);
     meta.appendChild(lb); meta.appendChild(tk);
   }
   d.appendChild(meta);
@@ -1775,7 +1918,7 @@ setInterval(flushRead, 1500);   // gözləyən "oxundu"lar heç vaxt ilişib qal
 document.addEventListener('visibilitychange', () => setTimeout(flushRead, 150));
 
 /* ---------- Şəkil göndərmə (həssas məzmun xəbərdarlığı ilə) ---------- */
-const IMG_URL_RE = /^\/if\/[a-z0-9-]+\/[0-9a-f]{16}\.jpg$/;
+const IMG_URL_RE = /^\/if\/[a-z0-9-]+\/[0-9a-f]{16}\.(jpg|gif)$/;
 function openLightbox(url){ const lb = $('lightbox'); lb.querySelector('img').src = url; lb.hidden = false; }
 $('lightbox').onclick = () => { $('lightbox').hidden = true; $('lightbox').querySelector('img').src = ''; };
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('lightbox').hidden) $('lightbox').onclick(); });
@@ -1841,7 +1984,7 @@ $('imgfile').onchange = async () => {
   const f = $('imgfile').files[0]; $('imgfile').value = '';
   if(!f || !room) return;
   let blob;
-  try{ blob = await shrinkImage(f); }catch(e){ sysMsg('Şəkil açıla bilmədi'); return; }
+  try{ blob = (f.type === 'image/gif' && f.size <= 6 * 1024 * 1024) ? f : await shrinkImage(f); }catch(e){ sysMsg('Şəkil açıla bilmədi'); return; }
   const id = newId(), local = URL.createObjectURL(blob);
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
@@ -2149,6 +2292,8 @@ async function leaveRoom(){
     }), 2000);
   }catch(e){}
   // vəziyyəti sıfırla
+  flushWatch(); myRole = 'viewer'; hostOnly = false; rv = -1; roleMap = {};
+  $('rolebox').hidden = true; $('stkpanel').hidden = true; document.body.classList.remove('viewer-lock'); $('lock').hidden = false;
   room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null; peerSet = new Map(); peerList = [];
   curUrl = null; navAt = 0; lastAt = 0; ytPending = null; hist.length = 0; autoNavs = []; autoWarned = false;
   showMode('home');                              // video / sayt dayansın
@@ -2453,7 +2598,7 @@ function showMenu(){
   $('app').style.display = 'none';
   $('menu').style.display = 'flex';
   renderName();
-  loadHistory();
+  loadHistory(); loadStats(); showInstall();
   $('mquote').textContent = '“' + DAILY[Math.floor(Date.now() / 864e5) % DAILY.length] + '”';
   fetch('/api/stats', {cache: 'no-store'}).then(r => r.json()).then(d => { $('stl').textContent = d.people; }).catch(() => {});
 }
@@ -2666,6 +2811,7 @@ function fillPeerHead(p){
   setAvatar($('pbav'), AV_RE.test(p.avatar || '') ? p.avatar : '', p.name);
   const n = $('pbname'); n.textContent = p.name || 'Qarşı tərəf'; if(p.badge) n.appendChild(vbEl());
   $('pbuser').textContent = p.username ? '@' + p.username : '';
+  $('pbbio').textContent = p.bio || '';
 }
 function setPeerRel(rel){
   const a = $('pbAct'), t = $('pbrel');
@@ -2717,7 +2863,7 @@ $('chat').addEventListener('click', e => {
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
 let invTimer = null;
-function startInvitePoll(){ loadInvites(); loadFriends(); if(!invTimer) invTimer = setInterval(loadInvites, 4000); }
+function startInvitePoll(){ loadInvites(); loadFriends(); loadPlans(); if(!invTimer) invTimer = setInterval(() => { loadInvites(); if(++planTick % 4 === 0) loadPlans(); }, 4000); }
 async function loadInvites(){
   if(!token || $('menu').style.display === 'none' || !$('profile').hidden || document.visibilityState !== 'visible') return;
   loadFriends();
@@ -2772,6 +2918,7 @@ function fillProfile(){
   if(document.activeElement !== $('pname')) $('pname').value = account.name || '';
   if(document.activeElement !== $('puser')) $('puser').value = account.username || '';
   $('pemail').value = account.email || '';
+  if(document.activeElement !== $('pbio')) $('pbio').value = account.bio || '';
   $('pcurrow').hidden = !account.has_pw;
   $('pwtitle').textContent = account.has_pw ? 'Şifrəni dəyiş' : 'Şifrə qoy';
   $('pusersave').disabled = true;
@@ -2949,6 +3096,337 @@ $('clearhist').onclick = async () => {
   try{ await api('/api/history/clear', {method: 'POST'}); }catch(e){}
   loadHistory();
 };
+
+/* =====================================================================
+   Rollar, stiker/GIF, mesaj tarixçəsi, statistika, planlı seanslar, bio, PWA
+   ===================================================================== */
+
+/* ---------- Otaq rolları ---------- */
+function applyRoles(d){
+  const old = myRole, oldHO = hostOnly;
+  if(d.roles){ roleMap = d.roles; if(d.roles[me]) myRole = d.roles[me]; }
+  if(typeof d.hostonly === 'boolean') hostOnly = d.hostonly;
+  if(typeof d.rv === 'number') rv = d.rv;
+  if(old !== myRole) sysMsg(myRole === 'mod' ? 'Sən moderator oldun' : myRole === 'host' ? 'Sən host oldun' : 'Moderatorluğun alındı');
+  if(oldHO !== hostOnly) sysMsg(hostOnly ? 'İndi yalnız host və moderatorlar videonu idarə edir' : 'İndi hamı videonu idarə edə bilər');
+  updateRoleUI();
+}
+function updateRoleUI(){
+  $('lock').hidden = myRole === 'viewer';
+  document.body.classList.toggle('viewer-lock', !canCtl() && (kind === 'yt' || kind === 'file' || kind === 'web'));
+  if(!$('rolebox').hidden) renderRoles();
+}
+const roleName = r => r === 'host' ? 'Host' : r === 'mod' ? 'Moderator' : 'İzləyici';
+function renderRoles(){
+  const box = $('rolelist'); box.textContent = '';
+  const mine = {id: me, name: myName, username: account && account.username, avatar: account && account.avatar, badge: account && account.badge, me: true};
+  [mine].concat(peerList).forEach(p => {
+    const r = p.me ? myRole : (roleMap[p.id] || 'viewer'), btns = [];
+    if(myRole === 'host' && !p.me){
+      btns.push(r === 'mod' ? frBtn('Moderatorluğu al', 'sec', () => setRole(p.id, 'viewer')) : frBtn('Moderator et', '', () => setRole(p.id, 'mod')));
+    }
+    box.appendChild(frRow({name: p.name || 'Qonaq', username: p.username || '', avatar: p.avatar || '', badge: p.badge}, roleName(r) + (p.me ? ' · sən' : ''), btns));
+  });
+  $('honly').checked = hostOnly; $('honly').disabled = myRole !== 'host';
+  $('honlyhint').textContent = myRole === 'host'
+    ? (hostOnly ? 'Açıq: yalnız sən və moderatorlar videonu idarə edir.' : 'Bağlı: hər kəs videonu idarə edə bilər.')
+    : (hostOnly ? 'Açıq: videonu yalnız host və moderatorlar idarə edir.' : 'Bağlı: hər kəs videonu idarə edə bilər.');
+}
+async function roleCall(path, body){
+  const r = await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.assign({room, id: me}, body))});
+  if(!r.ok) throw new Error('role ' + r.status);
+}
+async function setRole(target, role){
+  try{ await roleCall('/api/role', {target, role}); roleMap[target] = role === 'mod' ? 'mod' : 'viewer'; renderRoles(); }
+  catch(e){ sysMsg('Rol dəyişmədi, yenidən cəhd et'); }
+}
+$('honly').onchange = async () => {
+  const on = $('honly').checked;
+  try{ await roleCall('/api/hostonly', {on}); hostOnly = on; updateRoleUI(); }
+  catch(e){ $('honly').checked = !on; sysMsg('Rejim dəyişmədi, yenidən cəhd et'); }
+};
+$('members').onclick = () => { if(!room) return; renderRoles(); $('rolebox').hidden = false; };
+$('roleClose').onclick = () => { $('rolebox').hidden = true; };
+$('rolebox').addEventListener('click', e => { if(e.target === $('rolebox')) $('rolebox').hidden = true; });
+
+/* ---------- Mesaj tarixçəsi ---------- */
+async function loadChatHistory(){
+  try{
+    const r = await fetch('/api/chat/history?room=' + encodeURIComponent(room) + '&id=' + encodeURIComponent(me), {cache: 'no-store'});
+    if(!r.ok) return;
+    const list = (await r.json()).msgs || [];
+    if(!list.length) return;
+    list.forEach(m => {
+      if(m.id && msgEls.has(m.id)) return;
+      const mine = !!m.mine;
+      addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
+        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, ts: m.ts, hist: true});
+      if(mine && m.id) ownState.set(m.id, 3);
+    });
+    sysMsg('Əvvəlki söhbət burada bitir');
+  }catch(e){}
+}
+
+/* ---------- Stikerlər və GIF ---------- */
+const STICKERS = ['😂','😍','🥰','😭','😮','🔥','👏','❤️','💔','😴','🤯','🥳','🍿','🎬','👀','🙈','😘','🤗','😎','🤔','👍','🙏','💋','✨'];
+const GIF_RE = /^https:\/\/media\d*\.giphy\.com\/[\w\-\/.=]+\.gif(\?[\w=&\-.%]*)?$/;
+let gifSeq = 0, gifTimer = null, gifInit = false;
+function sendRich(extra){
+  if(!room) return;
+  const id = newId();
+  const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
+  const myU = (account && account.username) || '', myV = myAvVer();
+  addMsg(myName, '', true, Object.assign({id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge)}, extra));
+  ownState.set(id, 1);
+  send(Object.assign({t: 'chat', id, name: myName, text: '', reply: rp, u: myU, av: myV}, extra));
+  clearReply(); $('stkpanel').hidden = true;
+}
+function buildStickers(){
+  const g = $('stkgrid'); if(g.firstChild) return;
+  STICKERS.forEach(s => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = s; b.setAttribute('aria-label', 'Stiker ' + s);
+    b.onclick = () => sendRich({stk: s}); g.appendChild(b);
+  });
+}
+function stkTab(gif){
+  $('tabStk').classList.toggle('on', !gif); $('tabGif').classList.toggle('on', gif);
+  $('stkgrid').hidden = gif; $('gifwrap').hidden = !gif;
+  if(gif && !gifInit){ gifInit = true; loadGifs(''); }
+}
+async function loadGifs(q){
+  const my = ++gifSeq, g = $('gifgrid'), h = $('gifhint');
+  g.textContent = ''; h.textContent = 'Yüklənir...';
+  try{
+    const r = await fetch('/api/gif?q=' + encodeURIComponent(q || ''), {cache: 'no-store'});
+    if(my !== gifSeq) return;
+    if(r.status === 503){ h.textContent = 'GIF axtarışı hələ qurulmayıb. Qalereyadan GIF göndərə bilərsən.'; return; }
+    if(!r.ok) throw new Error('gif');
+    const list = (await r.json()).gifs || [];
+    h.textContent = list.length ? '' : 'Heç nə tapılmadı';
+    list.forEach(x => {
+      if(!GIF_RE.test(x.s) || !GIF_RE.test(x.u)) return;
+      const im = document.createElement('img'); im.src = x.s; im.loading = 'lazy'; im.alt = 'GIF';
+      im.onclick = () => sendRich({gif: x.u}); g.appendChild(im);
+    });
+  }catch(e){ if(my === gifSeq) h.textContent = 'GIF yüklənmədi, yenidən cəhd et'; }
+}
+$('stkbtn').onclick = () => { if(!room) return; buildStickers(); $('stkpanel').hidden = !$('stkpanel').hidden; };
+$('tabStk').onclick = () => stkTab(false);
+$('tabGif').onclick = () => stkTab(true);
+$('gifq').addEventListener('input', () => { clearTimeout(gifTimer); gifTimer = setTimeout(() => loadGifs($('gifq').value.trim()), 400); });
+$('gifup').onclick = () => { $('stkpanel').hidden = true; $('imgfile').click(); };
+
+/* ---------- İzləmə statistikası ---------- */
+let wAcc = 0, wTog = 0;
+const localDay = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
+function flushWatch(){
+  if(!wAcc || !token) return;
+  const body = JSON.stringify({secs: wAcc, tog: wTog, day: localDay()});
+  wAcc = 0; wTog = 0;
+  api('/api/watch', {method: 'POST', body, keepalive: true}).catch(() => {});
+}
+setInterval(() => {
+  if(!token || !room || (kind !== 'yt' && kind !== 'file') || document.visibilityState !== 'visible' || !isPlaying()) return;
+  wAcc++; if(connected && pc > 0) wTog++;
+  if(wAcc >= 30) flushWatch();
+}, 1000);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') flushWatch(); });
+function fmtDur(s){
+  const m = Math.round(s / 60);
+  if(m < 60) return m + ' dəq';
+  const h = Math.floor(m / 60), mm = m % 60;
+  return h + ' saat' + (mm && h < 10 ? ' ' + mm + ' dəq' : '');
+}
+async function loadStats(){
+  if(!token) return;
+  try{
+    const r = await api('/api/watch/stats?today=' + localDay());
+    if(r.ok) renderStats(await r.json());
+  }catch(e){}
+}
+function renderStats(d){
+  const s = $('wsum'); s.textContent = '';
+  const add = (t, em) => { const n = em ? document.createElement('em') : document.createTextNode(t); if(em) n.textContent = t; s.appendChild(n); };
+  if(d.month_tog >= 60){ add('Bu ay birlikdə '); add(fmtDur(d.month_tog), 1); add(' izlədiniz'); }
+  else if(d.month >= 60){ add('Bu ay '); add(fmtDur(d.month), 1); add(' izlədin'); }
+  else add('Bu ay hələ birlikdə izləməmisiniz. İlk filmi başlat!');
+  const bars = $('wbars'), lab = $('wlab'); bars.textContent = ''; lab.textContent = '';
+  const mx = Math.max(60, ...d.days.map(x => x.s));
+  d.days.forEach(x => {
+    const c = document.createElement('div'), i = document.createElement('i');
+    i.style.height = Math.max(5, Math.round(x.s / mx * 100)) + '%'; i.title = fmtDur(x.s);
+    c.appendChild(i); bars.appendChild(c);
+    const l = document.createElement('span'); l.textContent = new Date(x.d + 'T12:00:00').toLocaleDateString('az', {weekday: 'short'}); lab.appendChild(l);
+  });
+  const m = $('wmini'); m.textContent = '';
+  const b1 = document.createElement('b'); b1.textContent = fmtDur(d.total);
+  const b2 = document.createElement('b'); b2.textContent = fmtDur(d.total_tog);
+  const b3 = document.createElement('b'); b3.textContent = d.videos30;
+  m.append('Cəmi ', b1, ' izləmisən, ', b2, ' birlikdə. Son 30 gündə ', b3, ' video açmısan.');
+}
+
+/* ---------- Planlı seanslar ---------- */
+let plansCache = [], planTick = 0, plSel = new Set();
+let seenPl = new Set();
+try{ seenPl = new Set(JSON.parse(localStorage.getItem('wt_seen_plans') || '[]')); }catch(e){}
+function markSeen(k){ seenPl.add(k); try{ localStorage.setItem('wt_seen_plans', JSON.stringify([...seenPl].slice(-200))); }catch(e){} }
+const fmtPlan = ts => new Date(ts * 1000).toLocaleString('az', {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+function relTime(ts){
+  const d = ts - Date.now() / 1000;
+  if(d <= -60) return 'başlayıb';
+  if(d < 60) return 'indi';
+  if(d < 3600) return Math.round(d / 60) + ' dəq sonra';
+  if(d < 86400) return Math.round(d / 3600) + ' saat sonra';
+  return Math.round(d / 86400) + ' gün sonra';
+}
+async function loadPlans(){
+  if(!token || $('menu').style.display === 'none' || document.visibilityState !== 'visible') return;
+  try{
+    const r = await api('/api/plans');
+    if(!r.ok) return;
+    plansCache = (await r.json()).plans || [];
+    renderPlans(); notifyPlans();
+  }catch(e){}
+}
+function renderPlans(){
+  const box = $('plans'); box.textContent = '';
+  const now = Date.now() / 1000;
+  const list = plansCache.filter(p => p.ts > now - 3 * 3600 || p.room);
+  $('plnotif').hidden = !('Notification' in window) || Notification.permission !== 'default';
+  if(!list.length){ emptyNote(box, '<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>', 'Planlı seans yoxdur', 'Tarix seç, dostlarını dəvət et'); return; }
+  list.forEach(p => {
+    const d = new Date(p.ts * 1000);
+    const el = document.createElement('div'); el.className = 'pl' + (p.ts - now < 900 ? ' soon' : '');
+    const h = document.createElement('div'); h.className = 'pl-h';
+    const dd = document.createElement('div'); dd.className = 'pl-d';
+    const b = document.createElement('b'); b.textContent = d.getDate();
+    dd.appendChild(b); dd.appendChild(document.createTextNode(d.toLocaleString('az', {month: 'short'})));
+    const t = document.createElement('div'); t.className = 'pl-t';
+    t.appendChild(document.createTextNode(p.title));
+    const sm = document.createElement('small');
+    sm.textContent = fmtPlan(p.ts) + ' · ' + relTime(p.ts) + (p.mine ? '' : ' · @' + p.owner.username);
+    t.appendChild(sm); h.appendChild(dd); h.appendChild(t); el.appendChild(h);
+    if(p.guests && p.guests.length){
+      const g = document.createElement('div'); g.className = 'pl-g';
+      g.textContent = p.guests.map(x => x.name + (x.st === 1 ? ' ✓' : x.st === 2 ? ' ✗' : ' …')).join(' · ');
+      el.appendChild(g);
+    }
+    const bt = document.createElement('div'); bt.className = 'pl-b';
+    if(p.mine){
+      bt.appendChild(frBtn(p.room ? 'Otağa gir' : 'Başlat', '', () => startPlan(p)));
+      bt.appendChild(frBtn('Sil', 'sec', () => { if(confirm('Seans silinsin?')) planAct('/api/plan/delete', {id: p.id}); }));
+    } else {
+      if(p.room) bt.appendChild(frBtn('Qoşul', '', () => { if(!joinBusy) enterRoom(p.room, false); }));
+      if(p.my !== 1) bt.appendChild(frBtn('Gəlirəm', '', () => planAct('/api/plan/respond', {id: p.id, going: true})));
+      if(p.my !== 2) bt.appendChild(frBtn('Gələ bilmirəm', 'sec', () => planAct('/api/plan/respond', {id: p.id, going: false})));
+    }
+    el.appendChild(bt); box.appendChild(el);
+  });
+}
+async function planAct(path, body){
+  try{ const r = await api(path, {method: 'POST', body: JSON.stringify(body)}); if(!r.ok) throw new Error('plan'); }
+  catch(e){ frNote('Alınmadı, yenidən cəhd et'); }
+  loadPlans();
+}
+async function startPlan(p){
+  if(joinBusy) return;
+  try{
+    const r = await api('/api/plan/start', {method: 'POST', body: JSON.stringify({id: p.id, pid: me})});
+    if(!r.ok) throw new Error('start');
+    enterRoom((await r.json()).room, false);
+  }catch(e){ frNote('Seans başlamadı, yenidən cəhd et'); }
+}
+async function pushNote(t, body){
+  try{ if(navigator.vibrate) navigator.vibrate([40, 40, 40]); }catch(e){}
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  try{
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if(reg) reg.showNotification(t, {body, icon: '/icon-192.png', badge: '/icon-192.png', tag: 'plan'});
+    else new Notification(t, {body});
+  }catch(e){}
+}
+function notifyPlans(){
+  const now = Date.now() / 1000;
+  plansCache.forEach(p => {
+    if(!p.mine && p.my === 0 && !seenPl.has('i' + p.id)){ markSeen('i' + p.id); pushNote('Yeni seans dəvəti', p.owner.name + ': ' + p.title + ' · ' + fmtPlan(p.ts)); }
+    const dt = p.ts - now;
+    if((p.mine || p.my === 1) && dt < 600 && dt > -600 && !seenPl.has('s' + p.id)){ markSeen('s' + p.id); pushNote('Seans tezliklə başlayır', p.title + ' · ' + relTime(p.ts)); }
+  });
+}
+$('plnotif').onclick = async () => {
+  try{ await Notification.requestPermission(); }catch(e){}
+  $('plnotif').hidden = !('Notification' in window) || Notification.permission !== 'default';
+};
+const toLocalInput = d => { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+function plmsg(t){ $('plmsg').textContent = t || ''; }
+$('plnew').onclick = async () => {
+  $('pltitle').value = ''; plmsg(''); plSel = new Set();
+  const d = new Date(Date.now() + 3600e3); d.setMinutes(0, 0, 0);
+  $('pldate').value = toLocalInput(d); $('pldate').min = toLocalInput(new Date());
+  $('planbox').hidden = false;
+  const box = $('plfr'); box.textContent = '';
+  try{
+    const r = await api('/api/friends');
+    const fr = r.ok ? ((await r.json()).friends || []) : [];
+    if(!fr.length){ const e = document.createElement('div'); e.className = 'hint'; e.textContent = 'Hələ dostun yoxdur. Dostsuz da seans qura bilərsən.'; box.appendChild(e); }
+    fr.forEach(p => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = p.name;
+      c.onclick = () => { if(plSel.has(p.username)){ plSel.delete(p.username); c.classList.remove('on'); } else { plSel.add(p.username); c.classList.add('on'); } };
+      box.appendChild(c);
+    });
+  }catch(e){}
+  setTimeout(() => $('pltitle').focus(), 60);
+};
+$('plNo').onclick = () => { $('planbox').hidden = true; };
+$('planbox').addEventListener('click', e => { if(e.target === $('planbox')) $('planbox').hidden = true; });
+$('plYes').onclick = async () => {
+  const title = $('pltitle').value.trim(), v = $('pldate').value;
+  if(!title){ plmsg('Seansa ad ver'); return; }
+  const ts = v ? new Date(v).getTime() / 1000 : NaN;
+  if(!isFinite(ts) || ts < Date.now() / 1000 - 60){ plmsg('Gələcək bir tarix seç'); return; }
+  const b = $('plYes'); b.disabled = true; plmsg('');
+  try{
+    const r = await api('/api/plan/create', {method: 'POST', body: JSON.stringify({title, ts, friends: [...plSel]})});
+    if(r.ok){ $('planbox').hidden = true; frNote(plSel.size ? 'Seans planlandı, dostlara bildiriş getdi' : 'Seans planlandı'); loadPlans(); }
+    else if(r.status === 429) plmsg('Çox seans yaratdın, bir az sonra yenidən yoxla');
+    else plmsg('Seans yaradılmadı, yenidən cəhd et');
+  }catch(e){ plmsg('Əlaqə problemi, yenidən cəhd et'); }
+  finally{ b.disabled = false; }
+};
+
+/* ---------- Profil: qısa məlumat ---------- */
+$('pbiosave').onclick = async () => {
+  try{
+    const r = await api('/api/profile/bio', {method: 'POST', body: JSON.stringify({bio: $('pbio').value})});
+    if(!r.ok) throw new Error('bio');
+    applyProfile(await r.json()); pmsg('Məlumat yadda saxlandı', true);
+  }catch(e){ pmsg('Saxlanmadı, yenidən cəhd et'); }
+};
+$('pbio').addEventListener('keydown', e => { if(e.key === 'Enter') $('pbiosave').onclick(); });
+
+/* ---------- PWA: quraşdırma və service worker ---------- */
+let deferredInstall = null;
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function showInstall(){
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !isStandalone();
+  $('pwacard').hidden = isStandalone() || !(deferredInstall || ios);
+  $('pwainst').hidden = !deferredInstall;
+  $('pwahint').textContent = deferredInstall ? 'Ana ekrandan bir toxunuşla aç, tam ekranda işləyir.' : 'iPhone-da: Paylaş düyməsinə bas, sonra "Ana ekrana əlavə et" seç.';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; showInstall(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; showInstall(); });
+$('pwainst').onclick = async () => {
+  if(!deferredInstall) return;
+  deferredInstall.prompt();
+  try{ await deferredInstall.userChoice; }catch(e){}
+  deferredInstall = null; showInstall();
+};
+if('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(!$('rolebox').hidden) $('rolebox').hidden = true;
+  if(!$('planbox').hidden) $('planbox').hidden = true;
+});
 
 async function boot(){
   if(token){
