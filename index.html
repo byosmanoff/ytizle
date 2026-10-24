@@ -374,7 +374,7 @@ body.invoice #vmic{display:none}
 #create.dim:active{transform:none}
 
 /* ---- reactions row + flying emoji ---- */
-#reacts{display:flex;justify-content:center;gap:6px;padding:8px 12px 0;flex:none}
+#reacts{display:none!important;justify-content:center;gap:6px;padding:8px 12px 0;flex:none}
 #reacts button{flex:1;max-width:56px;height:34px;padding:0;border-radius:999px;background:var(--seat);font-size:18px;line-height:1}
 #reacts button:hover{background:var(--seat-2)}
 #reacts button i{font-size:17px}
@@ -1015,12 +1015,28 @@ function refreshStatus(){
 
 let peerSet = new Map(), peerList = [];
 function peerNm(){ return peerName || (peerList[0] && peerList[0].name) || 'Qarşı tərəf'; }
+const GENERIC_NM = /^(qonaq|guest|mən|qarşı tərəf)?$/i;
+const learnedNm = new Map();   // peer id -> yazışmadan öyrənilən real ad
 function peerLabel(w){ return w && w.name ? String(w.name).slice(0, 20) : 'Qarşı tərəf'; }
+function learnPeerName(name){
+  name = String(name || '').slice(0, 20);
+  if(!name || GENERIC_NM.test(name) || peerList.length !== 1) return;
+  learnedNm.set(peerList[0].id, name); peerList[0].name = name;
+  if(peerSet.has(peerList[0].id)) peerSet.get(peerList[0].id).name = name;
+}
 function announcePeers(who){
   if(!Array.isArray(who)) return;
   const list = who.filter(w => w && typeof w.id === 'string');
+  list.forEach(w => { if(GENERIC_NM.test(String(w.name || '')) && learnedNm.has(w.id)) w.name = learnedNm.get(w.id); });
   const cur = new Map(list.map(w => [w.id, w]));
-  cur.forEach((w, id) => { if(!peerSet.has(id)) sysMsg(peerLabel(w) + ' qoşuldu'); });
+  cur.forEach((w, id) => {
+    if(peerSet.has(id)) return;
+    if(!GENERIC_NM.test(String(w.name || ''))){ sysMsg(peerLabel(w) + ' qoşuldu'); return; }
+    setTimeout(() => {   // ad yazışmadan öyrənilsin deyə qısa gözləmə
+      const nm = learnedNm.get(id) || (peerSet.get(id) && peerSet.get(id).name) || w.name;
+      if(peerSet.has(id)) sysMsg((GENERIC_NM.test(String(nm || '')) ? 'Qarşı tərəf' : String(nm).slice(0, 20)) + ' qoşuldu');
+    }, 1500);
+  });
   peerSet.forEach((w, id) => { if(!cur.has(id)) sysMsg(peerLabel(w) + ' çıxdı'); });
   peerSet = cur; peerList = list;
 }
@@ -1059,10 +1075,10 @@ function setVp(box, span, u, av, name){
 }
 
 function handle(m){
-  if(m.t === 'typing'){ showTyping(m.name); }
+  if(m.t === 'typing'){ learnPeerName(m.name); showTyping(m.name); }
   else if(m.t === 'fly'){ if(REACTS.includes(m.e)) flyEmoji(m.e); }
   else if(m.t === 'chat'){
-    clearTyping(); bumpUnread();
+    clearTyping(); bumpUnread(); learnPeerName(m.name);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
     const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
@@ -2691,6 +2707,12 @@ $('pbAct').onclick = async () => {
 $('pbClose').onclick = () => { $('pbox').hidden = true; };
 $('pbox').addEventListener('click', e => { if(e.target === $('pbox')) $('pbox').hidden = true; });
 $('status').addEventListener('click', () => { if(connected && peerList.length) openPeerCard(peerList[0]); });
+$('status').style.cursor = 'pointer';
+/* mesaj balonunun ixtiyari yerinə toxunanda da qarşı tərəfin profili açılsın (cavab/uzun basma ilə toqquşmasın deyə yalnız ad/avatar sahəsi + status) */
+$('chat').addEventListener('click', e => {
+  const sy = e.target.closest && e.target.closest('.sys');
+  if(sy && peerList.length) openPeerCard(peerList[0]);
+});
 
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
