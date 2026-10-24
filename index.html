@@ -2,7 +2,7 @@
 <html lang="az">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#150a1d">
 <title>Birlikdə İzlə</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,11 +17,12 @@
   --text:#f6ecf7; --muted:#b7a2cf; --line:rgba(255,255,255,.09);
   --font:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
+:root{--H:100dvh}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
   background:var(--velvet);color:var(--text);font-family:var(--font);
-  font-size:16px;line-height:1.35;display:flex;flex-direction:column;height:100dvh;
+  font-size:16px;line-height:1.35;display:flex;flex-direction:column;height:var(--H);
   -webkit-tap-highlight-color:transparent;overflow:hidden;
 }
 button,input{font:inherit;font-size:16px;border:0;color:inherit}
@@ -88,7 +89,7 @@ input{outline:none}
 #joinmsg{margin-top:12px;font-size:14px;color:#b02a52;min-height:18px;font-weight:500}
 
 /* ================= APP shell ================= */
-#app{display:none;flex-direction:column;height:100dvh;
+#app{display:none;flex-direction:column;height:var(--H);
   background:radial-gradient(100% 40% at 50% 0,rgba(255,196,107,.07),transparent 70%),var(--velvet)}
 
 /* top bar */
@@ -122,9 +123,9 @@ input{outline:none}
 }
 #ytbox{width:100%;aspect-ratio:16/9;display:none}
 #ytbox iframe{width:100%;height:100%}
-#vid{width:100%;max-height:45dvh;display:none;background:#000}
-#web{display:none;width:100%;height:46dvh;border:0;background:#fff}
-#ytres,#home{display:none;width:100%;height:46dvh;overflow-y:auto;background:var(--velvet-2);overscroll-behavior:contain}
+#vid{width:100%;max-height:calc(var(--H)*.45);display:none;background:#000}
+#web{display:none;width:100%;height:calc(var(--H)*.46);border:0;background:#fff}
+#ytres,#home{display:none;width:100%;height:calc(var(--H)*.46);overflow-y:auto;background:var(--velvet-2);overscroll-behavior:contain}
 #tap,#pickfile{
   display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;
   padding:14px 22px;font-size:17px;font-weight:700;border-radius:999px;
@@ -132,8 +133,8 @@ input{outline:none}
 }
 #tap:active{transform:translate(-50%,-50%) scale(.96)}
 #pickfile{pointer-events:none}
-.big #web,.big #ytres,.big #home{height:76dvh}
-.big #vid{max-height:70dvh}
+.big #web,.big #ytres,.big #home{height:calc(var(--H)*.76)}
+.big #vid{max-height:calc(var(--H)*.70)}
 
 /* home & search */
 .hint{padding:18px 18px 8px;color:var(--muted);font-size:15px;line-height:1.5}
@@ -625,9 +626,9 @@ body.invoice #vmic{display:none}
 
   /* otaq: solda ekran, sağda söhbət paneli */
   #app{flex-direction:row;gap:22px;max-width:1760px;margin:0 auto;width:100%;padding:0 22px}
-  .stage{display:flex;flex-direction:column;flex:1;min-width:0;height:100dvh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+  .stage{display:flex;flex-direction:column;flex:1;min-width:0;height:var(--H);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
   .stage::-webkit-scrollbar{display:none}
-  .side{display:flex;flex-direction:column;flex:none;width:clamp(340px,27vw,430px);height:calc(100dvh - 28px);margin:14px 0;min-height:0;
+  .side{display:flex;flex-direction:column;flex:none;width:clamp(340px,27vw,430px);height:calc(var(--H) - 28px);margin:14px 0;min-height:0;
     background:var(--velvet-2);border-radius:22px;box-shadow:inset 0 0 0 1px var(--line),0 20px 50px -20px rgba(0,0,0,.7);overflow:hidden}
   #top{padding:16px 4px 8px}
   #status{font-size:15px}
@@ -636,11 +637,11 @@ body.invoice #vmic{display:none}
   #codebar button{width:34px;height:34px}
   #codebar button i{font-size:16px}
   #player{margin:6px 0 0;border-radius:20px}
-  #ytbox{max-height:calc(100dvh - 215px)}
-  #vid{max-height:calc(100dvh - 215px)}
-  #web,#ytres,#home{height:max(380px,calc(100dvh - 215px))}
-  .big #web,.big #ytres,.big #home{height:max(420px,calc(100dvh - 160px))}
-  .big #vid,.big #ytbox{max-height:calc(100dvh - 160px)}
+  #ytbox{max-height:calc(var(--H) - 215px)}
+  #vid{max-height:calc(var(--H) - 215px)}
+  #web,#ytres,#home{height:max(380px,calc(var(--H) - 215px))}
+  .big #web,.big #ytres,.big #home{height:max(420px,calc(var(--H) - 160px))}
+  .big #vid,.big #ytbox{max-height:calc(var(--H) - 160px)}
   .big .side{display:none}                         /* "Ekranı böyüt" = kinoteatr rejimi */
   #reacts{padding:12px 0 0;gap:8px}
   #reacts button{max-width:64px;height:38px}
@@ -700,6 +701,20 @@ body.invoice #vmic{display:none}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
 .sw:checked{background:var(--rose-deep)}
 .sw:checked::after{transform:translateX(20px)}
+#pbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+  background:rgba(10,4,16,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#pbox[hidden]{display:none}
+.pcard{text-align:center}
+.pcard .av.big{margin:4px auto 16px}
+.pcard h2{display:flex;align-items:center;justify-content:center;margin-bottom:2px}
+#pbuser{color:var(--muted);font-size:15px;margin-bottom:10px;min-height:20px}
+#pbrel{min-height:20px;margin-bottom:14px;font-size:14px;font-weight:600;color:#7be0a5}
+#pbrel.err{color:#ff8fae}
+#pbClose{background:var(--seat-2);color:var(--text)}
+#pbAct{background:var(--rose-deep);color:#fff}
+#pbAct:disabled{opacity:.55}
+.m:not(.me) b{cursor:pointer}
+#status[data-on="1"]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -920,6 +935,19 @@ body.invoice #vmic{display:none}
 </div>
 
 
+<div id="pbox" hidden role="dialog" aria-modal="true" aria-label="Profil">
+  <div class="lv-card pcard">
+    <div class="av big" id="pbav">?</div>
+    <h2 id="pbname"></h2>
+    <div id="pbuser"></div>
+    <div id="pbrel" role="status"></div>
+    <div class="lv-btns">
+      <button id="pbClose">Bağla</button>
+      <button id="pbAct" hidden></button>
+    </div>
+  </div>
+</div>
+
 <div id="invbox" hidden role="dialog" aria-modal="true" aria-labelledby="invTitle">
   <div class="lv-card">
     <h2 id="invTitle">Dəvət et</h2>
@@ -985,12 +1013,22 @@ function refreshStatus(){
   setStatus(connected ? 'Birlikdəsiniz' : 'Sevgilini gözləyirəm...');
 }
 
+let peerSet = new Map(), peerList = [];
+function peerLabel(w){ return w && w.name ? String(w.name).slice(0, 20) : 'Qarşı tərəf'; }
+function announcePeers(who){
+  if(!Array.isArray(who)) return;
+  const list = who.filter(w => w && typeof w.id === 'string');
+  const cur = new Map(list.map(w => [w.id, w]));
+  cur.forEach((w, id) => { if(!peerSet.has(id)) sysMsg(peerLabel(w) + ' qoşuldu'); });
+  peerSet.forEach((w, id) => { if(!cur.has(id)) sysMsg(peerLabel(w) + ' çıxdı'); });
+  peerSet = cur; peerList = list;
+}
+
 function updatePeers(n){
   pc = n;
   if(n > 0 && !connected){
     connected = true;
     setStatus('Birlikdəsiniz');
-    sysMsg('Qarşı tərəf qoşuldu');
     if(curUrl) send({t:'load', url: curUrl, hello: true, at: navAt});
     if(curUrl && (kind === 'file' || kind === 'yt')) setTimeout(() => {   // qayıdan şəxs videonu cari yerdən davam etsin
       if(!connected || (kind !== 'file' && kind !== 'yt')) return;
@@ -1001,7 +1039,6 @@ function updatePeers(n){
   } else if(n === 0 && connected){
     connected = false; clearTyping(false);
     setStatus('Sevgilini gözləyirəm...');
-    sysMsg('Qarşı tərəf çıxdı');
     peerVoice = false; closeRtc(); setVoiceUI();
   }
 }
@@ -1077,7 +1114,8 @@ async function pollLoop(){
     const to = setTimeout(() => ac.abort(), 35000); // server 20 san gözləyir; ondan uzun asılıbsa kəs
     try{
       const r = await fetch('/api/poll?room=' + encodeURIComponent(room) + '&id=' + me +
-        '&since=' + since + '&pc=' + pc + '&lk=' + (isLocked ? 1 : 0), {cache: 'no-store', signal: ac.signal});
+        '&since=' + since + '&pc=' + pc + '&lk=' + (isLocked ? 1 : 0) + '&nm=' + encodeURIComponent(String(myName || '').slice(0, 20)),
+        {cache: 'no-store', signal: ac.signal, headers: {'X-Token': token || ''}});
       if(r.status === 403){
         setStatus('Otaq kilidlidir, bu cihaz üzv deyil');
         sysMsg('Otaq kilidlənib, bu cihaz içəri buraxılmadı');
@@ -1097,6 +1135,7 @@ async function pollLoop(){
         applyLock(!!d.locked);
       }
       (d.msgs || []).forEach(handle);
+      announcePeers(d.who);
       updatePeers(d.peers);
     }catch(e){
       if(gen !== pollGen) return;
@@ -1612,6 +1651,7 @@ function addMsg(name, text, mine, o){
   if(mine) d.dataset.st = '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
   const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); d.appendChild(b);
+  if(!mine) b.onclick = () => openPeerCard(peerForMsg(o.u, name));
   if(o.reply && o.reply.id){
     const q = document.createElement('div'); q.className = 'q';
     const qn = document.createElement('strong'); qn.textContent = String(o.reply.name || '').slice(0, 20);
@@ -2092,7 +2132,7 @@ async function leaveRoom(){
     }), 2000);
   }catch(e){}
   // vəziyyəti sıfırla
-  room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null;
+  room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null; peerSet = new Map(); peerList = [];
   curUrl = null; navAt = 0; lastAt = 0; ytPending = null; hist.length = 0; autoNavs = []; autoWarned = false;
   showMode('home');                              // video / sayt dayansın
   document.body.classList.remove('big');
@@ -2597,6 +2637,60 @@ $('pinv').onchange = async () => {
   }catch(e){ $('pinv').checked = !on; pinvHint(); pmsg('Dəyişmədi, yenidən cəhd et'); }
 };
 
+/* ---------- Otaqda qarşı tərəfin profili ---------- */
+function peerForMsg(u, name){
+  const hit = u && peerList.find(w => w.username === u);
+  if(hit) return hit;
+  if(u) return {username: u, name: name, avatar: '', badge: false};
+  return peerList.length === 1 ? peerList[0] : {name: name, username: '', avatar: '', badge: false};
+}
+let pcUser = '';
+function fillPeerHead(p){
+  setAvatar($('pbav'), AV_RE.test(p.avatar || '') ? p.avatar : '', p.name);
+  const n = $('pbname'); n.textContent = p.name || 'Qarşı tərəf'; if(p.badge) n.appendChild(vbEl());
+  $('pbuser').textContent = p.username ? '@' + p.username : '';
+}
+function setPeerRel(rel){
+  const a = $('pbAct'), t = $('pbrel');
+  t.className = ''; a.hidden = false; a.disabled = false; a.dataset.rel = rel; t.textContent = '';
+  if(rel === 'friend'){ t.textContent = 'Dostsunuz'; a.hidden = true; }
+  else if(rel === 'out'){ a.textContent = 'Sorğu göndərilib'; a.disabled = true; }
+  else if(rel === 'in'){ a.textContent = 'Qəbul et'; }
+  else a.textContent = 'Dost əlavə et';
+}
+async function loadPeerRel(u){
+  try{
+    const r = await api('/api/users/search?q=' + encodeURIComponent(u));
+    if(!r.ok || pcUser !== u) return;
+    const p = ((await r.json()).users || []).find(x => x.username === u);
+    if(!p) return;
+    fillPeerHead(p); setPeerRel(p.rel);
+  }catch(e){}
+}
+function openPeerCard(p){
+  if(!p) return;
+  pcUser = p.username || '';
+  fillPeerHead(p);
+  $('pbrel').textContent = ''; $('pbAct').hidden = true;
+  $('pbox').hidden = false;
+  if(pcUser && token) loadPeerRel(pcUser);
+}
+$('pbAct').onclick = async () => {
+  const rel = $('pbAct').dataset.rel, u = pcUser;
+  if(!u) return;
+  $('pbAct').disabled = true;
+  try{
+    const acc = rel === 'in';
+    const r = await api(acc ? '/api/friend/respond' : '/api/friend/request',
+      {method: 'POST', body: JSON.stringify(acc ? {username: u, accept: true} : {username: u})});
+    if(r.ok){ const d = await r.json().catch(() => ({})); setPeerRel(acc ? 'friend' : (d.rel || 'out')); loadFriends(); }
+    else { $('pbAct').disabled = false; $('pbrel').className = 'err'; $('pbrel').textContent = 'Alınmadı, yenidən cəhd et'; }
+  }catch(e){ $('pbAct').disabled = false; }
+};
+$('pbClose').onclick = () => { $('pbox').hidden = true; };
+$('pbox').addEventListener('click', e => { if(e.target === $('pbox')) $('pbox').hidden = true; });
+$('status').addEventListener('click', () => { if(connected && peerList.length) openPeerCard(peerList[0]); });
+
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
 let invTimer = null;
@@ -2843,6 +2937,22 @@ async function boot(){
   showLogin();
 }
 boot();
+</script>
+<script>
+/* Klaviatura açılanda ekran yuxarı sürüşməsin: hündürlük görünən sahəyə bərabərləşir */
+(function(){
+  var vv = window.visualViewport, root = document.documentElement;
+  function fit(){
+    var h = (vv && vv.scale <= 1.02) ? vv.height : window.innerHeight;
+    root.style.setProperty('--H', Math.round(h) + 'px');
+    var se = document.scrollingElement;
+    if(window.scrollY || (se && se.scrollTop)) window.scrollTo(0, 0);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function(){ setTimeout(fit, 250); });
+  if(vv){ vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+})();
 </script>
 </body>
 </html>

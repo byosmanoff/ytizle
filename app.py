@@ -87,6 +87,7 @@ def prune_peers(r, now):
     # köhnə (bağlanmış) bağlantı id-ləri yaddaşda yığılmasın
     for pid in [p for p, ts in r["peers"].items() if now - ts > PEER_TTL * 4]:
         del r["peers"][pid]
+        r.get("who", {}).pop(pid, None)
 
 
 def cleanup(now):
@@ -152,12 +153,13 @@ def api_send():
     msg.pop("vf", None)   # tik yalnız serverdə təyin olunur, müştəridən gələn nəzərə alınmır
     tok = request.headers.get("X-Token", "")[:100]
     if tok:
-        try:
-            srow = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True)
-            if srow and time.time() - srow["created"] <= SESSION_DAYS * 86400 and is_owner(srow["sub"]):
+        idn = ident_for(tok)
+        if idn["authed"]:
+            if idn["badge"]:
                 msg["vf"] = 1
-        except Exception:
-            pass
+            if msg.get("t") in ("chat", "voice"):   # istifadəçi adı və şəkil də serverdən: başqasının adı ilə yazmaq olmur
+                msg["u"] = idn["username"]
+                msg["av"] = idn["avts"]
     now = time.time()
     with CV:
         r = get_room(code)
@@ -714,6 +716,37 @@ def assign_username(sub):
 
 def primary_cred(sub):
     return dbq("SELECT email, pw FROM creds WHERE sub=? ORDER BY verified DESC, rowid LIMIT 1", (sub,), one=True)
+
+
+IDENT = {}   # sessiya tokeni -> (vaxt, kimlik): otaqda ad/profil üçün qısa müddətli keş
+
+
+def ident_for(tok, fallback_name=""):
+    """Otaqdakı iştirakçının kimliyi. Token etibarlıdırsa ad, istifadəçi adı, şəkil və tik bazadan gəlir
+    (müştəri saxtalaşdıra bilməz); yoxsa yalnız verilən ad."""
+    now = time.time()
+    if tok:
+        c = IDENT.get(tok)
+        if c and now - c[0] < 60:
+            return c[1]
+    idn = dict(name=clean_name(fallback_name) or "Qonaq", username="", avatar="", avts=0, badge=False, authed=False)
+    if tok:
+        try:
+            row = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True)
+            if row and now - row["created"] <= SESSION_DAYS * 86400:
+                u = dbq("SELECT name, username FROM users WHERE sub=?", (row["sub"],), one=True)
+                if u:
+                    av = dbq("SELECT ts FROM avatars WHERE sub=?", (row["sub"],), one=True)
+                    un = u["username"] or ""
+                    idn = dict(name=u["name"], username=un, avts=int(av["ts"]) if av else 0,
+                               avatar=_av_url(un, av["ts"]) if av and un else "",
+                               badge=is_owner(row["sub"]), authed=True)
+        except Exception:
+            pass
+        if len(IDENT) > 5000:
+            IDENT.clear()
+        IDENT[tok] = (now, idn)
+    return idn
 
 
 OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "murikosmanov@gmail.com").strip().lower()
@@ -1389,10 +1422,13 @@ def api_poll():
     except ValueError:
         abort(400)
     lk = request.args.get("lk") == "1"
+    idn = ident_for(request.headers.get("X-Token", "")[:100], request.args.get("nm", ""))
     deadline = time.time() + 20
     with CV:
         r = get_room(code)
         admit(r, pid)
+        r.setdefault("who", {})[pid] = dict(name=idn["name"], username=idn["username"],
+                                            avatar=idn["avatar"], badge=idn["badge"])
         if since > r["seq"]:  # server restart olub: köhnə "since" mesajları bloklamasın
             since = 0
         while True:
@@ -1405,7 +1441,10 @@ def api_poll():
             if new or n != pc or r["locked"] != lk or left <= 0:
                 break
             CV.wait(timeout=left)
-        resp = jsonify(seq=r["seq"], peers=n, msgs=[m[2] for m in new],
+        blank = dict(name="", username="", avatar="", badge=False)
+        who = [dict(id=p, **r["who"].get(p, blank)) for p, ts in r["peers"].items()
+               if p != pid and now - ts < PEER_TTL]
+        resp = jsonify(seq=r["seq"], peers=n, msgs=[m[2] for m in new], who=who,
                        locked=r["locked"], epoch=r["created"], video=r.get("video"))
     resp.headers["Cache-Control"] = "no-store"
     return resp
