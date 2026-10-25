@@ -702,6 +702,22 @@ body.invoice #vmic{display:none}
 }
 .vb{display:inline-block;width:1.05em;height:1.05em;margin-left:4px;color:var(--rose);vertical-align:-.17em;flex:none}
 .vb svg{display:block;width:100%;height:100%}
+.pb{display:inline-block;margin-left:4px;color:#ffc15e;font-size:.82em;vertical-align:baseline}
+.m.pcol,.m.pcol.me{color:#1b0b24}
+.m.pcol b,.m.pcol.me b{color:#5a3a63}
+.m.pcol .meta{color:rgba(27,11,36,.62)}
+#premcard .prem-on{display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:6px}
+#premcard .prem-on i{color:#ffc15e}
+#premcard p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.45}
+#premcard .plans{display:flex;gap:10px;margin-bottom:6px}
+#premcard .plans button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border-radius:14px;background:var(--seat-2);color:var(--text);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--line)}
+#premcard .plans button small{font-weight:600;color:var(--muted);font-size:12px}
+#premcard .plans button:hover:not(:disabled){box-shadow:inset 0 0 0 1.5px #ffc15e}
+#premcard .plans button:disabled{opacity:.55}
+#premcard .sw-row{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 6px}
+#premcard .sw-row button{width:34px;height:34px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+#premcard .sw-row button.on{box-shadow:0 0 0 2px var(--seat),0 0 0 4px #ffc15e}
+#premcard .sw-row button.def{background:var(--rose)}
 .hhead{padding:20px 18px 4px;display:flex;flex-direction:column;gap:3px}
 .hhead b{font-size:19px;font-weight:800;letter-spacing:-.01em}
 .hhead span{color:var(--muted);font-size:14px}
@@ -985,6 +1001,20 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
       <label for="pbio">Haqqında</label>
       <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave">Saxla</button></div>
     </div>
+  </div>
+  <div class="card" id="premcard">
+    <h2>Premium</h2>
+    <div class="prem-on" id="premon" hidden><i class="fa-solid fa-gem" aria-hidden="true"></i><span id="premuntil"></span></div>
+    <p id="premdesc">Qızıl nişan və mesajların üçün xüsusi rəng.</p>
+    <div id="premcolors" hidden>
+      <label style="font-size:13px;font-weight:600;color:var(--muted)">Mesaj rəngi</label>
+      <div class="sw-row" id="premsw"></div>
+    </div>
+    <div class="plans" id="premplans">
+      <button type="button" id="premMonth"></button>
+      <button type="button" id="premYear"></button>
+    </div>
+    <div class="hint" id="premhint"></div>
   </div>
   <div class="card">
     <h2>Gizlilik</h2>
@@ -1311,7 +1341,7 @@ function handle(m){
     if(m.id && msgEls.has(m.id)) return;
     clearTyping(); bumpUnread(); learnPeerName(m.name);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
-    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl});
+    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, pr: m.pr === 1, pc: m.pc, rl: m.rl});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
   }
   else if(m.t === 'dlv' || m.t === 'read'){
@@ -2048,6 +2078,12 @@ function vbEl(){
   const s = document.createElement('span'); s.className = 'vb'; s.title = 'Təsdiqlənmiş hesab'; s.innerHTML = VB_SVG;
   return s;
 }
+const PCOL = {gold: '#ffd479', sky: '#8fd3ff', mint: '#8be8c0', violet: '#c8a7ff', peach: '#ffb38a'};
+function pbEl(){
+  const s = document.createElement('span'); s.className = 'pb'; s.title = 'Premium';
+  s.innerHTML = '<i class="fa-solid fa-gem" aria-hidden="true"></i>';
+  return s;
+}
 function roleIcon(r){
   const s = document.createElement('span'); s.className = 'rolei ' + r;
   s.title = r === 'host' ? 'Host' : 'Moderator';
@@ -2060,7 +2096,8 @@ function addMsg(name, text, mine, o){
   d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : '');
   if(mine) d.dataset.st = o.hist ? '3' : '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
-  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
+  if(o.pr && PCOL[o.pc]){ d.classList.add('pcol'); d.style.background = PCOL[o.pc]; }
+  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.pr) b.appendChild(pbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
   if(!mine) b.onclick = () => openPeerCard(peerForMsg(o.u, name));
   if(o.reply && o.reply.id){
     const q = document.createElement('div'); q.className = 'q';
@@ -2261,7 +2298,7 @@ function sendChat(){
   const id = newId();
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
-  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge), rl: myRole});
+  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge), pr: !!(account && account.premium), pc: account && account.premium ? account.pcolor : '', rl: myRole});
   ownState.set(id, 1);
   send({t: 'chat', id, name: myName, text: t, reply: rp, u: myU, av: myV});
   $('msg').value = ''; clearReply();
@@ -3196,6 +3233,7 @@ function fillProfile(){
   if(document.activeElement !== $('puser')) $('puser').value = account.username || '';
   $('pemail').value = account.email || '';
   if(document.activeElement !== $('pbio')) $('pbio').value = account.bio || '';
+  renderPremium();
   $('pcurrow').hidden = !account.has_pw;
   $('pwtitle').textContent = account.has_pw ? 'Şifrəni dəyiş' : 'Şifrə qoy';
   $('pusersave').disabled = true;
@@ -3463,7 +3501,7 @@ async function loadChatHistory(){
       if(m.id && msgEls.has(m.id)) return;
       const mine = !!m.mine;
       addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
-        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
+        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, pr: m.pr === 1, pc: m.pc, rl: m.rl, ts: m.ts, hist: true});
       if(mine && m.id) ownState.set(m.id, 3);
       if(m.id) rxLoad(m.id, m.rx, m.my);
     });
@@ -3579,6 +3617,77 @@ function appleImg(s){
   im.src = APPLE_EMOJI + tries[0] + '.png';
   return im;
 }
+
+/* ---------- Premium ---------- */
+function renderPremium(){
+  const a = account || {}, on = !!a.premium, plans = a.plans || {};
+  $('premon').hidden = !on;
+  if(on){
+    const d = new Date((a.premium_until || 0) * 1000);
+    $('premuntil').textContent = 'Premium aktivdir · ' + d.toLocaleDateString('az-AZ', {day: 'numeric', month: 'long', year: 'numeric'}) + ' tarixinədək';
+  }
+  $('premdesc').textContent = on ? 'Qızıl nişanın və mesaj rəngin otaqdakı hamıya görünür. İstəsən müddəti uzada bilərsən.' : 'Qızıl nişan və mesajların üçün xüsusi rəng.';
+  const m = plans.month, y = plans.year;
+  $('premMonth').innerHTML = m ? '1 ay<small>' + m.price + ' AZN</small>' : '';
+  $('premYear').innerHTML = y ? '1 il<small>' + y.price + ' AZN</small>' : '';
+  $('premplans').hidden = !m;
+  $('premMonth').disabled = $('premYear').disabled = !a.pay_ok;
+  if(!a.pay_ok) hint('premhint', 'Ödəniş hələ qurulmayıb.');
+  else if(!$('premhint').dataset.keep) hint('premhint', '');
+  $('premcolors').hidden = !on;
+  const sw = $('premsw'); sw.textContent = '';
+  if(on){
+    const mk = (name, hex, label) => {
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', label);
+      if(hex) b.style.background = hex; else b.className = 'def';
+      if((a.pcolor || '') === name) b.classList.add('on');
+      b.onclick = () => setPremColor(name);
+      sw.appendChild(b);
+    };
+    mk('', '', 'Standart rəng');
+    Object.keys(PCOL).forEach(k => { if((a.pcolors || []).includes(k)) mk(k, PCOL[k], k); });
+  }
+}
+async function setPremColor(c){
+  try{
+    const r = await api('/api/premium/color', {method: 'POST', body: JSON.stringify({color: c})});
+    if(!r.ok) throw new Error('c');
+    account.pcolor = c; renderPremium();
+  }catch(e){ hint('premhint', 'Rəng dəyişmədi, yenidən cəhd et'); }
+}
+async function buyPremium(plan){
+  $('premhint').dataset.keep = '1'; hint('premhint', 'Ödəniş səhifəsi açılır...');
+  $('premMonth').disabled = $('premYear').disabled = true;
+  try{
+    const r = await api('/api/premium/checkout', {method: 'POST', body: JSON.stringify({plan})});
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok || !j.url) throw new Error('pay');
+    location.href = j.url;
+  }catch(e){
+    delete $('premhint').dataset.keep;
+    $('premMonth').disabled = $('premYear').disabled = !(account && account.pay_ok);
+    hint('premhint', 'Ödəniş başladıla bilmədi, bir az sonra yenidən cəhd et');
+  }
+}
+$('premMonth').onclick = () => buyPremium('month');
+$('premYear').onclick = () => buyPremium('year');
+/* ödənişdən qayıdanda: Epoint bildirişi bir neçə saniyə gecikə bilər, ona görə profil bir neçə dəfə yoxlanılır */
+(function(){
+  let q = ''; try{ q = new URLSearchParams(location.search).get('premium') || ''; }catch(e){}
+  if(!q) return;
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  let n = 0;
+  const tick = async () => {
+    if(!token){ if(n++ < 10) setTimeout(tick, 1000); return; }
+    await loadProfile();
+    if(q === 'ok' && !(account && account.premium) && n++ < 8){ setTimeout(tick, 2500); return; }
+    openProfile();
+    $('premhint').dataset.keep = '1';
+    hint('premhint', q === 'ok' ? (account && account.premium ? 'Təşəkkürlər! Premium aktivdir.' : 'Ödəniş qəbul olundu, premium bir azdan aktiv olacaq.') : 'Ödəniş tamamlanmadı.');
+  };
+  setTimeout(tick, 800);
+})();
+
 /* ---------- İzləmə statistikası ---------- */
 let wAcc = 0, wTog = 0;
 const localDay = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
