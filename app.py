@@ -72,7 +72,6 @@ def admit(r, pid):
 
 
 CTRL_TYPES = {"play", "pause", "seek", "sync", "load", "wv", "q"}   # videonu idarə edən mesajlar
-GIF_RE = re.compile(r"^https://media\d*\.giphy\.com/[\w\-/.=]+\.gif(\?[\w=&\-.%]*)?$")
 HIST_KEEP = 300
 
 
@@ -251,12 +250,8 @@ def api_send():
             msg.pop("rl", None)   # rol nişanı yalnız serverdən gəlir, saxtalaşdırmaq olmur
             if role_of(r, pid) in ("host", "mod"):
                 msg["rl"] = role_of(r, pid)
-            g = msg.get("gif")
-            if g is not None and not (isinstance(g, str) and GIF_RE.match(g)):
-                msg.pop("gif", None)
-            s = msg.get("stk")
-            if s is not None and not (isinstance(s, str) and 0 < len(s) <= 8):
-                msg.pop("stk", None)
+            msg.pop("gif", None)   # GIF və stiker özəlliyi silinib
+            msg.pop("stk", None)
         if msg.get("t") == "load" and "/vf/" not in str(msg.get("url") or ""):
             r["video"] = None   # otaq başqa səhifəyə keçdi: yenidən girənə köhnə video açılmasın
         r["seq"] += 1
@@ -1688,33 +1683,6 @@ def api_chat_history():
                     o["my"] = rm[mk]
             out.append(o)
     return _nostore(jsonify(msgs=out))
-
-
-@app.route("/api/gif")
-def api_gif():
-    """GIF axtarışı (Giphy). Açar mühit dəyişənində: GIPHY_API_KEY."""
-    key = os.environ.get("GIPHY_API_KEY", "")
-    if not key:
-        return jsonify(error="nokey"), 503
-    if not rate_hit("gif", client_ip(), 60, 600):
-        abort(429)
-    q = request.args.get("q", "").strip()[:50]
-    params = {"api_key": key, "limit": 24, "rating": "pg-13"}
-    if q:
-        params["q"] = q
-    try:
-        r = requests.get("https://api.giphy.com/v1/gifs/" + ("search" if q else "trending"), params=params, timeout=8)
-        data = r.json().get("data", [])
-    except Exception:
-        return jsonify(error="fail"), 502
-    out = []
-    for g in data if isinstance(data, list) else []:
-        im = g.get("images") or {}
-        small = (im.get("fixed_height_small") or im.get("fixed_height") or {}).get("url") or ""
-        full = (im.get("fixed_height") or {}).get("url") or ""
-        if GIF_RE.match(small) and GIF_RE.match(full):
-            out.append({"s": small, "u": full})
-    return _nostore(jsonify(gifs=out))
 
 
 # ---- İzləmə statistikası ----

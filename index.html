@@ -375,6 +375,9 @@ body.invoice #vmic{display:none}
 #leaveNo:hover{background:#432a58}
 #leaveYes{background:var(--rose);color:var(--ink)}
 #leaveYes:hover{background:#ff93ae}
+#qskip,#hostYes{background:var(--rose);color:var(--ink)}
+#qskip:hover,#hostYes:hover{background:#ff93ae}
+#hostNo{background:var(--seat-2);color:var(--text)}
 
 /* ---- required fields ---- */
 #join input.bad,#join input.bad:focus{box-shadow:inset 0 0 0 2px #d6336c}
@@ -754,7 +757,7 @@ body.lite button,body.lite .tile,body.lite .stat{transition:none!important}
 body.lite #player{box-shadow:0 0 0 1px var(--line)!important}
 body.lite .lv-card{animation:none!important}
 
-/* ================= Rollar, stiker/GIF, statistika, seanslar, PWA ================= */
+/* ================= Rollar, statistika, seanslar, PWA ================= */
 #codebar button[hidden]{display:none}
 @media (max-width:420px){#codebar button{width:27px;height:27px}#codebar b{letter-spacing:.12em;font-size:15px}}
 .composer{gap:5px}
@@ -775,23 +778,6 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #planbox input:focus{box-shadow:inset 0 0 0 2px var(--rose)}
 #plmsg{min-height:20px;margin-bottom:10px;font-size:14px;font-weight:500;color:#ff8fae}
 .chip.on{background:var(--rose-deep);color:#fff}
-#stkpanel{flex:none;margin:0 12px 6px;border-radius:16px;background:var(--seat);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
-#stkpanel[hidden],#gifwrap[hidden],#stkgrid[hidden]{display:none}
-.stabs{display:flex;gap:6px;padding:8px 8px 0}
-.stabs button{flex:1;padding:8px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:14px}
-.stabs button.on{background:var(--seat-2);color:var(--text)}
-#stkgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:8px;max-height:190px;overflow-y:auto}
-#stkgrid button{font-size:30px;line-height:1;padding:6px 0;border-radius:12px;background:transparent}
-#stkgrid button:hover{background:var(--seat-2)}
-#gifwrap{padding:8px}
-#gifq{width:100%;height:40px;padding:0 14px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line);margin-bottom:8px}
-#gifgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:170px;overflow-y:auto}
-#gifgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;background:var(--velvet-2)}
-.m.stkm,.m.stkm.me{background:none;padding:2px 6px}
-.m.stkm.me b{color:var(--muted)}
-.stk{display:block;font-size:56px;line-height:1.15}
-.stk img{display:block;width:64px;height:64px;-webkit-user-drag:none;user-select:none}
-#stkgrid button img{display:block;width:36px;height:36px;margin:0 auto;pointer-events:none}
 .meta{opacity:1}
 .meta>span{opacity:.75}
 .m.hasrx{margin-bottom:15px}
@@ -834,7 +820,6 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #rolelist .fr{flex-wrap:wrap}
 #rolelist .fr .tx{flex:1 1 120px}
 .rbtns{display:flex;gap:6px;flex:none;margin-left:auto}
-@media (min-width:1024px){.side #stkpanel{margin:0 14px 6px}}
 #pbbio{color:var(--text);font-size:14px;line-height:1.4;margin:0 0 10px;opacity:.9}
 #pbbio:empty{display:none}
 .wsum{font-size:17px;font-weight:700;line-height:1.35;margin-bottom:14px}
@@ -1108,22 +1093,11 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
     <div class="rb-body"><strong id="rbName"></strong><span id="rbText"></span></div>
     <button id="rbX" aria-label="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </div>
-  <div id="stkpanel" hidden>
-    <div class="stabs"><button id="tabStk" class="on" type="button">Stikerlər</button><button id="tabGif" type="button">GIF</button></div>
-    <div id="stkgrid"></div>
-    <div id="gifwrap" hidden>
-      <input id="gifq" placeholder="GIF axtar" maxlength="50" autocomplete="off" aria-label="GIF axtar">
-      <div id="gifgrid"></div>
-      <div class="hint" id="gifhint"></div>
-      <button class="pbtn alt" id="gifup" type="button" style="width:100%;margin-top:6px">Qalereyadan GIF göndər</button>
-    </div>
-  </div>
   <input type="file" id="imgfile" accept="image/*" hidden>
   <audio id="raudio" autoplay playsinline></audio>
   <div class="bar composer">
     <button id="vmic" aria-label="Səsli söhbətə qoşul"><i class="fa-solid fa-microphone" aria-hidden="true"></i></button>
     <button id="imgbtn" aria-label="Şəkil göndər"><i class="fa-solid fa-image" aria-hidden="true"></i></button>
-    <button id="stkbtn" aria-label="Stiker və GIF"><i class="fa-regular fa-face-smile" aria-hidden="true"></i></button>
     <input id="msg" placeholder="Mesaj yaz..." autocomplete="off" maxlength="400" enterkeyhint="send">
     <button id="send" class="pink" aria-label="Göndər"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
   </div>
@@ -1337,7 +1311,7 @@ function handle(m){
     if(m.id && msgEls.has(m.id)) return;
     clearTyping(); bumpUnread(); learnPeerName(m.name);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
-    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, rl: m.rl});
+    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
   }
   else if(m.t === 'dlv' || m.t === 'read'){
@@ -2083,7 +2057,7 @@ function roleIcon(r){
 function addMsg(name, text, mine, o){
   o = o || {};
   const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
-  d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : o.gif ? 'GIF' : o.stk ? String(o.stk) : '');
+  d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : '');
   if(mine) d.dataset.st = o.hist ? '3' : '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
   const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
@@ -2097,11 +2071,6 @@ function addMsg(name, text, mine, o){
     d.appendChild(q);
   }
   if(o.img && (o.local || IMG_URL_RE.test(o.img))) d.appendChild(imgBox(o.img, !!o.sens, mine));
-  if(typeof o.gif === 'string' && GIF_RE.test(o.gif)) d.appendChild(imgBox(o.gif, false, mine));
-  if(typeof o.stk === 'string' && o.stk && o.stk.length <= 8){
-    d.classList.add('stkm');
-    const sk = document.createElement('span'); sk.className = 'stk'; sk.appendChild(appleImg(o.stk)); d.appendChild(sk);
-  }
   if(text){ const s = document.createElement('span'); s.textContent = text; d.appendChild(s); }
   const meta = document.createElement('div'); meta.className = 'meta';
   const tm = document.createElement('span'); tm.textContent = fmtTime(o.ts); meta.appendChild(tm);
@@ -2598,7 +2567,7 @@ async function leaveRoom(){
   }catch(e){}
   // vəziyyəti sıfırla
   flushWatch(); myRole = 'viewer'; hostOnly = false; rv = -1; roleMap = {};
-  $('rolebox').hidden = true; $('stkpanel').hidden = true; document.body.classList.remove('viewer-lock'); $('lock').hidden = false;
+  $('rolebox').hidden = true; document.body.classList.remove('viewer-lock'); $('lock').hidden = false;
   room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null; peerSet = new Map(); peerList = [];
   queue = []; qRender(); $('qbox').hidden = true;
   curUrl = null; navAt = 0; lastAt = 0; ytPending = null; hist.length = 0; autoNavs = []; autoWarned = false;
@@ -3494,7 +3463,7 @@ async function loadChatHistory(){
       if(m.id && msgEls.has(m.id)) return;
       const mine = !!m.mine;
       addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
-        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
+        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
       if(mine && m.id) ownState.set(m.id, 3);
       if(m.id) rxLoad(m.id, m.rx, m.my);
     });
@@ -3593,21 +3562,7 @@ function bindHold(d, id){
 $('chat').addEventListener('scroll', rxClose, {passive: true});
 document.addEventListener('keydown', e => { if(e.key === 'Escape') rxClose(); });
 
-/* ---------- Stikerlər və GIF ---------- */
-const STICKERS = ['😂','😍','🥰','😭','😮','🔥','👏','❤️','💔','😴','🤯','🥳','🍿','🎬','👀','🙈','😘','🤗','😎','🤔','👍','🙏','💋','✨'];
-const GIF_RE = /^https:\/\/media\d*\.giphy\.com\/[\w\-\/.=]+\.gif(\?[\w=&\-.%]*)?$/;
-let gifSeq = 0, gifTimer = null, gifInit = false;
-function sendRich(extra){
-  if(!room) return;
-  const id = newId();
-  const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
-  const myU = (account && account.username) || '', myV = myAvVer();
-  addMsg(myName, '', true, Object.assign({id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge), rl: myRole}, extra));
-  ownState.set(id, 1);
-  send(Object.assign({t: 'chat', id, name: myName, text: '', reply: rp, u: myU, av: myV}, extra));
-  clearReply(); $('stkpanel').hidden = true;
-}
-/* iOS (Apple) stikerləri: emoji hər cihazda eyni görünsün deyə Apple şəkilləri ilə göstərilir.
+/* Apple emoji: reaksiyalar hər cihazda eyni görünsün deyə Apple şəkilləri ilə göstərilir.
    Şəkil yüklənməsə (CDN əlçatmazdırsa) adi emoji simvoluna qayıdır. */
 const APPLE_EMOJI = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.0.1/img/apple/64/';
 function appleImg(s){
@@ -3624,41 +3579,6 @@ function appleImg(s){
   im.src = APPLE_EMOJI + tries[0] + '.png';
   return im;
 }
-function buildStickers(){
-  const g = $('stkgrid'); if(g.firstChild) return;
-  STICKERS.forEach(s => {
-    const b = document.createElement('button'); b.type = 'button'; b.appendChild(appleImg(s)); b.setAttribute('aria-label', 'Stiker ' + s);
-    b.onclick = () => sendRich({stk: s}); g.appendChild(b);
-  });
-}
-function stkTab(gif){
-  $('tabStk').classList.toggle('on', !gif); $('tabGif').classList.toggle('on', gif);
-  $('stkgrid').hidden = gif; $('gifwrap').hidden = !gif;
-  if(gif && !gifInit){ gifInit = true; loadGifs(''); }
-}
-async function loadGifs(q){
-  const my = ++gifSeq, g = $('gifgrid'), h = $('gifhint');
-  g.textContent = ''; h.textContent = 'Yüklənir...';
-  try{
-    const r = await fetch('/api/gif?q=' + encodeURIComponent(q || ''), {cache: 'no-store'});
-    if(my !== gifSeq) return;
-    if(r.status === 503){ h.textContent = 'GIF axtarışı hələ qurulmayıb. Qalereyadan GIF göndərə bilərsən.'; return; }
-    if(!r.ok) throw new Error('gif');
-    const list = (await r.json()).gifs || [];
-    h.textContent = list.length ? '' : 'Heç nə tapılmadı';
-    list.forEach(x => {
-      if(!GIF_RE.test(x.s) || !GIF_RE.test(x.u)) return;
-      const im = document.createElement('img'); im.src = x.s; im.loading = 'lazy'; im.alt = 'GIF';
-      im.onclick = () => sendRich({gif: x.u}); g.appendChild(im);
-    });
-  }catch(e){ if(my === gifSeq) h.textContent = 'GIF yüklənmədi, yenidən cəhd et'; }
-}
-$('stkbtn').onclick = () => { if(!room) return; buildStickers(); $('stkpanel').hidden = !$('stkpanel').hidden; };
-$('tabStk').onclick = () => stkTab(false);
-$('tabGif').onclick = () => stkTab(true);
-$('gifq').addEventListener('input', () => { clearTimeout(gifTimer); gifTimer = setTimeout(() => loadGifs($('gifq').value.trim()), 400); });
-$('gifup').onclick = () => { $('stkpanel').hidden = true; $('imgfile').click(); };
-
 /* ---------- İzləmə statistikası ---------- */
 let wAcc = 0, wTog = 0;
 const localDay = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
