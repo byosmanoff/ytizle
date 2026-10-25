@@ -213,18 +213,12 @@ def api_send():
     if len(json.dumps(msg)) > 4000:
         abort(400)
     msg.pop("vf", None)   # tik yalnız serverdə təyin olunur, müştəridən gələn nəzərə alınmır
-    msg.pop("pr", None)   # premium nişanı və rəngi də yalnız serverdən
-    msg.pop("pc", None)
     tok = request.headers.get("X-Token", "")[:100]
     if tok:
         idn = ident_for(tok)
         if idn["authed"]:
             if idn["badge"]:
                 msg["vf"] = 1
-            if idn.get("prem"):
-                msg["pr"] = 1
-                if idn.get("pcolor") in PCOLORS:
-                    msg["pc"] = idn["pcolor"]
             if msg.get("t") in ("chat", "voice"):   # istifadəçi adı və şəkil də serverdən: başqasının adı ilə yazmaq olmur
                 msg["u"] = idn["username"]
                 msg["av"] = idn["avts"]
@@ -504,12 +498,6 @@ CREATE INDEX IF NOT EXISTS plan_inv_sub ON plan_inv(sub);
                 c.execute("ALTER TABLE users ADD COLUMN invites_open INTEGER NOT NULL DEFAULT 1")
             if "bio" not in ucols:   # profildə qısa "Haqqında"
                 c.execute("ALTER TABLE users ADD COLUMN bio TEXT")
-            if "premium_until" not in ucols:   # premium: bitmə vaxtı (unix saniyə), 0 = premium deyil
-                c.execute("ALTER TABLE users ADD COLUMN premium_until REAL NOT NULL DEFAULT 0")
-            if "pcolor" not in ucols:   # premium istifadəçinin seçdiyi mesaj rəngi (adı, rəngin özü yox)
-                c.execute("ALTER TABLE users ADD COLUMN pcolor TEXT")
-            c.execute("CREATE TABLE IF NOT EXISTS payments(order_id TEXT PRIMARY KEY, sub TEXT NOT NULL, plan TEXT NOT NULL, "
-                      "amount TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', tx TEXT, ts REAL NOT NULL)")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -856,19 +844,18 @@ def ident_for(tok, fallback_name=""):
         c = IDENT.get(tok)
         if c and now - c[0] < 60:
             return c[1]
-    idn = dict(name=clean_name(fallback_name) or "Qonaq", username="", avatar="", avts=0, badge=False, authed=False, bio="", prem=False, pcolor="")
+    idn = dict(name=clean_name(fallback_name) or "Qonaq", username="", avatar="", avts=0, badge=False, authed=False, bio="")
     if tok:
         try:
             row = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True)
             if row and now - row["created"] <= SESSION_DAYS * 86400:
-                u = dbq("SELECT name, username, bio, premium_until, pcolor FROM users WHERE sub=?", (row["sub"],), one=True)
+                u = dbq("SELECT name, username, bio FROM users WHERE sub=?", (row["sub"],), one=True)
                 if u:
                     av = dbq("SELECT ts FROM avatars WHERE sub=?", (row["sub"],), one=True)
                     un = u["username"] or ""
                     idn = dict(name=u["name"], username=un, avts=int(av["ts"]) if av else 0,
                                avatar=_av_url(un, av["ts"]) if av and un else "",
-                               badge=is_owner(row["sub"]), authed=True, bio=u["bio"] or "",
-                               prem=(u["premium_until"] or 0) > now, pcolor=(u["pcolor"] or "") if (u["premium_until"] or 0) > now else "")
+                               badge=is_owner(row["sub"]), authed=True, bio=u["bio"] or "")
         except Exception:
             pass
         if len(IDENT) > 5000:
@@ -890,15 +877,13 @@ def is_owner(sub):
 
 
 def profile_json(sub):
-    u = dbq("SELECT name, username, invites_open, bio, premium_until, pcolor FROM users WHERE sub=?", (sub,), one=True)
+    u = dbq("SELECT name, username, invites_open, bio FROM users WHERE sub=?", (sub,), one=True)
     if not u:
         abort(401)
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
     return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0),
-                premium=(u["premium_until"] or 0) > time.time(), premium_until=int(u["premium_until"] or 0),
-                pcolor=u["pcolor"] or "", pcolors=sorted(PCOLORS), plans=PLAN_INFO, pay_ok=bool(EPOINT_PUBLIC and EPOINT_PRIVATE),
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -1698,129 +1683,6 @@ def api_chat_history():
                     o["my"] = rm[mk]
             out.append(o)
     return _nostore(jsonify(msgs=out))
-
-
-# ---- Premium abunəlik (Epoint ödənişi) ----
-# Mühit dəyişənləri: EPOINT_PUBLIC_KEY, EPOINT_PRIVATE_KEY, SITE_URL (məs. https://sayt.onrender.com),
-# PREMIUM_PRICE_MONTH (standart 3.00), PREMIUM_PRICE_YEAR (standart 30.00) - AZN
-EPOINT_PUBLIC = os.environ.get("EPOINT_PUBLIC_KEY", "").strip()
-EPOINT_PRIVATE = os.environ.get("EPOINT_PRIVATE_KEY", "").strip()
-EPOINT_API = "https://epoint.az/api/1/"
-SITE_URL = os.environ.get("SITE_URL", "").strip().rstrip("/")
-PCOLORS = {"gold", "sky", "mint", "violet", "peach"}
-
-
-def _price(env, default):
-    try:
-        v = float(os.environ.get(env, default))
-        return "%.2f" % v if v > 0 else default
-    except ValueError:
-        return default
-
-
-PLANS = {"month": (_price("PREMIUM_PRICE_MONTH", "3.00"), 30), "year": (_price("PREMIUM_PRICE_YEAR", "30.00"), 365)}
-PLAN_INFO = {k: dict(price=v[0], days=v[1]) for k, v in PLANS.items()}
-
-
-def epoint_sign(data_b64):
-    return base64.b64encode(hashlib.sha1((EPOINT_PRIVATE + data_b64 + EPOINT_PRIVATE).encode()).digest()).decode()
-
-
-def _site_url():
-    if SITE_URL:
-        return SITE_URL
-    proto = "https" if (request.is_secure or request.headers.get("X-Forwarded-Proto", "") == "https") else "http"
-    return proto + "://" + request.host
-
-
-@app.route("/api/premium/checkout", methods=["POST"])
-def api_premium_checkout():
-    sub, _ = auth_sub()
-    if not (EPOINT_PUBLIC and EPOINT_PRIVATE):
-        return jsonify(error="nokey"), 503
-    if not rate_hit("pay", sub, 10, 3600):
-        abort(429)
-    plan = str((request.get_json(silent=True) or {}).get("plan") or "")
-    if plan not in PLANS:
-        abort(400)
-    price, days = PLANS[plan]
-    order_id = "pr-%s-%s" % (int(time.time()), secrets.token_hex(6))
-    dbq("INSERT INTO payments(order_id, sub, plan, amount, status, ts) VALUES(?,?,?,?, 'pending', ?)",
-        (order_id, sub, plan, price, time.time()))
-    base = _site_url()
-    payload = {"public_key": EPOINT_PUBLIC, "amount": float(price), "currency": "AZN", "language": "az",
-               "order_id": order_id, "description": "Premium (%d gün)" % days,
-               "success_redirect_url": base + "/?premium=ok", "error_redirect_url": base + "/?premium=fail",
-               "result_url": base + "/api/premium/result"}
-    data = base64.b64encode(json.dumps(payload).encode()).decode()
-    try:
-        r = requests.post(EPOINT_API + "request", data={"data": data, "signature": epoint_sign(data)}, timeout=15)
-        j = r.json()
-    except Exception:
-        return jsonify(error="fail"), 502
-    url = str(j.get("redirect_url") or "")
-    if j.get("status") != "success" or not url.startswith("https://"):
-        return jsonify(error="fail"), 502
-    return jsonify(url=url)
-
-
-def _grant_premium(order_id, tx):
-    """Ödəniş təsdiqlənəndə premiumu uzadır. Eyni sifariş ikinci dəfə gəlsə təkrar vermir."""
-    with DBL:
-        c = sqlite3.connect(DB_PATH, timeout=10)
-        try:
-            c.row_factory = sqlite3.Row
-            row = c.execute("SELECT sub, plan FROM payments WHERE order_id=? AND status='pending'", (order_id,)).fetchone()
-            if not row or row["plan"] not in PLANS:
-                return False
-            cur = c.execute("UPDATE payments SET status='paid', tx=? WHERE order_id=? AND status='pending'", (str(tx or "")[:60], order_id))
-            if cur.rowcount != 1:
-                return False
-            u = c.execute("SELECT premium_until FROM users WHERE sub=?", (row["sub"],)).fetchone()
-            start = max(time.time(), (u["premium_until"] or 0) if u else 0)
-            c.execute("UPDATE users SET premium_until=? WHERE sub=?", (start + PLANS[row["plan"]][1] * 86400, row["sub"]))
-            c.commit()
-            IDENT.clear()
-            return True
-        finally:
-            c.close()
-
-
-@app.route("/api/premium/result", methods=["POST"])
-def api_premium_result():
-    """Epoint-in server-server bildirişi: imza yoxlanılır, məbləğ bizim sifarişlə üst-üstə düşməlidir."""
-    data = request.form.get("data", "")
-    sig = request.form.get("signature", "")
-    if not (EPOINT_PRIVATE and data and sig) or not hmac.compare_digest(epoint_sign(data), sig):
-        abort(400)
-    try:
-        info = json.loads(base64.b64decode(data).decode())
-    except Exception:
-        abort(400)
-    if str(info.get("status")) == "success":
-        oid = str(info.get("order_id") or "")
-        row = dbq("SELECT amount FROM payments WHERE order_id=?", (oid,), one=True)
-        try:
-            paid = float(info.get("amount")) if info.get("amount") is not None else None
-        except (TypeError, ValueError):
-            paid = None
-        if row and (paid is None or abs(paid - float(row["amount"])) < 0.005):
-            _grant_premium(oid, info.get("transaction"))
-    return Response("ok", mimetype="text/plain")
-
-
-@app.route("/api/premium/color", methods=["POST"])
-def api_premium_color():
-    sub, _ = auth_sub()
-    u = dbq("SELECT premium_until FROM users WHERE sub=?", (sub,), one=True)
-    if not u or (u["premium_until"] or 0) <= time.time():
-        abort(403)
-    col = str((request.get_json(silent=True) or {}).get("color") or "")
-    if col and col not in PCOLORS:
-        abort(400)
-    dbq("UPDATE users SET pcolor=? WHERE sub=?", (col or None, sub))
-    IDENT.clear()
-    return jsonify(pcolor=col)
 
 
 # ---- İzləmə statistikası ----
