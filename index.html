@@ -794,12 +794,11 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #stkgrid button img{display:block;width:36px;height:36px;margin:0 auto;pointer-events:none}
 .meta{opacity:1}
 .meta>span{opacity:.75}
-.rxs{display:flex;flex-wrap:wrap;gap:2px;margin-right:auto}
-.rx{display:inline-flex;align-items:center;gap:2px;padding:0 2px;border-radius:5px;background:none;color:inherit;font-size:12px;font-weight:700;line-height:1;cursor:pointer}
-.rx img{width:20px;height:20px;display:block}
-.rx.mine{box-shadow:inset 0 -2px 0 var(--amber)}
-.m.me .rx.mine{box-shadow:inset 0 -2px 0 var(--ink)}
-.m.stkm.me .rx.mine{box-shadow:inset 0 -2px 0 var(--amber)}
+.m.hasrx{margin-bottom:15px}
+.rxs{position:absolute;right:10px;bottom:-14px;display:flex;gap:3px;z-index:2}
+.rx{display:inline-flex;align-items:center;gap:3px;padding:2px 6px 2px 5px;border-radius:999px;background:var(--velvet-2);color:var(--text);font-size:12px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 0 0 2.5px var(--velvet)}
+.rx img{width:17px;height:17px;display:block}
+.rx.mine{background:var(--seat-2);box-shadow:0 0 0 2.5px var(--velvet),inset 0 0 0 1.5px var(--amber)}
 .m{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #rxpick{position:fixed;z-index:70;display:flex;gap:2px;padding:6px 8px;border-radius:999px;background:var(--seat-2);box-shadow:0 8px 28px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
 #rxpick[hidden]{display:none}
@@ -808,6 +807,27 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #rxpick button.on{background:rgba(255,255,255,.16)}
 #rxpick img{display:block;width:30px;height:30px;pointer-events:none}
 #lvHostRow{display:block;margin:0 0 16px}
+/* ---- video növbəsi ---- */
+#qbtn{position:relative}
+#qbtn b{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--rose);color:var(--ink);font-size:11px;font-weight:800;line-height:18px;text-align:center}
+#qbtn b[hidden]{display:none}
+#qbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;background:rgba(10,4,16,.6)}
+#qbox[hidden]{display:none}
+#qbox .lv-card{max-height:84dvh;overflow-y:auto}
+#qlist{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+#qlist .qe{color:var(--muted);font-size:14px;text-align:center;padding:14px 0}
+.qi{display:flex;align-items:center;gap:10px;padding:6px;border-radius:14px;background:var(--seat-2)}
+.qi img{flex:none;width:72px;height:40px;object-fit:cover;border-radius:8px;background:var(--velvet-2)}
+.qi .qph{flex:none;display:grid;place-items:center;width:72px;height:40px;border-radius:8px;background:var(--velvet-2);color:var(--rose)}
+.qi .qt{flex:1;min-width:0;font-size:13px;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:pointer}
+.qi button{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:transparent;color:var(--muted);font-size:14px}
+.qi button:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.qnow{display:flex;gap:8px;margin-bottom:10px}
+.qnow input{flex:1;min-width:0;height:42px;padding:0 14px;border-radius:12px;background:var(--velvet-2);color:var(--text);font-size:15px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.qnow button{flex:none;width:42px;height:42px;border-radius:50%;background:var(--rose);color:var(--ink);font-size:16px}
+#ytres .r{position:relative}
+#ytres .r .qadd{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(21,10,29,.82);color:var(--rose);font-size:15px}
+#ytres .r .qadd.on{background:var(--rose);color:var(--ink)}
 #lvHostRow[hidden]{display:none}
 #lvHostRow span{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--muted)}
 #lvHost{width:100%;height:46px;padding:0 12px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line);font-size:15px}
@@ -1065,6 +1085,7 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
   <div class="bar">
     <button id="back" aria-label="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <button id="homebtn" aria-label="Ana səhifə"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
+    <button id="qbtn" aria-label="Video növbəsi"><i class="fa-solid fa-list-ol" aria-hidden="true"></i><b hidden>0</b></button>
     <input id="url" placeholder="Link yaz..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
     <button id="load" class="pink" aria-label="Aç"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
     <button id="big" aria-label="Ekranı böyüt"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
@@ -1120,6 +1141,22 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
     <div class="lv-btns">
       <button id="pbClose">Bağla</button>
       <button id="pbAct" hidden></button>
+    </div>
+  </div>
+</div>
+
+<div id="qbox" hidden role="dialog" aria-modal="true" aria-labelledby="qTitle">
+  <div class="lv-card">
+    <h2 id="qTitle">Video növbəsi</h2>
+    <p>Biri bitəndə növbəti avtomatik açılır. YouTube nəticələrindəki <b style="letter-spacing:0">+</b> düyməsi ilə də əlavə edə bilərsən.</p>
+    <div id="qlist"></div>
+    <div class="qnow">
+      <input id="qurl" placeholder="Video linki yaz..." autocomplete="off" autocapitalize="off" autocorrect="off" aria-label="Növbəyə link əlavə et">
+      <button id="qadd" type="button" aria-label="Əlavə et"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+    </div>
+    <div class="lv-btns">
+      <button id="qclose" class="alt">Bağla</button>
+      <button id="qskip">Növbətiyə keç</button>
     </div>
   </div>
 </div>
@@ -1200,7 +1237,7 @@ let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resol
 let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
 const hist = [];
 let myRole = 'viewer', hostOnly = false, rv = -1, roleMap = {};
-const CTRL_T = ['play', 'pause', 'seek', 'sync', 'load', 'wv'];
+const CTRL_T = ['play', 'pause', 'seek', 'sync', 'load', 'wv', 'q'];
 const canCtl = () => !hostOnly || myRole !== 'viewer';
 const vid = $('vid'), web = $('web');
 function mute(ms){ ignoreUntil = Math.max(ignoreUntil, Date.now() + ms); }
@@ -1264,6 +1301,7 @@ function updatePeers(n){
     connected = true;
     setStatus('Birlikdəsiniz');
     if(curUrl) send({t:'load', url: curUrl, hello: true, at: navAt});
+    if(queue.length) send({t:'q', list: queue});
     if(curUrl && (kind === 'file' || kind === 'yt')) setTimeout(() => {   // qayıdan şəxs videonu cari yerdən davam etsin
       if(!connected || (kind !== 'file' && kind !== 'yt')) return;
       const t = getTime();
@@ -1306,8 +1344,10 @@ function handle(m){
     (Array.isArray(m.ids) ? m.ids : []).forEach(id => setReceipt(id, m.t === 'read' ? 3 : 2));
   }
   else if(m.t === 'voice' || m.t === 'vmute' || m.t === 'rtc') voiceMsg(m);
+  else if(m.t === 'q'){ qSet(m.list, false); }
   else if(m.t === 'load' && typeof m.url === 'string' && m.url){
     if(m.hello && (m.url === curUrl || (m.at || 0) <= navAt)) return;
+    if(m.qn && m.url === curUrl) return;   // növbədən keçidi hər iki tərəf eyni anda özü etdi
     loadPage(m.url, true);
   }
   else if(m.t === 'uploading' && typeof m.name === 'string'){
@@ -1599,6 +1639,90 @@ vid.addEventListener('error', () => {
 });
 $('lfile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; uploadLocal(f); });
 
+
+/* ---------- Video növbəsi: biri bitəndə növbəti avtomatik açılır, hər iki tərəfdə eyni siyahı ---------- */
+const Q_MAX = 12;
+let queue = [], qAt = 0;
+function qClean(list){
+  const out = [];
+  (Array.isArray(list) ? list : []).forEach(x => {
+    if(!x || typeof x.u !== 'string' || !/^https?:\/\//i.test(x.u) || x.u.length > 200 || out.length >= Q_MAX) return;
+    out.push({u: x.u, t: typeof x.t === 'string' ? x.t.slice(0, 60) : ''});
+  });
+  return out;
+}
+function qSet(list, push){
+  queue = qClean(list);
+  qRender();
+  if(push) send({t: 'q', list: queue});
+}
+function qAdd(url, title){
+  if(!room){ sysMsg('Əvvəlcə otağa qoşul'); return false; }
+  if(!canCtl()){ sysMsg('Yalnız host və moderatorlar növbəyə əlavə edə bilər'); return false; }
+  if(queue.length >= Q_MAX){ sysMsg('Növbə doludur (' + Q_MAX + ' video)'); return false; }
+  url = String(url || '').trim();
+  if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  if(url.length > 200){ sysMsg('Link çox uzundur'); return false; }
+  let host = '';
+  try{ host = new URL(url).hostname.replace(/^www\./, ''); }catch(e){ sysMsg('Link düzgün deyil'); return false; }
+  qSet(queue.concat([{u: url, t: title || host}]), true);
+  return true;
+}
+function qThumb(u){ const id = ytId(u); return id && YT_ID_RE.test(id) ? 'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg' : ''; }
+function qRender(){
+  const n = queue.length, bd = $('qbtn').querySelector('b');
+  bd.textContent = String(n); bd.hidden = !n;
+  const list = $('qlist'); list.textContent = '';
+  if(!n){ const e = document.createElement('div'); e.className = 'qe'; e.textContent = 'Növbə boşdur'; list.appendChild(e); }
+  queue.forEach((it, i) => {
+    const row = document.createElement('div'); row.className = 'qi';
+    const th = qThumb(it.u);
+    if(th){ const im = document.createElement('img'); im.src = th; im.alt = ''; im.loading = 'lazy'; row.appendChild(im); }
+    else { const ph = document.createElement('span'); ph.className = 'qph'; ph.innerHTML = '<i class="fa-solid fa-film" aria-hidden="true"></i>'; row.appendChild(ph); }
+    const t = document.createElement('div'); t.className = 'qt'; t.textContent = it.t || it.u;
+    t.onclick = () => qPlayAt(i);   // adına toxun: indi aç
+    row.appendChild(t);
+    const rm = document.createElement('button'); rm.type = 'button'; rm.setAttribute('aria-label', 'Sil');
+    rm.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+    rm.onclick = () => { if(!canCtl()){ sysMsg('Yalnız host və moderatorlar növbəni dəyişə bilər'); return; } qSet(queue.filter((_, j) => j !== i), true); };
+    row.appendChild(rm);
+    list.appendChild(row);
+  });
+  $('qskip').disabled = !n; $('qskip').style.opacity = n ? '' : '.45';
+}
+function qPlayAt(i){
+  if(!canCtl()){ sysMsg('Yalnız host və moderatorlar video seçə bilər'); return; }
+  const it = queue[i]; if(!it) return;
+  qSet(queue.filter((_, j) => j !== i), true);
+  $('qbox').hidden = true;
+  loadPage(it.u, false);
+}
+function qAdvance(){
+  if(!queue.length) return;
+  const now = Date.now();
+  if(now - qAt < 4000) return;   // "ended" hadisəsi iki dəfə gələ bilər
+  qAt = now;
+  const it = queue[0];
+  queue = queue.slice(1); qRender();
+  if(canCtl()){ send({t: 'q', list: queue}); send({t: 'load', url: it.u, qn: 1}); }
+  sysMsg('Növbədəki video açılır');
+  loadPage(it.u, true);
+}
+$('qbtn').onclick = () => { qRender(); $('qbox').hidden = false; };
+$('qclose').onclick = () => { $('qbox').hidden = true; };
+$('qbox').addEventListener('click', e => { if(e.target === $('qbox')) $('qbox').hidden = true; });
+$('qskip').onclick = () => {
+  if(!canCtl()){ sysMsg('Yalnız host və moderatorlar növbəni dəyişə bilər'); return; }
+  qAt = 0; $('qbox').hidden = true; qAdvance();
+};
+function qAddFromInput(){
+  const v = $('qurl').value.trim(); if(!v) return;
+  if(qAdd(v, '')) $('qurl').value = '';
+}
+$('qadd').onclick = qAddFromInput;
+$('qurl').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); qAddFromInput(); } });
+qRender();
+
 /* ---------- Başlanğıc səhifə ---------- */
 const TILES = [
   {i: '<i class="fa-brands fa-youtube" aria-hidden="true"></i>', t: 'YouTube axtarışı', f: () => ytOpen()},
@@ -1715,6 +1839,14 @@ function ytRender(d){
     t.appendChild(s);
     el.appendChild(th); el.appendChild(t);
     const play = () => loadPage('https://www.youtube.com/watch?v=' + v.id, false);
+    const qa = document.createElement('button'); qa.type = 'button'; qa.className = 'qadd';
+    qa.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i>';
+    qa.setAttribute('aria-label', 'Növbəyə əlavə et');
+    qa.onclick = ev => {
+      ev.stopPropagation();
+      if(qAdd('https://www.youtube.com/watch?v=' + v.id, String(v.title || ''))){ qa.classList.add('on'); qa.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>'; setTimeout(() => { qa.classList.remove('on'); qa.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i>'; }, 1400); }
+    };
+    el.appendChild(qa);
     el.onclick = play;
     el.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); play(); } };
     list.appendChild(el);
@@ -1860,6 +1992,7 @@ function applyRemote(m){
 }
 function ytState(e){
   if(e.data === 1) $('tap').style.display = 'none';
+  if(e.data === 0){ qAdvance(); return; }   // video bitdi: növbədəki açılsın
   if(ignoring()) return;
   if(e.data !== 1 && e.data !== 2) return;
   const t = yt.getCurrentTime(), pl = e.data === 1;
@@ -1867,6 +2000,7 @@ function ytState(e){
   sendLocal({t: pl ? 'play' : 'pause', time: t});
 }
 vid.addEventListener('playing', () => { $('tap').style.display = 'none'; });
+vid.addEventListener('ended', () => { if(kind === 'file') qAdvance(); });
 vid.addEventListener('loadedmetadata', () => {   // video gec yüklənəndə qarşı tərəfin son vaxtına keç
   if(kind !== 'file' || !lastRemote.at || Date.now() - lastRemote.at > 20000) return;
   const t = lastRemote.time + (wantPlay ? (Date.now() - lastRemote.at) / 1000 : 0);
@@ -2466,6 +2600,7 @@ async function leaveRoom(){
   flushWatch(); myRole = 'viewer'; hostOnly = false; rv = -1; roleMap = {};
   $('rolebox').hidden = true; $('stkpanel').hidden = true; document.body.classList.remove('viewer-lock'); $('lock').hidden = false;
   room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null; peerSet = new Map(); peerList = [];
+  queue = []; qRender(); $('qbox').hidden = true;
   curUrl = null; navAt = 0; lastAt = 0; ytPending = null; hist.length = 0; autoNavs = []; autoWarned = false;
   showMode('home');                              // video / sayt dayansın
   document.body.classList.remove('big');
@@ -3385,9 +3520,10 @@ function rxLoad(mid, others, my){
 }
 function rxRender(mid){
   const el = msgEls.get(mid); if(!el) return;
-  const meta = el.querySelector('.meta'); if(!meta) return;
-  const old = meta.querySelector('.rxs'); if(old) old.remove();
-  const m = rxs.get(mid); if(!m || !m.size) return;
+  const old = el.querySelector(':scope > .rxs'); if(old) old.remove();
+  const m = rxs.get(mid);
+  el.classList.toggle('hasrx', !!(m && m.size));
+  if(!m || !m.size) return;
   const cnt = new Map(); m.forEach(e => cnt.set(e, (cnt.get(e) || 0) + 1));
   const mine = m.get('me');
   const row = document.createElement('div'); row.className = 'rxs';
@@ -3400,7 +3536,7 @@ function rxRender(mid){
     c.onclick = ev => { ev.stopPropagation(); toggleReact(mid, e); };
     row.appendChild(c);
   });
-  meta.insertBefore(row, meta.firstChild);
+  el.appendChild(row);
 }
 function toggleReact(mid, e){
   if(!room || !mid) return;

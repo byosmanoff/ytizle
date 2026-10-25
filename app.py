@@ -71,7 +71,7 @@ def admit(r, pid):
     r["members"].add(pid)
 
 
-CTRL_TYPES = {"play", "pause", "seek", "sync", "load", "wv"}   # videonu idarə edən mesajlar
+CTRL_TYPES = {"play", "pause", "seek", "sync", "load", "wv", "q"}   # videonu idarə edən mesajlar
 GIF_RE = re.compile(r"^https://media\d*\.giphy\.com/[\w\-/.=]+\.gif(\?[\w=&\-.%]*)?$")
 HIST_KEEP = 300
 
