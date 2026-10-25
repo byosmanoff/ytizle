@@ -187,6 +187,9 @@ def api_send():
         if msg.get("t") in CTRL_TYPES and not can_ctl(r, pid):
             return jsonify(ok=True, dropped=True)   # "yalnız host idarə edir" rejimi
         if msg.get("t") == "chat":
+            msg.pop("rl", None)   # rol nişanı yalnız serverdən gəlir, saxtalaşdırmaq olmur
+            if role_of(r, pid) in ("host", "mod"):
+                msg["rl"] = role_of(r, pid)
             g = msg.get("gif")
             if g is not None and not (isinstance(g, str) and GIF_RE.match(g)):
                 msg.pop("gif", None)

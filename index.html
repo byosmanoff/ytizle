@@ -721,6 +721,13 @@ body.invoice #vmic{display:none}
 #pbAct:disabled{opacity:.55}
 .m:not(.me) b{cursor:pointer}
 #status[data-on="1"]{cursor:pointer}
+/* yüngül rejim: zəif kompüterlərdə animasiya və kölgə yükünü azaldır */
+body.lite .floaties{display:none!important}
+body.lite .pair,body.lite .live i,body.lite .mticket .pair{animation:none!important}
+body.lite .ticket,body.lite .mticket{filter:none!important;transform:none!important;animation:none!important;transition:none!important}
+body.lite button,body.lite .tile,body.lite .stat{transition:none!important}
+body.lite #player{box-shadow:0 0 0 1px var(--line)!important}
+body.lite .lv-card{animation:none!important}
 
 /* ================= Rollar, stiker/GIF, statistika, seanslar, PWA ================= */
 #codebar button[hidden]{display:none}
@@ -780,6 +787,11 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .pl-t small{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted)}
 .pl-g{margin-top:6px;font-size:12px;color:var(--muted)}
 .pl-b{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+.rolei{display:inline-grid;place-items:center;flex:none;width:17px;height:17px;border-radius:50%;font-size:9px;line-height:1}
+.rolei i{display:block;line-height:1}
+.rolei.host{background:var(--amber);color:var(--ink)}
+.rolei.mod{background:#7be0a5;color:#0f3a24}
 </style>
 </head>
 <body>
@@ -925,6 +937,13 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
     <label class="swrow" for="pinv">
       <span><b>Otağa dəvətlər</b><small id="pinvhint">Açıq: hər kəs səni otağa dəvət edə bilər.</small></span>
       <input type="checkbox" id="pinv" class="sw" checked>
+    </label>
+  </div>
+  <div class="card">
+    <h2>Performans</h2>
+    <label class="swrow" for="plite">
+      <span><b>Yüngül rejim</b><small>Animasiyaları və kölgə effektlərini azaldır. Sayt kompüterdə ləng işləyirsə aç.</small></span>
+      <input type="checkbox" id="plite" class="sw">
     </label>
   </div>
   <div class="card">
@@ -1212,7 +1231,7 @@ function handle(m){
     if(m.id && msgEls.has(m.id)) return;
     clearTyping(); bumpUnread(); learnPeerName(m.name);
     if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
-    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1});
+    const el = addMsg(m.name, typeof m.text === 'string' ? m.text : '', false, {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, rl: m.rl});
     if(m.id){ send({t:'dlv', ids:[m.id]}); watchRead(el, m.id); }
   }
   else if(m.t === 'dlv' || m.t === 'read'){
@@ -1303,7 +1322,7 @@ async function pollLoop(){
 /* ---------- Bilet cırılır ---------- */
 function tearTicket(){
   const j = $('join'), tk = j.querySelector('.ticket'), top = j.querySelector('.t-main'), bot = j.querySelector('.t-stub');
-  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || document.body.classList.contains('lite');
   if(reduce || !tk || !bot || !bot.animate){ j.style.display = 'none'; return; }
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   const seam = top.offsetHeight, w = tk.offsetWidth;
@@ -1331,7 +1350,7 @@ function tearTicket(){
 
 /* ---------- Pərdə açılır (otağa qoşulanda, kinoteatr kimi) ---------- */
 function tearMenuTicket(){
-  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || document.body.classList.contains('lite');
   if(reduce || !document.body.animate || $('menu').style.display === 'none' || $('join').style.display !== 'none') return;
   const box = document.createElement('div'); box.className = 'cfx'; box.setAttribute('aria-hidden', 'true');
   box.innerHTML = '<i class="cl"></i><i class="cr"></i><i class="cv"></i>';
@@ -1799,13 +1818,19 @@ function vbEl(){
   const s = document.createElement('span'); s.className = 'vb'; s.title = 'Təsdiqlənmiş hesab'; s.innerHTML = VB_SVG;
   return s;
 }
+function roleIcon(r){
+  const s = document.createElement('span'); s.className = 'rolei ' + r;
+  s.title = r === 'host' ? 'Host' : 'Moderator';
+  s.innerHTML = r === 'host' ? '<i class="fa-solid fa-crown" aria-hidden="true"></i>' : '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>';
+  return s;
+}
 function addMsg(name, text, mine, o){
   o = o || {};
   const d = document.createElement('div'); d.className = 'm' + (mine ? ' me' : '');
   d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : o.gif ? 'GIF' : o.stk ? String(o.stk) : '');
   if(mine) d.dataset.st = o.hist ? '3' : '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
-  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); d.appendChild(b);
+  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
   if(!mine) b.onclick = () => openPeerCard(peerForMsg(o.u, name));
   if(o.reply && o.reply.id){
     const q = document.createElement('div'); q.className = 'q';
@@ -1988,7 +2013,7 @@ $('imgfile').onchange = async () => {
   const id = newId(), local = URL.createObjectURL(blob);
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
-  const el = addMsg(myName, '', true, {id, reply: rp, u: myU, av: myV, img: local, local: true});
+  const el = addMsg(myName, '', true, {id, reply: rp, u: myU, av: myV, img: local, local: true, rl: myRole});
   ownState.set(id, 1); clearReply();
   el.classList.add('sending');
   try{
@@ -2009,7 +2034,7 @@ function sendChat(){
   const id = newId();
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
-  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge)});
+  addMsg(myName, t, true, {id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge), rl: myRole});
   ownState.set(id, 1);
   send({t: 'chat', id, name: myName, text: t, reply: rp, u: myU, av: myV});
   $('msg').value = ''; clearReply();
@@ -2598,6 +2623,7 @@ function showMenu(){
   $('app').style.display = 'none';
   $('menu').style.display = 'flex';
   renderName();
+  lastFr = ''; lastInv = '';
   loadHistory(); loadStats(); showInstall();
   $('mquote').textContent = '“' + DAILY[Math.floor(Date.now() / 864e5) % DAILY.length] + '”';
   fetch('/api/stats', {cache: 'no-store'}).then(r => r.json()).then(d => { $('stl').textContent = d.people; }).catch(() => {});
@@ -2770,7 +2796,7 @@ async function loadFriends(){
   if(!token) return;
   try{
     const r = await api('/api/friends');
-    if(r.ok) renderFriends(await r.json());
+    if(r.ok){ const t = await r.text(); if(t !== lastFr){ lastFr = t; renderFriends(JSON.parse(t)); } }
   }catch(e){}
 }
 async function fillInvFriends(){
@@ -2870,7 +2896,8 @@ async function loadInvites(){
   try{
     const r = await api('/api/invites');
     if(!r.ok) return;
-    renderInvites((await r.json()).invites || []);
+    const list = (await r.json()).invites || [], t = JSON.stringify(list);
+    if(t !== lastInv){ lastInv = t; renderInvites(list); }
   }catch(e){}
 }
 function renderInvites(list){
@@ -2926,6 +2953,7 @@ function fillProfile(){
 }
 function openProfile(){
   if(!account) return;
+  $('plite').checked = document.body.classList.contains('lite');
   pmsg(''); hint('puserhint', 'Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.');
   hint('pemailhint', ''); $('pecoderow').hidden = true; $('pecode').value = '';
   $('delbox').hidden = true; $('delopen').hidden = false;
@@ -3166,7 +3194,7 @@ async function loadChatHistory(){
       if(m.id && msgEls.has(m.id)) return;
       const mine = !!m.mine;
       addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
-        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, ts: m.ts, hist: true});
+        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
       if(mine && m.id) ownState.set(m.id, 3);
     });
     sysMsg('Əvvəlki söhbət burada bitir');
@@ -3182,7 +3210,7 @@ function sendRich(extra){
   const id = newId();
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
-  addMsg(myName, '', true, Object.assign({id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge)}, extra));
+  addMsg(myName, '', true, Object.assign({id, reply: rp, u: myU, av: myV, vf: !!(account && account.badge), rl: myRole}, extra));
   ownState.set(id, 1);
   send(Object.assign({t: 'chat', id, name: myName, text: '', reply: rp, u: myU, av: myV}, extra));
   clearReply(); $('stkpanel').hidden = true;
@@ -3433,6 +3461,38 @@ document.addEventListener('keydown', e => {
   if(!$('rolebox').hidden) $('rolebox').hidden = true;
   if(!$('planbox').hidden) $('planbox').hidden = true;
 });
+
+/* ---------- Yüngül rejim: avtomatik aşkarlama + əl ilə açar ---------- */
+let lastFr = '', lastInv = '';
+(function(){
+  let pref = null;
+  try{ pref = localStorage.getItem('wt_lite'); }catch(e){}
+  if(pref === '1') document.body.classList.add('lite');
+  if(pref !== null || !window.requestAnimationFrame) return;
+  window.addEventListener('load', () => setTimeout(() => {
+    if(document.visibilityState !== 'visible') return;
+    const ds = []; let last = 0; const t0 = performance.now();
+    const f = t => {
+      if(last) ds.push(t - last);
+      last = t;
+      if(ds.length < 100 && t - t0 < 3000) return requestAnimationFrame(f);
+      const a = ds.slice(5).filter(x => x < 1000).sort((x, y) => x - y);
+      if(a.length < 20) return;
+      const med = a[a.length >> 1], slow = a.filter(x => x > 45).length / a.length;
+      if(med > 26 || slow > .15){
+        document.body.classList.add('lite');
+        try{ localStorage.setItem('wt_lite', '1'); }catch(e){}
+      }
+    };
+    requestAnimationFrame(f);
+  }, 1500));
+})();
+$('plite').onchange = () => {
+  const on = $('plite').checked;
+  document.body.classList.toggle('lite', on);
+  try{ localStorage.setItem('wt_lite', on ? '1' : '0'); }catch(e){}
+  pmsg(on ? 'Yüngül rejim açıldı' : 'Yüngül rejim söndürüldü', true);
+};
 
 async function boot(){
   if(token){
