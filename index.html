@@ -403,7 +403,7 @@ body.invoice #vmic{display:none}
 #menu{display:none;flex:1;flex-direction:column;gap:14px;overflow-y:auto;overscroll-behavior:contain;
   padding:max(16px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));
   background:radial-gradient(100% 40% at 50% 0,rgba(255,196,107,.09),transparent 70%),var(--velvet)}
-@media (min-width:700px) and (max-width:1023px){#menu{max-width:520px;margin:0 auto;width:100%}}
+@media (min-width:700px) and (max-width:1023px){#menu{max-width:none;width:100%;padding-left:max(16px,calc((100% - 488px)/2));padding-right:max(16px,calc((100% - 488px)/2))}}
 .mhead{display:flex;align-items:center;gap:10px}
 .av{width:46px;height:46px;border-radius:50%;background:var(--rose);color:var(--ink);display:grid;place-items:center;font-weight:800;font-size:20px;flex:none}
 .mhello{flex:1;min-width:0}
@@ -619,7 +619,7 @@ body.invoice #vmic{display:none}
   #join h1{font-size:46px}
 
   /* ana menyu: solda bilet+say, sağda tarixçə */
-  #menu{max-width:1160px;margin:0 auto;width:100%;padding:32px 36px 40px;gap:22px}
+  #menu{max-width:none;width:100%;padding:32px max(36px,calc((100% - 1088px)/2)) 40px;gap:22px}
   .mbody{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:30px;align-items:start}
   .mcol{display:flex;flex-direction:column;gap:18px;min-width:0}
   .mright .card{padding:20px 22px}
@@ -669,7 +669,7 @@ body.invoice #vmic{display:none}
   .fly{font-size:40px}
 }
 @media (min-width:1500px){
-  #menu{max-width:1280px}
+  #menu{padding-left:max(36px,calc((100% - 1208px)/2));padding-right:max(36px,calc((100% - 1208px)/2))}
   #hvids .hs{width:240px}
 }
 .vb{display:inline-block;width:1.05em;height:1.05em;margin-left:4px;color:var(--rose);vertical-align:-.17em;flex:none}
@@ -2614,7 +2614,7 @@ function renderName(){
   $('muser').textContent = account && account.username ? '@' + account.username : '';
   setAvatar($('mav'), account && account.avatar, account && account.name);
 }
-const fmtDate = ts => new Date(ts * 1000).toLocaleString('az', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+const fmtDate = ts => azDate(new Date(ts * 1000));
 async function loadHistory(){
   try{
     const r = await api('/api/history');
@@ -3101,6 +3101,12 @@ $('clearhist').onclick = async () => {
    Rollar, stiker/GIF, mesaj tarixçəsi, statistika, planlı seanslar, bio, PWA
    ===================================================================== */
 
+/* ---------- Azərbaycanca gün/ay adları (brauzerin 'az' dili olmasa da işləsin) ---------- */
+const AZ_WD = ['Baz', 'B.e', 'Ç.a', 'Çər', 'C.a', 'Cüm', 'Şən'];
+const AZ_MO = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avq', 'sen', 'okt', 'noy', 'dek'];
+const azTime = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+const azDate = d => d.getDate() + ' ' + AZ_MO[d.getMonth()] + ', ' + azTime(d);
+
 /* ---------- Otaq rolları ---------- */
 function applyRoles(d){
   const old = myRole, oldHO = hostOnly;
@@ -3256,7 +3262,7 @@ function renderStats(d){
     const c = document.createElement('div'), i = document.createElement('i');
     i.style.height = Math.max(5, Math.round(x.s / mx * 100)) + '%'; i.title = fmtDur(x.s);
     c.appendChild(i); bars.appendChild(c);
-    const l = document.createElement('span'); l.textContent = new Date(x.d + 'T12:00:00').toLocaleDateString('az', {weekday: 'short'}); lab.appendChild(l);
+    const l = document.createElement('span'); l.textContent = AZ_WD[new Date(x.d + 'T12:00:00').getDay()]; lab.appendChild(l);
   });
   const m = $('wmini'); m.textContent = '';
   const b1 = document.createElement('b'); b1.textContent = fmtDur(d.total);
@@ -3270,7 +3276,7 @@ let plansCache = [], planTick = 0, plSel = new Set();
 let seenPl = new Set();
 try{ seenPl = new Set(JSON.parse(localStorage.getItem('wt_seen_plans') || '[]')); }catch(e){}
 function markSeen(k){ seenPl.add(k); try{ localStorage.setItem('wt_seen_plans', JSON.stringify([...seenPl].slice(-200))); }catch(e){} }
-const fmtPlan = ts => new Date(ts * 1000).toLocaleString('az', {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
+const fmtPlan = ts => { const d = new Date(ts * 1000); return AZ_WD[d.getDay()] + ', ' + azDate(d); };
 function relTime(ts){
   const d = ts - Date.now() / 1000;
   if(d <= -60) return 'başlayıb';
@@ -3300,7 +3306,7 @@ function renderPlans(){
     const h = document.createElement('div'); h.className = 'pl-h';
     const dd = document.createElement('div'); dd.className = 'pl-d';
     const b = document.createElement('b'); b.textContent = d.getDate();
-    dd.appendChild(b); dd.appendChild(document.createTextNode(d.toLocaleString('az', {month: 'short'})));
+    dd.appendChild(b); dd.appendChild(document.createTextNode(AZ_MO[d.getMonth()]));
     const t = document.createElement('div'); t.className = 'pl-t';
     t.appendChild(document.createTextNode(p.title));
     const sm = document.createElement('small');
