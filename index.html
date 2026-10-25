@@ -161,6 +161,31 @@ input{outline:none}
 .r img{width:132px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none;background:var(--seat)}
 .r div{min-width:0;font-size:14px;line-height:1.3;font-weight:500}
 .r small{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:400}
+/* öz YouTube axtarış səhifəmiz */
+#ytres{background:radial-gradient(120% 55% at 50% 0,rgba(255,122,156,.17),transparent 65%),radial-gradient(90% 45% at 100% 100%,rgba(255,196,107,.09),transparent 70%),var(--velvet-2)}
+.ysb{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 12px 8px;background:linear-gradient(var(--velvet-2) 72%,rgba(30,16,41,0))}
+.ysb .yin{flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:46px;padding:0 15px;border-radius:999px;background:var(--seat);box-shadow:inset 0 0 0 1.5px var(--line)}
+.ysb .yin:focus-within{box-shadow:inset 0 0 0 2px var(--rose)}
+.ysb .yin i{color:var(--rose);font-size:15px}
+.ysb input{flex:1;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;-webkit-appearance:none;appearance:none}
+.ysb input::placeholder{color:#8f7aa8}
+.ysb input::-webkit-search-cancel-button{-webkit-appearance:none}
+.ysb button{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--rose);color:var(--ink);font-size:16px}
+#ytres .r{margin:0 12px 10px;padding:8px;border-radius:16px;background:var(--seat);border-bottom:0}
+#ytres .r:hover{background:var(--seat-2)}
+#ytres .r:active{transform:scale(.985)}
+.rt{position:relative;flex:none;display:block}
+.rt img{display:block}
+.dur{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.78);color:#fff;font-size:11px;font-weight:700;font-style:normal;line-height:1.3}
+.yhero{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 24px 6px;text-align:center}
+.yhero span{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--seat);color:var(--rose);font-size:28px;box-shadow:0 10px 30px -8px rgba(255,122,156,.55)}
+.yhero b{font-size:18px;font-weight:800}
+.yhero p{max-width:310px;color:var(--muted);font-size:14px;line-height:1.45}
+.ylab{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px;color:var(--muted);font-size:13px;font-weight:700}
+.ylab button{padding:4px 8px;background:transparent;color:var(--muted);font-size:12px;font-weight:600}
+.yrec{display:flex;flex-wrap:wrap;gap:8px;padding:2px 14px 16px}
+.yrec button{padding:9px 14px;border-radius:999px;background:var(--seat);color:var(--text);font-size:14px;font-weight:600}
+.yrec button:active{background:var(--seat-2)}
 
 /* url bar */
 .bar{display:flex;align-items:center;gap:6px;padding:10px 12px;flex:none;background:none}
@@ -1015,7 +1040,13 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
     <video id="vid" controls playsinline></video>
     <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
       sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
-    <div id="ytres"></div>
+    <div id="ytres">
+      <form class="ysb" id="ytform" action="javascript:void(0)">
+        <label class="yin"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="ytq" type="search" placeholder="YouTube-da axtar..." enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="YouTube-da axtar"></label>
+        <button type="submit" aria-label="Axtar"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+      </form>
+      <div id="ytlist"></div>
+    </div>
     <div id="home"></div>
     <div id="ctlock"></div>
     <div id="ctbadge"><i class="fa-solid fa-crown" aria-hidden="true"></i> Yalnız host idarə edir</div>
@@ -1034,7 +1065,7 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
   <div class="bar">
     <button id="back" aria-label="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <button id="homebtn" aria-label="Ana səhifə"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
-    <input id="url" placeholder="Link və ya yt söz yaz..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
+    <input id="url" placeholder="Link yaz..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
     <button id="load" class="pink" aria-label="Aç"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
     <button id="big" aria-label="Ekranı böyüt"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
   </div>
@@ -1497,8 +1528,10 @@ function ytSearchFromUrl(raw){
   try{ u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw); }catch(e){ return false; }
   if(!/(^|\.)youtube\.com$/i.test(u.hostname)) return false;
   if(u.pathname === '/results'){ ytSearch(u.searchParams.get('search_query') || ''); return true; }
-  if(u.pathname === '/' || u.pathname === ''){ ytSearch(''); return true; }
-  return false;
+  // YouTube-un öz saytı (ana səhifə, kanal, pleylist...) açılmır: əvəzinə öz axtarış səhifəmiz açılır
+  ytOpen();
+  if(u.pathname !== '/' && u.pathname !== '') sysMsg('YouTube-un öz səhifəsi açılmır, videonu burada axtar');
+  return true;
 }
 
 /* ---------- Rejim ---------- */
@@ -1568,7 +1601,7 @@ $('lfile').addEventListener('change', e => { const f = e.target.files && e.targe
 
 /* ---------- Başlanğıc səhifə ---------- */
 const TILES = [
-  {i: '<i class="fa-brands fa-youtube" aria-hidden="true"></i>', t: 'YouTube axtarışı', f: () => { ytSearch(''); $('url').value = 'yt '; $('url').focus(); }},
+  {i: '<i class="fa-brands fa-youtube" aria-hidden="true"></i>', t: 'YouTube axtarışı', f: () => ytOpen()},
   {i: '<i class="fa-solid fa-film" aria-hidden="true"></i>', t: 'Telefondan video', f: () => $('lfile').click()}
 ];
 function showHome(){
@@ -1591,7 +1624,7 @@ function showHome(){
   const tips = document.createElement('div'); tips.className = 'tips';
   [
     ['fa-link', 'Sayt linki', 'yaz, həmin sayta girir'],
-    ['fa-magnifying-glass', 'yt söz', 'YouTube-da axtarır. Məsələn: yt dəniz səsi'],
+    ['fa-magnifying-glass', 'YouTube axtarışı', 'düyməyə bas, sözü yaz, çıxan videolardan birini seç'],
     ['fa-mobile-screen', 'Telefondan video', 'bir nəfər yükləyir, ikiniz birlikdə izləyirsiniz']
   ].forEach(t => {
     const row = document.createElement('div'); row.className = 'tip';
@@ -1625,46 +1658,97 @@ function ytLoad(id){
   }
 }
 
-let ytSeq = 0;
+/* ---------- YouTube axtarışı: öz səhifəmizdə (YouTube-un öz saytı açılmır) ---------- */
+const YT_REC_KEY = 'wt_ytrec';
+const YT_ID_RE = /^[\w-]{11}$/;
+function ytRecent(){
+  try{ const a = JSON.parse(localStorage.getItem(YT_REC_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => typeof x === 'string' && x).slice(0, 8) : []; }
+  catch(e){ return []; }
+}
+function ytRecentAdd(q){
+  try{
+    const a = ytRecent().filter(x => x.toLowerCase() !== q.toLowerCase()); a.unshift(q.slice(0, 60));
+    localStorage.setItem(YT_REC_KEY, JSON.stringify(a.slice(0, 8)));
+  }catch(e){}
+}
+let ytSeq = 0, ytCache = null;
+function ytOpen(){   // "YouTube axtarışı" düyməsi
+  if(ytCache && ytCache.d.length){
+    ++ytSeq; showMode('ytres'); $('ytq').value = ytCache.q; ytRender(ytCache.d); $('ytres').scrollTop = 0;
+  } else {
+    ytSearch(''); $('ytq').focus();
+  }
+}
+function ytEmpty(){
+  const list = $('ytlist'); list.className = ''; list.textContent = '';
+  const hero = document.createElement('div'); hero.className = 'yhero';
+  const ic = document.createElement('span'); ic.innerHTML = '<i class="fa-brands fa-youtube" aria-hidden="true"></i>';
+  const t = document.createElement('b'); t.textContent = 'Birlikdə izləyəcəyin videonu tap';
+  const p = document.createElement('p'); p.textContent = 'Sözü yaz, çıxan videolardan birini seç. İkiniz də eyni anda izləyəcəksiniz.';
+  hero.appendChild(ic); hero.appendChild(t); hero.appendChild(p); list.appendChild(hero);
+  const rec = ytRecent();
+  if(!rec.length) return;
+  const lab = document.createElement('div'); lab.className = 'ylab';
+  const lt = document.createElement('span'); lt.textContent = 'Son axtarışlar';
+  const clr = document.createElement('button'); clr.type = 'button'; clr.textContent = 'Təmizlə';
+  clr.onclick = () => { try{ localStorage.removeItem(YT_REC_KEY); }catch(e){} ytEmpty(); };
+  lab.appendChild(lt); lab.appendChild(clr); list.appendChild(lab);
+  const row = document.createElement('div'); row.className = 'yrec';
+  rec.forEach(q => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = q;
+    b.onclick = () => ytSearch(q); row.appendChild(b);
+  });
+  list.appendChild(row);
+}
+function ytRender(d){
+  const list = $('ytlist'); list.className = ''; list.textContent = '';
+  d.forEach(v => {
+    if(!v || !YT_ID_RE.test(String(v.id))) return;
+    const el = document.createElement('div'); el.className = 'r'; el.tabIndex = 0; el.setAttribute('role', 'button');
+    const th = document.createElement('span'); th.className = 'rt';
+    const img = document.createElement('img'); img.loading = 'lazy'; img.alt = '';
+    if(/^https:\/\/i\.ytimg\.com\//.test(String(v.thumb))) img.src = v.thumb;
+    th.appendChild(img);
+    if(v.len){ const du = document.createElement('em'); du.className = 'dur'; du.textContent = String(v.len); th.appendChild(du); }
+    const t = document.createElement('div'); t.textContent = String(v.title || '');
+    const s = document.createElement('small'); s.textContent = String(v.channel || '');
+    t.appendChild(s);
+    el.appendChild(th); el.appendChild(t);
+    const play = () => loadPage('https://www.youtube.com/watch?v=' + v.id, false);
+    el.onclick = play;
+    el.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); play(); } };
+    list.appendChild(el);
+  });
+}
 async function ytSearch(q){
   const my = ++ytSeq;
+  q = String(q || '').trim();
   showMode('ytres');
-  const box = $('ytres');
-  box.scrollTop = 0;
-  if(!q){
-    box.innerHTML = '';
-    box.className = '';
-    const h = document.createElement('div'); h.className = 'hint';
-    h.textContent = 'YouTube-da axtarmaq üçün yuxarıdakı xanaya yt və axtarış sözünü yaz. Məsələn: yt dəniz səsi';
-    box.appendChild(h);
-    return;
-  }
-  box.textContent = 'Axtarılır...';
-  box.className = 'hint';
+  $('ytres').scrollTop = 0;
+  $('ytq').value = q;
+  const list = $('ytlist');
+  if(!q){ ytEmpty(); return; }
+  ytRecentAdd(q);
+  list.className = 'hint'; list.textContent = 'Axtarılır...';
   try{
     const r = await fetch('/api/yt?q=' + encodeURIComponent(q));
     const d = await r.json();
     if(my !== ytSeq) return;
     if(!r.ok) throw new Error('yt ' + r.status);
-    box.className = '';
-    if(!Array.isArray(d) || !d.length){ box.className = 'hint'; box.textContent = 'Nəticə tapılmadı'; return; }
-    box.textContent = '';
-    d.forEach(v => {
-      const el = document.createElement('div'); el.className = 'r';
-      const img = document.createElement('img'); img.src = v.thumb; img.loading = 'lazy';
-      const t = document.createElement('div'); t.textContent = v.title;
-      const s = document.createElement('small'); s.textContent = v.channel + (v.len ? ' · ' + v.len : '');
-      t.appendChild(s);
-      el.appendChild(img); el.appendChild(t);
-      el.onclick = () => loadPage('https://www.youtube.com/watch?v=' + v.id, false);
-      box.appendChild(el);
-    });
+    if(!Array.isArray(d) || !d.length){ list.className = 'hint'; list.textContent = 'Nəticə tapılmadı'; return; }
+    ytCache = {q, d};
+    ytRender(d);
   }catch(e){
     if(my !== ytSeq) return;
-    box.className = 'hint';
-    box.textContent = 'Axtarış alınmadı, bir az sonra yenidən yoxla';
+    list.className = 'hint';
+    list.textContent = 'Axtarış alınmadı, bir az sonra yenidən yoxla';
   }
 }
+$('ytform').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = $('ytq').value.trim();
+  if(q){ ytSearch(q); $('ytq').blur(); }
+});
 
 let navSeq = 0;
 function loadPage(url, remote, tries = 0){
@@ -1699,6 +1783,7 @@ function loadPage(url, remote, tries = 0){
 function goBack(){
   if(kind === 'ytres' || kind === 'home'){
     if(hist.length) loadPage(hist[hist.length - 1], false);
+    else if(kind === 'ytres') showHome();
     return;
   }
   if(hist.length < 2){ showHome(); return; }
