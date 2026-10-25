@@ -11,9 +11,22 @@
 <meta name="apple-mobile-web-app-title" content="Birlikdə İzlə">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Birlikdə İzlə</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
+<script>
+/* Platforma aşkarlanır: iPhone/iPad = "ios", Android = "android", qalan hər şey (kompüter) = "other".
+   Kompüterdə sınamaq üçün ünvanın sonuna ?os=ios və ya ?os=android əlavə et. */
+(function(){
+  var d = document.documentElement, ua = navigator.userAgent || '', os = 'other';
+  if(/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) os = 'ios';
+  else if(/Android/i.test(ua)) os = 'android';
+  try{ var f = new URLSearchParams(location.search).get('os'); if(f === 'ios' || f === 'android' || f === 'other') os = f; }catch(e){}
+  d.setAttribute('data-os', os);
+  if(os === 'other'){   /* Bricolage şrifti yalnız kompüterdə yüklənir; telefonlar öz sistem şriftini işlədir */
+    var l = document.createElement('link'); l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap';
+    document.head.appendChild(l);
+  }
+})();
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <style>
 :root{
@@ -792,6 +805,204 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .rolei i{display:block;line-height:1}
 .rolei.host{background:var(--amber);color:var(--ink)}
 .rolei.mod{background:#7be0a5;color:#0f3a24}
+
+/* =====================================================================
+   PLATFORMA DİZAYNI
+   iPhone / iPad -> html[data-os="ios"]      Apple üslubu: şüşə səthlər, aşağıdan açılan pəncərələr, SF şrifti, yaşıl açar
+   Android       -> html[data-os="android"]  Material 3 üslubu: tonal səthlər, mərkəzdə dialoq, ripple, Roboto, FAB düymə
+   Kompüterdə (data-os="other") heç nə dəyişmir. Kompüterdə sınamaq üçün: ?os=ios və ya ?os=android
+   ===================================================================== */
+
+/* ============================== iOS ============================== */
+html[data-os="ios"]{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif;
+  --seat:rgba(255,255,255,.085);
+  --seat-2:rgba(255,255,255,.15);
+  --velvet-2:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.12);
+}
+html[data-os="ios"] body{-webkit-font-smoothing:antialiased}
+
+/* toxunanda miqyas əvəzinə solğunlaşma */
+html[data-os="ios"] button:active:not(:disabled),
+html[data-os="ios"] .tile:active{transform:none;opacity:.55}
+
+/* başlıqlar və düymələr */
+html[data-os="ios"] #join h1{font-size:38px;font-weight:700;letter-spacing:-.035em;font-variation-settings:normal}
+html[data-os="ios"] .mticket .mt{font-size:28px;font-weight:700;letter-spacing:-.03em;font-variation-settings:normal}
+html[data-os="ios"] #join button,
+html[data-os="ios"] .btn,
+html[data-os="ios"] .pbtn,
+html[data-os="ios"] .lv-btns button{border-radius:14px;font-weight:600;letter-spacing:-.01em}
+
+/* otaq: yuxarı status, ekran, ünvan xanası */
+html[data-os="ios"] #status{flex:1;padding:8px 14px;border-radius:99px;background:var(--seat);box-shadow:inset 0 0 0 .5px var(--line)}
+html[data-os="ios"] #player{border-radius:22px;box-shadow:0 0 0 .5px rgba(255,255,255,.14),0 18px 44px -14px rgba(255,122,156,.38)}
+html[data-os="ios"] .stage .bar input{border-radius:12px;background:rgba(118,118,128,.26)}
+
+/* mesaj paneli: bulanıq şüşə lent, ox düyməsi */
+html[data-os="ios"] .composer{
+  background:rgba(24,12,33,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+  box-shadow:0 -.5px 0 rgba(255,255,255,.14);gap:4px;padding-top:8px;
+}
+html[data-os="ios"] .composer input{height:38px;border-radius:19px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.24)}
+html[data-os="ios"] .composer input:focus{box-shadow:inset 0 0 0 1.5px var(--rose)}
+html[data-os="ios"] .composer button{width:36px;height:36px;background:transparent;color:var(--rose)}
+html[data-os="ios"] #send{width:34px;height:34px;border-radius:50%;background:var(--rose);color:var(--ink)}
+html[data-os="ios"] #send i{display:none}
+html[data-os="ios"] #send::after{content:"\f062";font-family:"Font Awesome 6 Free";font-weight:900;font-size:15px;line-height:1}
+
+/* mesaj qabarcıqları */
+html[data-os="ios"] .m:not(.stkm){border-radius:20px 20px 20px 6px;padding:8px 14px 7px}
+html[data-os="ios"] .m.me:not(.stkm){border-radius:20px 20px 6px 20px;background:linear-gradient(180deg,#ff8dab,#f0668b)}
+html[data-os="ios"] .sys{background:transparent;font-size:11.5px;font-weight:500}
+
+/* ana menyu və profil */
+html[data-os="ios"] .mhello b{font-size:28px;font-weight:700;letter-spacing:-.03em}
+html[data-os="ios"] .card{
+  border-radius:22px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14);
+  -webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
+}
+html[data-os="ios"] .card.dz{box-shadow:inset 0 0 0 .5px rgba(255,92,138,.5)}
+html[data-os="ios"] #menu .card h2,
+html[data-os="ios"] #profile .card h2{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:12px}
+html[data-os="ios"] .stat{border-radius:20px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14)}
+html[data-os="ios"] .stat b{font-weight:700;letter-spacing:-.03em}
+html[data-os="ios"] .tile{border-radius:20px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14)}
+html[data-os="ios"] .tile span{border-radius:12px;background:linear-gradient(150deg,#ff8dab,#e8567d);color:#fff}
+html[data-os="ios"] .fr,
+html[data-os="ios"] .hs,
+html[data-os="ios"] .pl,
+html[data-os="ios"] .r{border-bottom-width:.5px}
+html[data-os="ios"] .phead{position:relative;min-height:44px}
+html[data-os="ios"] .phead h1{position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;pointer-events:none}
+html[data-os="ios"] .phead .ib{position:relative;z-index:1}
+
+/* iOS açarı: yaşıl */
+html[data-os="ios"] .sw{width:51px;height:31px;background:rgba(120,120,128,.4)}
+html[data-os="ios"] .sw::after{top:2px;left:2px;width:27px;height:27px;box-shadow:0 3px 8px rgba(0,0,0,.35),0 1px 1px rgba(0,0,0,.2);transition:transform .25s cubic-bezier(.3,.9,.3,1)}
+html[data-os="ios"] .sw:checked{background:#34c759}
+html[data-os="ios"] .sw:checked::after{transform:translateX(20px)}
+
+/* pəncərələr: şüşə vərəq */
+html[data-os="ios"] .lv-card{
+  background:rgba(36,21,49,.84);
+  -webkit-backdrop-filter:blur(34px) saturate(180%);backdrop-filter:blur(34px) saturate(180%);
+  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.16),0 24px 60px rgba(0,0,0,.55);
+}
+html[data-os="ios"] .lv-card h2{font-size:21px;font-weight:700;letter-spacing:-.02em}
+@media (max-width:699px){
+  html[data-os="ios"] #leavebox,
+  html[data-os="ios"] #invbox,
+  html[data-os="ios"] #pbox,
+  html[data-os="ios"] #rolebox,
+  html[data-os="ios"] #planbox{padding:8px}
+  html[data-os="ios"] .lv-card{border-radius:32px;padding:12px 20px 20px}
+  html[data-os="ios"] .lv-card::before{content:"";display:block;width:38px;height:5px;margin:0 auto 18px;border-radius:3px;background:rgba(255,255,255,.3)}
+}
+
+/* ============================ Android ============================ */
+html[data-os="android"]{
+  --font:"Google Sans","Google Sans Text",Roboto,"Noto Sans",system-ui,sans-serif;
+  --seat:#2d2238;
+  --seat-2:#3b2e49;
+  --velvet-2:#231a2d;
+  --rose:#ffb3c9;
+  --line:rgba(255,255,255,.07);
+}
+html[data-os="android"] #menu,
+html[data-os="android"] #profile,
+html[data-os="android"] #chat{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.22) transparent}
+
+/* toxunanda miqyas yoxdur: ripple var */
+html[data-os="android"] button:active:not(:disabled),
+html[data-os="android"] .tile:active{transform:none}
+html[data-os="android"] .rip{
+  position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.22;
+  transform:scale(0);animation:rip .6s cubic-bezier(.2,.6,.3,1) forwards;
+}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+
+/* başlıqlar və düymələr: stadion forması */
+html[data-os="android"] #join h1{font-size:36px;font-weight:500;letter-spacing:-.01em;font-variation-settings:normal}
+html[data-os="android"] .mticket .mt{font-size:26px;font-weight:500;letter-spacing:0;font-variation-settings:normal}
+html[data-os="android"] #join button,
+html[data-os="android"] .btn,
+html[data-os="android"] .pbtn,
+html[data-os="android"] .fb:not(.no),
+html[data-os="android"] .lv-btns button{border-radius:100px;font-weight:500;letter-spacing:.01em}
+
+/* doldurulmuş mətn xanaları (Material filled text field) */
+html[data-os="android"] #join input:not(.bad){border-radius:12px 12px 0 0;background:#f1dcd5;box-shadow:inset 0 -1.5px 0 rgba(43,15,38,.45)}
+html[data-os="android"] #join input:not(.bad):focus{box-shadow:inset 0 -3px 0 var(--rose-deep)}
+html[data-os="android"] #join input.bad{border-radius:12px 12px 0 0}
+html[data-os="android"] .mticket #codein{border-radius:100px}
+html[data-os="android"] .frow input,
+html[data-os="android"] #profile .pin,
+html[data-os="android"] #fq,
+html[data-os="android"] #invuser,
+html[data-os="android"] #gifq,
+html[data-os="android"] #planbox input{border-radius:12px 12px 0 0;box-shadow:inset 0 -1px 0 rgba(255,255,255,.5)}
+html[data-os="android"] .frow input:focus,
+html[data-os="android"] #profile .pin:focus,
+html[data-os="android"] #fq:focus,
+html[data-os="android"] #invuser:focus,
+html[data-os="android"] #planbox input:focus{box-shadow:inset 0 -2px 0 var(--rose)}
+
+/* otaq */
+html[data-os="android"] #player{border-radius:24px;box-shadow:0 2px 6px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.4)}
+html[data-os="android"] .composer{gap:6px}
+html[data-os="android"] .composer input{height:44px;background:var(--seat-2)}
+html[data-os="android"] .composer button{width:40px;height:40px;background:transparent;color:var(--muted)}
+html[data-os="android"] #send{width:48px;height:48px;border-radius:16px;background:var(--rose);color:#4a0f27}
+html[data-os="android"] .m:not(.stkm){border-radius:20px 20px 20px 4px}
+html[data-os="android"] .m.me:not(.stkm){border-radius:20px 20px 4px 20px}
+
+/* ana menyu və profil: tonal səthlər, kölgəsiz */
+html[data-os="android"] .mhello b{font-size:22px;font-weight:500;letter-spacing:0}
+html[data-os="android"] .card{border-radius:28px;box-shadow:none;padding:18px 20px}
+html[data-os="android"] .card.dz{box-shadow:inset 0 0 0 1px rgba(255,92,138,.35)}
+html[data-os="android"] #menu .card h2,
+html[data-os="android"] #profile .card h2{font-size:15px;font-weight:500;letter-spacing:.01em;color:var(--rose)}
+html[data-os="android"] .stat{border-radius:24px;background:var(--seat);box-shadow:none}
+html[data-os="android"] .stat b{background:none;color:var(--rose)}
+html[data-os="android"] .stat.now b{color:var(--amber)}
+html[data-os="android"] .tile{border-radius:28px;box-shadow:none}
+html[data-os="android"] .tile span{background:var(--seat-2)}
+html[data-os="android"] .phead h1{font-size:22px;font-weight:400}
+
+/* Material açarı */
+html[data-os="android"] .sw{width:52px;height:32px;box-sizing:border-box;border:2px solid #9d8fb0;background:transparent}
+html[data-os="android"] .sw::after{
+  top:6px;left:6px;width:16px;height:16px;background:#9d8fb0;
+  transition:transform .2s cubic-bezier(.2,0,0,1),width .2s,height .2s,top .2s,left .2s,background-color .2s;
+}
+html[data-os="android"] .sw:checked{background:var(--rose);border-color:var(--rose)}
+html[data-os="android"] .sw:checked::after{top:2px;left:2px;width:24px;height:24px;background:#4a0f27;transform:translateX(20px)}
+
+/* pəncərələr: mərkəzdə Material dialoqu, mətn düymələri */
+html[data-os="android"] #leavebox,
+html[data-os="android"] #invbox,
+html[data-os="android"] #pbox,
+html[data-os="android"] #rolebox,
+html[data-os="android"] #planbox{align-items:center;background:rgba(0,0,0,.52);-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-os="android"] .lv-card{border-radius:28px;background:#32253f;padding:24px 24px 18px;margin-bottom:0;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+html[data-os="android"] .lv-card h2{font-size:24px;font-weight:400;letter-spacing:0}
+html[data-os="android"] .lv-btns{justify-content:flex-end;gap:8px}
+html[data-os="android"] .lv-btns button{flex:none;padding:11px 24px}
+html[data-os="android"] #leaveNo,
+html[data-os="android"] #invNo,
+html[data-os="android"] #roleClose,
+html[data-os="android"] #plNo,
+html[data-os="android"] #pbClose{background:transparent;color:var(--rose)}
+@media (prefers-reduced-motion:no-preference){
+  html[data-os="android"] .lv-card{animation:m3dialog .26s cubic-bezier(.2,0,0,1) both}
+  @keyframes m3dialog{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+}
+
+/* yüngül rejimdə bulanıqlıq söndürülür */
+html[data-os] body.lite *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 </style>
 </head>
 <body>
@@ -3526,6 +3737,28 @@ boot();
   document.addEventListener('focusin', function(){ fit(); setTimeout(fit, 120); setTimeout(fit, 400); });
   document.addEventListener('focusout', function(){ setTimeout(fit, 120); setTimeout(fit, 400); });
   if(vv){ vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+})();
+</script>
+<script>
+/* Android: düymələrə toxunanda Material "ripple" dalğası */
+(function(){
+  if(document.documentElement.getAttribute('data-os') !== 'android') return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.addEventListener('pointerdown', function(e){
+    var t = e.target; if(!t || !t.closest) return;
+    var b = t.closest('button, .tile, .hsr');
+    if(!b || b.disabled || b.id === 'tap' || b.id === 'pickfile') return;
+    var r = b.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+    if(getComputedStyle(b).position === 'static') b.style.position = 'relative';
+    b.style.overflow = 'hidden';
+    var d = Math.max(r.width, r.height) * 2, s = document.createElement('i');
+    s.className = 'rip';
+    s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+    b.appendChild(s);
+    s.addEventListener('animationend', function(){ s.remove(); });
+    setTimeout(function(){ s.remove(); }, 900);
+  }, {passive: true});
 })();
 </script>
 </body>
