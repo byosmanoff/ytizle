@@ -86,6 +86,49 @@ def can_ctl(r, pid):
     return (not r["hostonly"]) or role_of(r, pid) != "viewer"
 
 
+MSG_REACTS = ["\u2764\ufe0f", "😂", "😮", "😭", "👍", "🔥", "👏"]   # mesaja verilə bilən reaksiyalar (index.html ilə eyni)
+RX_MAX_MSGS = 400   # otaqda eyni anda saxlanan reaksiyalı mesaj sayı
+
+
+def rx_key(code, pid):
+    """Reaksiya verənin otaq daxilində açıq (hash) açarı: həqiqi cihaz id-si başqalarına göndərilmir."""
+    return hashlib.sha1(("rx:%s:%s" % (code, pid)).encode()).hexdigest()[:10]
+
+
+def rx_canon(e):
+    """Gələn emojini siyahıdakı dəqiq formaya gətirir ('' = reaksiyanı sil). Etibarsızdırsa None."""
+    if e == "":
+        return ""
+    if not isinstance(e, str):
+        return None
+    t = e.replace("\ufe0f", "")
+    for x in MSG_REACTS:
+        if x.replace("\ufe0f", "") == t:
+            return x
+    return None
+
+
+HOST_GRACE = 90   # host səssizcə qopubsa (tab bağlanıb, şəbəkə getdi) bu qədər saniyədən sonra host keçir
+
+
+def pass_host(r, now):
+    """Host otaqdan çıxanda host ilk moderatora keçir (moderatorluq verilmə sırası ilə).
+    Yalnız hazırda otaqda olan moderator seçilir. Moderator yoxdursa host dəyişmir.
+    CV tutulu halda çağırılır. Keçid olubsa True qaytarır."""
+    old = r.get("host")
+    for p, role in list(r["roles"].items()):
+        if role != "mod" or p == old:
+            continue
+        ts = r["peers"].get(p)
+        if ts is None or now - ts >= PEER_TTL:
+            continue   # bu moderator hazırda otaqda deyil
+        r["host"] = p
+        r["roles"].pop(p, None)
+        r["rv"] += 1
+        return True
+    return False
+
+
 LEFT_GRACE = 25  # çıxandan sonra gec qalan long-poll sorğusu üzvü yenidən "içəridə" göstərməsin
 
 
@@ -186,6 +229,24 @@ def api_send():
         admit(r, pid)
         if msg.get("t") in CTRL_TYPES and not can_ctl(r, pid):
             return jsonify(ok=True, dropped=True)   # "yalnız host idarə edir" rejimi
+        if msg.get("t") == "react":
+            mid, e = msg.get("id"), rx_canon(msg.get("e"))
+            if not isinstance(mid, str) or not (0 < len(mid) <= 40) or e is None:
+                abort(400)
+            if not any(h.get("id") == mid for h in r["hist"]):
+                return jsonify(ok=True, dropped=True)   # mesaj tarixçədə yoxdur (köhnəlib)
+            key = rx_key(code, pid)
+            rx_all = r.setdefault("reacts", {})
+            rm = rx_all.setdefault(mid, {})
+            if e:
+                rm[key] = e
+            else:
+                rm.pop(key, None)
+            if not rm:
+                rx_all.pop(mid, None)
+            while len(rx_all) > RX_MAX_MSGS:
+                rx_all.pop(next(iter(rx_all)))
+            msg = {"t": "react", "id": mid, "e": e, "from": key}   # yalnız yoxlanmış sahələr yayılır
         if msg.get("t") == "chat":
             msg.pop("rl", None)   # rol nişanı yalnız serverdən gəlir, saxtalaşdırmaq olmur
             if role_of(r, pid) in ("host", "mod"):
@@ -223,6 +284,8 @@ def api_leave():
         if r is not None:
             r["peers"].pop(pid, None)
             r.setdefault("left", {})[pid] = time.time()
+            if r.get("host") == pid:
+                pass_host(r, time.time())   # host çıxdı: host ilk moderatora keçir
             CV.notify_all()  # qarşı tərəfin long-poll-u dərhal yenilənsin
     return jsonify(ok=True)
 
@@ -1500,6 +1563,9 @@ def api_poll():
             now = time.time()
             prune_peers(r, now)
             alive_mark(r, pid, now)
+            h = r.get("host")
+            if h and h != pid and now - r["peers"].get(h, 0) > HOST_GRACE:
+                pass_host(r, now)   # host uzun müddət yoxdur: host ilk moderatora keçir
             new = [m for m in r["msgs"] if m[0] > since and m[1] != pid]
             n = count_others(r, pid, now)
             left = deadline - now
@@ -1571,6 +1637,32 @@ def api_hostonly():
         return jsonify(ok=True, hostonly=r["hostonly"])
 
 
+@app.route("/api/host", methods=["POST"])
+def api_host():
+    """Host hostluğu otaqdakı başqa üzvə verir; özü hostdan çıxır (adi izləyici olur)."""
+    d = request.get_json(silent=True) or {}
+    code, pid = _room_ctx(d)
+    target = str(d.get("target", ""))[:20]
+    now = time.time()
+    with CV:
+        r = ROOMS.get(code)
+        if r is None:
+            abort(404)
+        if r["host"] != pid:
+            abort(403)
+        if target == pid or target not in r["members"]:
+            abort(400)
+        ts = r["peers"].get(target)
+        if ts is None or now - ts >= PEER_TTL:
+            abort(409)   # hədəf hazırda otaqda deyil
+        r["host"] = target
+        r["roles"].pop(target, None)
+        r["roles"].pop(pid, None)
+        r["rv"] += 1
+        CV.notify_all()
+        return jsonify(ok=True)
+
+
 @app.route("/api/chat/history")
 def api_chat_history():
     code = clean_room(request.args.get("room"))
@@ -1584,9 +1676,16 @@ def api_chat_history():
         if pid not in r["members"]:
             abort(403)
         out = []
+        rx_all, mk = r.get("reacts", {}), rx_key(code, pid)
         for h in r["hist"]:
             o = {k: v for k, v in h.items() if k != "pid"}
             o["mine"] = (h["pid"] == pid)
+            hid = h.get("id")
+            rm = rx_all.get(hid) if isinstance(hid, str) else None
+            if rm:
+                o["rx"] = {k: v for k, v in rm.items() if k != mk}
+                if mk in rm:
+                    o["my"] = rm[mk]
             out.append(o)
     return _nostore(jsonify(msgs=out))
 

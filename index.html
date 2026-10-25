@@ -765,6 +765,26 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .m.stkm,.m.stkm.me{background:none;padding:2px 6px}
 .m.stkm.me b{color:var(--muted)}
 .stk{display:block;font-size:56px;line-height:1.15}
+.stk img{display:block;width:64px;height:64px;-webkit-user-drag:none;user-select:none}
+#stkgrid button img{display:block;width:36px;height:36px;margin:0 auto;pointer-events:none}
+.rxs{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.rx{display:inline-flex;align-items:center;gap:3px;padding:2px 8px 2px 5px;border-radius:999px;background:rgba(255,255,255,.12);color:inherit;font-size:12px;font-weight:700;line-height:1;cursor:pointer}
+.rx img{width:16px;height:16px;display:block}
+.rx.mine{background:rgba(255,184,77,.28);box-shadow:inset 0 0 0 1.5px var(--amber)}
+.m.me .rx{background:rgba(43,15,38,.14)}
+.m.me .rx.mine{background:rgba(43,15,38,.26);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.m.stkm.me .rx{background:rgba(255,255,255,.12)}
+.m.stkm.me .rx.mine{background:rgba(255,184,77,.28);box-shadow:inset 0 0 0 1.5px var(--amber)}
+.rxb{display:inline-grid;place-items:center;width:20px;height:16px;padding:0;background:transparent;color:inherit;font-size:12px;opacity:.85;cursor:pointer}
+#rxpick{position:fixed;z-index:70;display:flex;gap:2px;padding:6px 8px;border-radius:999px;background:var(--seat-2);box-shadow:0 8px 28px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+#rxpick[hidden]{display:none}
+#rxpick button{display:grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;background:transparent;transition:transform .12s ease}
+#rxpick button:active{transform:scale(1.25)}
+#rxpick button.on{background:rgba(255,255,255,.16)}
+#rxpick img{display:block;width:30px;height:30px;pointer-events:none}
+#rolelist .fr{flex-wrap:wrap}
+#rolelist .fr .tx{flex:1 1 120px}
+.rbtns{display:flex;gap:6px;flex:none;margin-left:auto}
 @media (min-width:1024px){.side #stkpanel{margin:0 14px 6px}}
 #pbbio{color:var(--text);font-size:14px;line-height:1.4;margin:0 0 10px;opacity:.9}
 #pbbio:empty{display:none}
@@ -1227,6 +1247,7 @@ function setVp(box, span, u, av, name){
 function handle(m){
   if(m.t === 'typing'){ learnPeerName(m.name); showTyping(m.name); }
   else if(m.t === 'fly'){ if(REACTS.includes(m.e)) flyEmoji(m.e); }
+  else if(m.t === 'react'){ if(typeof m.from === 'string' && m.from) rxApply(m.id, m.from, MSG_REACTS.includes(m.e) ? m.e : ''); }
   else if(m.t === 'chat'){
     if(m.id && msgEls.has(m.id)) return;
     clearTyping(); bumpUnread(); learnPeerName(m.name);
@@ -1844,7 +1865,7 @@ function addMsg(name, text, mine, o){
   if(typeof o.gif === 'string' && GIF_RE.test(o.gif)) d.appendChild(imgBox(o.gif, false, mine));
   if(typeof o.stk === 'string' && o.stk && o.stk.length <= 8){
     d.classList.add('stkm');
-    const sk = document.createElement('span'); sk.className = 'stk'; sk.textContent = o.stk; d.appendChild(sk);
+    const sk = document.createElement('span'); sk.className = 'stk'; sk.appendChild(appleImg(o.stk)); d.appendChild(sk);
   }
   if(text){ const s = document.createElement('span'); s.textContent = text; d.appendChild(s); }
   const meta = document.createElement('div'); meta.className = 'meta';
@@ -1854,12 +1875,24 @@ function addMsg(name, text, mine, o){
     const tk = document.createElement('span'); tk.className = 'tick'; tk.innerHTML = tickSvg(o.hist ? 3 : 1);
     meta.appendChild(lb); meta.appendChild(tk);
   }
+  if(o.id){
+    const rb = document.createElement('button'); rb.type = 'button'; rb.className = 'rxb';
+    rb.innerHTML = '<i class="fa-regular fa-face-smile" aria-hidden="true"></i>'; rb.setAttribute('aria-label', 'Reaksiya ver');
+    rb.onclick = ev => { ev.stopPropagation(); rxOpen(o.id, d); };
+    meta.insertBefore(rb, meta.firstChild);
+  }
   d.appendChild(meta);
   if(o.id){
     const rp = document.createElement('button'); rp.className = 'rp'; rp.innerHTML = REPLY_ICON;
     rp.setAttribute('aria-label', 'Yanıt ver'); rp.onclick = () => setReply(o.id);
     d.appendChild(rp);
     bindSwipe(d, o.id);
+    d.addEventListener('dblclick', ev => {   // ikiqat toxunuş / ikiqat klik: reaksiya seçimi
+      if(ev.target.closest('button, a, .q, .mimg')) return;
+      try{ window.getSelection().removeAllRanges(); }catch(_){}
+      rxOpen(o.id, d);
+    });
+    if(rxs.has(o.id)) rxRender(o.id);
   }
   $('chat').appendChild(d); $('chat').scrollTop = 1e9;
   refreshLabels();
@@ -1899,7 +1932,7 @@ $('rbX').onclick = clearReply;
 function bindSwipe(d, id){
   let sx = 0, sy = 0, act = false, drag = false, pid = null;
   d.addEventListener('pointerdown', e => {
-    if(e.target.closest('.rp, .q')) return;
+    if(e.target.closest('.rp, .q, .rxb, .rx')) return;
     act = true; drag = false; sx = e.clientX; sy = e.clientY; pid = e.pointerId;
   });
   d.addEventListener('pointermove', e => {
@@ -2323,7 +2356,7 @@ async function leaveRoom(){
   curUrl = null; navAt = 0; lastAt = 0; ytPending = null; hist.length = 0; autoNavs = []; autoWarned = false;
   showMode('home');                              // video / sayt dayansın
   document.body.classList.remove('big');
-  $('chat').textContent = ''; msgEls.clear(); ownState.clear(); pendingRead.clear(); clearReply();
+  $('chat').textContent = ''; msgEls.clear(); rxs.clear(); rxClose(); ownState.clear(); pendingRead.clear(); clearReply();
   $('msg').value = ''; $('url').value = ''; clearUnread(); clearTyping(false);
   peerVoice = false; peerId = ''; peerName = ''; peerU = ''; peerAv = 0; closeRtc(); setVoiceUI();
   $('status').dataset.on = '0'; $('status').textContent = 'Qoşulur...';
@@ -3141,7 +3174,7 @@ function applyRoles(d){
   if(d.roles){ roleMap = d.roles; if(d.roles[me]) myRole = d.roles[me]; }
   if(typeof d.hostonly === 'boolean') hostOnly = d.hostonly;
   if(typeof d.rv === 'number') rv = d.rv;
-  if(old !== myRole) sysMsg(myRole === 'mod' ? 'Sən moderator oldun' : myRole === 'host' ? 'Sən host oldun' : 'Moderatorluğun alındı');
+  if(old !== myRole) sysMsg(myRole === 'mod' ? 'Sən moderator oldun' : myRole === 'host' ? 'Sən host oldun' : old === 'host' ? 'Host başqasına keçdi' : 'Moderatorluğun alındı');
   if(oldHO !== hostOnly) sysMsg(hostOnly ? 'İndi yalnız host və moderatorlar videonu idarə edir' : 'İndi hamı videonu idarə edə bilər');
   updateRoleUI();
 }
@@ -3157,7 +3190,18 @@ function renderRoles(){
   [mine].concat(peerList).forEach(p => {
     const r = p.me ? myRole : (roleMap[p.id] || 'viewer'), btns = [];
     if(myRole === 'host' && !p.me){
-      btns.push(r === 'mod' ? frBtn('Moderatorluğu al', 'sec', () => setRole(p.id, 'viewer')) : frBtn('Moderator et', '', () => setRole(p.id, 'mod')));
+      const grp = document.createElement('div'); grp.className = 'rbtns';
+      grp.appendChild(r === 'mod' ? frBtn('Moderatorluğu al', 'sec', () => setRole(p.id, 'viewer')) : frBtn('Moderator et', '', () => setRole(p.id, 'mod')));
+      const hb = frBtn('Host ver', 'sec', () => {
+        if(hb.dataset.ask !== '1'){   // təsadüfən basılmasın: ikinci toxunuşla təsdiqlənir
+          hb.dataset.ask = '1'; hb.textContent = 'Əminsən?';
+          setTimeout(() => { if(hb.isConnected){ hb.dataset.ask = ''; hb.textContent = 'Host ver'; } }, 3500);
+          return;
+        }
+        giveHost(p.id);
+      });
+      grp.appendChild(hb);
+      btns.push(grp);
     }
     box.appendChild(frRow({name: p.name || 'Qonaq', username: p.username || '', avatar: p.avatar || '', badge: p.badge}, roleName(r) + (p.me ? ' · sən' : ''), btns));
   });
@@ -3173,6 +3217,14 @@ async function roleCall(path, body){
 async function setRole(target, role){
   try{ await roleCall('/api/role', {target, role}); roleMap[target] = role === 'mod' ? 'mod' : 'viewer'; renderRoles(); }
   catch(e){ sysMsg('Rol dəyişmədi, yenidən cəhd et'); }
+}
+async function giveHost(target){
+  try{
+    await roleCall('/api/host', {target});
+    roleMap[target] = 'host'; roleMap[me] = 'viewer'; myRole = 'viewer';
+    sysMsg('Host verildi, indi sən izləyicisən');
+    updateRoleUI();
+  }catch(e){ sysMsg('Host verilmədi (həmin şəxs otaqda olmaya bilər), yenidən cəhd et'); }
 }
 $('honly').onchange = async () => {
   const on = $('honly').checked;
@@ -3196,10 +3248,81 @@ async function loadChatHistory(){
       addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
         {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, gif: m.gif, stk: m.stk, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
       if(mine && m.id) ownState.set(m.id, 3);
+      if(m.id) rxLoad(m.id, m.rx, m.my);
     });
     sysMsg('Əvvəlki söhbət burada bitir');
   }catch(e){}
 }
+
+/* ---------- Mesaj reaksiyaları (Apple emoji) ---------- */
+const MSG_REACTS = ['\u2764\ufe0f', '😂', '😮', '😭', '👍', '🔥', '👏'];
+const rxs = new Map();   // mesaj id -> Map(açar -> emoji); öz reaksiyam 'me' açarı ilə saxlanır
+let rxPick = null, rxFor = '';
+function rxApply(mid, key, e){
+  if(typeof mid !== 'string' || !mid) return;
+  let m = rxs.get(mid);
+  if(!m){ if(!e) return; m = new Map(); rxs.set(mid, m); }
+  if(e) m.set(key, e); else m.delete(key);
+  if(!m.size) rxs.delete(mid);
+  rxRender(mid);
+}
+function rxLoad(mid, others, my){
+  if(others && typeof others === 'object') Object.keys(others).forEach(k => { if(MSG_REACTS.includes(others[k])) rxApply(mid, k, others[k]); });
+  if(MSG_REACTS.includes(my)) rxApply(mid, 'me', my);
+}
+function rxRender(mid){
+  const el = msgEls.get(mid); if(!el) return;
+  const old = el.querySelector('.rxs'); if(old) old.remove();
+  const m = rxs.get(mid); if(!m || !m.size) return;
+  const cnt = new Map(); m.forEach(e => cnt.set(e, (cnt.get(e) || 0) + 1));
+  const mine = m.get('me');
+  const row = document.createElement('div'); row.className = 'rxs';
+  MSG_REACTS.forEach(e => {
+    const n = cnt.get(e); if(!n) return;
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'rx' + (mine === e ? ' mine' : '');
+    c.appendChild(appleImg(e));
+    if(n > 1){ const s = document.createElement('span'); s.textContent = String(n); c.appendChild(s); }
+    c.setAttribute('aria-label', e + ' ' + n);
+    c.onclick = ev => { ev.stopPropagation(); toggleReact(mid, e); };
+    row.appendChild(c);
+  });
+  el.insertBefore(row, el.querySelector('.meta'));
+}
+function toggleReact(mid, e){
+  if(!room || !mid) return;
+  const m = rxs.get(mid), ne = (m && m.get('me')) === e ? '' : e;   // eyni emojiyə yenidən toxunmaq reaksiyanı silir
+  rxApply(mid, 'me', ne);
+  send({t: 'react', id: mid, e: ne});
+}
+function rxClose(){ if(rxPick) rxPick.hidden = true; rxFor = ''; }
+function rxOpen(mid, anchor){
+  if(!room || !mid) return;
+  if(!rxPick){
+    rxPick = document.createElement('div'); rxPick.id = 'rxpick'; rxPick.hidden = true;
+    rxPick.setAttribute('role', 'group'); rxPick.setAttribute('aria-label', 'Reaksiya seç');
+    MSG_REACTS.forEach(e => {
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.e = e; b.setAttribute('aria-label', 'Reaksiya ' + e);
+      b.appendChild(appleImg(e));
+      b.onclick = () => { const id = rxFor; rxClose(); toggleReact(id, e); };
+      rxPick.appendChild(b);
+    });
+    document.body.appendChild(rxPick);
+  }
+  if(!rxPick.hidden && rxFor === mid){ rxClose(); return; }
+  rxFor = mid;
+  const m = rxs.get(mid), mine = m && m.get('me');
+  rxPick.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.e === mine));
+  rxPick.hidden = false;
+  const r = anchor.getBoundingClientRect(), pw = rxPick.offsetWidth, ph = rxPick.offsetHeight;
+  let top = r.top - ph - 6;
+  if(top < 8) top = Math.min(r.bottom + 6, window.innerHeight - ph - 8);
+  let left = anchor.classList.contains('me') ? r.right - pw : r.left;
+  left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+  rxPick.style.top = top + 'px'; rxPick.style.left = left + 'px';
+}
+document.addEventListener('pointerdown', e => { if(rxPick && !rxPick.hidden && !e.target.closest('#rxpick, .rxb')) rxClose(); }, true);
+$('chat').addEventListener('scroll', rxClose, {passive: true});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') rxClose(); });
 
 /* ---------- Stikerlər və GIF ---------- */
 const STICKERS = ['😂','😍','🥰','😭','😮','🔥','👏','❤️','💔','😴','🤯','🥳','🍿','🎬','👀','🙈','😘','🤗','😎','🤔','👍','🙏','💋','✨'];
@@ -3215,10 +3338,27 @@ function sendRich(extra){
   send(Object.assign({t: 'chat', id, name: myName, text: '', reply: rp, u: myU, av: myV}, extra));
   clearReply(); $('stkpanel').hidden = true;
 }
+/* iOS (Apple) stikerləri: emoji hər cihazda eyni görünsün deyə Apple şəkilləri ilə göstərilir.
+   Şəkil yüklənməsə (CDN əlçatmazdırsa) adi emoji simvoluna qayıdır. */
+const APPLE_EMOJI = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.0.1/img/apple/64/';
+function appleImg(s){
+  const cps = Array.from(s).map(c => c.codePointAt(0).toString(16));
+  const bare = cps.filter(x => x !== 'fe0f');
+  const tries = Array.from(new Set([cps.join('-'), bare.join('-'), bare.concat('fe0f').join('-')]));
+  const im = document.createElement('img'); im.alt = s; im.draggable = false; im.decoding = 'async';
+  let i = 0;
+  im.onerror = () => {
+    i++;
+    if(i < tries.length) im.src = APPLE_EMOJI + tries[i] + '.png';
+    else im.replaceWith(document.createTextNode(s));
+  };
+  im.src = APPLE_EMOJI + tries[0] + '.png';
+  return im;
+}
 function buildStickers(){
   const g = $('stkgrid'); if(g.firstChild) return;
   STICKERS.forEach(s => {
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = s; b.setAttribute('aria-label', 'Stiker ' + s);
+    const b = document.createElement('button'); b.type = 'button'; b.appendChild(appleImg(s)); b.setAttribute('aria-label', 'Stiker ' + s);
     b.onclick = () => sendRich({stk: s}); g.appendChild(b);
   });
 }
