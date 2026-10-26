@@ -876,6 +876,14 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #menu[data-tab] [data-t]{animation:tabin .22s ease both}
 @keyframes tabin{from{opacity:0;transform:translate(var(--tx,0px),8px)}to{opacity:1;transform:none}}
 body.lite #menu [data-t]{animation:none!important}
+
+/* sürüşdürmə: barmağı izləyən animasiya, yüngül */
+#menu,#profile{touch-action:pan-y}
+#hvids,#hrooms{touch-action:pan-x pan-y}
+#menu.swiping [data-t],#profile.swiping{will-change:transform,opacity}
+#menu.swiping .mticket{filter:none!important}
+#menu.swiping .mticket .pair,#menu.swiping .live i{animation:none!important}
+#menu.swiping [data-t]{animation:none!important}
 </style>
 </head>
 <body>
@@ -3893,7 +3901,7 @@ boot();
       if(prof.hidden && typeof openProfile === 'function') openProfile();
       return;
     }
-    menu.style.setProperty('--tx', (ORDER.indexOf(t) >= ORDER.indexOf(cur) ? 28 : -28) + 'px');
+    menu.style.setProperty('--tx', (ORDER.indexOf(t) >= ORDER.indexOf(cur) ? 36 : -36) + 'px');
     cur = t; menu.setAttribute('data-tab', t); mark(t);
     if(!prof.hidden) prof.hidden = true;
     menu.scrollTop = 0;
@@ -3910,8 +3918,8 @@ boot();
   function syncAv(){ tav.style.backgroundImage = mav.style.backgroundImage; tav.textContent = mav.style.backgroundImage ? '' : mav.textContent; }
   new MutationObserver(syncAv).observe(mav, {attributes: true, childList: true, characterData: true, subtree: true});
   syncAv();
-  /* sola-sağa sürüşdürmə ilə səhifə dəyişmə */
-  var sx = 0, sy = 0, st = 0, sOk = false;
+  /* sola-sağa sürüşdürmə: barmağı izləyir, buraxanda həm sürətə, həm məsafəyə baxır */
+  var sx = 0, sy = 0, st = 0, sOk = false, lock = 0, ddx = 0, targets = [], raf = 0, busy = false, W = 360;
   function hScroller(el){
     while(el && el !== document.body){
       if(el.scrollWidth > el.clientWidth + 4){
@@ -3922,22 +3930,72 @@ boot();
     }
     return false;
   }
+  function getTargets(){
+    if(cur === 'profile') return [prof];
+    return [].slice.call(menu.querySelectorAll('[data-t]')).filter(function(e){ return e.offsetParent !== null; });
+  }
+  function paint(dx){
+    raf = 0;
+    var o = Math.max(.25, 1 - Math.abs(dx) / (W * 1.1));
+    for(var i = 0; i < targets.length; i++){
+      targets[i].style.transform = 'translate3d(' + dx + 'px,0,0)';
+      targets[i].style.opacity = o;
+    }
+  }
+  function clearT(){
+    targets.forEach(function(e){ e.style.transform = ''; e.style.opacity = ''; e.style.transition = ''; });
+    menu.classList.remove('swiping'); prof.classList.remove('swiping');
+    targets = [];
+  }
+  function slideTo(dx, op, ms, done){
+    targets.forEach(function(e){
+      e.style.transition = 'transform ' + ms + 'ms cubic-bezier(.2,.8,.2,1),opacity ' + ms + 'ms ease-out';
+      e.style.transform = 'translate3d(' + dx + 'px,0,0)'; e.style.opacity = op;
+    });
+    setTimeout(done, ms + 20);
+  }
   function onStart(e){
+    if(busy) return;
     var t = e.touches[0], tg = e.target;
     sOk = e.touches.length === 1 && !(tg.closest && tg.closest('input,textarea,select,[contenteditable]')) && !hScroller(tg);
-    sx = t.clientX; sy = t.clientY; st = Date.now();
+    sx = t.clientX; sy = t.clientY; st = Date.now(); lock = 0; ddx = 0;
+    W = Math.max(280, window.innerWidth);
+  }
+  function onMove(e){
+    if(!sOk || busy) return;
+    var t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(!lock){
+      if(Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)){ sOk = false; return; }
+      if(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3){
+        lock = 1; targets = getTargets();
+        menu.classList.add('swiping'); if(cur === 'profile') prof.classList.add('swiping');
+        targets.forEach(function(el){ el.style.transition = 'none'; });
+      } else return;
+    }
+    var i = ORDER.indexOf(cur) + (dx < 0 ? 1 : -1);
+    ddx = (i < 0 || i >= ORDER.length) ? dx * .25 : dx;
+    if(!raf) raf = requestAnimationFrame(function(){ paint(ddx); });
   }
   function onEnd(e){
-    if(!sOk) return; sOk = false;
-    var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-    if(Date.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.7) return;
-    var i = ORDER.indexOf(cur) + (dx < 0 ? 1 : -1);
-    if(i >= 0 && i < ORDER.length) setTab(ORDER[i]);
+    if(!sOk || !lock){ sOk = false; return; }
+    sOk = false; lock = 0;
+    var dx = ddx, v = Math.abs(dx) / Math.max(1, Date.now() - st);
+    var dir = dx < 0 ? 1 : -1, i = ORDER.indexOf(cur) + dir;
+    var ok = i >= 0 && i < ORDER.length && (Math.abs(dx) > W * .28 || (v > .45 && Math.abs(dx) > 40));
+    busy = true;
+    if(ok){
+      slideTo(dir > 0 ? -W * .35 : W * .35, 0, 140, function(){
+        clearT(); setTab(ORDER[i]); busy = false;
+      });
+    } else {
+      slideTo(0, 1, 180, function(){ clearT(); busy = false; });
+    }
   }
   [menu, prof].forEach(function(el){
     el.addEventListener('touchstart', onStart, {passive: true});
+    el.addEventListener('touchmove', onMove, {passive: true});
     el.addEventListener('touchend', onEnd, {passive: true});
-    el.addEventListener('touchcancel', function(){ sOk = false; }, {passive: true});
+    el.addEventListener('touchcancel', function(){ if(lock){ busy = true; slideTo(0, 1, 120, function(){ clearT(); busy = false; }); } sOk = false; lock = 0; }, {passive: true});
   });
   /* menyuya hər qayıdışda ana səhifədən başla */
   var _sm = window.showMenu;
