@@ -669,15 +669,47 @@ def _code_hash(email, purpose, code):
     return hashlib.sha256((email + ":" + purpose + ":" + code).encode()).hexdigest()
 
 
-def code_email_html(code, title, intro):
+MAIL_L = {
+    "az": {"tag": "Uzaqda olsanız da, eyni kadrdasınız.", "pre": "Kodun: ", "valid": "Kod <b style=\"color:#2b0f26;\">15 dəqiqə</b> etibarlıdır.",
+           "ign": "Bu sorğunu sən etməmisənsə, bu məktubu nəzərə alma.<br>Kodu heç kimlə paylaşma.",
+           "subj": "Birlikdə İzlə: kodun ", "hello": "Salam!",
+           "plain": "%s üçün kodun: %s\n\nKod 15 dəqiqə etibarlıdır. Bu sorğunu sən etməmisənsə, məktubu nəzərə alma.",
+           "verify": ("e-poçtunu təsdiq etmək", "E-poçtunu təsdiq et", "Qeydiyyatı tamamlamaq üçün bu kodu saytda daxil et."),
+           "chg": ("yeni e-poçtu təsdiq etmək", "Yeni e-poçt ünvanı", "E-poçtunu dəyişmək üçün bu kodu saytda daxil et."),
+           "reset": ("şifrəni yeniləmək", "Şifrəni yenilə", "Yeni şifrə təyin etmək üçün bu kodu saytda daxil et.")},
+    "tr": {"tag": "Uzakta olsanız da, aynı karedesiniz.", "pre": "Kodun: ", "valid": "Kod <b style=\"color:#2b0f26;\">15 dakika</b> geçerlidir.",
+           "ign": "Bu isteği sen yapmadıysan, bu e-postayı dikkate alma.<br>Kodu kimseyle paylaşma.",
+           "subj": "Birlikdə İzlə: kodun ", "hello": "Merhaba!",
+           "plain": "%s için kodun: %s\n\nKod 15 dakika geçerlidir. Bu isteği sen yapmadıysan, bu e-postayı dikkate alma.",
+           "verify": ("e-postanı doğrulamak", "E-postanı doğrula", "Kaydı tamamlamak için bu kodu sitede gir."),
+           "chg": ("yeni e-postayı doğrulamak", "Yeni e-posta adresi", "E-postanı değiştirmek için bu kodu sitede gir."),
+           "reset": ("şifreni yenilemek", "Şifreni yenile", "Yeni şifre belirlemek için bu kodu sitede gir.")},
+    "en": {"tag": "Even when you're far apart, you're in the same frame.", "pre": "Your code: ", "valid": "The code is valid for <b style=\"color:#2b0f26;\">15 minutes</b>.",
+           "ign": "If you did not make this request, ignore this email.<br>Never share the code with anyone.",
+           "subj": "Birlikdə İzlə: your code ", "hello": "Hi!",
+           "plain": "Your code for %s: %s\n\nThe code is valid for 15 minutes. If you did not make this request, ignore this email.",
+           "verify": ("verifying your email", "Verify your email", "Enter this code on the site to finish signing up."),
+           "chg": ("verifying your new email", "New email address", "Enter this code on the site to change your email."),
+           "reset": ("resetting your password", "Reset your password", "Enter this code on the site to set a new password.")},
+}
+
+
+def req_lang():
+    """Müştərinin seçdiyi dil (X-Lang başlığı): az / tr / en."""
+    l = (request.headers.get("X-Lang") or "").strip().lower()
+    return l if l in MAIL_L else "az"
+
+
+def code_email_html(code, title, intro, lang="az"):
+    L = MAIL_L.get(lang) or MAIL_L["az"]
     """Saytın biletə bənzər dizaynında məktub (cədvəl + inline CSS: Gmail/Outlook-da işləsin deyə)."""
     F = "'Bricolage Grotesque',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
     return (
-        '<!DOCTYPE html><html lang="az"><head><meta charset="utf-8">'
+        '<!DOCTYPE html><html lang="' + lang + '"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">'
         '</head><body style="margin:0;padding:0;background:#150a1d;">'
-        '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Kodun: ' + code + '</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + L["pre"] + code + '</div>'
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#150a1d" '
         'style="background:#150a1d;background-image:linear-gradient(180deg,#2b1630 0%,#150a1d 45%,#2a0f24 100%);">'
         '<tr><td align="center" style="padding:32px 14px;">'
@@ -686,7 +718,7 @@ def code_email_html(code, title, intro):
         '<tr><td bgcolor="#f8e7e1" style="background:#f8e7e1;border-radius:22px 22px 0 0;padding:28px 24px 22px;font-family:' + F + ';">'
         '<div style="font-size:46px;line-height:46px;color:#e8567d;">&#9829;</div>'
         '<div style="font-size:34px;line-height:1;font-weight:800;letter-spacing:-0.02em;color:#2b0f26;margin-top:10px;">Birlikdə İzlə</div>'
-        '<div style="font-size:15px;line-height:1.4;color:#7a5469;margin-top:8px;">Uzaqda olsanız da, eyni kadrdasınız.</div>'
+        '<div style="font-size:15px;line-height:1.4;color:#7a5469;margin-top:8px;">' + L["tag"] + '</div>'
         '</td></tr>'
         # pərforasiya xətti
         '<tr><td bgcolor="#f8e7e1" style="background:#f8e7e1;padding:0 22px;font-size:0;line-height:0;">'
@@ -700,17 +732,17 @@ def code_email_html(code, title, intro):
         'font-family:' + F + ';font-size:38px;line-height:1;font-weight:800;letter-spacing:0.3em;text-indent:0.3em;color:#e8567d;">'
         + code + '</td></tr></table>'
         '<div style="font-size:13px;line-height:1.45;color:#7a5469;margin-top:16px;text-align:center;">'
-        'Kod <b style="color:#2b0f26;">15 dəqiqə</b> etibarlıdır.</div>'
+        + L["valid"] + '</div>'
         '</td></tr></table>'
         # alt qeyd
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:380px;"><tr>'
         '<td align="center" style="padding:20px 10px 0;font-family:' + F + ';font-size:12.5px;line-height:1.5;color:#b7a2cf;">'
-        'Bu sorğunu sən etməmisənsə, bu məktubu nəzərə alma.<br>Kodu heç kimlə paylaşma.'
+        + L["ign"] +
         '</td></tr></table>'
         '</td></tr></table></body></html>')
 
 
-def send_code(email, purpose):
+def send_code(email, purpose, lang="az"):
     """Kod göndərir. Soyutma müddətindədirsə göndərmir və False qaytarır."""
     now = time.time()
     row = dbq("SELECT sent FROM codes WHERE email=? AND purpose=?", (email, purpose), one=True)
@@ -721,17 +753,13 @@ def send_code(email, purpose):
     code = "%06d" % secrets.randbelow(10 ** 6)
     dbq("INSERT OR REPLACE INTO codes(email,purpose,h,exp,sent,tries) VALUES(?,?,?,?,?,0)",
         (email, purpose, _code_hash(email, purpose, code), now + CODE_TTL, now))
-    if purpose == "verify":
-        what, title, intro = "e-poçtunu təsdiq etmək", "E-poçtunu təsdiq et", "Qeydiyyatı tamamlamaq üçün bu kodu saytda daxil et."
-    elif purpose.startswith("chg:"):
-        what, title, intro = "yeni e-poçtu təsdiq etmək", "Yeni e-poçt ünvanı", "E-poçtunu dəyişmək üçün bu kodu saytda daxil et."
-    else:
-        what, title, intro = "şifrəni yeniləmək", "Şifrəni yenilə", "Yeni şifrə təyin etmək üçün bu kodu saytda daxil et."
+    L = MAIL_L.get(lang) or MAIL_L["az"]
+    key = "verify" if purpose == "verify" else "chg" if purpose.startswith("chg:") else "reset"
+    what, title, intro = L[key]
     try:
-        send_mail(email, "Birlikdə İzlə: kodun " + code,
-                  "Salam!\n\n%s üçün kodun: %s\n\nKod 15 dəqiqə etibarlıdır. "
-                  "Bu sorğunu sən etməmisənsə, məktubu nəzərə alma.\n\nBirlikdə İzlə" % (what[0].upper() + what[1:], code),
-                  html=code_email_html(code, title, intro))
+        send_mail(email, L["subj"] + code,
+                  L["hello"] + "\n\n" + (L["plain"] % (what[0].upper() + what[1:], code)) + "\n\nBirlikdə İzlə",
+                  html=code_email_html(code, title, intro, lang))
     except Exception as e:
         print("[MAIL ERROR]", repr(e), flush=True)
         dbq("DELETE FROM codes WHERE email=? AND purpose=?", (email, purpose))
@@ -955,7 +983,7 @@ def api_register():
         except sqlite3.IntegrityError:
             abort(409)
         dbq("INSERT INTO users(sub,name,created) VALUES(?,?,?)", (sub, name, time.time()))
-    send_code(email, "verify")
+    send_code(email, "verify", req_lang())
     return jsonify(pending=True)
 
 
@@ -978,7 +1006,7 @@ def api_resend():
         abort(503)
     mail_guard()
     row = dbq("SELECT verified FROM creds WHERE email=?", (email,), one=True)
-    if row and not row["verified"] and not send_code(email, "verify"):
+    if row and not row["verified"] and not send_code(email, "verify", req_lang()):
         abort(429)
     return jsonify(ok=True)
 
@@ -1000,7 +1028,7 @@ def api_login():
     if not row["verified"]:   # şifrə düzdür, amma e-poçt təsdiqlənməyib
         log_login("e-poçt", email, False)
         if mail_ready() and rate_hit("mail", client_ip(), 10, 600):
-            send_code(email, "verify")
+            send_code(email, "verify", req_lang())
         abort(403)
     log_login("e-poçt", email, True)
     return jsonify(token=issue_token(row["sub"]), name=user_name(row["sub"]))
@@ -1015,7 +1043,7 @@ def api_forgot():
         abort(429)
     if not dbq("SELECT 1 FROM creds WHERE email=?", (email,), one=True):
         abort(404)   # bu e-poçtla hesab yoxdur: kod göndərilmir, istifadəçi qeydiyyata yönləndirilir
-    if not send_code(email, "reset"):
+    if not send_code(email, "reset", req_lang()):
         abort(429)
     return jsonify(ok=True)
 
@@ -1163,6 +1191,49 @@ def api_password():
     return jsonify(ok=True)
 
 
+@app.route("/api/password/forgot", methods=["POST"])
+def api_password_forgot():
+    """Giriş etmiş istifadəçi şifrəsini unudub: hesabın e-poçtuna kod göndərilir."""
+    sub, _ = auth_sub()
+    cr = primary_cred(sub)
+    if not cr or not cr["email"]:
+        abort(400)
+    if not mail_ready():
+        abort(503)
+    mail_guard()
+    if too_many_fails("pwr:" + sub):
+        abort(429)
+    if not send_code(cr["email"], "reset", req_lang()):
+        abort(429)
+    return jsonify(ok=True)
+
+
+@app.route("/api/password/reset", methods=["POST"])
+def api_password_reset():
+    """Kodu yoxlayır və yeni şifrə qoyur. Bu cihaz girişdə qalır, digər cihazlar çıxarılır."""
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    new = str(d.get("password") or "")
+    if not (6 <= len(new) <= 72):
+        abort(400)
+    cr = primary_cred(sub)
+    if not cr or not cr["email"]:
+        abort(400)
+    key = "pwr:" + sub
+    if too_many_fails(key):
+        abort(429)
+    if not check_code(cr["email"], "reset", d.get("code")):
+        LOGIN_FAILS.setdefault(key, []).append(time.time())
+        abort(422)
+    dbq("UPDATE creds SET pw=?, verified=1 WHERE sub=?", (generate_password_hash(new, method=PW_METHOD), sub))
+    dbq("DELETE FROM sessions WHERE sub=? AND token<>?", (sub, tok))
+    LOGIN_FAILS.pop(key, None)
+    LOGIN_FAILS.pop("pw:" + sub, None)
+    LOGIN_FAILS.pop(cr["email"], None)
+    log_login("bərpa", cr["email"], True)
+    return jsonify(ok=True)
+
+
 @app.route("/api/email/request", methods=["POST"])
 def api_email_request():
     sub, _ = auth_sub()
@@ -1172,7 +1243,7 @@ def api_email_request():
     mail_guard()
     if dbq("SELECT 1 FROM creds WHERE email=?", (email,), one=True):
         abort(409)
-    if not send_code(email, "chg:" + sub[:40]):
+    if not send_code(email, "chg:" + sub[:40], req_lang()):
         abort(429)
     return jsonify(ok=True)
 

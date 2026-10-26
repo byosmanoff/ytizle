@@ -1310,9 +1310,19 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   </div>
   <div class="card">
     <h2 id="pwtitle">Şifrəni dəyiş</h2>
-    <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Cari şifrə" autocomplete="current-password" aria-label="Cari şifrə"></div>
+    <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Mövcud şifrə" autocomplete="current-password" aria-label="Mövcud şifrə"></div>
     <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+    <div class="fld"><input id="pnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
     <button class="pbtn" id="pwsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+    <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pwforgot">Şifrəmi unutdum</button></div>
+    <div id="pwfgbox" hidden style="margin-top:10px">
+      <div class="hint" id="pwfghint"></div>
+      <div class="fld"><input id="pfcode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"></div>
+      <div class="fld"><input id="pfnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+      <div class="fld"><input id="pfnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
+      <button class="pbtn" id="pfsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+      <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pfresend">Kodu yenidən göndər</button></div>
+    </div>
   </div>
   <div id="pmsg" role="status"></div>
 </div>
@@ -1373,7 +1383,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   </div>
   <div id="chat"></div>
   <div id="replybar" hidden>
-    <div class="rb-body"><strong id="rbName"></strong><span id="rbText"></span></div>
+    <div class="rb-body"><strong id="rbName" data-nt></strong><span id="rbText" data-nt></span></div>
     <button id="rbX" aria-label="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </div>
   <input type="file" id="imgfile" accept="image/*" hidden>
@@ -1391,9 +1401,9 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 <div id="pbox" hidden role="dialog" aria-modal="true" aria-label="Profil">
   <div class="lv-card pcard">
     <div class="av big" id="pbav">?</div>
-    <h2 id="pbname"></h2>
-    <div id="pbuser"></div>
-    <div id="pbbio"></div>
+    <h2 id="pbname" data-nt></h2>
+    <div id="pbuser" data-nt></div>
+    <div id="pbbio" data-nt></div>
     <div id="pbrel" role="status"></div>
     <div class="lv-btns">
       <button id="pbClose">Bağla</button>
@@ -1479,7 +1489,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 <div id="hostbox" hidden role="dialog" aria-modal="true" aria-labelledby="hbTitle">
   <div class="lv-card">
     <h2 id="hbTitle">Host verilsin?</h2>
-    <p><b id="hbName"></b> host olacaq, sən isə izləyici olacaqsan.</p>
+    <p><b id="hbName" data-nt></b> host olacaq, sən isə izləyici olacaqsan.</p>
     <div class="lv-btns">
       <button id="hostNo" class="alt">Xeyr</button>
       <button id="hostYes">Host ver</button>
@@ -1948,7 +1958,7 @@ function qRender(){
     const th = qThumb(it.u);
     if(th){ const im = document.createElement('img'); im.src = th; im.alt = ''; im.loading = 'lazy'; row.appendChild(im); }
     else { const ph = document.createElement('span'); ph.className = 'qph'; ph.innerHTML = '<i class="fa-solid fa-film" aria-hidden="true"></i>'; row.appendChild(ph); }
-    const t = document.createElement('div'); t.className = 'qt'; t.textContent = it.t || it.u;
+    const t = document.createElement('div'); t.className = 'qt'; t.dataset.nt = ''; t.textContent = it.t || it.u;
     t.onclick = () => qPlayAt(i);   // adına toxun: indi aç
     row.appendChild(t);
     const rm = document.createElement('button'); rm.type = 'button'; rm.setAttribute('aria-label', 'Sil');
@@ -2103,7 +2113,7 @@ function ytRender(d){
     if(/^https:\/\/i\.ytimg\.com\//.test(String(v.thumb))) img.src = v.thumb;
     th.appendChild(img);
     if(v.len){ const du = document.createElement('em'); du.className = 'dur'; du.textContent = String(v.len); th.appendChild(du); }
-    const t = document.createElement('div'); t.textContent = String(v.title || '');
+    const t = document.createElement('div'); t.dataset.nt = ''; t.textContent = String(v.title || '');
     const s = document.createElement('small'); s.textContent = String(v.channel || '');
     t.appendChild(s);
     el.appendChild(th); el.appendChild(t);
@@ -2355,10 +2365,10 @@ function addMsg(name, text, mine, o){
   d.dataset.name = name; d.dataset.text = text || (o.img ? '📷 Şəkil' : '');
   if(mine) d.dataset.st = o.hist ? '3' : '1';
   if(o.id){ d.dataset.mid = o.id; msgEls.set(o.id, d); }
-  const b = document.createElement('b'); b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
+  const b = document.createElement('b'); b.dataset.nt = ''; b.appendChild(avEl(o.u, o.av, name)); b.appendChild(document.createTextNode(name)); if(o.vf) b.appendChild(vbEl()); if(o.rl === 'host' || o.rl === 'mod') b.appendChild(roleIcon(o.rl)); d.appendChild(b);
   if(!mine) b.onclick = () => openPeerCard(peerForMsg(o.u, name));
   if(o.reply && o.reply.id){
-    const q = document.createElement('div'); q.className = 'q';
+    const q = document.createElement('div'); q.className = 'q'; q.dataset.nt = '';
     const qn = document.createElement('strong'); qn.textContent = String(o.reply.name || '').slice(0, 20);
     const qt = document.createElement('span'); qt.textContent = String(o.reply.text || '').slice(0, 90);
     q.appendChild(qn); q.appendChild(qt);
@@ -2366,7 +2376,7 @@ function addMsg(name, text, mine, o){
     d.appendChild(q);
   }
   if(o.img && (o.local || IMG_URL_RE.test(o.img))) d.appendChild(imgBox(o.img, !!o.sens, mine));
-  if(text){ const s = document.createElement('span'); s.textContent = text; d.appendChild(s); }
+  if(text){ const s = document.createElement('span'); s.dataset.nt = ''; s.textContent = text; d.appendChild(s); }
   const meta = document.createElement('div'); meta.className = 'meta';
   const tm = document.createElement('span'); tm.textContent = fmtTime(o.ts); meta.appendChild(tm);
   if(mine){
@@ -2923,7 +2933,7 @@ $('copy').onclick = async () => {
   if(!room) return;
   const link = location.origin + '/?kod=' + encodeURIComponent(room.toUpperCase());
   if(navigator.share){
-    try{ await navigator.share({title: 'Birlikdə İzlə', text: 'Otağa gəl, birlikdə izləyək', url: link}); return; }
+    try{ await navigator.share({title: 'Birlikdə İzlə', text: wtT('Otağa gəl, birlikdə izləyək'), url: link}); return; }
     catch(e){ if(e && e.name === 'AbortError') return; }
   }
   try{
@@ -2954,7 +2964,7 @@ function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
 async function api(path, o){
   o = o || {};
-  const hd = Object.assign({'X-Token': token}, o.headers || {});
+  const hd = Object.assign({'X-Token': token, 'X-Lang': (window.wtLang ? window.wtLang() : 'az')}, o.headers || {});
   if(o.body) hd['Content-Type'] = 'application/json';
   const r = await fetch(path, Object.assign({}, o, {headers: hd, cache: 'no-store'}));
   if(r.status === 401 && token && !AUTH_PATHS.includes(path)){ forgetLogin(); throw new Error('401'); }
@@ -3213,10 +3223,10 @@ function renderHistory(d){
     if(x.thumb && /^https:\/\/i\.ytimg\.com\//.test(x.thumb)){
       const im = document.createElement('img'); im.src = x.thumb; im.loading = 'lazy'; im.alt = ''; el.appendChild(im);
     } else {
-      const ph = document.createElement('div'); ph.className = 'ph'; ph.textContent = x.title || ''; el.appendChild(ph);
+      const ph = document.createElement('div'); ph.className = 'ph'; ph.dataset.nt = ''; ph.textContent = x.title || ''; el.appendChild(ph);
     }
     const tx = document.createElement('div'); tx.className = 'tx';
-    const t = document.createElement('span'); t.textContent = x.title || x.url;
+    const t = document.createElement('span'); t.dataset.nt = ''; t.textContent = x.title || x.url;
     const sm = document.createElement('small'); sm.textContent = fmtDate(x.ts);
     tx.appendChild(t); tx.appendChild(sm); el.appendChild(tx);
     vb.appendChild(el);
@@ -3273,7 +3283,7 @@ function frRow(p, sub, btns){
   const av = document.createElement('div'); av.className = 'av'; av.textContent = initial(p.name);
   if(p.avatar && AV_RE.test(p.avatar)){ av.style.backgroundImage = 'url("' + p.avatar + '")'; av.textContent = ''; }
   const tx = document.createElement('div'); tx.className = 'tx';
-  const b = document.createElement('b'); b.textContent = p.name; if(p.badge) b.appendChild(vbEl());
+  const b = document.createElement('b'); b.dataset.nt = ''; b.textContent = p.name; if(p.badge) b.appendChild(vbEl());
   const s = document.createElement('span'); s.textContent = sub || ('@' + p.username);
   tx.appendChild(b); tx.appendChild(s);
   r.appendChild(av); r.appendChild(tx); (btns || []).forEach(x => r.appendChild(x));
@@ -3493,6 +3503,8 @@ function fillProfile(){
   $('pemail').value = account.email || '';
   if(document.activeElement !== $('pbio')) $('pbio').value = account.bio || '';
   $('pcurrow').hidden = !account.has_pw;
+  $('pwforgot').hidden = !account.has_pw || !account.email;
+  if(!account.has_pw) $('pwfgbox').hidden = true;
   $('pwtitle').textContent = account.has_pw ? 'Şifrəni dəyiş' : 'Şifrə qoy';
   $('pusersave').disabled = true;
   $('pinv').checked = account.invites_open !== false; pinvHint();
@@ -3623,17 +3635,52 @@ $('pemailok').onclick = async () => {
 
 // şifrə
 $('pwsave').onclick = async () => {
-  const cur = $('pcur').value, nw = $('pnew').value;
-  if(account.has_pw && !cur){ pmsg('Cari şifrəni yaz'); return; }
+  const cur = $('pcur').value, nw = $('pnew').value, nw2 = $('pnew2').value;
+  if(account.has_pw && !cur){ pmsg('Mövcud şifrəni yaz'); return; }
   if(nw.length < 6){ pmsg('Yeni şifrə ən azı 6 simvol olmalıdır'); return; }
+  if(nw !== nw2){ pmsg('Yeni şifrələr uyğun gəlmir'); return; }
+  if(account.has_pw && nw === cur){ pmsg('Yeni şifrə mövcud şifrə ilə eyni ola bilməz'); return; }
   const b = $('pwsave'); b.disabled = true;
   try{
     const r = await api('/api/password', {method: 'POST', body: JSON.stringify({current: cur, password: nw})});
-    if(r.ok){ $('pcur').value = ''; $('pnew').value = ''; account.has_pw = true; fillProfile(); pmsg('Şifrə dəyişdi. Digər cihazlardan çıxarıldın.', true); }
-    else if(r.status === 403) pmsg('Cari şifrə səhvdir');
+    if(r.ok){ $('pcur').value = ''; $('pnew').value = ''; $('pnew2').value = ''; $('pwfgbox').hidden = true; account.has_pw = true; fillProfile(); pmsg('Şifrə dəyişdi. Digər cihazlardan çıxarıldın.', true); }
+    else if(r.status === 403) pmsg('Mövcud şifrə səhvdir');
     else if(r.status === 429) pmsg('Çox cəhd olundu, bir az sonra yenidən yoxla');
     else pmsg('Şifrə dəyişmədi, yenidən cəhd et');
   }catch(e){ pmsg('Əlaqə problemi, yenidən cəhd et'); }
+  finally{ b.disabled = false; }
+};
+// şifrəmi unutdum: hesabın e-poçtuna kod gedir, kodla yeni şifrə qoyulur (bu cihazdan çıxmırsan)
+async function pwSendCode(){
+  const b = $('pwforgot'), rs = $('pfresend'); b.disabled = true; rs.disabled = true; pmsg('');
+  try{
+    const r = await api('/api/password/forgot', {method: 'POST', body: '{}'});
+    if(r.ok){ $('pwfgbox').hidden = false; hint('pwfghint', 'E-poçtuna kod göndərdik. Kodu və yeni şifrəni yaz.', 'ok'); $('pfcode').focus(); }
+    else if(r.status === 429) hint('pwfghint', 'Kod 1 dəqiqədən bir göndərilə bilər, bir az gözlə', 'err');
+    else if(r.status === 503) hint('pwfghint', 'E-poçt xidməti hələ qurulmayıb, Google ilə daxil ol', 'err');
+    else { $('pwfgbox').hidden = false; hint('pwfghint', 'Kod göndərilmədi, bir az sonra yenidən yoxla', 'err'); }
+  }catch(e){ $('pwfgbox').hidden = false; hint('pwfghint', 'Əlaqə problemi, yenidən cəhd et', 'err'); }
+  finally{ b.disabled = false; rs.disabled = false; }
+}
+$('pwforgot').onclick = pwSendCode;
+$('pfresend').onclick = pwSendCode;
+$('pfsave').onclick = async () => {
+  const code = $('pfcode').value.trim(), nw = $('pfnew').value, nw2 = $('pfnew2').value;
+  if(!/^\d{6}$/.test(code)){ hint('pwfghint', '6 rəqəmli kodu yaz', 'err'); return; }
+  if(nw.length < 6){ hint('pwfghint', 'Yeni şifrə ən azı 6 simvol olmalıdır', 'err'); return; }
+  if(nw !== nw2){ hint('pwfghint', 'Yeni şifrələr uyğun gəlmir', 'err'); return; }
+  const b = $('pfsave'); b.disabled = true;
+  try{
+    const r = await api('/api/password/reset', {method: 'POST', body: JSON.stringify({code, password: nw})});
+    if(r.ok){
+      ['pfcode', 'pfnew', 'pfnew2', 'pcur', 'pnew', 'pnew2'].forEach(id => { $(id).value = ''; });
+      $('pwfgbox').hidden = true; hint('pwfghint', '');
+      account.has_pw = true; fillProfile(); pmsg('Şifrə yeniləndi. Digər cihazlardan çıxarıldın.', true);
+    }
+    else if(r.status === 422) hint('pwfghint', 'Kod səhvdir və ya vaxtı bitib, yenidən göndər', 'err');
+    else if(r.status === 429) hint('pwfghint', 'Çox cəhd olundu, bir az sonra yenidən yoxla', 'err');
+    else hint('pwfghint', 'Şifrə dəyişmədi, yenidən cəhd et', 'err');
+  }catch(e){ hint('pwfghint', 'Əlaqə problemi, yenidən cəhd et', 'err'); }
   finally{ b.disabled = false; }
 };
 // bütün cihazlardan çıx
@@ -3961,12 +4008,12 @@ function renderPlans(){
     const b = document.createElement('b'); b.textContent = d.getDate();
     dd.appendChild(b); dd.appendChild(document.createTextNode(AZ_MO[d.getMonth()]));
     const t = document.createElement('div'); t.className = 'pl-t';
-    t.appendChild(document.createTextNode(p.title));
+    const pt = document.createElement('span'); pt.dataset.nt = ''; pt.textContent = p.title; t.appendChild(pt);
     const sm = document.createElement('small');
     sm.textContent = fmtPlan(p.ts) + ' · ' + relTime(p.ts) + (p.mine ? '' : ' · @' + p.owner.username);
     t.appendChild(sm); h.appendChild(dd); h.appendChild(t); el.appendChild(h);
     if(p.guests && p.guests.length){
-      const g = document.createElement('div'); g.className = 'pl-g';
+      const g = document.createElement('div'); g.className = 'pl-g'; g.dataset.nt = '';
       g.textContent = p.guests.map(x => x.name + (x.st === 1 ? ' ✓' : x.st === 2 ? ' ✗' : ' …')).join(' · ');
       el.appendChild(g);
     }
@@ -4007,9 +4054,9 @@ async function pushNote(t, body){
 function notifyPlans(){
   const now = Date.now() / 1000;
   plansCache.forEach(p => {
-    if(!p.mine && p.my === 0 && !seenPl.has('i' + p.id)){ markSeen('i' + p.id); pushNote('Yeni seans dəvəti', p.owner.name + ': ' + p.title + ' · ' + fmtPlan(p.ts)); }
+    if(!p.mine && p.my === 0 && !seenPl.has('i' + p.id)){ markSeen('i' + p.id); pushNote(wtT('Yeni seans dəvəti'), p.owner.name + ': ' + p.title + ' · ' + wtT(fmtPlan(p.ts))); }
     const dt = p.ts - now;
-    if((p.mine || p.my === 1) && dt < 600 && dt > -600 && !seenPl.has('s' + p.id)){ markSeen('s' + p.id); pushNote('Seans tezliklə başlayır', p.title + ' · ' + relTime(p.ts)); }
+    if((p.mine || p.my === 1) && dt < 600 && dt > -600 && !seenPl.has('s' + p.id)){ markSeen('s' + p.id); pushNote(wtT('Seans tezliklə başlayır'), p.title + ' · ' + wtT(relTime(p.ts))); }
   });
 }
 $('plnotif').onclick = async () => {
@@ -4365,23 +4412,88 @@ boot();
 })();
 </script>
 <script>
-/* Dil seçimi: az (defolt) / tr / en. Orijinal Azərbaycan mətni açar kimi işlənir. */
+/* Dil seçimi: az (defolt) / tr / en. Orijinal Azərbaycan mətni açar kimi işlənir.
+   Mətn düyünləri və atributlar (placeholder, title, aria-label) lüğət, nümunə (regex), tarix və
+   "a · b" qaydaları ilə tərcümə olunur. İstifadəçi məzmunu ([data-nt]) tərcümə olunmur. */
 (function(){
-  var D = {}; 'Salam|Merhaba|Hello\nBu axşam nə izləyirik?|Bu akşam ne izliyoruz?|What are we watching tonight?\nOtaq aç, kodu göndər, eyni kadrda olun.|Oda aç, kodu gönder, aynı karede olun.|Open a room, send the code, and watch together.\nOtaq aç|Oda aç|Open room\nKodun var?|Kodun var mı?|Have a code?\nGir|Gir|Join\nizlənən|izlenen|watched\notaq|oda|rooms\nindi izləyir|şimdi izliyor|watching now\nTətbiq kimi quraşdır|Uygulama olarak yükle|Install as an app\nAna ekrana əlavə et|Ana ekrana ekle|Add to home screen\nPlanlı seanslar|Planlı seanslar|Scheduled sessions\nYeni seans|Yeni seans|New session\nBildirişlər|Bildirimler|Notifications\nİzləmə statistikası|İzleme istatistikleri|Watch stats\nDostlar|Arkadaşlar|Friends\nİzlədiklərin|İzlediklerin|Watched\nOtaqların|Odaların|Your rooms\nSeans bildirişləri|Seans bildirimleri|Session notifications\nSəs və video|Ses ve video|Sound and video\nSəsli söhbətin səsi|Sesli sohbetin sesi|Voice chat volume\nVideonun səsi|Videonun sesi|Video volume\nMikrofon bağlı başlasın|Mikrofon kapalı başlasın|Start with mic muted\nSəsli söhbətə qoşulanda mikrofon söndürülmüş olur.|Sesli sohbete katılınca mikrofon kapalı olur.|The mic is muted when you join voice chat.\nSəs təmizləmə|Ses temizleme|Noise cancelling\nKüyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.|Gürültüyü ve yankıyı azaltır. Ses kötü çıkarsa kapat.|Reduces noise and echo. Turn it off if your audio sounds bad.\nHesab|Hesap|Account\nHesabdan çıx|Hesaptan çık|Log out\nTəhlükəsizlik|Güvenlik|Security\nBütün cihazlardan çıx|Tüm cihazlardan çık|Log out of all devices\nBu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.|Bu cihaz dahil tüm telefon ve bilgisayarlardan çıkarılırsın.|You will be logged out of all phones and computers, including this one.\nTəhlükəli zona|Tehlikeli bölge|Danger zone\nHesabı sil|Hesabı sil|Delete account\nHesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.|Hesabın, geçmişin, fotoğrafın ve kullanıcı adın kalıcı olarak silinecek. Bu geri alınamaz.|Your account, history, photo and username will be permanently deleted. This cannot be undone.\nLəğv et|Vazgeç|Cancel\nHəmişəlik sil|Kalıcı olarak sil|Delete forever\nTarixçəni təmizlə|Geçmişi temizle|Clear history\nProfil|Profil|Profile\nŞəkli dəyiş|Fotoğrafı değiştir|Change photo\nSil|Sil|Remove\nAd|Ad|Name\nSaxla|Kaydet|Save\nİstifadəçi adı|Kullanıcı adı|Username\nHərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.|Harf, rakam, nokta ve _ (3-20 karakter). Herkesin adı farklıdır.|Letters, digits, dots and _ (3-20 characters). Everyone\'s username is unique.\nHaqqında|Hakkında|About\nGizlilik|Gizlilik|Privacy\nOtağa dəvətlər|Odaya davetler|Room invites\nAçıq: hər kəs səni otağa dəvət edə bilər.|Açık: herkes seni odaya davet edebilir.|On: anyone can invite you to a room.\nE-poçt|E-posta|Email\nDəyiş|Değiştir|Change\nTəsdiq et|Onayla|Confirm\nŞifrəni dəyiş|Şifreyi değiştir|Change password\nŞifrəni yenilə|Şifreyi güncelle|Update password\nOtaq kodu|Oda kodu|Room code\nİstifadəçi adı ilə axtar|Kullanıcı adıyla ara|Search by username\nTəsdiq üçün şifrən|Onay için şifren|Your password to confirm\nŞifrə|Şifre|Password\nTəsdiq üçün SİL yaz|Onay için SİL yaz|Type DELETE to confirm\nTəsdiq sözü|Onay kelimesi|Confirmation word\nNaviqasiya|Gezinme|Navigation\nƏsas|Ana sayfa|Home\nSeanslar|Seanslar|Sessions\nTarixçə|Geçmiş|History\nAyarlar|Ayarlar|Settings\nGeri|Geri|Back\nQısa məlumat (məs. Komediya və qorxu filmləri)|Kısa bilgi (örn. Komedi ve korku filmleri)|Short bio (e.g. Comedy and horror films)\n6 rəqəmli kod|6 haneli kod|6-digit code\nTəsdiq kodu|Onay kodu|Confirmation code\nCari şifrə|Mevcut şifre|Current password\nYeni şifrə (ən azı 6 simvol)|Yeni şifre (en az 6 karakter)|New password (at least 6 characters)\nYeni şifrə|Yeni şifre|New password\nDil|Dil|Language\nKOD|KOD|CODE\nBaz|Paz|Sun\nB.e|Pzt|Mon\nÇ.a|Sal|Tue\nÇər|Çar|Wed\nC.a|Per|Thu\nCüm|Cum|Fri\nŞən|Cmt|Sat\nCəmi|Toplam|Total\nizləmisən,|izledin,|watched,\nbirlikdə. Son 30 gündə|birlikte. Son 30 günde|together. In the last 30 days you opened\nvideo açmısan.|video açtın.|videos.\nBu ay birlikdə|Bu ay birlikte|Together this month:\nizlədiniz|izlediniz|watched\nBu ay|Bu ay|This month:\nizlədin|izledin|watched\nNə izləyirik? (məs. Cümə filmi)|Ne izliyoruz? (örn. Cuma filmi)|What are we watching? (e.g. Friday movie)\nƏminsən?|Emin misin?|Are you sure?\nBəli|Evet|Yes\nÇıx|Çık|Log out\nBütün cihazlardan çıxılsın? Bu cihaz da daxil.|Tüm cihazlardan çıkılsın mı? Bu cihaz da dahil.|Log out of all devices, including this one?\nHesab həmişəlik silinsin?|Hesap kalıcı olarak silinsin mi?|Delete your account permanently?\nTarixçə silinsin?|Geçmiş silinsin mi?|Delete your history?\nSeans silinsin?|Seans silinsin mi?|Delete this session?\nGecən xeyir|İyi geceler|Good night\nSabahın xeyir|Günaydın|Good morning\nGünün xeyir|İyi günler|Good afternoon\nAxşamın xeyir|İyi akşamlar|Good evening\nHələ heç nə izləməmisən|Henüz hiçbir şey izlemedin|You haven\'t watched anything yet\nOtaqda açdığın videolar burada görünəcək|Odada açtığın videolar burada görünecek|Videos you open in a room will show up here\nHələ otaq yoxdur|Henüz oda yok|No rooms yet\nİlk otağı aç, dostunu dəvət et|İlk odayı aç, arkadaşını davet et|Open your first room and invite a friend\nOtağa yenidən gir|Odaya tekrar gir|Rejoin room\nBir film, iki ekran, tək ürək.|Bir film, iki ekran, tek yürek.|One movie, two screens, one heart.\nMəsafə uzaq, kadr eyni.|Mesafe uzak, kare aynı.|Far apart, same frame.\nPopcorn hazırdır, sən də hazırsan?|Patlamış mısır hazır, sen de hazır mısın?|Popcorn is ready, are you?\nGözlərin başqa şəhərdə, ürəyin eyni salonda.|Gözlerin başka şehirde, yüreğin aynı salonda.|Your eyes in another city, your heart in the same theater.\nIşıqlar sönür, söhbət başlayır.|Işıklar sönüyor, sohbet başlıyor.|Lights go down, the chat begins.\nBu axşamın filmini kim seçir?|Bu akşamın filmini kim seçiyor?|Who picks tonight\'s movie?\nƏn yaxşı yer, ekranın qarşısında qoşa gülmək.|En iyi yer, ekranın karşısında birlikte gülmek.|The best seat is laughing together in front of the screen.\nEyni saniyədə başla, eyni anda gül.|Aynı saniyede başla, aynı anda gül.|Press play together, laugh together.\nPlanlı seans yoxdur|Planlı seans yok|No scheduled sessions\nTarix seç, dostlarını dəvət et|Tarih seç, arkadaşlarını davet et|Pick a date and invite your friends\nOtağa gir|Odaya gir|Enter room\nBaşlat|Başlat|Start\nGəlirəm|Geliyorum|I am in\nGələ bilmirəm|Gelemiyorum|Can\'t make it\nDostluq sorğuları|Arkadaşlık istekleri|Friend requests\ndost olmaq istəyir|arkadaş olmak istiyor|wants to be friends\nQəbul et|Kabul et|Accept\nRədd et|Reddet|Decline\nGöndərilən sorğular|Gönderilen istekler|Sent requests\nSorğunu ləğv et|İsteği iptal et|Cancel request\nDostlardan çıxar|Arkadaşlıktan çıkar|Remove friend\nDost əlavə et|Arkadaş ekle|Add friend\nSorğu göndərilib|İstek gönderildi|Request sent\nHələ dostun yoxdur. Dostunun istifadəçi adını yuxarıda axtar.|Henüz arkadaşın yok. Arkadaşının kullanıcı adını yukarıda ara.|You have no friends yet. Search for a friend\'s username above.\nQoşul|Katıl|Join\nsəni otağa dəvət edir|seni odaya davet ediyor|invites you to a room\nBağlı: heç kim səni otağa dəvət edə bilməz.|Kapalı: kimse seni odaya davet edemez.|Off: nobody can invite you to a room.\nİndi otaqlar boşdur, ilk otağı sən aç|Şu an odalar boş, ilk odayı sen aç|All rooms are empty, open the first one\nBu ay hələ birlikdə izləməmisiniz. İlk filmi başlat!|Bu ay henüz birlikte izlemediniz. İlk filmi başlat!|You haven\'t watched together this month. Start the first movie!\nƏlaqə problemi, yenidən cəhd et|Bağlantı sorunu, tekrar dene|Connection problem, try again\nAlınmadı, yenidən cəhd et|Olmadı, tekrar dene|Failed, try again'.split('\n').forEach(function(r){ var a = r.split('|'); D[a[0]] = [a[1], a[2]]; });
+  var D = Object.create(null); 'Salam|Merhaba|Hello\nBu axşam nə izləyirik?|Bu akşam ne izliyoruz?|What are we watching tonight?\nOtaq aç, kodu göndər, eyni kadrda olun.|Oda aç, kodu gönder, aynı karede olun.|Open a room, send the code, and watch together.\nOtaq aç|Oda aç|Open room\nKodun var?|Kodun var mı?|Have a code?\nGir|Gir|Join\nizlənən|izlenen|watched\notaq|oda|rooms\nindi izləyir|şimdi izliyor|watching now\nTətbiq kimi quraşdır|Uygulama olarak yükle|Install as an app\nAna ekrana əlavə et|Ana ekrana ekle|Add to home screen\nPlanlı seanslar|Planlı seanslar|Scheduled sessions\nYeni seans|Yeni seans|New session\nBildirişlər|Bildirimler|Notifications\nİzləmə statistikası|İzleme istatistikleri|Watch stats\nDostlar|Arkadaşlar|Friends\nİzlədiklərin|İzlediklerin|Watched\nOtaqların|Odaların|Your rooms\nSeans bildirişləri|Seans bildirimleri|Session notifications\nSəs və video|Ses ve video|Sound and video\nSəsli söhbətin səsi|Sesli sohbetin sesi|Voice chat volume\nVideonun səsi|Videonun sesi|Video volume\nMikrofon bağlı başlasın|Mikrofon kapalı başlasın|Start with mic muted\nSəsli söhbətə qoşulanda mikrofon söndürülmüş olur.|Sesli sohbete katılınca mikrofon kapalı olur.|The mic is muted when you join voice chat.\nSəs təmizləmə|Ses temizleme|Noise cancelling\nKüyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.|Gürültüyü ve yankıyı azaltır. Ses kötü çıkarsa kapat.|Reduces noise and echo. Turn it off if your audio sounds bad.\nHesab|Hesap|Account\nHesabdan çıx|Hesaptan çık|Log out\nTəhlükəsizlik|Güvenlik|Security\nBütün cihazlardan çıx|Tüm cihazlardan çık|Log out of all devices\nBu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.|Bu cihaz dahil tüm telefon ve bilgisayarlardan çıkarılırsın.|You will be logged out of all phones and computers, including this one.\nTəhlükəli zona|Tehlikeli bölge|Danger zone\nHesabı sil|Hesabı sil|Delete account\nHesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.|Hesabın, geçmişin, fotoğrafın ve kullanıcı adın kalıcı olarak silinecek. Bu geri alınamaz.|Your account, history, photo and username will be permanently deleted. This cannot be undone.\nLəğv et|Vazgeç|Cancel\nHəmişəlik sil|Kalıcı olarak sil|Delete forever\nTarixçəni təmizlə|Geçmişi temizle|Clear history\nProfil|Profil|Profile\nŞəkli dəyiş|Fotoğrafı değiştir|Change photo\nSil|Sil|Remove\nAd|Ad|Name\nSaxla|Kaydet|Save\nİstifadəçi adı|Kullanıcı adı|Username\nHərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.|Harf, rakam, nokta ve _ (3-20 karakter). Herkesin adı farklıdır.|Letters, digits, dots and _ (3-20 characters). Everyone\'s username is unique.\nHaqqında|Hakkında|About\nGizlilik|Gizlilik|Privacy\nOtağa dəvətlər|Odaya davetler|Room invites\nAçıq: hər kəs səni otağa dəvət edə bilər.|Açık: herkes seni odaya davet edebilir.|On: anyone can invite you to a room.\nE-poçt|E-posta|Email\nDəyiş|Değiştir|Change\nTəsdiq et|Onayla|Confirm\nŞifrəni dəyiş|Şifreyi değiştir|Change password\nŞifrəni yenilə|Şifreyi güncelle|Update password\nOtaq kodu|Oda kodu|Room code\nİstifadəçi adı ilə axtar|Kullanıcı adıyla ara|Search by username\nTəsdiq üçün şifrən|Onay için şifren|Your password to confirm\nŞifrə|Şifre|Password\nTəsdiq üçün SİL yaz|Onay için SİL yaz|Type DELETE to confirm\nTəsdiq sözü|Onay kelimesi|Confirmation word\nNaviqasiya|Gezinme|Navigation\nƏsas|Ana sayfa|Home\nSeanslar|Seanslar|Sessions\nTarixçə|Geçmiş|History\nAyarlar|Ayarlar|Settings\nGeri|Geri|Back\nQısa məlumat (məs. Komediya və qorxu filmləri)|Kısa bilgi (örn. Komedi ve korku filmleri)|Short bio (e.g. Comedy and horror films)\n6 rəqəmli kod|6 haneli kod|6-digit code\nTəsdiq kodu|Onay kodu|Confirmation code\nCari şifrə|Mevcut şifre|Current password\nYeni şifrə (ən azı 6 simvol)|Yeni şifre (en az 6 karakter)|New password (at least 6 characters)\nYeni şifrə|Yeni şifre|New password\nDil|Dil|Language\nKOD|KOD|CODE\nBaz|Paz|Sun\nB.e|Pzt|Mon\nÇ.a|Sal|Tue\nÇər|Çar|Wed\nC.a|Per|Thu\nCüm|Cum|Fri\nŞən|Cmt|Sat\nCəmi|Toplam|Total\nizləmisən,|izledin,|watched,\nbirlikdə. Son 30 gündə|birlikte. Son 30 günde|together. In the last 30 days you opened\nvideo açmısan.|video açtın.|videos.\nBu ay birlikdə|Bu ay birlikte|Together this month:\nizlədiniz|izlediniz|watched\nBu ay|Bu ay|This month:\nizlədin|izledin|watched\nNə izləyirik? (məs. Cümə filmi)|Ne izliyoruz? (örn. Cuma filmi)|What are we watching? (e.g. Friday movie)\nƏminsən?|Emin misin?|Are you sure?\nBəli|Evet|Yes\nÇıx|Çık|Log out\nBütün cihazlardan çıxılsın? Bu cihaz da daxil.|Tüm cihazlardan çıkılsın mı? Bu cihaz da dahil.|Log out of all devices, including this one?\nHesab həmişəlik silinsin?|Hesap kalıcı olarak silinsin mi?|Delete your account permanently?\nTarixçə silinsin?|Geçmiş silinsin mi?|Delete your history?\nSeans silinsin?|Seans silinsin mi?|Delete this session?\nGecən xeyir|İyi geceler|Good night\nSabahın xeyir|Günaydın|Good morning\nGünün xeyir|İyi günler|Good afternoon\nAxşamın xeyir|İyi akşamlar|Good evening\nHələ heç nə izləməmisən|Henüz hiçbir şey izlemedin|You haven\'t watched anything yet\nOtaqda açdığın videolar burada görünəcək|Odada açtığın videolar burada görünecek|Videos you open in a room will show up here\nHələ otaq yoxdur|Henüz oda yok|No rooms yet\nİlk otağı aç, dostunu dəvət et|İlk odayı aç, arkadaşını davet et|Open your first room and invite a friend\nOtağa yenidən gir|Odaya tekrar gir|Rejoin room\nBir film, iki ekran, tək ürək.|Bir film, iki ekran, tek yürek.|One movie, two screens, one heart.\nMəsafə uzaq, kadr eyni.|Mesafe uzak, kare aynı.|Far apart, same frame.\nPopcorn hazırdır, sən də hazırsan?|Patlamış mısır hazır, sen de hazır mısın?|Popcorn is ready, are you?\nGözlərin başqa şəhərdə, ürəyin eyni salonda.|Gözlerin başka şehirde, yüreğin aynı salonda.|Your eyes in another city, your heart in the same theater.\nIşıqlar sönür, söhbət başlayır.|Işıklar sönüyor, sohbet başlıyor.|Lights go down, the chat begins.\nBu axşamın filmini kim seçir?|Bu akşamın filmini kim seçiyor?|Who picks tonight\'s movie?\nƏn yaxşı yer, ekranın qarşısında qoşa gülmək.|En iyi yer, ekranın karşısında birlikte gülmek.|The best seat is laughing together in front of the screen.\nEyni saniyədə başla, eyni anda gül.|Aynı saniyede başla, aynı anda gül.|Press play together, laugh together.\nPlanlı seans yoxdur|Planlı seans yok|No scheduled sessions\nTarix seç, dostlarını dəvət et|Tarih seç, arkadaşlarını davet et|Pick a date and invite your friends\nOtağa gir|Odaya gir|Enter room\nBaşlat|Başlat|Start\nGəlirəm|Geliyorum|I am in\nGələ bilmirəm|Gelemiyorum|Can\'t make it\nDostluq sorğuları|Arkadaşlık istekleri|Friend requests\ndost olmaq istəyir|arkadaş olmak istiyor|wants to be friends\nQəbul et|Kabul et|Accept\nRədd et|Reddet|Decline\nGöndərilən sorğular|Gönderilen istekler|Sent requests\nSorğunu ləğv et|İsteği iptal et|Cancel request\nDostlardan çıxar|Arkadaşlıktan çıkar|Remove friend\nDost əlavə et|Arkadaş ekle|Add friend\nSorğu göndərilib|İstek gönderildi|Request sent\nHələ dostun yoxdur. Dostunun istifadəçi adını yuxarıda axtar.|Henüz arkadaşın yok. Arkadaşının kullanıcı adını yukarıda ara.|You have no friends yet. Search for a friend\'s username above.\nQoşul|Katıl|Join\nsəni otağa dəvət edir|seni odaya davet ediyor|invites you to a room\nBağlı: heç kim səni otağa dəvət edə bilməz.|Kapalı: kimse seni odaya davet edemez.|Off: nobody can invite you to a room.\nİndi otaqlar boşdur, ilk otağı sən aç|Şu an odalar boş, ilk odayı sen aç|All rooms are empty, open the first one\nBu ay hələ birlikdə izləməmisiniz. İlk filmi başlat!|Bu ay henüz birlikte izlemediniz. İlk filmi başlat!|You haven\'t watched together this month. Start the first movie!\nƏlaqə problemi, yenidən cəhd et|Bağlantı sorunu, tekrar dene|Connection problem, try again\nAlınmadı, yenidən cəhd et|Olmadı, tekrar dene|Failed, try again'.split('\n').forEach(function(r){ var a = r.split('|'); D[a[0]] = [a[1], a[2]]; });
+  var X = {"Ekranı böyüt": ["Ekranı büyüt", "Enlarge screen"], "şəffaflığı azalt": ["şeffaflığı azalt", "reduce transparency"], "Adın": ["Adın", "Your name"], "@istifadəçi_adı": ["@kullanıcı_adı", "@username"], "Dəvət linkini göndər": ["Davet linkini gönder", "Send invite link"], "İstifadəçi adı ilə dəvət et": ["Kullanıcı adıyla davet et", "Invite by username"], "Otaqdakılar və rollar": ["Odadakiler ve roller", "People in the room and roles"], "Otağı kilidlə": ["Odayı kilitle", "Lock the room"], "Otaqdan çıx": ["Odadan çık", "Leave the room"], "Ürək": ["Kalp", "Heart"], "Gülüş": ["Gülme", "Laugh"], "Ağlamaq": ["Ağlama", "Cry"], "Təəccüb": ["Şaşkınlık", "Surprise"], "Alqış": ["Alkış", "Applause"], "Alov": ["Ateş", "Fire"], "Reaksiyalar": ["Tepkiler", "Reactions"], "Ana səhifə": ["Ana sayfa", "Home page"], "Video növbəsi": ["Video sırası", "Video queue"], "Link yaz...": ["Link yaz...", "Enter a link..."], "Mikrofonu söndür": ["Mikrofonu kapat", "Mute microphone"], "Mikrofonu aç": ["Mikrofonu aç", "Unmute microphone"], "Yanıtı ləğv et": ["Yanıtı iptal et", "Cancel reply"], "Səsli söhbətə qoşul": ["Sesli sohbete katıl", "Join voice chat"], "Şəkil göndər": ["Fotoğraf gönder", "Send a photo"], "Mesaj yaz...": ["Mesaj yaz...", "Type a message..."], "Göndər": ["Gönder", "Send"], "Video linki yaz...": ["Video linki yaz...", "Enter a video link..."], "Növbəyə link əlavə et": ["Sıraya link ekle", "Add a link to the queue"], "Əlavə et": ["Ekle", "Add"], "Tarix və saat": ["Tarih ve saat", "Date and time"], "Axtar": ["Ara", "Search"], "Aç": ["Aç", "Open"], "YouTube-da axtar": ["YouTube’da ara", "Search YouTube"], "YouTube-da axtar...": ["YouTube’da ara...", "Search YouTube..."], ", istədiyin vaxt eyni kodla geri qayıda bilərsən.": [", istediğin zaman aynı kodla geri dönebilirsin.", ", you can come back with the same code any time."], "Bağla": ["Kapat", "Close"], "Biri bitəndə növbəti avtomatik açılır. YouTube nəticələrindəki": ["Biri bitince sıradaki otomatik açılır. YouTube sonuçlarındaki", "When one ends, the next one opens automatically. In YouTube results, the"], "düyməsi ilə də əlavə edə bilərsən.": ["düğmesiyle de ekleyebilirsin.", "button also adds a video to the queue."], "Davam etmək üçün daxil ol": ["Devam etmek için giriş yap", "Sign in to continue"], "Daxil ol": ["Giriş yap", "Sign in"], "Dostları dəvət et": ["Arkadaşları davet et", "Invite friends"], "Dostunun istifadəçi adını yaz. O, ana menyuda dəvətini görüb bir toxunuşla otağa qoşulacaq.": ["Arkadaşının kullanıcı adını yaz. O, ana menüde davetini görüp tek dokunuşla odaya katılacak.", "Type your friend's username. They will see the invite on the home screen and join the room with one tap."], "Dəvət et": ["Davet et", "Invite"], "E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.": ["E-postan yalnızca hesabı doğrulamak ve şifreyi kurtarmak için saklanır. Google ve e-posta aynı adresle tek hesap olur. Şifren şifrelenmiş olarak saklanır.", "Your email is stored only to verify your account and recover your password. Google and email with the same address become one account. Your password is stored encrypted."], "Host ver": ["Host devret", "Hand over host"], "Host verilsin?": ["Host devredilsin mi?", "Hand over host?"], "Hostluq kimə keçsin?": ["Hostluk kime geçsin?", "Who should become host?"], "Kodu yenidən göndər": ["Kodu yeniden gönder", "Resend code"], "Linki göndər, birlikdə izlə": ["Linki gönder, birlikte izle", "Send the link, watch together"], "Növbətiyə keç": ["Sıradakine geç", "Skip to next"], "Otaq kodu:": ["Oda kodu:", "Room code:"], "Otaqdakılar": ["Odadakiler", "In the room"], "Otaqdan çıxılsın?": ["Odadan çıkılsın mı?", "Leave the room?"], "Qal": ["Kal", "Stay"], "Sevgilin otaqda qalacaq. Otaq kodu": ["Sevgilin odada kalacak. Oda kodu", "Your partner will stay in the room. Room code"], "Səsi aç": ["Sesi aç", "Unmute"], "Səsli otaq": ["Sesli oda", "Voice room"], "Tarix seç, dostlarını dəvət et. Vaxtı çatanda otağı sən başladırsan, dostlara dəvət gedir.": ["Tarih seç, arkadaşlarını davet et. Vakti gelince odayı sen başlatırsın, arkadaşlara davet gider.", "Pick a date and invite your friends. When the time comes you start the room and the invites go out."], "Uzaqda olsanız da, eyni kadrdasınız.": ["Uzakta olsanız da, aynı karedesiniz.", "Even when you're far apart, you're in the same frame."], "Videonu başlat": ["Videoyu başlat", "Start video"], "Xeyr": ["Hayır", "No"], "Yalnız host idarə edir": ["Yalnızca host yönetir", "Only the host controls"], "host olacaq, sən isə izləyici olacaqsan.": ["host olacak, sen ise izleyici olacaksın.", "will become host, and you will become a viewer."], "və ya e-poçt ilə": ["veya e-postayla", "or with email"], "Planla": ["Planla", "Schedule"], "Qoşulur...": ["Katılıyor...", "Joining..."], "Şifrəmi unutdum": ["Şifremi unuttum", "Forgot password"], "Mən": ["Ben", "Me"], "Qonaq": ["Misafir", "Guest"], "Qarşı tərəf": ["Karşı taraf", "The other person"], "Birlikdəsiniz": ["Birlikte siniz", "You are together"], "Sevgilini gözləyirəm...": ["Sevgilini bekliyorum...", "Waiting for your partner..."], "Otaq kilidlidir, açmaq üçün bas": ["Oda kilitli, açmak için dokun", "Room is locked, tap to unlock"], "Otaq kilidləndi, yeni nəfər girə bilməz": ["Oda kilitlendi, yeni kimse giremez", "Room locked, no one new can join"], "Otaq açıldı": ["Oda açıldı", "Room unlocked"], "Kilid dəyişmədi, yenidən cəhd et": ["Kilit değişmedi, tekrar dene", "The lock did not change, try again"], "Otaq kilidlidir, bu cihaz üzv deyil": ["Oda kilitli, bu cihaz üye değil", "Room is locked, this device is not a member"], "Otaq kilidlənib, bu cihaz içəri buraxılmadı": ["Oda kilitlenmiş, bu cihaz içeri alınmadı", "The room is locked, this device was not let in"], "Əlaqə problemi, yenidən cəhd edilir...": ["Bağlantı sorunu, tekrar deneniyor...", "Connection problem, retrying..."], "Qoşulur... ilk dəfə 30-50 saniyə çəkə bilər": ["Katılıyor... ilk seferde 30-50 saniye sürebilir", "Joining... the first time may take 30-50 seconds"], "Belə otaq tapılmadı. Kodu yoxla.": ["Böyle bir oda bulunamadı. Kodu kontrol et.", "No such room found. Check the code."], "Otaq kilidlidir, girmək olmur.": ["Oda kilitli, girilemiyor.", "The room is locked, you cannot enter."], "YouTube-un öz səhifəsi açılmır, videonu burada axtar": ["YouTube’un kendi sayfası açılmıyor, videoyu burada ara", "YouTube's own page can't be opened, search for the video here"], "Əvvəlcə otağa qoşul": ["Önce odaya katıl", "Join a room first"], "Yalnız host və moderatorlar video yükləyə bilər": ["Yalnızca host ve moderatörler video yükleyebilir", "Only the host and moderators can upload videos"], "Başqa video hələ yüklənir": ["Başka bir video hâlâ yükleniyor", "Another video is still uploading"], "Serverdə saxlanır…": ["Sunucuda kaydediliyor…", "Saving on the server…"], "Yükləmə alınmadı": ["Yükleme başarısız", "Upload failed"], "Fayl çox böyükdür": ["Dosya çok büyük", "The file is too large"], "Çox yükləmə etdin, bir az sonra yenidən yoxla": ["Çok fazla yükleme yaptın, biraz sonra tekrar dene", "Too many uploads, try again in a bit"], "Yükləmə alınmadı (bağlantı kəsildi)": ["Yükleme başarısız (bağlantı koptu)", "Upload failed (connection lost)"], "Bu video formatı brauzerdə oynamır. mp4 (H.264) formatında yüklə": ["Bu video biçimi tarayıcıda oynatılmıyor. mp4 (H.264) biçiminde yükle", "This video format doesn't play in the browser. Upload it as mp4 (H.264)"], "Yalnız host və moderatorlar növbəyə əlavə edə bilər": ["Yalnızca host ve moderatörler sıraya ekleyebilir", "Only the host and moderators can add to the queue"], "Link çox uzundur": ["Link çok uzun", "The link is too long"], "Link düzgün deyil": ["Link geçerli değil", "The link is not valid"], "Növbə boşdur": ["Sıra boş", "The queue is empty"], "Yalnız host və moderatorlar növbəni dəyişə bilər": ["Yalnızca host ve moderatörler sırayı değiştirebilir", "Only the host and moderators can change the queue"], "Yalnız host və moderatorlar video seçə bilər": ["Yalnızca host ve moderatörler video seçebilir", "Only the host and moderators can pick a video"], "Növbədəki video açılır": ["Sıradaki video açılıyor", "Opening the next video in the queue"], "YouTube axtarışı": ["YouTube araması", "YouTube search"], "Sayt linki": ["Site linki", "Website link"], "Telefondan video": ["Telefondan video", "Video from phone"], "Birlikdə nə izləyək?": ["Birlikte ne izleyelim?", "What shall we watch together?"], "Birini seç və ya aşağıdakı xanaya yaz": ["Birini seç ya da aşağıdaki kutuya yaz", "Pick one or type in the box below"], "yaz, həmin sayta girir": ["yaz, o siteye girer", "type it and it opens that site"], "düyməyə bas, sözü yaz, çıxan videolardan birini seç": ["düğmeye bas, kelimeyi yaz, çıkan videolardan birini seç", "tap the button, type a word, pick one of the videos"], "bir nəfər yükləyir, ikiniz birlikdə izləyirsiniz": ["bir kişi yükler, ikiniz birlikte izlersiniz", "one person uploads, you both watch together"], "Birlikdə izləyəcəyin videonu tap": ["Birlikte izleyeceğin videoyu bul", "Find a video to watch together"], "Sözü yaz, çıxan videolardan birini seç. İkiniz də eyni anda izləyəcəksiniz.": ["Kelimeyi yaz, çıkan videolardan birini seç. İkiniz de aynı anda izleyeceksiniz.", "Type a word and pick one of the videos. You will both watch at the same time."], "Son axtarışlar": ["Son aramalar", "Recent searches"], "Təmizlə": ["Temizle", "Clear"], "Növbəyə əlavə et": ["Sıraya ekle", "Add to queue"], "Axtarılır...": ["Aranıyor...", "Searching..."], "Nəticə tapılmadı": ["Sonuç bulunamadı", "No results found"], "Axtarış alınmadı, bir az sonra yenidən yoxla": ["Arama yapılamadı, biraz sonra tekrar dene", "Search failed, try again in a bit"], "YouTube pleyeri yüklənmədi (bloklanmış ola bilər)": ["YouTube oynatıcısı yüklenmedi (engellenmiş olabilir)", "The YouTube player didn't load (it may be blocked)"], "Səhifə açdın": ["Sayfa açtın", "You opened a page"], "Səhifə dəyişdi": ["Sayfa değişti", "The page changed"], "Sayt öz-özünə yönləndirir, dayandırıldı": ["Site kendiliğinden yönlendiriyor, durduruldu", "The site redirects by itself, stopped"], "Göndərildi": ["Gönderildi", "Sent"], "Görüldü": ["Görüldü", "Seen"], "Oxundu": ["Okundu", "Read"], "Təsdiqlənmiş hesab": ["Doğrulanmış hesap", "Verified account"], "📷 Şəkil": ["📷 Fotoğraf", "📷 Photo"], "Şəkil": ["Fotoğraf", "Photo"], "Yanıt ver": ["Yanıtla", "Reply"], "Həssas": ["Hassas", "Sensitive"], "həssas deyil": ["hassas değil", "not sensitive"], "Şəkil açıla bilmədi": ["Fotoğraf açılamadı", "The photo couldn't be opened"], "Şəkil göndərilmədi, yenidən cəhd et": ["Fotoğraf gönderilmedi, tekrar dene", "The photo wasn't sent, try again"], "Yazır...": ["Yazıyor...", "Typing..."], "Qarşı tərəfi gözləyirəm...": ["Karşı tarafı bekliyorum...", "Waiting for the other person..."], "Səs qoşulmadı. Çıx və yenidən gir": ["Ses bağlanmadı. Çık ve tekrar gir", "Audio didn't connect. Leave and rejoin"], "Mikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.": ["Mikrofon bu bağlantıda çalışmıyor. Site https ile açılmalı.", "The microphone doesn't work on this connection. The site must be opened with https."], "Mikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.": ["Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.", "Microphone permission was denied. Allow it in your browser settings."], "Səsli otağa girdin. Qulaqlıq tax ki, videonun səsi mikrofona düşməsin": ["Sesli odaya girdin. Videonun sesi mikrofona düşmesin diye kulaklık tak", "You joined the voice room. Wear headphones so the video sound does not leak into the mic"], "Səsli otaqdan çıxdın": ["Sesli odadan çıktın", "You left the voice room"], "Kod yazılıb, \"Otaq aç\" bağlıdır. Yeni otaq üçün kodu sil.": ["Kod yazılı, \"Oda aç\" kapalı. Yeni oda için kodu sil.", "A code is entered, \"Open room\" is disabled. Delete the code to open a new room."], "Otaq kodunu yaz": ["Oda kodunu yaz", "Enter the room code"], "Kod yazılıb, \"Otaq aç\" bağlıdır. Girmək üçün \"Kodla gir\" bas, yeni otaq üçün kodu sil.": ["Kod yazılı, \"Oda aç\" kapalı. Girmek için \"Gir\"e bas, yeni oda için kodu sil.", "A code is entered, \"Open room\" is disabled. Tap \"Join\" to enter, or delete the code to open a new room."], "Otağa gəl, birlikdə izləyək": ["Odaya gel, birlikte izleyelim", "Come to the room, let us watch together"], "Dəvət linki kopyalandı": ["Davet linki kopyalandı", "Invite link copied"], "Google girişi hələ qurulmayıb, e-poçt ilə daxil ola bilərsən.": ["Google girişi henüz kurulmadı, e-postayla giriş yapabilirsin.", "Google sign-in isn't set up yet, you can sign in with email."], "Google yüklənmədi, yenidən yoxla.": ["Google yüklenmedi, tekrar dene.", "Google didn't load, try again."], "Google yüklənmədi, internetini yoxla.": ["Google yüklenmedi, internetini kontrol et.", "Google didn't load, check your internet."], "Giriş alınmadı, yenidən cəhd et.": ["Giriş yapılamadı, tekrar dene.", "Sign-in failed, try again."], "Qeydiyyatdan keç": ["Kayıt ol", "Sign up"], "Kod göndər": ["Kod gönder", "Send code"], "Hesabın yoxdur? Qeydiyyatdan keç": ["Hesabın yok mu? Kayıt ol", "Don't have an account? Sign up"], "Artıq hesabın var? Daxil ol": ["Zaten hesabın var mı? Giriş yap", "Already have an account? Sign in"], "Geri qayıt": ["Geri dön", "Go back"], "Şifrə (ən azı 6 simvol)": ["Şifre (en az 6 karakter)", "Password (at least 6 characters)"], "Dostların səni bu adla tapacaq. Sonra dəyişə bilərsən.": ["Arkadaşların seni bu adla bulacak. Sonra değiştirebilirsin.", "Your friends will find you by this name. You can change it later."], "3-20 simvol: hərf, rəqəm, nöqtə, _ (əvvəl və sonda nöqtə/_ olmasın)": ["3-20 karakter: harf, rakam, nokta, _ (başta ve sonda nokta/_ olmasın)", "3-20 characters: letters, digits, dots, _ (no dot/_ at the start or end)"], "Yoxlanılır...": ["Kontrol ediliyor...", "Checking..."], "Bu ad artıq götürülüb": ["Bu ad zaten alınmış", "This username is already taken"], "Format düzgün deyil": ["Biçim geçerli değil", "Invalid format"], "Çox cəhd olundu, bir az sonra yenidən yoxla": ["Çok fazla deneme yapıldı, biraz sonra tekrar dene", "Too many attempts, try again in a bit"], "E-poçt xidməti hələ qurulmayıb, Google ilə daxil ol": ["E-posta hizmeti henüz kurulmadı, Google ile giriş yap", "The email service isn't set up yet, sign in with Google"], "Məktub göndərilmədi, bir az sonra yenidən yoxla": ["E-posta gönderilemedi, biraz sonra tekrar dene", "The email wasn't sent, try again in a bit"], "Məlumatları yoxla və yenidən cəhd et": ["Bilgileri kontrol et ve tekrar dene", "Check your details and try again"], "E-poçt ünvanı düzgün deyil": ["E-posta adresi geçerli değil", "The email address is not valid"], "İstifadəçi adı seç: 3-20 simvol, hərf, rəqəm, nöqtə, _": ["Kullanıcı adı seç: 3-20 karakter, harf, rakam, nokta, _", "Pick a username: 3-20 characters, letters, digits, dots, _"], "Şifrə ən azı 6 simvol olmalıdır": ["Şifre en az 6 karakter olmalı", "Password must be at least 6 characters"], "Şifrəni yaz": ["Şifreyi yaz", "Enter your password"], "6 rəqəmli kodu yaz": ["6 haneli kodu yaz", "Enter the 6-digit code"], "E-poçtuna 6 rəqəmli kod göndərdik. Kodu yaz.": ["E-postana 6 haneli kod gönderdik. Kodu yaz.", "We sent a 6-digit code to your email. Enter it."], "E-poçtuna 6 rəqəmli kod göndərdik. Gəlməsə 1 dəqiqə sonra \"Kodu yenidən göndər\" bas.": ["E-postana 6 haneli kod gönderdik. Gelmezse 1 dakika sonra \"Kodu yeniden gönder\"e bas.", "We sent a 6-digit code to your email. If it does not arrive, tap \"Resend code\" after 1 minute."], "E-poçtun hələ təsdiqlənməyib. Ünvanına kod göndərdik (gəlməsə 1 dəqiqə sonra yenidən göndər).": ["E-postan henüz doğrulanmadı. Adresine kod gönderdik (gelmezse 1 dakika sonra tekrar gönder).", "Your email isn't verified yet. We sent a code to your address (if it doesn't arrive, resend after 1 minute)."], "Bu e-poçtla hesab tapılmadı. Hesab yaratmaq üçün ad və şifrə yaz.": ["Bu e-postayla hesap bulunamadı. Hesap oluşturmak için ad ve şifre yaz.", "No account found with this email. Enter a name and password to create one."], "Bu istifadəçi adı götürülüb və ya düzgün deyil. Başqa ad seç.": ["Bu kullanıcı adı alınmış veya geçerli değil. Başka bir ad seç.", "This username is taken or invalid. Pick another one."], "Bu e-poçtla hesab var, daxil ol. Şifrəni unutmusansa \"Şifrəmi unutdum\" bas.": ["Bu e-postayla hesap var, giriş yap. Şifreni unuttuysan \"Şifremi unuttum\"a bas.", "An account with this email exists, sign in. If you forgot your password, tap \"Forgot password\"."], "E-poçt və ya şifrə səhvdir. Google ilə qeydiyyatdan keçmisənsə, \"Şifrəmi unutdum\" ilə şifrə qoya bilərsən.": ["E-posta veya şifre yanlış. Google ile kayıt olduysan, \"Şifremi unuttum\" ile şifre koyabilirsin.", "Wrong email or password. If you signed up with Google, you can set a password with \"Forgot password\"."], "Kod səhvdir və ya vaxtı bitib": ["Kod yanlış veya süresi dolmuş", "The code is wrong or has expired"], "Kod yenidən göndərildi": ["Kod yeniden gönderildi", "Code resent"], "Bir az gözlə, sonra yenidən göndər": ["Biraz bekle, sonra tekrar gönder", "Wait a moment, then resend"], "İstifadəçi adı düzgün deyil": ["Kullanıcı adı geçerli değil", "The username is not valid"], "Dəvət üçün hesaba daxil ol": ["Davet için hesabına giriş yap", "Sign in to send invites"], "Bu istifadəçi otaq dəvətlərini bağlayıb": ["Bu kullanıcı oda davetlerini kapatmış", "This user has turned off room invites"], "Otaq tapılmadı": ["Oda bulunamadı", "Room not found"], "Belə istifadəçi tapılmadı": ["Böyle bir kullanıcı bulunamadı", "No such user found"], "Çox dəvət göndərdin, bir az sonra yenidən yoxla": ["Çok fazla davet gönderdin, biraz sonra tekrar dene", "You sent too many invites, try again in a bit"], "Özünü dəvət edə bilməzsən": ["Kendini davet edemezsin", "You can't invite yourself"], "Dəvət getmədi, yenidən cəhd et": ["Davet gitmedi, tekrar dene", "The invite wasn't sent, try again"], "Çox sorğu göndərdin, bir az gözlə": ["Çok fazla istek gönderdin, biraz bekle", "You sent too many requests, wait a bit"], "Dostların": ["Arkadaşların", "Your friends"], "sorğu göndərilib": ["istek gönderildi", "request sent"], "Dostsunuz": ["Arkadaşsınız", "You are friends"], "Dəvətlər açıqdır": ["Davetler açık", "Invites are on"], "Dəvətlər bağlandı": ["Davetler kapatıldı", "Invites are off"], "Dəyişmədi, yenidən cəhd et": ["Değişmedi, tekrar dene", "It didn't change, try again"], "Şifrə qoy": ["Şifre koy", "Set password"], "Şəkil yüklənir...": ["Fotoğraf yükleniyor...", "Uploading photo..."], "Şəkil yeniləndi": ["Fotoğraf güncellendi", "Photo updated"], "Şəkil yüklənmədi, başqa şəkil seç": ["Fotoğraf yüklenmedi, başka bir fotoğraf seç", "The photo didn't upload, pick another one"], "Şəkil silindi": ["Fotoğraf silindi", "Photo removed"], "Şəkil silinmədi, yenidən cəhd et": ["Fotoğraf silinmedi, tekrar dene", "The photo wasn't removed, try again"], "Ad boş ola bilməz": ["Ad boş olamaz", "Name cannot be empty"], "Ad yadda saxlandı": ["Ad kaydedildi", "Name saved"], "Ad dəyişmədi, yenidən cəhd et": ["Ad değişmedi, tekrar dene", "The name didn't change, try again"], "Hazırkı istifadəçi adın": ["Mevcut kullanıcı adın", "Your current username"], "Yoxlamaq alınmadı": ["Kontrol edilemedi", "Couldn't check"], "İstifadəçi adı dəyişdi": ["Kullanıcı adı değişti", "Username changed"], "İstifadəçi adı dəyişmədi, yenidən cəhd et": ["Kullanıcı adı değişmedi, tekrar dene", "The username didn't change, try again"], "Bu, hazırkı e-poçtundur": ["Bu, mevcut e-postan", "This is your current email"], "Yeni ünvana kod göndərdik. Kodu yaz.": ["Yeni adrese kod gönderdik. Kodu yaz.", "We sent a code to the new address. Enter it."], "Bu e-poçt başqa hesabda istifadə olunur": ["Bu e-posta başka bir hesapta kullanılıyor", "This email is used by another account"], "E-poçt dəyişdi": ["E-posta değişti", "Email changed"], "E-poçt dəyişmədi, yenidən cəhd et": ["E-posta değişmedi, tekrar dene", "The email didn't change, try again"], "Mövcud şifrə": ["Mevcut şifre", "Current password"], "Yeni şifrənin təkrarı": ["Yeni şifreyi tekrar yaz", "Repeat new password"], "Mövcud şifrəni yaz": ["Mevcut şifreyi yaz", "Enter your current password"], "Yeni şifrə ən azı 6 simvol olmalıdır": ["Yeni şifre en az 6 karakter olmalı", "The new password must be at least 6 characters"], "Yeni şifrələr uyğun gəlmir": ["Yeni şifreler uyuşmuyor", "The new passwords do not match"], "Yeni şifrə mövcud şifrə ilə eyni ola bilməz": ["Yeni şifre mevcut şifreyle aynı olamaz", "The new password cannot be the same as the current one"], "Şifrə dəyişdi. Digər cihazlardan çıxarıldın.": ["Şifre değişti. Diğer cihazlardan çıkarıldın.", "Password changed. You were logged out of your other devices."], "Mövcud şifrə səhvdir": ["Mevcut şifre yanlış", "The current password is wrong"], "Şifrə dəyişmədi, yenidən cəhd et": ["Şifre değişmedi, tekrar dene", "The password didn't change, try again"], "Əlaqə problemi, yenidən cəhd et": ["Bağlantı sorunu, tekrar dene", "Connection problem, try again"], "E-poçtuna kod göndərdik. Kodu və yeni şifrəni yaz.": ["E-postana kod gönderdik. Kodu ve yeni şifreni yaz.", "We sent a code to your email. Enter the code and your new password."], "Kodu yaz": ["Kodu yaz", "Enter the code"], "Kod göndərilmədi, bir az sonra yenidən yoxla": ["Kod gönderilemedi, biraz sonra tekrar dene", "The code wasn't sent, try again in a bit"], "Kod 1 dəqiqədən bir göndərilə bilər, bir az gözlə": ["Kod dakikada bir gönderilebilir, biraz bekle", "A code can be sent once a minute, wait a bit"], "Kod səhvdir və ya vaxtı bitib, yenidən göndər": ["Kod yanlış veya süresi dolmuş, tekrar gönder", "The code is wrong or has expired, send a new one"], "Şifrə yeniləndi. Digər cihazlardan çıxarıldın.": ["Şifre güncellendi. Diğer cihazlardan çıkarıldın.", "Password updated. You were logged out of your other devices."], "Təsdiq üçün şifrəni yaz": ["Onay için şifreni yaz", "Enter your password to confirm"], "Hesabın silindi.": ["Hesabın silindi.", "Your account was deleted."], "Şifrə səhvdir": ["Şifre yanlış", "Wrong password"], "Təsdiq sözü səhvdir": ["Onay kelimesi yanlış", "Wrong confirmation word"], "Hesab silinmədi, yenidən cəhd et": ["Hesap silinmedi, tekrar dene", "The account wasn't deleted, try again"], "Sən moderator oldun": ["Moderatör oldun", "You are now a moderator"], "Sən host oldun": ["Host oldun", "You are now the host"], "Host başqasına keçdi": ["Host başkasına geçti", "The host role moved to someone else"], "Moderatorluğun alındı": ["Moderatörlüğün alındı", "Your moderator role was removed"], "İndi yalnız host və moderatorlar videonu idarə edir": ["Artık videoyu yalnızca host ve moderatörler yönetiyor", "Now only the host and moderators control the video"], "İndi hamı videonu idarə edə bilər": ["Artık herkes videoyu yönetebilir", "Now everyone can control the video"], "İzləyici": ["İzleyici", "Viewer"], "Host": ["Host", "Host"], "Moderator": ["Moderatör", "Moderator"], "Moderatorluğu al": ["Moderatörlüğü al", "Remove moderator"], "Moderator et": ["Moderatör yap", "Make moderator"], "Açıq: yalnız sən və moderatorlar videonu idarə edir.": ["Açık: videoyu yalnızca sen ve moderatörler yönetiyor.", "On: only you and the moderators control the video."], "Bağlı: hər kəs videonu idarə edə bilər.": ["Kapalı: herkes videoyu yönetebilir.", "Off: everyone can control the video."], "Açıq: videonu yalnız host və moderatorlar idarə edir.": ["Açık: videoyu yalnızca host ve moderatörler yönetiyor.", "On: only the host and moderators control the video."], "Rol dəyişmədi, yenidən cəhd et": ["Rol değişmedi, tekrar dene", "The role didn't change, try again"], "Host verildi, indi sən izləyicisən": ["Host devredildi, artık izleyicisin", "Host handed over, you are now a viewer"], "Həmin şəxs hazırda otaqda deyil": ["Bu kişi şu an odada değil", "That person is not in the room right now"], "Host verilmədi, yenidən cəhd et": ["Host devredilemedi, tekrar dene", "Host wasn't handed over, try again"], "Rejim dəyişmədi, yenidən cəhd et": ["Mod değişmedi, tekrar dene", "The mode didn't change, try again"], "Əvvəlki söhbət burada bitir": ["Önceki sohbet burada bitiyor", "The previous chat ends here"], "Reaksiya seç": ["Tepki seç", "Pick a reaction"], "başlayıb": ["başladı", "started"], "Seans başlamadı, yenidən cəhd et": ["Seans başlamadı, tekrar dene", "The session didn't start, try again"], "Yeni seans dəvəti": ["Yeni seans daveti", "New session invite"], "Seans tezliklə başlayır": ["Seans yakında başlıyor", "The session starts soon"], "Hələ dostun yoxdur. Dostsuz da seans qura bilərsən.": ["Henüz arkadaşın yok. Arkadaşsız da seans kurabilirsin.", "You have no friends yet. You can still schedule a session without friends."], "Gələcək bir tarix seç": ["Gelecek bir tarih seç", "Pick a future date"], "Seans planlandı, dostlara bildiriş getdi": ["Seans planlandı, arkadaşlara bildirim gitti", "Session scheduled, your friends were notified"], "Seans planlandı": ["Seans planlandı", "Session scheduled"], "Çox seans yaratdın, bir az sonra yenidən yoxla": ["Çok fazla seans oluşturdun, biraz sonra tekrar dene", "You created too many sessions, try again in a bit"], "Seans yaradılmadı, yenidən cəhd et": ["Seans oluşturulamadı, tekrar dene", "The session wasn't created, try again"], "Məlumat yadda saxlandı": ["Bilgi kaydedildi", "Info saved"], "Saxlanmadı, yenidən cəhd et": ["Kaydedilemedi, tekrar dene", "Couldn't save, try again"], "İstifadəçi adı düzgün deyil, ya da hələ yoxlanılır": ["Kullanıcı adı geçerli değil ya da hâlâ kontrol ediliyor", "The username is invalid or still being checked"], "Yadda saxlandı": ["Kaydedildi", "Saved"], "Ana ekrandan bir toxunuşla aç, tam ekranda işləyir.": ["Ana ekrandan tek dokunuşla aç, tam ekranda çalışır.", "Open it from your home screen with one tap, it runs full screen."], "iPhone-da: Paylaş düyməsinə bas, sonra \"Ana ekrana əlavə et\" seç.": ["iPhone’da: Paylaş düğmesine bas, sonra \"Ana ekrana ekle\"yi seç.", "On iPhone: tap Share, then choose \"Add to home screen\"."], "Bu brauzer bildirişləri dəstəkləmir.": ["Bu tarayıcı bildirimleri desteklemiyor.", "This browser doesn't support notifications."], "Brauzerdə bağlanıb. Brauzer ayarlarından icazə ver.": ["Tarayıcıda kapatılmış. Tarayıcı ayarlarından izin ver.", "Blocked in the browser. Allow it in your browser settings."], "Yeni seans dəvətləri və tezliklə başlayacaq seanslar barədə xəbər alırsan.": ["Yeni seans davetleri ve yakında başlayacak seanslar hakkında haber alırsın.", "You get notified about new session invites and sessions starting soon."], "Söndürülüb. Seans xatırlatmaları gəlmir.": ["Kapalı. Seans hatırlatmaları gelmiyor.", "Off. You will not get session reminders."], "Avtomatik (ilk moderator)": ["Otomatik (ilk moderatör)", "Automatic (first moderator)"], "Daxil olunur...": ["Giriş yapılıyor...", "Signing in..."], "yan": ["Oca", "Jan"], "fev": ["Şub", "Feb"], "mar": ["Mar", "Mar"], "apr": ["Nis", "Apr"], "may": ["May", "May"], "iyn": ["Haz", "Jun"], "iyl": ["Tem", "Jul"], "avq": ["Ağu", "Aug"], "sen": ["Eyl", "Sep"], "okt": ["Eki", "Oct"], "noy": ["Kas", "Nov"], "dek": ["Ara", "Dec"]};
+  Object.keys(X).forEach(function(k){ D[k] = X[k]; });
   var O = new WeakMap(), AT = ['placeholder','title','aria-label'], busy = false, lang = 'az';
+  /* istifadəçi məzmunu içində yalnız bu ümumi etiketlər tərcümə olunur */
+  var GEN = {'Qonaq': 1, 'Qarşı tərəf': 1, 'Mən': 1, 'İzləyici': 1, 'Host': 1, 'Moderator': 1};
+  var MON = 'yan|fev|mar|apr|may|iyn|iyl|avq|sen|okt|noy|dek'.split('|');
+  var MO = {
+    tr: ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],
+    en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  };
+  var DATE_RE = new RegExp('^(?:(Baz|B\\.e|Ç\\.a|Çər|C\\.a|Cüm|Şən), )?(\\d{1,2}) (' + MON.join('|') + ')(, \\d{1,2}:\\d{2})?$');
+  /* dəyişən hissəli mətnlər: [regex, türkcə, ingiliscə], $1.. tutulan hissələrdir */
+  var PATS = [
+    [/^(.+) qoşuldu$/, '$1 katıldı', '$1 joined'],
+    [/^(.+) çıxdı$/, '$1 çıktı', '$1 left'],
+    [/^Sevgilin video yükləyir: (.+)\. Hazır olanda avtomatik açılacaq\.$/, 'Sevgilin video yüklüyor: $1. Hazır olunca otomatik açılacak.', 'Your partner is uploading a video: $1. It will open automatically when ready.'],
+    [/^Yüklənir… (\d+)%$/, 'Yükleniyor… $1%', 'Uploading… $1%'],
+    [/^Növbə doludur \((\d+) video\)$/, 'Sıra dolu ($1 video)', 'The queue is full ($1 videos)'],
+    [/^(.+) yazır\.\.\.$/, '$1 yazıyor...', '$1 is typing...'],
+    [/^(.+) səsli otaqdadır$/, '$1 sesli odada', '$1 is in the voice room'],
+    [/^Səsli söhbət (\d+:\d+(?::\d+)?)$/, 'Sesli sohbet $1', 'Voice chat $1'],
+    [/^(.+) səsli otağa girdi$/, '$1 sesli odaya girdi', '$1 joined the voice room'],
+    [/^(.+) səsli otaqdan çıxdı$/, '$1 sesli odadan çıktı', '$1 left the voice room'],
+    [/^@(.+) boşdur$/, '@$1 müsait', '@$1 is available'],
+    [/^İndi (\d+) nəfər (\d+) otaqda birlikdə izləyir$/, 'Şu an $1 kişi $2 odada birlikte izliyor', '$1 people are watching together in $2 rooms right now'],
+    [/^Dəvət göndərildi\. @(.+) ana menyuda görəcək\.$/, 'Davet gönderildi. @$1 ana menüde görecek.', 'Invite sent. @$1 will see it on the home screen.'],
+    [/^@(.+) dostlardan çıxarılsın\?$/, '@$1 arkadaşlıktan çıkarılsın mı?', 'Remove @$1 from friends?'],
+    [/^(Host|Moderator|İzləyici) · sən$/, '$1 · sen', '$1 · you'],
+    [/^(.+) · moderator$/, '$1 · moderatör', '$1 · moderator'],
+    [/^Reaksiya (.+)$/, 'Tepki $1', 'Reaction $1'],
+    [/^(.+) · sən$/, '$1 · sen', '$1 · you']
+  ];
   function tr(k){ var r = D[k]; return lang === 'tr' ? r[0] : lang === 'en' ? r[1] : k; }
+  function norm(s){ return s.replace(/\s+/g, ' ').trim(); }
+  function nm(g){ return (GEN[g] && D[g]) ? tr(g) : g; }
+  function fill(t, m){ return t.replace(/\$(\d)/g, function(_, i){ return m[+i] == null ? '' : nm(m[+i]); }); }
   /* rəqəm + ölçü vahidi: 12 dəq, 2 saat 5 dəq, 3 gün sonra */
   function pat(k){
     if(!/^\d+ (dəq|saat|gün)( \d+ dəq)?( sonra)?$/.test(k)) return null;
-    if(lang === 'az') return k; var t = lang === 'tr';
+    var t = lang === 'tr';
     return k.replace(/dəq/g, t ? 'dk' : 'min').replace(/saat/g, t ? 'sa' : 'h').replace(/gün/g, t ? 'gün' : 'd').replace(/sonra/g, t ? 'sonra' : 'later');
   }
+  /* az mətnin cari dildəki qarşılığı; qayda yoxdursa null */
+  function T(k){
+    if(D[k]) return tr(k);
+    var p = pat(k); if(p !== null) return p;
+    var m = DATE_RE.exec(k);
+    if(m) return (m[1] && D[m[1]] ? tr(m[1]) + ', ' : '') + m[2] + ' ' + MO[lang][MON.indexOf(m[3])] + (m[4] || '');
+    for(var i = 0; i < PATS.length; i++){
+      m = PATS[i][0].exec(k);
+      if(m) return fill(lang === 'tr' ? PATS[i][1] : PATS[i][2], m);
+    }
+    if(k.indexOf(' · ') > 0){
+      var ch = false, out = k.split(' · ').map(function(s){ var v = T(s); if(v !== null){ ch = true; return v; } return s; });
+      return ch ? out.join(' · ') : null;
+    }
+    return null;
+  }
+  function skip(n, k){
+    var e = n.nodeType === 3 ? n.parentNode : n;
+    return !!(e && e.closest && e.closest('[data-nt]')) && !GEN[k];
+  }
   function text(n){
-    var cur = n.nodeValue, o = O.get(n);
-    if(o && cur.trim() !== o.v && cur.trim() !== o.k) o = null;
-    var k = o ? o.k : cur.trim(), wq = /^“[\s\S]*”$/.test(k), b = wq ? k.slice(1, -1) : k; if(!D[b] && !pat(b)) return;
-    var v = D[b] ? tr(b) : pat(b); if(wq) v = '“' + v + '”'; var m = cur.match(/^(\s*)[\s\S]*?(\s*)$/);
-    O.set(n, {k: k, v: v}); var nv = m[1] + v + m[2]; if(nv !== cur) n.nodeValue = nv;
+    var cur = n.nodeValue, cn = norm(cur), o = O.get(n);
+    if(o && cn !== o.v && cn !== o.k) o = null;
+    var k = o ? o.k : cn; if(!k) return;
+    var m = cur.match(/^(\s*)[\s\S]*?(\s*)$/);
+    if(lang === 'az'){
+      if(o && cn === o.v && o.v !== o.k){ n.nodeValue = m[1] + o.k + m[2]; O.set(n, {k: o.k, v: o.k}); }
+      return;
+    }
+    if(skip(n, k)) return;
+    var wq = /^“[\s\S]*”$/.test(k), b = wq ? k.slice(1, -1) : k;
+    var v = T(b); if(v === null) return;
+    if(wq) v = '“' + v + '”';
+    O.set(n, {k: k, v: v});
+    var nv = m[1] + v + m[2]; if(nv !== cur) n.nodeValue = nv;
   }
   function attr(el){
     var o = el.__o || (el.__o = {});
@@ -4389,8 +4501,11 @@ boot();
       if(!el.hasAttribute(a)) return;
       var cur = el.getAttribute(a), e = o[a];
       if(e && cur !== e.v && cur !== e.k) e = null;
-      var k = e ? e.k : cur; if(!D[k] && !pat(k)) return;
-      var v = D[k] ? tr(k) : pat(k); o[a] = {k: k, v: v}; if(v !== cur) el.setAttribute(a, v);
+      var k = e ? e.k : cur;
+      if(lang === 'az'){ if(e && cur === e.v && e.v !== e.k){ el.setAttribute(a, e.k); o[a] = {k: e.k, v: e.k}; } return; }
+      if(skip(el, k)) return;
+      var v = T(k); if(v === null) return;
+      o[a] = {k: k, v: v}; if(v !== cur) el.setAttribute(a, v);
     });
   }
   function run(root){
@@ -4418,6 +4533,12 @@ boot();
     lang = l; if(save){ try{ localStorage.setItem('wt_lang', l); }catch(e){} }
     document.documentElement.lang = l; run(document.body); mark();
   }
+  /* kodun özü də bildiriş, paylaşma kimi DOM-dan kənar mətnlər üçün istifadə edir */
+  window.wtLang = function(){ return lang; };
+  window.wtT = function(s){
+    s = String(s == null ? '' : s); if(lang === 'az') return s;
+    var v = T(norm(s)); return v === null ? s : v;
+  };
   document.getElementById('setlang').addEventListener('click', function(e){
     var b = e.target.closest('button[data-l]'); if(b) setLang(b.getAttribute('data-l'), true);
   });
