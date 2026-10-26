@@ -1013,6 +1013,29 @@ body.mob #profile{
   -webkit-backdrop-filter:none;backdrop-filter:none;
   background:rgba(255,255,255,.085);
 }
+
+/* ================= AYARLAR TABI ================= */
+#setCards{display:flex;flex-direction:column;gap:14px}
+@media (min-width:1024px){#setCards{gap:18px}}
+#setCards [hidden]{display:none!important}
+#setCards .pin{flex:1;min-width:0;height:44px;padding:0 14px;border-radius:12px;background:var(--velvet-2);color:var(--text);
+  box-shadow:inset 0 0 0 1.5px var(--line);transition:box-shadow .15s ease}
+#setCards .pin:focus{box-shadow:inset 0 0 0 2px var(--rose)}
+#setCards .pin::placeholder{color:#8f7aa8}
+#setCards .card.dz{box-shadow:inset 0 0 0 1px rgba(255,92,138,.4),var(--lg-drop)}
+#setCards .swrow+.swrow{margin-top:14px}
+.srange{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.srange label{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.srange label span{color:var(--muted);font-size:13px;font-weight:600}
+.srange input{width:100%;height:28px;padding:0;background:none;box-shadow:none;accent-color:var(--rose)}
+#smsg{min-height:20px;font-size:14px;font-weight:500;color:#ff8fae;text-align:center}
+#smsg[data-ok="1"]{color:#7be0a5}
+/* 6 tab: kapsulalar bir az daralır */
+#tabbar button .tp{width:min(58px,100%)}
+
+.seg{display:flex;gap:4px;padding:4px;border-radius:16px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.seg button{flex:1;padding:10px 6px;border-radius:12px;background:none;font-weight:700;font-size:14px;color:var(--muted)}
+.seg button.on{color:var(--text);background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.09));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 14px -4px rgba(255,122,156,.5)}
 </style>
 </head>
 <body>
@@ -1120,6 +1143,58 @@ body.mob #profile{
   <div class="card"><h2><i class="fa-solid fa-film" aria-hidden="true"></i>İzlədiklərin</h2><div id="hvids"></div></div>
   <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
   <p class="mquote" id="mquote"></p>
+  <div id="setCards">
+  <div class="card">
+    <h2><i class="fa-solid fa-language" aria-hidden="true"></i>Dil</h2>
+    <div class="seg" id="setlang" role="group" aria-label="Dil"><button type="button" data-l="az">Azərbaycan</button><button type="button" data-l="tr">Türkçe</button><button type="button" data-l="en">English</button></div>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-bell" aria-hidden="true"></i>Bildirişlər</h2>
+    <label class="swrow" for="setnotif">
+      <span><b>Seans bildirişləri</b><small id="setnotifhint"></small></span>
+      <input type="checkbox" id="setnotif" class="sw">
+    </label>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-sliders" aria-hidden="true"></i>Səs və video</h2>
+    <div class="srange">
+      <label for="setvvol"><b>Səsli söhbətin səsi</b><span id="setvvolv">100%</span></label>
+      <input type="range" id="setvvol" min="0" max="100" step="5" value="100">
+    </div>
+    <div class="srange">
+      <label for="setvidvol"><b>Videonun səsi</b><span id="setvidvolv">100%</span></label>
+      <input type="range" id="setvidvol" min="0" max="100" step="5" value="100">
+    </div>
+    <label class="swrow" for="setmuted">
+      <span><b>Mikrofon bağlı başlasın</b><small>Səsli söhbətə qoşulanda mikrofon söndürülmüş olur.</small></span>
+      <input type="checkbox" id="setmuted" class="sw">
+    </label>
+    <label class="swrow" for="setclean" style="margin-top:14px">
+      <span><b>Səs təmizləmə</b><small>Küyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.</small></span>
+      <input type="checkbox" id="setclean" class="sw" checked>
+    </label>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-user" aria-hidden="true"></i>Hesab</h2>
+    <button class="pbtn alt" id="setlogout" style="width:100%;padding:13px">Hesabdan çıx</button>
+  </div>
+  <div class="card">
+    <h2>Təhlükəsizlik</h2>
+    <button class="pbtn alt" id="logoutall" style="width:100%;padding:13px">Bütün cihazlardan çıx</button>
+    <div class="hint" style="margin-top:8px">Bu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.</div>
+  </div>
+  <div class="card dz">
+    <h2>Təhlükəli zona</h2>
+    <button class="pbtn danger" id="delopen" style="width:100%;padding:13px">Hesabı sil</button>
+    <div id="delbox" hidden>
+      <p class="dzt">Hesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.</p>
+      <div class="fld" id="delpwrow"><input id="delpw" class="pin" type="password" placeholder="Təsdiq üçün şifrən" autocomplete="current-password" aria-label="Şifrə"></div>
+      <div class="fld" id="delcfrow" hidden><input id="delcf" class="pin" placeholder="Təsdiq üçün SİL yaz" autocomplete="off" aria-label="Təsdiq sözü"></div>
+      <div class="frow" style="gap:10px"><button class="pbtn alt" id="delcancel" style="flex:1">Ləğv et</button><button class="pbtn danger" id="delgo" style="flex:1">Həmişəlik sil</button></div>
+    </div>
+  </div>
+  <div id="smsg" role="status"></div>
+  </div>
   <button id="clearhist">Tarixçəni təmizlə</button>
   </div></div>
   <nav id="tabbar" aria-label="Naviqasiya">
@@ -1127,6 +1202,7 @@ body.mob #profile{
     <button type="button" data-go="plans" aria-label="Seanslar" title="Seanslar"><span class="tp"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span></button>
     <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span></button>
     <button type="button" data-go="hist" aria-label="Tarixçə" title="Tarixçə"><span class="tp"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="settings" aria-label="Ayarlar" title="Ayarlar"><span class="tp"><i class="fa-solid fa-gear" aria-hidden="true"></i></span></button>
     <button type="button" data-go="profile" aria-label="Profil" title="Profil"><span class="tp"><span class="tav" id="tav"></span></span></button>
   </nav>
 </div>
@@ -1182,21 +1258,6 @@ body.mob #profile{
     <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Cari şifrə" autocomplete="current-password" aria-label="Cari şifrə"></div>
     <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
     <button class="pbtn" id="pwsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
-  </div>
-  <div class="card">
-    <h2>Təhlükəsizlik</h2>
-    <button class="pbtn alt" id="logoutall" style="width:100%;padding:13px">Bütün cihazlardan çıx</button>
-    <div class="hint" style="margin-top:8px">Bu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.</div>
-  </div>
-  <div class="card dz">
-    <h2>Təhlükəli zona</h2>
-    <button class="pbtn danger" id="delopen" style="width:100%;padding:13px">Hesabı sil</button>
-    <div id="delbox" hidden>
-      <p class="dzt">Hesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.</p>
-      <div class="fld" id="delpwrow"><input id="delpw" class="pin" type="password" placeholder="Təsdiq üçün şifrən" autocomplete="current-password" aria-label="Şifrə"></div>
-      <div class="fld" id="delcfrow" hidden><input id="delcf" class="pin" placeholder="Təsdiq üçün SİL yaz" autocomplete="off" aria-label="Təsdiq sözü"></div>
-      <div class="frow" style="gap:10px"><button class="pbtn alt" id="delcancel" style="flex:1">Ləğv et</button><button class="pbtn danger" id="delgo" style="flex:1">Həmişəlik sil</button></div>
-    </div>
   </div>
   <div id="pmsg" role="status"></div>
 </div>
@@ -2558,7 +2619,7 @@ async function joinVoice(){
     sysMsg('Mikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.'); return;
   }
   try{
-    localStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}, video: false});
+    localStream = await navigator.mediaDevices.getUserMedia({audio: (window.wtAudioCons ? window.wtAudioCons() : {echoCancellation: true, noiseSuppression: true, autoGainControl: true}), video: false});
   }catch(e){
     sysMsg('Mikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.'); return;
   }
@@ -2570,6 +2631,7 @@ async function joinVoice(){
   sysMsg('Səsli otağa girdin. Qulaqlıq tax ki, videonun səsi mikrofona düşməsin');
   setVoiceUI();
   maybeCall();
+  if(window.wtStartMuted && window.wtStartMuted()) $('vmute').click();
 }
 function leaveVoice(){
   if(!voiceOn) return;
@@ -3867,7 +3929,7 @@ async function startPlan(p){
 }
 async function pushNote(t, body){
   try{ if(navigator.vibrate) navigator.vibrate([40, 40, 40]); }catch(e){}
-  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  if(!('Notification' in window) || Notification.permission !== 'granted' || (window.wtNotifOff && window.wtNotifOff())) return;
   try{
     const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
     if(reg) reg.showNotification(t, {body, icon: '/icon-192.png', badge: '/icon-192.png', tag: 'plan'});
@@ -3977,10 +4039,10 @@ boot();
 /* Instagram tipli naviqasiya: alt panel (ani keçid) + yanaşı səhifələr (barmağı izləyən sürüşdürmə) */
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
-  var ORDER = ['home','plans','friends','hist','profile'], PAGES = ORDER.slice(0,4);
+  var ORDER = ['home','plans','friends','hist','settings','profile'], PAGES = ORDER.slice(0,5);
   var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
-    ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist']];
+    ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
   map.forEach(function(m){
     var el = menu.querySelector(m[0]); if(!el) return;
     if(m[2]) el = el.closest(m[2]) || el;
@@ -4007,7 +4069,7 @@ boot();
     menu.insertBefore(pager, document.getElementById('tabbar'));
     menu.classList.add('pager-on');
   }
-  var idx = function(){ return cur === 'profile' ? 4 : PAGES.indexOf(cur); };
+  var idx = function(){ return cur === 'profile' ? 5 : PAGES.indexOf(cur); };
   function go(i, anim){
     if(!track) return;
     track.style.transition = anim ? 'transform .26s cubic-bezier(.22,.9,.3,1)' : 'none';
@@ -4072,7 +4134,7 @@ boot();
         track.style.transition = 'none'; prof.style.transition = 'none';
       }
       if(mode === 'pager'){
-        var edge = (i0 === 0 && dx > 0) || (i0 === 3 && dx < 0);
+        var edge = (i0 === 0 && dx > 0) || (i0 === 4 && dx < 0);
         d = edge ? dx * .3 : dx;
       } else d = Math.max(0, dx);
       if(!raf) raf = requestAnimationFrame(paint);
@@ -4084,9 +4146,9 @@ boot();
       var v = Math.abs(d) / Math.max(1, Date.now() - st), far = Math.abs(d) > W * .25 || (v > .4 && Math.abs(d) > 30);
       if(mode === 'pager'){
         var dir = d < 0 ? 1 : -1, j = i0 + dir;
-        if(far && j >= 0 && j <= 3) setTab(PAGES[j], true);
-        else if(far && j === 4){
-          go(3, true); setTab('profile', false);
+        if(far && j >= 0 && j <= 4) setTab(PAGES[j], true);
+        else if(far && j === 5){
+          go(4, true); setTab('profile', false);
           prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
           void prof.offsetWidth;
           prof.style.transition = 'transform .26s cubic-bezier(.22,.9,.3,1)'; prof.style.transform = '';
@@ -4141,6 +4203,124 @@ boot();
   document.addEventListener('focusin', function(){ fit(); setTimeout(fit, 120); setTimeout(fit, 400); });
   document.addEventListener('focusout', function(){ setTimeout(fit, 120); setTimeout(fit, 400); });
   if(vv){ vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+})();
+</script>
+<script>
+/* Ayarlar tabı: bildirişlər, səs və video, hesab */
+(function(){
+  var $ = function(i){ return document.getElementById(i); };
+  function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
+  function put(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+
+  /* xəta/uğur mesajı: profil açıqdırsa orada, yoxsa Ayarlarda göstərilir */
+  var _pm = window.pmsg;
+  if(typeof _pm === 'function') window.pmsg = function(t, ok){
+    var p = $('profile');
+    if(p && !p.hidden) return _pm(t, ok);
+    var e = $('smsg'); if(e){ e.textContent = t || ''; e.dataset.ok = ok ? '1' : '0'; }
+  };
+
+  /* bildirişlər */
+  var nt = $('setnotif'), nh = $('setnotifhint');
+  window.wtNotifOff = function(){ return get('wt_notif', '1') === '0'; };
+  function notifState(){
+    if(!('Notification' in window)){ nt.checked = false; nt.disabled = true; nh.textContent = 'Bu brauzer bildirişləri dəstəkləmir.'; return; }
+    var perm = Notification.permission;
+    if(perm === 'denied'){ nt.checked = false; nh.textContent = 'Brauzerdə bağlanıb. Brauzer ayarlarından icazə ver.'; return; }
+    nt.checked = perm === 'granted' && get('wt_notif', '1') !== '0';
+    nh.textContent = nt.checked ? 'Yeni seans dəvətləri və tezliklə başlayacaq seanslar barədə xəbər alırsan.' : 'Söndürülüb. Seans xatırlatmaları gəlmir.';
+  }
+  nt.addEventListener('change', async function(){
+    if(nt.checked){
+      if(Notification.permission === 'default'){ try{ await Notification.requestPermission(); }catch(e){} }
+      if(Notification.permission === 'granted') put('wt_notif', '1');
+    } else put('wt_notif', '0');
+    notifState();
+    var b = $('plnotif'); if(b && 'Notification' in window) b.hidden = Notification.permission !== 'default';
+  });
+  document.addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('#tabbar,#plnotif')) setTimeout(notifState, 300);
+  });
+  notifState();
+
+  /* səs səviyyələri */
+  function bindVol(id, labId, key, getEl){
+    var r = $(id), l = $(labId);
+    function apply(){ var el = getEl(); if(el){ try{ el.volume = Math.min(1, Math.max(0, (+r.value) / 100)); }catch(e){} } l.textContent = r.value + '%'; }
+    r.value = get(key, '100'); apply();
+    r.addEventListener('input', function(){ put(key, r.value); apply(); });
+    return apply;
+  }
+  var av = bindVol('setvvol', 'setvvolv', 'wt_voicevol', function(){ return $('raudio'); });
+  var vv = bindVol('setvidvol', 'setvidvolv', 'wt_vidvol', function(){ return $('vid'); });
+  document.addEventListener('play', function(e){ if(e.target && (e.target.id === 'vid' || e.target.id === 'raudio')){ av(); vv(); } }, true);
+
+  /* mikrofon */
+  var sm = $('setmuted'), sc = $('setclean');
+  sm.checked = get('wt_micmuted', '0') === '1';
+  sc.checked = get('wt_micclean', '1') !== '0';
+  sm.addEventListener('change', function(){ put('wt_micmuted', sm.checked ? '1' : '0'); });
+  sc.addEventListener('change', function(){ put('wt_micclean', sc.checked ? '1' : '0'); });
+  window.wtAudioCons = function(){ var c = sc.checked; return {echoCancellation: c, noiseSuppression: c, autoGainControl: c}; };
+  window.wtStartMuted = function(){ return sm.checked; };
+
+  /* hesab */
+  $('setlogout').onclick = function(){ $('logout').click(); };
+})();
+</script>
+<script>
+/* Dil seçimi: az (defolt) / tr / en. Orijinal Azərbaycan mətni açar kimi işlənir. */
+(function(){
+  var D = {}; 'Salam|Merhaba|Hello\nBu axşam nə izləyirik?|Bu akşam ne izliyoruz?|What are we watching tonight?\nOtaq aç, kodu göndər, eyni kadrda olun.|Oda aç, kodu gönder, aynı karede olun.|Open a room, send the code, and watch together.\nOtaq aç|Oda aç|Open room\nKodun var?|Kodun var mı?|Have a code?\nGir|Gir|Join\nizlənən|izlenen|watched\notaq|oda|rooms\nindi izləyir|şimdi izliyor|watching now\nTətbiq kimi quraşdır|Uygulama olarak yükle|Install as an app\nAna ekrana əlavə et|Ana ekrana ekle|Add to home screen\nPlanlı seanslar|Planlı seanslar|Scheduled sessions\nYeni seans|Yeni seans|New session\nBildirişlər|Bildirimler|Notifications\nİzləmə statistikası|İzleme istatistikleri|Watch stats\nDostlar|Arkadaşlar|Friends\nİzlədiklərin|İzlediklerin|Watched\nOtaqların|Odaların|Your rooms\nSeans bildirişləri|Seans bildirimleri|Session notifications\nSəs və video|Ses ve video|Sound and video\nSəsli söhbətin səsi|Sesli sohbetin sesi|Voice chat volume\nVideonun səsi|Videonun sesi|Video volume\nMikrofon bağlı başlasın|Mikrofon kapalı başlasın|Start with mic muted\nSəsli söhbətə qoşulanda mikrofon söndürülmüş olur.|Sesli sohbete katılınca mikrofon kapalı olur.|The mic is muted when you join voice chat.\nSəs təmizləmə|Ses temizleme|Noise cancelling\nKüyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.|Gürültüyü ve yankıyı azaltır. Ses kötü çıkarsa kapat.|Reduces noise and echo. Turn it off if your audio sounds bad.\nHesab|Hesap|Account\nHesabdan çıx|Hesaptan çık|Log out\nTəhlükəsizlik|Güvenlik|Security\nBütün cihazlardan çıx|Tüm cihazlardan çık|Log out of all devices\nBu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.|Bu cihaz dahil tüm telefon ve bilgisayarlardan çıkarılırsın.|You will be logged out of all phones and computers, including this one.\nTəhlükəli zona|Tehlikeli bölge|Danger zone\nHesabı sil|Hesabı sil|Delete account\nHesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.|Hesabın, geçmişin, fotoğrafın ve kullanıcı adın kalıcı olarak silinecek. Bu geri alınamaz.|Your account, history, photo and username will be permanently deleted. This cannot be undone.\nLəğv et|Vazgeç|Cancel\nHəmişəlik sil|Kalıcı olarak sil|Delete forever\nTarixçəni təmizlə|Geçmişi temizle|Clear history\nProfil|Profil|Profile\nŞəkli dəyiş|Fotoğrafı değiştir|Change photo\nSil|Sil|Remove\nAd|Ad|Name\nSaxla|Kaydet|Save\nİstifadəçi adı|Kullanıcı adı|Username\nHərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.|Harf, rakam, nokta ve _ (3-20 karakter). Herkesin adı farklıdır.|Letters, digits, dots and _ (3-20 characters). Everyone\'s username is unique.\nHaqqında|Hakkında|About\nGizlilik|Gizlilik|Privacy\nOtağa dəvətlər|Odaya davetler|Room invites\nAçıq: hər kəs səni otağa dəvət edə bilər.|Açık: herkes seni odaya davet edebilir.|On: anyone can invite you to a room.\nE-poçt|E-posta|Email\nDəyiş|Değiştir|Change\nTəsdiq et|Onayla|Confirm\nŞifrəni dəyiş|Şifreyi değiştir|Change password\nŞifrəni yenilə|Şifreyi güncelle|Update password\nOtaq kodu|Oda kodu|Room code\nİstifadəçi adı ilə axtar|Kullanıcı adıyla ara|Search by username\nTəsdiq üçün şifrən|Onay için şifren|Your password to confirm\nŞifrə|Şifre|Password\nTəsdiq üçün SİL yaz|Onay için SİL yaz|Type DELETE to confirm\nTəsdiq sözü|Onay kelimesi|Confirmation word\nNaviqasiya|Gezinme|Navigation\nƏsas|Ana sayfa|Home\nSeanslar|Seanslar|Sessions\nTarixçə|Geçmiş|History\nAyarlar|Ayarlar|Settings\nGeri|Geri|Back\nQısa məlumat (məs. Komediya və qorxu filmləri)|Kısa bilgi (örn. Komedi ve korku filmleri)|Short bio (e.g. Comedy and horror films)\n6 rəqəmli kod|6 haneli kod|6-digit code\nTəsdiq kodu|Onay kodu|Confirmation code\nCari şifrə|Mevcut şifre|Current password\nYeni şifrə (ən azı 6 simvol)|Yeni şifre (en az 6 karakter)|New password (at least 6 characters)\nYeni şifrə|Yeni şifre|New password\nDil|Dil|Language'.split('\n').forEach(function(r){ var a = r.split('|'); D[a[0]] = [a[1], a[2]]; });
+  var O = new WeakMap(), AT = ['placeholder','title','aria-label'], busy = false, lang = 'az';
+  function tr(k){ var r = D[k]; return lang === 'tr' ? r[0] : lang === 'en' ? r[1] : k; }
+  function text(n){
+    var cur = n.nodeValue, o = O.get(n);
+    if(o && cur.trim() !== o.v && cur.trim() !== o.k) o = null;
+    var k = o ? o.k : cur.trim(); if(!D[k]) return;
+    var v = tr(k), m = cur.match(/^(\s*)[\s\S]*?(\s*)$/);
+    O.set(n, {k: k, v: v}); var nv = m[1] + v + m[2]; if(nv !== cur) n.nodeValue = nv;
+  }
+  function attr(el){
+    var o = el.__o || (el.__o = {});
+    AT.forEach(function(a){
+      if(!el.hasAttribute(a)) return;
+      var cur = el.getAttribute(a), e = o[a];
+      if(e && cur !== e.v && cur !== e.k) e = null;
+      var k = e ? e.k : cur; if(!D[k]) return;
+      var v = tr(k); o[a] = {k: k, v: v}; if(v !== cur) el.setAttribute(a, v);
+    });
+  }
+  function run(root){
+    busy = true;
+    try{
+      var w = document.createTreeWalker(root, 5, {acceptNode: function(n){ var t = n.nodeName; return (t === 'SCRIPT' || t === 'STYLE') ? 2 : 1; }});
+      var n; if(root.nodeType === 1) attr(root);
+      while((n = w.nextNode())){ if(n.nodeType === 3) text(n); else attr(n); }
+    }finally{ busy = false; }
+  }
+  new MutationObserver(function(list){
+    if(busy || lang === 'az') return;
+    busy = true;
+    try{
+      list.forEach(function(m){
+        var t = m.target;
+        if(m.type === 'characterData') text(t);
+        else if(m.type === 'attributes') attr(t);
+        else m.addedNodes.forEach(function(a){ if(a.nodeType === 3) text(a); else if(a.nodeType === 1) run(a); });
+      });
+    }finally{ busy = false; }
+  }).observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: AT});
+  function mark(){ [].forEach.call(document.querySelectorAll('#setlang button'), function(b){ var on = b.getAttribute('data-l') === lang; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
+  function setLang(l, save){
+    lang = l; if(save){ try{ localStorage.setItem('wt_lang', l); }catch(e){} }
+    document.documentElement.lang = l; run(document.body); mark();
+  }
+  document.getElementById('setlang').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-l]'); if(b) setLang(b.getAttribute('data-l'), true);
+  });
+  var sv = 'az'; try{ sv = localStorage.getItem('wt_lang') || 'az'; }catch(e){}
+  setLang(sv === 'tr' || sv === 'en' ? sv : 'az', false);
 })();
 </script>
 </body>
