@@ -2536,6 +2536,7 @@ def proxy():
 DOMINO = {}
 DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
 DOM_MAX = 200
+DOM_TARGET = 101             # ilk bu xala çatan oyunu qazanır
 
 
 def _dom_other(g, sub):
@@ -2569,6 +2570,7 @@ def _dom_deal(g):
     g["passes"] = 0
     g["winner"] = None
     g["reason"] = ""
+    g["pts"] = 0
     g["last"] = None
     g["note"] = None
     # başlayan: ən böyük cüt, yoxdursa ən böyük cəmli daş
@@ -2583,11 +2585,21 @@ def _dom_deal(g):
 
 
 def _dom_finish(g, winner, reason):
+    """Raund bitir. Daşlar bitibsə qalib rəqibin əlindəki daşların cəmini alır;
+    oyun bloklanıbsa rəqibin və öz daşlarının cəmi arasındakı fərqi alır."""
     g["status"] = "over"
     g["winner"] = winner
     g["reason"] = reason
+    g["pts"] = 0
     if winner:
-        g["score"][winner] = g["score"].get(winner, 0) + 1
+        o = _dom_other(g, winner)
+        so = sum(a + b for a, b in g["hands"][o])
+        sw = sum(a + b for a, b in g["hands"][winner])
+        pts = so if reason == "out" else max(so - sw, 1)
+        g["pts"] = pts
+        g["score"][winner] = g["score"].get(winner, 0) + pts
+        if g["score"][winner] >= DOM_TARGET:
+            g["match"] = winner
 
 
 def _dom_settle(g):
@@ -2633,12 +2645,14 @@ def _dom_view(g, sub):
         me=g["names"].get(sub), opp=g["names"].get(opp) if opp else None,
         opp_online=bool(opp and now - g["seen"].get(opp, 0) < 35),
         score=dict(me=g["score"].get(sub, 0), opp=g["score"].get(opp, 0) if opp else 0),
-        last=g["last"], reason=g["reason"],
+        last=g["last"], reason=g["reason"], target=DOM_TARGET,
     )
     if g["note"]:
         out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"]}
     if st == "over":
         out["result"] = "draw" if not g["winner"] else ("me" if g["winner"] == sub else "opp")
+        out["pts"] = g.get("pts", 0)
+        out["match"] = None if not g.get("match") else ("me" if g["match"] == sub else "opp")
         out["opp_hand"] = [list(t) for t in g["hands"].get(opp, [])] if opp else []
     return out
 
@@ -2679,7 +2693,7 @@ def api_domino_create():
             abort(503)
         g = dict(code=c, players=[sub], names={sub: nm}, hands={}, stock=[], board=[], turn=None,
                  status="wait", winner=None, reason="", passes=0, v=1, round=1, score={},
-                 seen={sub: now}, upd=now, last=None, note=None)
+                 seen={sub: now}, upd=now, last=None, note=None, pts=0, match=None)
         DOMINO[c] = g
         return jsonify(_dom_view(g, sub))
 
@@ -2808,6 +2822,9 @@ def api_domino_again():
             rd = 0
         if g["status"] == "over" and rd == g["round"] and len(g["players"]) == 2:
             g["round"] += 1
+            if g.get("match"):                 # 101-ə çatılıb: yeni oyun, xal sıfırdan
+                g["score"] = {}
+                g["match"] = None
             _dom_deal(g)
             _dom_touch(g)
         return jsonify(_dom_view(g, sub))
