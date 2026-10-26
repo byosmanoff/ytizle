@@ -881,6 +881,121 @@ body.mob #menu,body.mob #profile{touch-action:pan-y}
   padding:10px max(16px,calc((100% - 488px)/2)) calc(96px + env(safe-area-inset-bottom))}
 .pg>*{flex:none}
 body.mob #profile{will-change:transform}
+
+/* ================= LIQUID GLASS (üst təbəqə — köhnə dizaynın üzərinə) ================= */
+:root{
+  --lg-fill:rgba(255,255,255,.075);
+  --lg-fill-hi:rgba(255,255,255,.14);
+  --lg-blur:blur(22px) saturate(180%);
+  --lg-edge:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1.5px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(255,255,255,.07),inset 0 0 22px rgba(255,255,255,.04);
+  --lg-drop:0 10px 30px -10px rgba(0,0,0,.55);
+}
+
+/* şüşənin əks etdirəcəyi rəngli arxa fon */
+#app,#menu,#profile{
+  background:
+    radial-gradient(60% 36% at 8% 4%,rgba(255,122,156,.34),transparent 70%),
+    radial-gradient(55% 34% at 96% 18%,rgba(255,196,107,.24),transparent 70%),
+    radial-gradient(75% 44% at 78% 100%,rgba(138,92,255,.32),transparent 70%),
+    radial-gradient(60% 38% at 0% 78%,rgba(232,86,125,.20),transparent 70%),
+    var(--velvet);
+}
+
+/* şüşə səthlər */
+.card,.tile,#imgbar,.ysb .yin,#ytres .r,#hrooms .hs,.ib,.bar button,.bar input,.yrec button{
+  background:var(--lg-fill);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:var(--lg-edge),var(--lg-drop);
+}
+.tile:hover,.ib:hover,.bar button:hover,#ytres .r:hover,#hrooms .hs:hover{background:var(--lg-fill-hi)}
+.yrec button:active{background:var(--lg-fill-hi)}
+.tile span{background:rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 0 0 1px rgba(255,255,255,.10)}
+.sys{background:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.ysb{background:linear-gradient(rgba(30,16,41,.82) 70%,rgba(30,16,41,0))}
+
+/* düymələr: parlaq maye şüşə */
+.fb,.lv-btns button{
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(0,0,0,.14),0 8px 18px -8px rgba(232,86,125,.6);
+}
+.fb.no,.fb.sec,.lv-btns button.alt{
+  background:rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.bar button.pink,.ysb button{
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -1px 0 rgba(160,30,70,.2),0 8px 18px -8px rgba(255,122,156,.7);
+}
+
+/* çat baloncukları */
+.m{
+  background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.32);
+}
+.m.me{
+  background:linear-gradient(160deg,rgba(255,152,178,.94),rgba(232,86,125,.88));
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(160,30,70,.25),0 8px 22px -8px rgba(232,86,125,.55);
+}
+.m.armed,.m.me.armed{box-shadow:0 0 0 2px var(--amber)}
+
+/* kod çipi */
+#codebar{
+  background:var(--lg-fill-hi);color:var(--text);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-edge);
+}
+#codebar b{color:var(--text)}
+#codebar button{background:rgba(255,255,255,.12);color:var(--text)}
+#codebar button:hover{background:rgba(255,255,255,.22)}
+#codebar #leave{background:rgba(255,92,138,.22);color:#ff9db8}
+#codebar #leave:hover{background:rgba(255,92,138,.36)}
+#codebar #copy.ok{background:rgba(123,224,165,.22);color:#7be0a5}
+
+/* ekran */
+#player{
+  border-radius:22px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 14px 50px -10px rgba(255,122,156,.42),0 0 90px -20px rgba(255,196,107,.32);
+}
+
+/* üzən şüşə alt naviqasiya */
+#menu.pager-on>#tabbar{
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  width:min(calc(100% - 28px),440px);
+  padding:6px;border:0;border-radius:34px;
+  background:rgba(255,255,255,.08);
+  -webkit-backdrop-filter:blur(26px) saturate(190%) brightness(1.05);
+  backdrop-filter:blur(26px) saturate(190%) brightness(1.05);
+  box-shadow:var(--lg-edge),0 18px 44px -10px rgba(0,0,0,.6);
+}
+#tabbar button.on .tp{
+  background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.09));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.14),0 4px 14px -4px rgba(255,122,156,.55);
+}
+#tabbar button.on .tav{box-shadow:0 0 0 2px rgba(255,255,255,.22),0 0 0 3.5px var(--text)}
+
+/* pəncərələr: fon yalnız qaralır, bulanıqlıq kartın özündədir */
+#leavebox,#hostbox,#invbox,#pbox,#rolebox,#planbox{
+  background:rgba(14,6,22,.45);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.lv-card{
+  background:linear-gradient(160deg,rgba(255,255,255,.17),rgba(255,255,255,.06));
+  -webkit-backdrop-filter:blur(34px) saturate(190%);backdrop-filter:blur(34px) saturate(190%);
+  box-shadow:var(--lg-edge),0 30px 70px -10px rgba(0,0,0,.65);
+}
+#invuser,#planbox input{
+  background:rgba(255,255,255,.07);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 2px 4px rgba(0,0,0,.25);
+}
+
+/* köhnə brauzerlər və "şəffaflığı azalt" seçimi */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--lg-fill:rgba(55,32,74,.92);--lg-fill-hi:rgba(72,44,96,.96)}
+  #menu.pager-on>#tabbar{background:rgba(30,16,41,.96)}
+  .lv-card{background:rgba(42,23,57,.97)}
+}
+@media (prefers-reduced-transparency:reduce){
+  :root{--lg-fill:rgba(55,32,74,.94);--lg-fill-hi:rgba(72,44,96,.97)}
+  #menu.pager-on>#tabbar{background:rgba(30,16,41,.97)}
+  .lv-card{background:rgba(42,23,57,.98)}
+}
 </style>
 </head>
 <body>
