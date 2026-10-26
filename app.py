@@ -2546,7 +2546,8 @@ def _dom_other(g, sub):
 def _dom_moves(g, hand):
     b = g["board"]
     if not b:
-        return [{"t": list(t), "e": ["R"]} for t in hand]
+        first = g.get("first")
+        return [{"t": list(t), "e": ["R"]} for t in hand if not first or list(t) == list(first)]
     l, r = b[0][0], b[-1][1]
     out = []
     for t in hand:
@@ -2560,11 +2561,14 @@ def _dom_moves(g, hand):
     return out
 
 
+DOM_START_ORDER = [1, 2, 3, 4, 5, 6, 0]   # başlayan: əvvəl 1-1, sonra 2-2, 3-3 ... (ən az qoşa)
+
+
 def _dom_deal(g):
     tiles = [[a, b] for a in range(7) for b in range(a, 7)]
     secrets.SystemRandom().shuffle(tiles)
     ps = g["players"]
-    g["hands"] = {p: tiles[i * 7:(i + 1) * 7] for i, p in enumerate(ps)}
+    g["hands"] = {p: sorted(tiles[i * 7:(i + 1) * 7]) for i, p in enumerate(ps)}
     g["stock"] = tiles[14:]
     g["board"] = []
     g["passes"] = 0
@@ -2573,13 +2577,22 @@ def _dom_deal(g):
     g["pts"] = 0
     g["last"] = None
     g["note"] = None
-    # başlayan: ən böyük cüt, yoxdursa ən böyük cəmli daş
-    best, who = (-1, -1, -1), ps[0]
-    for p in ps:
-        for a, b in g["hands"][p]:
-            k = (1 if a == b else 0, a + b, max(a, b))
-            if k > best:
-                best, who = k, p
+    # başlayan: 1-1 olan, yoxdursa 2-2 olan, yoxdursa ən kiçik qoşa sahibi.
+    # Heç kimdə qoşa yoxdursa ən kiçik cəmli daş başlayır.
+    who, first = ps[0], None
+    for d in DOM_START_ORDER:
+        owner = next((p for p in ps if [d, d] in g["hands"][p]), None)
+        if owner:
+            who, first = owner, [d, d]
+            break
+    if first is None:
+        best = None
+        for p in ps:
+            for a, b in g["hands"][p]:
+                k = (a + b, min(a, b), max(a, b))
+                if best is None or k < best:
+                    best, who, first = k, p, [a, b]
+    g["first"] = first
     g["turn"] = who
     g["status"] = "play"
 
@@ -2597,7 +2610,7 @@ def _dom_finish(g, winner, reason):
         sw = sum(a + b for a, b in g["hands"][winner])
         pts = so if reason == "out" else max(so - sw, 1)
         g["pts"] = pts
-        g["score"][winner] = g["score"].get(winner, 0) + pts
+        g["score"][winner] = min(g["score"].get(winner, 0) + pts, DOM_TARGET)
         if g["score"][winner] >= DOM_TARGET:
             g["match"] = winner
 
