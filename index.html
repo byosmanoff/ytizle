@@ -3920,7 +3920,7 @@ boot();
       return false;
     };
     var paint = function(){
-      raf = 0;
+      raf = 0; if(!lock) return;
       if(mode === 'pager') track.style.transform = 'translate3d(calc(' + (-i0 * 100) + '% + ' + d + 'px),0,0)';
       else prof.style.transform = 'translate3d(' + d + 'px,0,0)';
     };
@@ -3945,6 +3945,7 @@ boot();
       if(!raf) raf = requestAnimationFrame(paint);
     };
     var onEnd = function(){
+      if(raf){ cancelAnimationFrame(raf); raf = 0; }
       if(!sOk || !lock){ sOk = false; return; }
       sOk = false; lock = 0;
       var v = Math.abs(d) / Math.max(1, Date.now() - st), far = Math.abs(d) > W * .25 || (v > .4 && Math.abs(d) > 30);
@@ -3971,9 +3972,15 @@ boot();
       el.addEventListener('touchstart', onStart, {passive: true});
       el.addEventListener('touchmove', onMove, {passive: true});
       el.addEventListener('touchend', onEnd, {passive: true});
-      el.addEventListener('touchcancel', function(){ if(lock){ if(mode === 'pager') go(i0, true); else { prof.style.transition = 'transform .2s ease-out'; prof.style.transform = ''; } } sOk = false; lock = 0; }, {passive: true});
+      el.addEventListener('touchcancel', function(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } if(lock){ if(mode === 'pager') go(i0, true); else { prof.style.transition = 'transform .2s ease-out'; prof.style.transform = ''; } } sOk = false; lock = 0; }, {passive: true});
     });
   }
+
+  /* ilişmə olmasın: pəncərə dəyişəndə və ya tətbiqə qayıdanda səhifəni dəqiq yerinə otuzdur */
+  var snap = function(){ if(pager && cur !== 'profile'){ go(PAGES.indexOf(cur), false); } };
+  window.addEventListener('resize', snap);
+  document.addEventListener('visibilitychange', snap);
+  window.addEventListener('pageshow', snap);
 
   /* menyuya hər qayıdışda ana səhifədən başla */
   var _sm = window.showMenu;
