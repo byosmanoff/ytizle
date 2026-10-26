@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#eef1ff">
+<meta name="theme-color" content="#150a1d">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1046,73 +1046,6 @@ body.mob #profile{
 #dlgbox #dlgYes.danger{background:#b02a52}
 @media (prefers-reduced-motion:no-preference){#dlgbox:not([hidden]) .lv-card{animation:dlgin .22s cubic-bezier(.22,.9,.3,1)}}
 @keyframes dlgin{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-
-/* ================= YENİ DİZAYN "GÜN İŞIĞI": açıq fon, qalın mürəkkəb xətt, sərt kölgə ================= */
-:root{
-  --velvet:#eef1ff;--velvet-2:#fff;--seat:#fff;--seat-2:#e1e6ff;
-  --rose:#3340ff;--rose-deep:#2230f0;--amber:#e8441c;
-  --paper:#ffe45c;--ink:#10133a;--ink-soft:#4b4f86;
-  --text:#10133a;--muted:#5a5f8f;--line:rgba(16,19,58,.16);
-  --lg-fill:#fff;--lg-fill-hi:#e1e6ff;--lg-blur:none;
-  --lg-edge:0 0 0 2px #10133a;--lg-drop:4px 4px 0 #10133a;
-}
-#app,#menu,#profile,#join::before{
-  background:radial-gradient(rgba(16,19,58,.12) 1px,transparent 1.3px) 0 0/18px 18px,var(--velvet);
-}
-.card,.tile,#imgbar,.ysb .yin,#ytres .r,#hrooms .hs,.ib,.bar button,.bar input,.yrec button,#codebar{
-  -webkit-backdrop-filter:none;backdrop-filter:none;
-}
-.card,.tile{border-radius:14px}
-.card h2{font-weight:800}
-.tile span{background:#e1e6ff;box-shadow:0 0 0 2px #10133a}
-.tile:hover,.stat:hover{transform:translate(-2px,-2px)}
-.sys{background:rgba(16,19,58,.08);box-shadow:none}
-.ysb{background:linear-gradient(#fff 70%,rgba(255,255,255,0))}
-#ytres{background:#fff}
-.q{background:rgba(16,19,58,.07)}
-
-/* düymələr */
-.fb,.lv-btns button,.pbtn{box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-.pbtn:hover:not(:disabled),#create:hover:not(:disabled),.mticket #enter:hover:not(:disabled){background:#1a26d6}
-.pbtn.alt:hover:not(:disabled){background:#fff2a8}
-.pbtn:active:not(:disabled),.fb:active{transform:translate(2px,2px);box-shadow:0 0 0 2px #10133a,1px 1px 0 #10133a}
-.fb.no,.fb.sec,.lv-btns button.alt,#dlgbox #dlgNo{background:#fff;color:#10133a;box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-.bar button.pink,.ysb button,.av,.m.me,.m.me b,#tap{color:#fff}
-.bar button.pink,.ysb button{box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-.mticket #create{background:#10133a}
-.mticket{filter:drop-shadow(5px 6px 0 #10133a)}
-
-/* çat */
-.m{background:#fff;color:#10133a;box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-.m.me{background:var(--rose);box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-.m.me .q{background:rgba(255,255,255,.18)}.m.me .q strong{color:#fff}.m.me .tick{color:rgba(255,255,255,.7)}
-.m.armed,.m.me.armed{box-shadow:0 0 0 3px var(--amber)}
-
-/* üst panel, ekran, alt naviqasiya */
-#codebar{background:#ffe45c;color:#10133a;box-shadow:0 0 0 2px #10133a,3px 3px 0 #10133a}
-#codebar button{background:rgba(16,19,58,.1);color:#10133a}
-#codebar button:hover{background:rgba(16,19,58,.2)}
-#codebar #leave{background:rgba(192,26,69,.14);color:#c01a45}
-#codebar #copy.ok{background:rgba(14,138,79,.18);color:#0e8a4f}
-#player{border-radius:16px;box-shadow:0 0 0 2px #10133a,5px 5px 0 #10133a}
-#menu.pager-on>#tabbar{background:#fff;border-radius:20px;bottom:calc(12px + env(safe-area-inset-bottom));
-  box-shadow:0 0 0 2px #10133a,4px 4px 0 #10133a;-webkit-backdrop-filter:none;backdrop-filter:none}
-#tabbar button.on .tp{background:var(--rose);color:#fff;box-shadow:none;opacity:1}
-#tabbar button .tp{border-radius:14px}
-#tabbar button.on .tav{box-shadow:0 0 0 2px #fff,0 0 0 4px #10133a}
-
-/* pəncərələr, ayarlar */
-#leavebox,#hostbox,#invbox,#pbox,#rolebox,#planbox,#dlgbox{background:rgba(16,19,58,.5)}
-.lv-card{background:#fff;border-radius:18px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 0 0 2px #10133a,6px 6px 0 #10133a}
-.lv-card p b{color:#10133a}
-#invuser,#planbox input{background:#fff;box-shadow:inset 0 0 0 2px #10133a}
-.seg{background:#e1e6ff;box-shadow:0 0 0 2px #10133a}
-.seg button.on{background:var(--rose);color:#fff;box-shadow:none}
-.sw{box-shadow:inset 0 0 0 2px #10133a}.sw::after{background:#fff;box-shadow:0 0 0 2px #10133a}
-.dz h2,#pmsg,#smsg,#invmsg{color:#c01a45!important}
-#pmsg[data-ok="1"],#smsg[data-ok="1"],#invmsg.ok{color:#0e8a4f!important}
-#setCards .card.dz{box-shadow:0 0 0 2px #c01a45,4px 4px 0 #c01a45}
-.hint.ok{color:#0e8a4f}.hint.err{color:#c01a45}
 </style>
 </head>
 <body>
