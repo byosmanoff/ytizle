@@ -1046,6 +1046,48 @@ body.mob #profile{
 #dlgbox #dlgYes.danger{background:#b02a52}
 @media (prefers-reduced-motion:no-preference){#dlgbox:not([hidden]) .lv-card{animation:dlgin .22s cubic-bezier(.22,.9,.3,1)}}
 @keyframes dlgin{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+
+/* ================= KOMPÜTER: DONMA DÜZƏLİŞİ + SEKMƏLƏR ================= */
+/* Donmanın səbəbi: kartların, düymələrin və pəncərələrin arxasında backdrop-filter (bulanıqlıq) var.
+   Arxada üzən emojilər və ya video hərəkət etdikcə brauzer hər kadrda bulanıqlığı yenidən hesablayır. */
+body:not(.mob) *,body:not(.mob) *::before,body:not(.mob) *::after{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+body:not(.mob) .lv-card{background:rgba(42,23,57,.97)}
+body:not(.mob) #codebar{background:rgba(72,44,96,.9)}
+body:not(.mob) #leavebox,body:not(.mob) #hostbox,body:not(.mob) #invbox,body:not(.mob) #pbox,
+body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{background:rgba(14,6,22,.7)}
+
+/* Kompüterdə sekmələr: yuxarıda üfüqi naviqasiya, yalnız seçilən sekmənin kartları görünür */
+#menu.tabs-on>#tabbar{
+  display:flex;position:relative;z-index:2;align-self:center;
+  width:min(100%,760px);padding:6px;gap:6px;border-radius:18px;
+  background:rgba(255,255,255,.07);box-shadow:var(--lg-edge);
+}
+#menu.tabs-on>#tabbar button{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:9px;height:44px;
+  padding:0 10px;border-radius:13px;background:none;color:var(--text);cursor:pointer;
+  font:inherit;font-size:14px;font-weight:700;opacity:.8;transition:background-color .15s ease,opacity .15s ease;
+}
+#menu.tabs-on>#tabbar button::after{content:attr(aria-label)}
+#menu.tabs-on>#tabbar button:hover{background:rgba(255,255,255,.08);opacity:1}
+#menu.tabs-on>#tabbar button.on{
+  opacity:1;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 14px -6px rgba(255,122,156,.55);
+}
+#menu.tabs-on>#tabbar button .tp{width:auto;height:auto;border-radius:0;background:none!important;box-shadow:none!important;font-size:18px;opacity:1}
+#menu.tabs-on>#tabbar button.on .tav{box-shadow:0 0 0 2px rgba(255,255,255,.22),0 0 0 3px var(--text)}
+@media (max-width:760px){#menu.tabs-on>#tabbar button::after{display:none}}
+
+#menu.tabs-on .mbody{display:flex;flex-direction:column;align-items:center;gap:18px}
+#menu.tabs-on .mcol{display:contents}
+#menu.tabs-on [data-t]{width:min(100%,760px)}
+#menu.tabs-on [data-t="home"]{width:min(100%,520px)}
+#menu.tabs-on[data-tab="home"] [data-t]:not([data-t="home"]),
+#menu.tabs-on[data-tab="plans"] [data-t]:not([data-t="plans"]),
+#menu.tabs-on[data-tab="friends"] [data-t]:not([data-t="friends"]),
+#menu.tabs-on[data-tab="hist"] [data-t]:not([data-t="hist"]),
+#menu.tabs-on[data-tab="settings"] [data-t]:not([data-t="settings"]){display:none!important}
 </style>
 </head>
 <body>
@@ -4085,6 +4127,11 @@ boot();
     pager.appendChild(track);
     menu.insertBefore(pager, document.getElementById('tabbar'));
     menu.classList.add('pager-on');
+  } else {
+    /* kompüter: naviqasiya yuxarıda sekmə zolağı olur, kartlar sekməyə görə göstərilir */
+    var inv0 = document.getElementById('invites'), tb0 = document.getElementById('tabbar');
+    if(inv0 && tb0) inv0.parentNode.insertBefore(tb0, inv0.nextSibling);
+    menu.classList.add('tabs-on');
   }
   var idx = function(){ return cur === 'profile' ? 5 : PAGES.indexOf(cur); };
   function go(i, anim){
@@ -4094,7 +4141,6 @@ boot();
   }
   function mark(t){ btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === t); }); }
   function setTab(t, anim){
-    if(!pager) return;
     if(t === 'profile'){
       if(cur !== 'profile') prev = cur;
       cur = 'profile'; mark('profile');
