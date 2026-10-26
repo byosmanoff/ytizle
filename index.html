@@ -846,6 +846,36 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .rolei i{display:block;line-height:1}
 .rolei.host{background:var(--amber);color:var(--ink)}
 .rolei.mod{background:#7be0a5;color:#0f3a24}
+
+/* ================= Instagram tipli alt naviqasiya (rənglər dəyişmir) ================= */
+#menu{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+#profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+#menu>#tabbar{
+  position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:75;
+  width:min(100%,560px);display:flex;align-items:center;justify-content:space-around;gap:2px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:var(--velvet);border-top:1px solid var(--line);
+}
+#tabbar button{
+  flex:1;display:grid;place-items:center;height:48px;padding:0;background:none;color:var(--text);
+}
+#tabbar button .tp{
+  display:grid;place-items:center;width:64px;height:44px;border-radius:22px;
+  font-size:22px;opacity:.78;transition:background-color .18s ease,opacity .18s ease;
+}
+#tabbar button.on .tp{background:var(--seat);opacity:1}
+#tabbar .tav{
+  width:28px;height:28px;border-radius:50%;background:var(--rose) center/cover no-repeat;color:var(--ink);
+  display:grid;place-items:center;font-size:14px;font-weight:800;line-height:1;
+}
+#tabbar button.on .tav{box-shadow:0 0 0 2px var(--velvet),0 0 0 3.5px var(--text)}
+#menu[data-tab="home"] [data-t]:not([data-t="home"]),
+#menu[data-tab="plans"] [data-t]:not([data-t="plans"]),
+#menu[data-tab="friends"] [data-t]:not([data-t="friends"]),
+#menu[data-tab="hist"] [data-t]:not([data-t="hist"]){display:none!important}
+#menu[data-tab] [data-t]{animation:tabin .22s ease both}
+@keyframes tabin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+body.lite #menu [data-t]{animation:none!important}
 </style>
 </head>
 <body>
@@ -955,6 +985,13 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
   <p class="mquote" id="mquote"></p>
   <button id="clearhist">Tarixçəni təmizlə</button>
   </div></div>
+  <nav id="tabbar" aria-label="Naviqasiya">
+    <button type="button" data-go="home" class="on" aria-label="Əsas" title="Əsas"><span class="tp"><i class="fa-solid fa-house" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="plans" aria-label="Seanslar" title="Seanslar"><span class="tp"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="hist" aria-label="Tarixçə" title="Tarixçə"><span class="tp"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="profile" aria-label="Profil" title="Profil"><span class="tp"><span class="tav" id="tav"></span></span></button>
+  </nav>
 </div>
 
 <div id="profile" hidden>
@@ -3833,6 +3870,48 @@ async function boot(){
   showLogin();
 }
 boot();
+</script>
+<script>
+/* Instagram tipli alt naviqasiya: səhifələr arası keçid */
+(function(){
+  var menu = document.getElementById('menu'), prof = document.getElementById('profile');
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],
+    ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
+    ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist']];
+  map.forEach(function(m){
+    var el = menu.querySelector(m[0]); if(!el) return;
+    if(m[2]) el = el.closest(m[2]) || el;
+    el.setAttribute('data-t', m[1]);
+  });
+  var btns = [].slice.call(document.querySelectorAll('#tabbar button')), cur = 'home', prev = 'home';
+  function mark(t){ btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === t); }); }
+  function setTab(t){
+    if(t === 'profile'){
+      if(cur !== 'profile'){ prev = cur; }
+      cur = 'profile'; mark('profile');
+      if(prof.hidden && typeof openProfile === 'function') openProfile();
+      return;
+    }
+    cur = t; menu.setAttribute('data-tab', t); mark(t);
+    if(!prof.hidden) prof.hidden = true;
+    menu.scrollTop = 0;
+  }
+  btns.forEach(function(b){ b.addEventListener('click', function(){ setTab(b.getAttribute('data-go')); }); });
+  menu.setAttribute('data-tab', 'home');
+  /* profil başqa yolla açılıb-bağlananda naviqasiya sinxron qalır */
+  new MutationObserver(function(){
+    if(!prof.hidden){ if(cur !== 'profile'){ prev = cur; cur = 'profile'; mark('profile'); } }
+    else if(cur === 'profile'){ cur = prev || 'home'; mark(cur); }
+  }).observe(prof, {attributes: true, attributeFilter: ['hidden']});
+  /* profil düyməsindəki şəkil menyudakı avatarla eyni olur */
+  var mav = document.getElementById('mav'), tav = document.getElementById('tav');
+  function syncAv(){ tav.style.backgroundImage = mav.style.backgroundImage; tav.textContent = mav.style.backgroundImage ? '' : mav.textContent; }
+  new MutationObserver(syncAv).observe(mav, {attributes: true, childList: true, characterData: true, subtree: true});
+  syncAv();
+  /* menyuya hər qayıdışda ana səhifədən başla */
+  var _sm = window.showMenu;
+  if(typeof _sm === 'function') window.showMenu = showMenu = function(){ _sm.apply(this, arguments); setTab('home'); };
+})();
 </script>
 <script>
 /* Klaviatura açılanda ekran yuxarı sürüşməsin: otaq həmişə görünən sahəyə yapışır (Android + iPhone) */
