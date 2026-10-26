@@ -996,6 +996,23 @@ body.mob #profile{will-change:transform}
   #menu.pager-on>#tabbar{background:rgba(30,16,41,.97)}
   .lv-card{background:rgba(42,23,57,.98)}
 }
+
+/* ---- Profil ekranı: sürüşdürmə düzəlişi ---- */
+#profile{
+  top:0;left:0;right:0;bottom:auto;height:var(--H);
+  overflow-x:hidden;overflow-y:scroll;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+  touch-action:pan-y;
+}
+body.mob #profile{
+  will-change:auto;
+  padding-bottom:calc(120px + env(safe-area-inset-bottom))!important;
+}
+/* sürüşən siyahıda hər kartda bulanıqlıq yükü ləğv olunur (sürüşməni əngəlləyirdi) */
+#profile .card,#profile .ib,#profile .ysb .yin{
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:rgba(255,255,255,.085);
+}
 </style>
 </head>
 <body>
