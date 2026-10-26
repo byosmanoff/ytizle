@@ -750,12 +750,6 @@ body.invoice #vmic{display:none}
 .m:not(.me) b{cursor:pointer}
 #status[data-on="1"]{cursor:pointer}
 /* yüngül rejim: zəif kompüterlərdə animasiya və kölgə yükünü azaldır */
-body.lite .floaties{display:none!important}
-body.lite .pair,body.lite .live i,body.lite .mticket .pair{animation:none!important}
-body.lite .ticket,body.lite .mticket{filter:none!important;transform:none!important;animation:none!important;transition:none!important}
-body.lite button,body.lite .tile,body.lite .stat{transition:none!important}
-body.lite #player{box-shadow:0 0 0 1px var(--line)!important}
-body.lite .lv-card{animation:none!important}
 
 /* ================= Rollar, statistika, seanslar, PWA ================= */
 #codebar button[hidden]{display:none}
@@ -875,23 +869,17 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #menu[data-tab="hist"] [data-t]:not([data-t="hist"]){display:none!important}
 #menu[data-tab] [data-t]{animation:tabin .22s ease both}
 @keyframes tabin{from{opacity:0;transform:translate(var(--tx,0px),8px)}to{opacity:1;transform:none}}
-body.lite #menu [data-t]{animation:none!important}
 
 /* sürüşdürmə: barmağı izləyən animasiya, yüngül */
 #menu,#profile{touch-action:pan-y}
 #hvids,#hrooms{touch-action:pan-x pan-y}
-#menu.swiping [data-t],#profile.swiping{will-change:transform,opacity}
-#menu.swiping .mticket{filter:none!important}
-#menu.swiping .mticket .pair,#menu.swiping .live i{animation:none!important}
 #menu.swiping [data-t]{animation:none!important}
 
-/* yüngül keçidlər: ağır effektlər menyuda söndürülüb */
-#menu .floaties{display:none!important}
-.mticket{filter:none!important;transform:none!important;transition:none!important}
-.mticket .pair{animation:none!important}
-#menu .live i{animation:none!important}
-#menu[data-tab] [data-t]{animation:tabin .12s ease-out both}
-@keyframes tabin{from{opacity:0}to{opacity:1}}
+/* 144Hz: effektlər açıqdır, hərəkət yalnız GPU qatında (transform/opacity) */
+#menu [data-t],#profile{will-change:transform,opacity}
+.mticket{will-change:transform}
+.floaties span{will-change:transform,opacity}
+#menu[data-tab] [data-t]{animation:tabin .26s cubic-bezier(.2,.8,.2,1) both}
 </style>
 </head>
 <body>
@@ -1044,13 +1032,6 @@ body.lite #menu [data-t]{animation:none!important}
     <label class="swrow" for="pinv">
       <span><b>Otağa dəvətlər</b><small id="pinvhint">Açıq: hər kəs səni otağa dəvət edə bilər.</small></span>
       <input type="checkbox" id="pinv" class="sw" checked>
-    </label>
-  </div>
-  <div class="card">
-    <h2>Performans</h2>
-    <label class="swrow" for="plite">
-      <span><b>Yüngül rejim</b><small>Animasiyaları və kölgə effektlərini azaldır. Sayt kompüterdə ləng işləyirsə aç.</small></span>
-      <input type="checkbox" id="plite" class="sw">
     </label>
   </div>
   <div class="card">
@@ -3256,7 +3237,6 @@ function fillProfile(){
 }
 function openProfile(){
   if(!account) return;
-  $('plite').checked = document.body.classList.contains('lite');
   pmsg(''); hint('puserhint', 'Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.');
   hint('pemailhint', ''); $('pecoderow').hidden = true; $('pecode').value = '';
   $('delbox').hidden = true; $('delopen').hidden = false;
@@ -3844,37 +3824,10 @@ document.addEventListener('keydown', e => {
   if(!$('planbox').hidden) $('planbox').hidden = true;
 });
 
-/* ---------- Yüngül rejim: avtomatik aşkarlama + əl ilə açar ---------- */
 let lastFr = '', lastInv = '';
-(function(){
-  let pref = null;
-  try{ pref = localStorage.getItem('wt_lite'); }catch(e){}
-  if(pref === '1') document.body.classList.add('lite');
-  if(pref !== null || !window.requestAnimationFrame) return;
-  window.addEventListener('load', () => setTimeout(() => {
-    if(document.visibilityState !== 'visible') return;
-    const ds = []; let last = 0; const t0 = performance.now();
-    const f = t => {
-      if(last) ds.push(t - last);
-      last = t;
-      if(ds.length < 100 && t - t0 < 3000) return requestAnimationFrame(f);
-      const a = ds.slice(5).filter(x => x < 1000).sort((x, y) => x - y);
-      if(a.length < 20) return;
-      const med = a[a.length >> 1], slow = a.filter(x => x > 45).length / a.length;
-      if(med > 26 || slow > .15){
-        document.body.classList.add('lite');
-        try{ localStorage.setItem('wt_lite', '1'); }catch(e){}
-      }
-    };
-    requestAnimationFrame(f);
-  }, 1500));
-})();
-$('plite').onchange = () => {
-  const on = $('plite').checked;
-  document.body.classList.toggle('lite', on);
-  try{ localStorage.setItem('wt_lite', on ? '1' : '0'); }catch(e){}
-  pmsg(on ? 'Yüngül rejim açıldı' : 'Yüngül rejim söndürüldü', true);
-};
+/* köhnə "yüngül rejim" qalıqlarını təmizlə: effektlər həmişə açıqdır */
+try{ localStorage.removeItem('wt_lite'); }catch(e){}
+document.body.classList.remove('lite');
 
 async function boot(){
   if(token){
@@ -3944,7 +3897,11 @@ boot();
   }
   function paint(dx){
     raf = 0;
-    for(var i = 0; i < targets.length; i++) targets[i].style.transform = 'translate3d(' + dx + 'px,0,0)';
+    var o = Math.max(.3, 1 - Math.abs(dx) / (W * 1.1));
+    for(var i = 0; i < targets.length; i++){
+      targets[i].style.transform = 'translate3d(' + dx + 'px,0,0)';
+      targets[i].style.opacity = o;
+    }
   }
   function clearT(){
     targets.forEach(function(e){ e.style.transform = ''; e.style.opacity = ''; e.style.transition = ''; });
@@ -3953,8 +3910,8 @@ boot();
   }
   function slideTo(dx, op, ms, done){
     targets.forEach(function(e){
-      e.style.transition = 'transform ' + ms + 'ms ease-out';
-      e.style.transform = 'translate3d(' + dx + 'px,0,0)';
+      e.style.transition = 'transform ' + ms + 'ms cubic-bezier(.2,.8,.2,1),opacity ' + ms + 'ms ease-out';
+      e.style.transform = 'translate3d(' + dx + 'px,0,0)'; e.style.opacity = op;
     });
     setTimeout(done, ms + 20);
   }
@@ -3988,9 +3945,9 @@ boot();
     var ok = i >= 0 && i < ORDER.length && (Math.abs(dx) > W * .28 || (v > .45 && Math.abs(dx) > 40));
     busy = true;
     if(ok){
-      clearT(); setTab(ORDER[i]); busy = false;
+      slideTo(dir > 0 ? -W * .3 : W * .3, 0, 120, function(){ clearT(); setTab(ORDER[i]); busy = false; });
     } else {
-      slideTo(0, 1, 140, function(){ clearT(); busy = false; });
+      slideTo(0, 1, 180, function(){ clearT(); busy = false; });
     }
   }
   [menu, prof].forEach(function(el){
