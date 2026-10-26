@@ -842,9 +842,9 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .rolei.mod{background:#7be0a5;color:#0f3a24}
 
 /* ================= Instagram tipli alt naviqasiya (rənglər dəyişmir) ================= */
-#menu{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
-#profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
-#menu>#tabbar{
+body.mob #profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+#tabbar{display:none}
+#menu.pager-on>#tabbar{
   position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:75;
   width:min(100%,560px);display:flex;align-items:center;justify-content:space-around;gap:2px;
   padding:8px 10px calc(8px + env(safe-area-inset-bottom));
@@ -863,13 +863,9 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
   display:grid;place-items:center;font-size:14px;font-weight:800;line-height:1;
 }
 #tabbar button.on .tav{box-shadow:0 0 0 2px var(--velvet),0 0 0 3.5px var(--text)}
-#menu:not(.pager-on)[data-tab="home"] [data-t]:not([data-t="home"]),
-#menu:not(.pager-on)[data-tab="plans"] [data-t]:not([data-t="plans"]),
-#menu:not(.pager-on)[data-tab="friends"] [data-t]:not([data-t="friends"]),
-#menu:not(.pager-on)[data-tab="hist"] [data-t]:not([data-t="hist"]){display:none!important}
 
 /* sürüşdürmə: barmağı izləyən animasiya, yüngül */
-#menu,#profile{touch-action:pan-y}
+body.mob #menu,body.mob #profile{touch-action:pan-y}
 #hvids,#hrooms{touch-action:pan-x pan-y}
 
 /* 144Hz: effektlər açıqdır, hərəkət yalnız GPU qatında (transform/opacity) */
@@ -884,7 +880,7 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 .pg{flex:0 0 100%;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;
   padding:10px max(16px,calc((100% - 488px)/2)) calc(96px + env(safe-area-inset-bottom))}
 .pg>*{flex:none}
-#profile{will-change:transform}
+body.mob #profile{will-change:transform}
 </style>
 </head>
 <body>
@@ -3862,7 +3858,11 @@ boot();
   var pager = null, track = null;
 
   /* telefon/planşet: səhifələri yanaşı düzürük; kompüter: köhnə kimi göstər/gizlət */
-  if(window.matchMedia('(max-width:1023px)').matches){
+  var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ||
+    window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  if(isMobile){
+    document.body.classList.add('mob');
     pager = document.createElement('div'); pager.className = 'pager';
     track = document.createElement('div'); track.className = 'track';
     var pgs = {};
@@ -3883,6 +3883,7 @@ boot();
   }
   function mark(t){ btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === t); }); }
   function setTab(t, anim){
+    if(!pager) return;
     if(t === 'profile'){
       if(cur !== 'profile') prev = cur;
       cur = 'profile'; mark('profile');
