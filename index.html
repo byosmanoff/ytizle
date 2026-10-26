@@ -874,7 +874,7 @@ body.viewer-lock #url,body.viewer-lock #load,body.viewer-lock #back,body.viewer-
 #menu[data-tab="friends"] [data-t]:not([data-t="friends"]),
 #menu[data-tab="hist"] [data-t]:not([data-t="hist"]){display:none!important}
 #menu[data-tab] [data-t]{animation:tabin .22s ease both}
-@keyframes tabin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes tabin{from{opacity:0;transform:translate(var(--tx,0px),8px)}to{opacity:1;transform:none}}
 body.lite #menu [data-t]{animation:none!important}
 </style>
 </head>
@@ -3884,6 +3884,7 @@ boot();
     el.setAttribute('data-t', m[1]);
   });
   var btns = [].slice.call(document.querySelectorAll('#tabbar button')), cur = 'home', prev = 'home';
+  var ORDER = ['home','plans','friends','hist','profile'];
   function mark(t){ btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === t); }); }
   function setTab(t){
     if(t === 'profile'){
@@ -3892,6 +3893,7 @@ boot();
       if(prof.hidden && typeof openProfile === 'function') openProfile();
       return;
     }
+    menu.style.setProperty('--tx', (ORDER.indexOf(t) >= ORDER.indexOf(cur) ? 28 : -28) + 'px');
     cur = t; menu.setAttribute('data-tab', t); mark(t);
     if(!prof.hidden) prof.hidden = true;
     menu.scrollTop = 0;
@@ -3908,6 +3910,35 @@ boot();
   function syncAv(){ tav.style.backgroundImage = mav.style.backgroundImage; tav.textContent = mav.style.backgroundImage ? '' : mav.textContent; }
   new MutationObserver(syncAv).observe(mav, {attributes: true, childList: true, characterData: true, subtree: true});
   syncAv();
+  /* sola-sağa sürüşdürmə ilə səhifə dəyişmə */
+  var sx = 0, sy = 0, st = 0, sOk = false;
+  function hScroller(el){
+    while(el && el !== document.body){
+      if(el.scrollWidth > el.clientWidth + 4){
+        var ox = getComputedStyle(el).overflowX;
+        if(ox === 'auto' || ox === 'scroll') return true;
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+  function onStart(e){
+    var t = e.touches[0], tg = e.target;
+    sOk = e.touches.length === 1 && !(tg.closest && tg.closest('input,textarea,select,[contenteditable]')) && !hScroller(tg);
+    sx = t.clientX; sy = t.clientY; st = Date.now();
+  }
+  function onEnd(e){
+    if(!sOk) return; sOk = false;
+    var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Date.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.7) return;
+    var i = ORDER.indexOf(cur) + (dx < 0 ? 1 : -1);
+    if(i >= 0 && i < ORDER.length) setTab(ORDER[i]);
+  }
+  [menu, prof].forEach(function(el){
+    el.addEventListener('touchstart', onStart, {passive: true});
+    el.addEventListener('touchend', onEnd, {passive: true});
+    el.addEventListener('touchcancel', function(){ sOk = false; }, {passive: true});
+  });
   /* menyuya hər qayıdışda ana səhifədən başla */
   var _sm = window.showMenu;
   if(typeof _sm === 'function') window.showMenu = showMenu = function(){ _sm.apply(this, arguments); setTab('home'); };
