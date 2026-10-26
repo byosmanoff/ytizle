@@ -1088,6 +1088,8 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #menu.tabs-on[data-tab="friends"] [data-t]:not([data-t="friends"]),
 #menu.tabs-on[data-tab="hist"] [data-t]:not([data-t="hist"]),
 #menu.tabs-on[data-tab="settings"] [data-t]:not([data-t="settings"]){display:none!important}
+#pnamesave,#pusersave,#pbiosave{display:none!important}
+#psaveall:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -1276,17 +1278,18 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <h2>Hesab</h2>
     <div class="fld">
       <label for="pname">Ad</label>
-      <div class="frow"><input id="pname" maxlength="20" autocomplete="off"><button class="pbtn" id="pnamesave">Saxla</button></div>
+      <div class="frow"><input id="pname" maxlength="20" autocomplete="off"><button class="pbtn" id="pnamesave" hidden>Saxla</button></div>
     </div>
     <div class="fld">
       <label for="puser">İstifadəçi adı</label>
-      <div class="frow"><span class="at">@</span><input id="puser" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pbtn" id="pusersave" disabled>Saxla</button></div>
+      <div class="frow"><span class="at">@</span><input id="puser" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pbtn" id="pusersave" disabled hidden>Saxla</button></div>
       <div class="hint" id="puserhint">Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.</div>
     </div>
     <div class="fld">
       <label for="pbio">Haqqında</label>
-      <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave">Saxla</button></div>
+      <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave" hidden>Saxla</button></div>
     </div>
+    <button class="pbtn" id="psaveall" style="width:100%;padding:13px;margin-top:6px" disabled>Saxla</button>
   </div>
   <div class="card">
     <h2>Gizlilik</h2>
@@ -1693,6 +1696,11 @@ function tearTicket(){
   const j = $('join'), tk = j.querySelector('.ticket'), top = j.querySelector('.t-main'), bot = j.querySelector('.t-stub');
   const reduce = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || document.body.classList.contains('lite');
   if(reduce || !tk || !bot || !bot.animate){ j.style.display = 'none'; return; }
+  if(!document.body.classList.contains('mob')){   // kompüter: ağır cırılma əvəzinə qısa solma (donmanın qarşısı)
+    j.style.transition = 'opacity .22s ease'; j.style.opacity = '0';
+    setTimeout(() => { j.style.display = 'none'; j.style.opacity = ''; j.style.transition = ''; }, 240);
+    return;
+  }
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   const seam = top.offsetHeight, w = tk.offsetWidth;
   j.classList.add('tearing');
@@ -1720,7 +1728,7 @@ function tearTicket(){
 /* ---------- Pərdə açılır (otağa qoşulanda, kinoteatr kimi) ---------- */
 function tearMenuTicket(){
   const reduce = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || document.body.classList.contains('lite');
-  if(reduce || !document.body.animate || $('menu').style.display === 'none' || $('join').style.display !== 'none') return;
+  if(reduce || !document.body.classList.contains('mob') || !document.body.animate || $('menu').style.display === 'none' || $('join').style.display !== 'none') return;
   const box = document.createElement('div'); box.className = 'cfx'; box.setAttribute('aria-hidden', 'true');
   box.innerHTML = '<i class="cl"></i><i class="cr"></i><i class="cv"></i>';
   document.body.appendChild(box);
@@ -3488,6 +3496,7 @@ function fillProfile(){
   $('pwtitle').textContent = account.has_pw ? 'Şifrəni dəyiş' : 'Şifrə qoy';
   $('pusersave').disabled = true;
   $('pinv').checked = account.invites_open !== false; pinvHint();
+  if(typeof syncSave === 'function') syncSave();
 }
 function openProfile(){
   if(!account) return;
@@ -3542,15 +3551,15 @@ $('pavdel').onclick = async () => {
 // ad
 async function saveName(){
   const n = $('pname').value.replace(/\s+/g, ' ').trim().slice(0, 20);
-  if(!n){ pmsg('Ad boş ola bilməz'); return; }
+  if(!n){ pmsg('Ad boş ola bilməz'); return false; }
   try{
     const r = await api('/api/name', {method: 'POST', body: JSON.stringify({name: n})});
     if(!r.ok) throw new Error('name');
-    applyProfile({name: (await r.json()).name}); pmsg('Ad yadda saxlandı', true);
-  }catch(e){ pmsg('Ad dəyişmədi, yenidən cəhd et'); }
+    applyProfile({name: (await r.json()).name}); pmsg('Ad yadda saxlandı', true); return true;
+  }catch(e){ pmsg('Ad dəyişmədi, yenidən cəhd et'); return false; }
 }
 $('pnamesave').onclick = saveName;
-$('pname').addEventListener('keydown', e => { if(e.key === 'Enter') saveName(); });
+$('pname').addEventListener('keydown', e => { if(e.key === 'Enter') saveAll(); });
 
 // istifadəçi adı (canlı yoxlama)
 let uTimer = null, uSeq = 0;
@@ -3579,10 +3588,10 @@ $('pusersave').onclick = async () => {
   const v = $('puser').value;
   try{
     const r = await api('/api/profile/username', {method: 'POST', body: JSON.stringify({username: v})});
-    if(r.status === 409){ hint('puserhint', 'Bu ad artıq götürülüb', 'err'); $('pusersave').disabled = true; return; }
+    if(r.status === 409){ hint('puserhint', 'Bu ad artıq götürülüb', 'err'); $('pusersave').disabled = true; return false; }
     if(!r.ok) throw new Error('user');
-    applyProfile(await r.json()); hint('puserhint', 'İstifadəçi adı dəyişdi', 'ok'); pmsg('');
-  }catch(e){ pmsg('İstifadəçi adı dəyişmədi, yenidən cəhd et'); }
+    applyProfile(await r.json()); hint('puserhint', 'İstifadəçi adı dəyişdi', 'ok'); pmsg(''); return true;
+  }catch(e){ pmsg('İstifadəçi adı dəyişmədi, yenidən cəhd et'); return false; }
 };
 
 // e-poçt (yeni ünvana kod gedir)
@@ -4049,10 +4058,34 @@ $('pbiosave').onclick = async () => {
   try{
     const r = await api('/api/profile/bio', {method: 'POST', body: JSON.stringify({bio: $('pbio').value})});
     if(!r.ok) throw new Error('bio');
-    applyProfile(await r.json()); pmsg('Məlumat yadda saxlandı', true);
-  }catch(e){ pmsg('Saxlanmadı, yenidən cəhd et'); }
+    applyProfile(await r.json()); pmsg('Məlumat yadda saxlandı', true); return true;
+  }catch(e){ pmsg('Saxlanmadı, yenidən cəhd et'); return false; }
 };
-$('pbio').addEventListener('keydown', e => { if(e.key === 'Enter') $('pbiosave').onclick(); });
+$('pbio').addEventListener('keydown', e => { if(e.key === 'Enter') saveAll(); });
+$('puser').addEventListener('keydown', e => { if(e.key === 'Enter') saveAll(); });
+
+/* ---------- Profil: hamısı üçün tək "Saxla" ---------- */
+function profDirty(){
+  if(!account) return false;
+  const n = $('pname').value.replace(/\s+/g, ' ').trim();
+  return n !== (account.name || '') || $('puser').value !== (account.username || '') || $('pbio').value !== (account.bio || '');
+}
+function syncSave(){ const b = $('psaveall'); if(b) b.disabled = !profDirty(); }
+async function saveAll(){
+  const b = $('psaveall'); if(!account || b.disabled) return;
+  if($('puser').value !== (account.username || '') && $('pusersave').disabled){
+    pmsg('İstifadəçi adı düzgün deyil, ya da hələ yoxlanılır'); return;
+  }
+  b.disabled = true;
+  let ok = true;
+  if($('pname').value.replace(/\s+/g, ' ').trim() !== (account.name || '')) ok = (await saveName()) && ok;
+  if($('puser').value !== (account.username || '') && !$('pusersave').disabled) ok = (await $('pusersave').onclick()) && ok;
+  if($('pbio').value !== (account.bio || '')) ok = (await $('pbiosave').onclick()) && ok;
+  if(ok) pmsg('Yadda saxlandı', true);
+  syncSave();
+}
+$('psaveall').onclick = saveAll;
+['pname', 'puser', 'pbio'].forEach(id => $(id).addEventListener('input', syncSave));
 
 /* ---------- PWA: quraşdırma və service worker ---------- */
 let deferredInstall = null;
