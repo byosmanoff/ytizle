@@ -2529,5 +2529,303 @@ def proxy():
     return resp
 
 
+# ---------------------------------------------------------------
+#  Domino otağı: 2 nəfərlik onlayn oyun (standart 28 daş, 0-6).
+#  Yaddaşda saxlanır, long-poll ilə yenilənir (otaq sistemi ilə eyni CV).
+# ---------------------------------------------------------------
+DOMINO = {}
+DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
+DOM_MAX = 200
+
+
+def _dom_other(g, sub):
+    return next((p for p in g["players"] if p != sub), None)
+
+
+def _dom_moves(g, hand):
+    b = g["board"]
+    if not b:
+        return [{"t": list(t), "e": ["R"]} for t in hand]
+    l, r = b[0][0], b[-1][1]
+    out = []
+    for t in hand:
+        e = []
+        if l in t:
+            e.append("L")
+        if r in t:
+            e.append("R")
+        if e:
+            out.append({"t": list(t), "e": e})
+    return out
+
+
+def _dom_deal(g):
+    tiles = [[a, b] for a in range(7) for b in range(a, 7)]
+    secrets.SystemRandom().shuffle(tiles)
+    ps = g["players"]
+    g["hands"] = {p: tiles[i * 7:(i + 1) * 7] for i, p in enumerate(ps)}
+    g["stock"] = tiles[14:]
+    g["board"] = []
+    g["passes"] = 0
+    g["winner"] = None
+    g["reason"] = ""
+    g["last"] = None
+    g["note"] = None
+    # başlayan: ən böyük cüt, yoxdursa ən böyük cəmli daş
+    best, who = (-1, -1, -1), ps[0]
+    for p in ps:
+        for a, b in g["hands"][p]:
+            k = (1 if a == b else 0, a + b, max(a, b))
+            if k > best:
+                best, who = k, p
+    g["turn"] = who
+    g["status"] = "play"
+
+
+def _dom_finish(g, winner, reason):
+    g["status"] = "over"
+    g["winner"] = winner
+    g["reason"] = reason
+    if winner:
+        g["score"][winner] = g["score"].get(winner, 0) + 1
+
+
+def _dom_settle(g):
+    """Növbədəki oyunçunun gedişi yoxdursa və bazar boşdursa, avtomatik keçir; hər ikisi keçərsə oyun bloklanır."""
+    for _ in range(3):
+        if g["status"] != "play":
+            return
+        cur = g["turn"]
+        if _dom_moves(g, g["hands"][cur]) or g["stock"]:
+            return
+        g["passes"] += 1
+        g["note"] = {"who": cur, "k": "pass"}
+        if g["passes"] >= 2:
+            a, b = g["players"]
+            sa = sum(x + y for x, y in g["hands"][a])
+            sb = sum(x + y for x, y in g["hands"][b])
+            if sa == sb:
+                _dom_finish(g, None, "blocked")
+            else:
+                _dom_finish(g, a if sa < sb else b, "blocked")
+            return
+        g["turn"] = _dom_other(g, cur)
+
+
+def _dom_touch(g):
+    g["v"] += 1
+    g["upd"] = time.time()
+    CV.notify_all()
+
+
+def _dom_view(g, sub):
+    opp = _dom_other(g, sub)
+    now = time.time()
+    st = g["status"]
+    hand = [list(t) for t in g["hands"].get(sub, [])] if st != "wait" else []
+    mv = _dom_moves(g, hand) if st == "play" and g["turn"] == sub else []
+    out = dict(
+        v=g["v"], code=g["code"], status=st, round=g["round"], board=g["board"], hand=hand,
+        moves=mv, stock=len(g["stock"]),
+        can_draw=bool(st == "play" and g["turn"] == sub and not mv and g["stock"]),
+        turn=(("me" if g["turn"] == sub else "opp") if st == "play" else None),
+        opp_n=len(g["hands"].get(opp, [])) if opp else 0,
+        me=g["names"].get(sub), opp=g["names"].get(opp) if opp else None,
+        opp_online=bool(opp and now - g["seen"].get(opp, 0) < 35),
+        score=dict(me=g["score"].get(sub, 0), opp=g["score"].get(opp, 0) if opp else 0),
+        last=g["last"], reason=g["reason"],
+    )
+    if g["note"]:
+        out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"]}
+    if st == "over":
+        out["result"] = "draw" if not g["winner"] else ("me" if g["winner"] == sub else "opp")
+        out["opp_hand"] = [list(t) for t in g["hands"].get(opp, [])] if opp else []
+    return out
+
+
+def _dom_cleanup(now):
+    for c in [c for c, g in DOMINO.items() if now - g["upd"] > DOM_IDLE]:
+        DOMINO.pop(c, None)
+
+
+def _dom_names(tok):
+    i = ident_for(tok, "")
+    return dict(name=i["name"], username=i["username"], avatar=i["avatar"], badge=i["badge"])
+
+
+def _dom_get(code, sub):
+    g = DOMINO.get(code)
+    if not g or sub not in g["players"]:
+        abort(404)
+    return g
+
+
+@app.route("/api/domino/create", methods=["POST"])
+def api_domino_create():
+    sub, tok = auth_sub()
+    if not rate_hit("domc", sub, 12, 60):
+        abort(429)
+    nm = _dom_names(tok)
+    now = time.time()
+    with CV:
+        _dom_cleanup(now)
+        if len(DOMINO) >= DOM_MAX:
+            abort(503)
+        for _ in range(50):
+            c = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
+            if c not in DOMINO:
+                break
+        else:
+            abort(503)
+        g = dict(code=c, players=[sub], names={sub: nm}, hands={}, stock=[], board=[], turn=None,
+                 status="wait", winner=None, reason="", passes=0, v=1, round=1, score={},
+                 seen={sub: now}, upd=now, last=None, note=None)
+        DOMINO[c] = g
+        return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/join", methods=["POST"])
+def api_domino_join():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    if not code:
+        abort(400)
+    nm = _dom_names(tok)
+    now = time.time()
+    with CV:
+        g = DOMINO.get(code)
+        if not g:
+            abort(404)
+        if sub not in g["players"]:
+            if len(g["players"]) >= 2:
+                return jsonify(error="full"), 403
+            g["players"].append(sub)
+            g["names"][sub] = nm
+            _dom_deal(g)
+            _dom_touch(g)
+        else:
+            g["names"][sub] = nm
+        g["seen"][sub] = now
+        return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/poll")
+def api_domino_poll():
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    try:
+        v = int(request.args.get("v", "0"))
+    except ValueError:
+        abort(400)
+    deadline = time.time() + 20
+    with CV:
+        g = _dom_get(code, sub)
+        now = time.time()
+        if now - g["seen"].get(sub, 0) > 30:     # qayıdıb: rəqib "onlayn" görsün
+            g["seen"][sub] = now
+            _dom_touch(g)
+        g["seen"][sub] = now
+        while g["v"] == v:
+            left = deadline - time.time()
+            if left <= 0:
+                break
+            CV.wait(timeout=left)
+            g = DOMINO.get(code)
+            if not g:
+                abort(404)
+            g["seen"][sub] = time.time()
+        resp = jsonify(_dom_view(g, sub))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/api/domino/move", methods=["POST"])
+def api_domino_move():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    act = str(d.get("action", ""))
+    with CV:
+        g = _dom_get(code, sub)
+        g["seen"][sub] = time.time()
+        if g["status"] != "play" or g["turn"] != sub:
+            return jsonify(_dom_view(g, sub))      # köhnə klik: cari vəziyyəti qaytar
+        hand = g["hands"][sub]
+        g["note"] = None
+        if act == "play":
+            try:
+                t = sorted(int(x) for x in d.get("t", []))
+                end = "L" if d.get("end") == "L" else "R"
+            except (TypeError, ValueError):
+                abort(400)
+            if len(t) != 2 or not all(0 <= x <= 6 for x in t) or t not in hand:
+                abort(400)
+            mv = next((m for m in _dom_moves(g, hand) if m["t"] == t), None)
+            if not mv:
+                abort(400)
+            if end not in mv["e"]:
+                end = mv["e"][0]
+            a, b = t
+            bd = g["board"]
+            if not bd:
+                bd.append([a, b])
+            elif end == "L":
+                bd.insert(0, [a, b] if b == bd[0][0] else [b, a])
+            else:
+                bd.append([a, b] if a == bd[-1][1] else [b, a])
+            hand.remove(t)
+            g["passes"] = 0
+            g["last"] = {"who": sub, "t": t}
+            if not hand:
+                _dom_finish(g, sub, "out")
+            else:
+                g["turn"] = _dom_other(g, sub)
+                _dom_settle(g)
+        elif act == "draw":
+            if _dom_moves(g, hand) or not g["stock"]:
+                abort(400)
+            hand.append(g["stock"].pop())
+            hand.sort()
+            g["note"] = {"who": sub, "k": "draw"}
+            _dom_settle(g)
+        else:
+            abort(400)
+        _dom_touch(g)
+        return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/again", methods=["POST"])
+def api_domino_again():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    with CV:
+        g = _dom_get(code, sub)
+        g["seen"][sub] = time.time()
+        try:
+            rd = int(d.get("round", 0))
+        except (TypeError, ValueError):
+            rd = 0
+        if g["status"] == "over" and rd == g["round"] and len(g["players"]) == 2:
+            g["round"] += 1
+            _dom_deal(g)
+            _dom_touch(g)
+        return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/leave", methods=["POST"])
+def api_domino_leave():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = DOMINO.get(code)
+        if g and sub in g["players"] and g["status"] == "wait":
+            DOMINO.pop(code, None)      # rəqib gəlməmiş otaq bağlanır
+        elif g and sub in g["players"]:
+            g["seen"][sub] = 0
+            _dom_touch(g)
+    return jsonify(ok=True)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), threaded=True)
