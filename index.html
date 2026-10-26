@@ -1113,7 +1113,12 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #domino .dsc{text-align:center;font-weight:800;font-size:22px;line-height:1;letter-spacing:.04em}
 #domino .dsc small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
 #dboard{flex:1;min-height:110px;display:flex;overflow:hidden;border-radius:22px;background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px var(--line);-webkit-overflow-scrolling:touch}
-#dchain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;align-content:center;gap:6px 4px;margin:auto;padding:16px;width:100%;box-sizing:border-box}
+#dchain{display:flex;flex-direction:column;justify-content:center;gap:8px;margin:auto;padding:16px;width:100%;box-sizing:border-box}
+#dchain .drow{display:flex;align-items:center;gap:4px;flex:none}
+#dchain .drow.rev{flex-direction:row-reverse}
+#dchain .drow.mid{justify-content:center}
+.tile.h.flip{flex-direction:row-reverse}
+.tile.h.flip .hf+.hf{border-left:0;border-right:2px solid rgba(43,15,38,.28)}
 #dwait{margin:auto;text-align:center;padding:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px}
 #dwait>i{font-size:28px;color:var(--amber)}
 #dwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
@@ -4749,26 +4754,37 @@ boot();
     fit();
   }
 
-  /* daş artdıqca taxta kiçilir: hamısı ekrana sığana qədər ölçü azalır */
+  /* daş artdıqca taxta kiçilir; zəncir ilan kimi düzülür: sətir sola→sağa, növbəti sətir sağa→sola */
+  function pack(items, sz, W){
+    var th = sz * .78, rows = [[]], cur = 0, rowH = [0], tot = 0;
+    for(var i = 0; i < items.length; i++){
+      var k = items[i].k;
+      var w = k === 'd' ? th : (k === 'e' ? sz * 1.1 : 2 * sz);
+      var h = k === 'd' ? 2 * sz : (k === 'e' ? sz * 1.6 : th);
+      if(cur && cur + 4 + w > W){ rows.push([]); rowH.push(0); cur = 0; }
+      cur += (cur ? 4 : 0) + w;
+      rows[rows.length - 1].push(items[i]);
+      if(h > rowH[rowH.length - 1]) rowH[rowH.length - 1] = h;
+    }
+    for(var j = 0; j < rowH.length; j++) tot += rowH[j] + (j ? 8 : 0);
+    return {rows: rows, tot: tot};
+  }
   function fit(){
-    var items = dom.items, bd = $('dboard');
+    var items = dom.items, bd = $('dboard'), ch = $('dchain');
     if(!items || !items.length || !bd) return;
     var W = bd.clientWidth - 32, H = bd.clientHeight - 32;
     if(W <= 0 || H <= 0) return;
     var best = 12;
-    for(var sz = 36; sz >= 12; sz--){
-      var th = sz * .78, cur = 0, rowH = 0, tot = 0;
-      for(var i = 0; i < items.length; i++){
-        var k = items[i].k;
-        var w = k === 'd' ? th : (k === 'e' ? sz * 1.1 : 2 * sz);
-        var h = k === 'd' ? 2 * sz : (k === 'e' ? sz * 1.6 : th);
-        if(cur && cur + 4 + w > W){ tot += rowH + 6; cur = 0; rowH = 0; }
-        cur += (cur ? 4 : 0) + w; if(h > rowH) rowH = h;
-      }
-      tot += rowH;
-      if(tot <= H){ best = sz; break; }
-    }
+    for(var sz = 36; sz >= 12; sz--){ if(pack(items, sz, W).tot <= H){ best = sz; break; } }
+    var res = pack(items, best, W);
     items.forEach(function(it){ it.el.style.setProperty('--s', best + 'px'); });
+    ch.innerHTML = '';
+    res.rows.forEach(function(r, i){
+      var rev = i % 2 === 1, row = document.createElement('div');
+      row.className = 'drow' + (rev ? ' rev' : '') + (res.rows.length === 1 ? ' mid' : '');
+      r.forEach(function(it){ it.el.classList.toggle('flip', rev && it.k === 'n'); row.appendChild(it.el); });
+      ch.appendChild(row);
+    });
   }
   window.addEventListener('resize', function(){ if(dom.s && !$('domino').hidden) fit(); });
 
