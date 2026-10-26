@@ -884,6 +884,14 @@ body.lite #menu [data-t]{animation:none!important}
 #menu.swiping .mticket{filter:none!important}
 #menu.swiping .mticket .pair,#menu.swiping .live i{animation:none!important}
 #menu.swiping [data-t]{animation:none!important}
+
+/* yüngül keçidlər: ağır effektlər menyuda söndürülüb */
+#menu .floaties{display:none!important}
+.mticket{filter:none!important;transform:none!important;transition:none!important}
+.mticket .pair{animation:none!important}
+#menu .live i{animation:none!important}
+#menu[data-tab] [data-t]{animation:tabin .12s ease-out both}
+@keyframes tabin{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
@@ -3936,11 +3944,7 @@ boot();
   }
   function paint(dx){
     raf = 0;
-    var o = Math.max(.25, 1 - Math.abs(dx) / (W * 1.1));
-    for(var i = 0; i < targets.length; i++){
-      targets[i].style.transform = 'translate3d(' + dx + 'px,0,0)';
-      targets[i].style.opacity = o;
-    }
+    for(var i = 0; i < targets.length; i++) targets[i].style.transform = 'translate3d(' + dx + 'px,0,0)';
   }
   function clearT(){
     targets.forEach(function(e){ e.style.transform = ''; e.style.opacity = ''; e.style.transition = ''; });
@@ -3949,8 +3953,8 @@ boot();
   }
   function slideTo(dx, op, ms, done){
     targets.forEach(function(e){
-      e.style.transition = 'transform ' + ms + 'ms cubic-bezier(.2,.8,.2,1),opacity ' + ms + 'ms ease-out';
-      e.style.transform = 'translate3d(' + dx + 'px,0,0)'; e.style.opacity = op;
+      e.style.transition = 'transform ' + ms + 'ms ease-out';
+      e.style.transform = 'translate3d(' + dx + 'px,0,0)';
     });
     setTimeout(done, ms + 20);
   }
@@ -3984,11 +3988,9 @@ boot();
     var ok = i >= 0 && i < ORDER.length && (Math.abs(dx) > W * .28 || (v > .45 && Math.abs(dx) > 40));
     busy = true;
     if(ok){
-      slideTo(dir > 0 ? -W * .35 : W * .35, 0, 140, function(){
-        clearT(); setTab(ORDER[i]); busy = false;
-      });
+      clearT(); setTab(ORDER[i]); busy = false;
     } else {
-      slideTo(0, 1, 180, function(){ clearT(); busy = false; });
+      slideTo(0, 1, 140, function(){ clearT(); busy = false; });
     }
   }
   [menu, prof].forEach(function(el){
