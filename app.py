@@ -2567,6 +2567,7 @@ DOM_START_ORDER = [1, 2, 3, 4, 5, 6, 0]   # başlayan: əvvəl 1-1, sonra 2-2, 3
 
 
 def _dom_deal(g):
+    prev = g.get("winner")      # əvvəlki raundun qalibi (ilk raundda və yeni oyunda None)
     tiles = [[a, b] for a in range(7) for b in range(a, 7)]
     secrets.SystemRandom().shuffle(tiles)
     ps = g["players"]
@@ -2580,9 +2581,15 @@ def _dom_deal(g):
     g["pts"] = 0
     g["last"] = None
     g["note"] = None
-    # başlayan: 1-1 olan, yoxdursa 2-2 olan, yoxdursa ən kiçik qoşa sahibi.
-    # Heç kimdə qoşa yoxdursa ən kiçik cəmli daş başlayır.
+    # İlk raund: 1-1 olan başlayır, yoxdursa 2-2 olan və s. Heç kimdə qoşa yoxdursa ən kiçik cəmli daş.
+    # Sonrakı raundlar (101-ə qədər): əvvəlki raundun qalibi başlayır və istənilən daşı qoya bilir.
+    # Raund bərabər bitibsə (qalib yoxdur), yenə qoşa qaydası işləyir.
     who, first = ps[0], None
+    if prev in ps:
+        g["first"] = None
+        g["turn"] = prev
+        g["status"] = "play"
+        return
     for d in DOM_START_ORDER:
         owner = next((p for p in ps if [d, d] in g["hands"][p]), None)
         if owner:
@@ -2890,6 +2897,7 @@ def api_domino_again():
             if g.get("match"):                 # 101-ə çatılıb: yeni oyun, xal sıfırdan
                 g["score"] = {}
                 g["match"] = None
+                g["winner"] = None             # yeni oyun yenə qoşa ilə başlayır
             _dom_deal(g)
             _dom_touch(g)
         return jsonify(_dom_view(g, sub))
