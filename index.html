@@ -719,7 +719,10 @@ body.invoice #vmic{display:none}
 .fr .av{width:40px;height:40px;font-size:17px}
 .fr .tx{flex:1;min-width:0;font-size:13px;line-height:1.3;color:var(--muted)}
 .fr .tx b{display:block;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fb{flex:none;padding:8px 13px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:13px}
+.fb{flex:none;padding:8px 13px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:13px;line-height:1.2}
+.fb.block-btn{width:auto;min-width:70px;max-width:none;height:40px;padding:0 12px;border-radius:999px;white-space:nowrap;word-break:normal;overflow-wrap:normal;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;}
+.fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
+.fb.no.block-btn{width:auto;min-width:70px;height:40px;padding:0 12px;border-radius:999px;white-space:nowrap;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px var(--line)}
 .presence{display:block!important;font-size:11px;color:var(--muted);margin-top:3px}.presence.online{color:#279a62;font-weight:700}#pbpresence{font-size:12px;margin:5px 0;color:var(--muted)}#pbpresence.online{color:#279a62;font-weight:700}#blockedlist{display:grid;gap:8px}#pbBlock{background:#b02a52;color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
 .fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
 .ftag{flex:none;color:var(--muted);font-size:12px;font-weight:600}
@@ -864,6 +867,9 @@ body.mob #profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!import
   display:grid;place-items:center;font-size:14px;font-weight:800;line-height:1;
 }
 #tabbar button.on .tav{box-shadow:none}
+#tabbar .tp{position:relative}
+.nav-notif-dot{position:absolute;right:calc(50% - 21px);top:2px;width:10px;height:10px;border-radius:50%;background:#ff315d;border:2px solid #32143e;box-shadow:0 0 0 2px rgba(255,49,93,.18);}
+.nav-notif-dot[hidden]{display:none!important}
 
 /* sürüşdürmə: barmağı izləyən animasiya, yüngül */
 body.mob #menu,body.mob #profile{touch-action:pan-y}
@@ -1272,8 +1278,11 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 /* Profil: daha səliqəli, Azərbaycan hərflərini düzgün göstərən yazı tipi */
 #profile{gap:12px}
 #profile .phead{padding:2px 0 4px}
-#profile .pavbox{padding:8px 0 12px;gap:12px}
-#profile .av.big{width:112px;height:112px;border-radius:50%;outline:none;border:0;box-shadow:none}
+#profile .pavbox{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;padding:8px 4px 14px;gap:16px;text-align:left}
+#profile .av.big{width:86px;height:86px;min-width:86px;border-radius:50%;outline:none;border:0;box-shadow:none;font-size:34px}
+#profile .pavbtns{display:flex;flex:1;flex-wrap:wrap;justify-content:flex-start;gap:8px;align-items:center}
+#profile .pavbtns .pbtn{min-height:42px;padding:10px 14px}
+#profile .pavbtns .plink{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08)}
 #profile .card{border-radius:22px;padding:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),0 12px 32px rgba(0,0,0,.12)}
 #profile .card h2{font-size:16px;margin-bottom:14px}
 #profile .fld{gap:8px;margin-bottom:18px}
@@ -1491,7 +1500,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <nav id="tabbar" aria-label="Naviqasiya">
     <button type="button" data-go="home" class="on" aria-label="Əsas" title="Əsas"><span class="tp"><i class="fa-solid fa-house" aria-hidden="true"></i></span></button>
     <button type="button" data-go="plans" aria-label="Seanslar" title="Seanslar"><span class="tp"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span></button>
-    <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i><span class="nav-notif-dot" id="friendNotifDot" hidden aria-label="Yeni dostluq sorğusu"></span></span></button>
     <button type="button" data-go="games" aria-label="Oyunlar" title="Oyunlar"><span class="tp"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span></button>
     <button type="button" data-go="hist" aria-label="Tarixçə" title="Tarixçə"><span class="tp"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span></button>
     <button type="button" data-go="settings" aria-label="Ayarlar" title="Ayarlar"><span class="tp"><i class="fa-solid fa-gear" aria-hidden="true"></i></span></button>
@@ -3659,7 +3668,7 @@ async function frAct(path, body){
 function searchBtns(p){
   if(p.blocked) return [frBtn('Blokdan çıxar','',async()=>{ await frAct('/api/unblock',{username:p.username}); doSearch(); loadBlocked(); },'Blokdan çıxar')];
   if(p.blocked_me) return [frTag('Səni bloklayıb')];
-  const block = frBtn('Blok et','no',async()=>{ const ok=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(ok){ await frAct('/api/block',{username:p.username}); doSearch(); loadBlocked(); } },'Blok et');
+  const block = frBtn('Blok et','block-btn',async()=>{ const ok=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(ok){ await frAct('/api/block',{username:p.username}); doSearch(); loadBlocked(); } },'Blok et');
   let main;
   if(p.rel === 'friend') main = frTag('Dostsunuz');
   else if(p.rel === 'out') main = frTag('Göndərildi');
@@ -3689,6 +3698,10 @@ function frSection(box, title){ const t = document.createElement('div'); t.class
 function renderFriends(d){
   const rq = $('freqs'); rq.textContent = '';
   const inc = d.incoming || [], fr = d.friends || [], out = d.outgoing || [];
+  const notifDot = $('friendNotifDot');
+  if(notifDot) notifDot.hidden = inc.length === 0;
+  const friendsTab = document.querySelector('#tabbar [data-go="friends"]');
+  if(friendsTab) friendsTab.setAttribute('aria-label', inc.length ? `Dostlar, ${inc.length} yeni sorğu` : 'Dostlar');
   if(inc.length){
     frSection(rq, 'Dostluq sorğuları');
     inc.forEach(p => rq.appendChild(frRow(p, 'dost olmaq istəyir', [
@@ -3700,7 +3713,7 @@ function renderFriends(d){
     frSection(fl, 'Dostların');
     fr.forEach(p => fl.appendChild(frRow(p, null, [
       frBtn('<i class="fa-solid fa-user-minus" aria-hidden="true"></i>', 'no', () => { wtConfirm('@' + p.username + ' dostlardan çıxarılsın?', {ok: 'Dostlardan çıxar', danger: true}).then(y => { if(y) frAct('/api/friend/remove', {username: p.username}); }); }, 'Dostlardan çıxar'),
-      frBtn('Blok et','no',async()=>{ const y=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(y){ await frAct('/api/block',{username:p.username}); loadBlocked(); } },'Blok et')])));
+      frBtn('Blok et','block-btn',async()=>{ const y=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(y){ await frAct('/api/block',{username:p.username}); loadBlocked(); } },'Blok et')])));
   }
   if(out.length){
     frSection(fl, 'Göndərilən sorğular');
