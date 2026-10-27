@@ -1302,6 +1302,23 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #avatarcrop .crop-actions button{flex:1;padding:12px;border-radius:13px;font-weight:700;background:rgba(255,255,255,.1)}
 #avatarcrop #cropapply{background:var(--rose-deep)}
 
+
+/* Profil şəkli: redaktə əməliyyatları avatarın üzərindəki karandaş menyusundadır */
+#profile .pavbox{justify-content:flex-start;align-items:center;flex-direction:row;padding:8px 4px 14px;gap:16px}
+#profile .pav-edit-wrap{position:relative;flex:none;width:86px;height:86px}
+#profile #pav.av.big{display:grid;place-items:center;width:86px;height:86px;min-width:86px;padding:0;margin:0;border:0;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.12);font-size:34px;line-height:1;cursor:pointer;appearance:none;-webkit-appearance:none;background-size:cover;background-position:center;color:var(--text)}
+#profile #pav:focus-visible,#profile .pav-pencil:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+#profile .pav-pencil{position:absolute;right:-3px;bottom:-3px;z-index:2;display:none;place-items:center;width:30px;height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:var(--rose-deep);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);font-size:12px;cursor:pointer}
+#profile .pav-edit-wrap.editing .pav-pencil{display:grid}
+#profile .pav-edit-menu{position:absolute;z-index:20;top:calc(100% + 10px);left:0;width:max-content;min-width:190px;max-width:min(260px,calc(100vw - 48px));padding:7px;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:linear-gradient(155deg,rgba(69,41,84,.98),rgba(27,13,37,.99));box-shadow:0 18px 38px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+#profile .pav-edit-menu[hidden]{display:none!important}
+#profile .pav-edit-menu button{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:10px 12px;border-radius:11px;background:transparent;color:var(--text);text-align:left;font:inherit;font-size:14px;font-weight:650}
+#profile .pav-edit-menu button:active{background:rgba(255,122,156,.16)}
+#profile .pav-edit-menu button i{width:18px;text-align:center;color:var(--rose)}
+#profile .pav-edit-menu #pavdel{color:#ffb0c2}
+#profile .pav-edit-menu #pavdel[hidden]{display:none!important}
+#avatarcrop h2,#avatarcrop .crop-help,#avatarcrop label{line-height:1.45}
+@media(max-width:380px){#avatarcrop{padding:12px}#avatarcrop .crop-card{padding:16px}#cropcanvas{width:min(100%,270px)}}
 </style>
 </head>
 <body>
@@ -1525,10 +1542,13 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <button type="button" class="ib profile-settings" id="profilesettings" aria-label="Ayarlar" title="Ayarlar"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
   </div>
   <div class="pavbox">
-    <div class="av big" id="pav">?</div>
-    <div class="pavbtns">
-      <button class="pbtn" id="pavpick">Şəkli dəyiş</button>
-      <button class="plink" id="pavdel">Sil</button>
+    <div class="pav-edit-wrap" id="pavEditWrap">
+      <button type="button" class="av big" id="pav" aria-label="Profil şəklini redaktə et" title="Profil şəklini redaktə et" aria-expanded="false">?</button>
+      <button type="button" class="pav-pencil" id="pavmenuopen" aria-label="Şəkil əməliyyatlarını aç" title="Şəkil əməliyyatları" aria-expanded="false"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+      <div class="pav-edit-menu" id="pavmenu" hidden>
+        <button type="button" id="pavpick"><i class="fa-regular fa-image" aria-hidden="true"></i><span>Şəkli dəyiş</span></button>
+        <button type="button" id="pavdel" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Şəkli sil</span></button>
+      </div>
     </div>
     <input type="file" id="pfile" accept="image/*" hidden>
   </div>
@@ -3952,6 +3972,7 @@ function hint(id, t, cls){ const e = $(id); e.textContent = t || ''; e.className
 function fillProfile(){
   setAvatar($('pav'), account.avatar, account.name);
   $('pavdel').hidden = !account.avatar;
+  $('pavmenu').hidden = true; $('pavEditWrap').classList.remove('editing'); $('pav').setAttribute('aria-expanded','false'); $('pavmenuopen').setAttribute('aria-expanded','false');
   if(document.activeElement !== $('pname')) $('pname').value = account.name || '';
   if(document.activeElement !== $('puser')) $('puser').value = account.username || '';
   $('pemail').value = account.email || '';
@@ -4004,7 +4025,30 @@ cropCanvas.addEventListener('pointermove',e=>{if(!cropDrag)return;const r=cropCa
 function stopCropDrag(){cropDrag=null;cropCanvas.style.cursor='grab';}
 cropCanvas.addEventListener('pointerup',stopCropDrag);cropCanvas.addEventListener('pointercancel',stopCropDrag);
 function imageForCrop(file){return new Promise((resolve,reject)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>resolve({u,im});im.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('img'));};im.src=u;});}
-$('pavpick').onclick = () => $('pfile').click();
+function closePavMenu(){
+  $('pavmenu').hidden = true;
+  $('pavEditWrap').classList.remove('editing');
+  $('pav').setAttribute('aria-expanded','false');
+  $('pavmenuopen').setAttribute('aria-expanded','false');
+}
+$('pav').onclick = () => {
+  const wrap = $('pavEditWrap');
+  const show = !wrap.classList.contains('editing');
+  wrap.classList.toggle('editing', show);
+  $('pav').setAttribute('aria-expanded', String(show));
+  if(!show){ $('pavmenu').hidden = true; $('pavmenuopen').setAttribute('aria-expanded','false'); }
+};
+$('pavmenuopen').onclick = e => {
+  e.stopPropagation();
+  const open = $('pavmenu').hidden;
+  $('pavEditWrap').classList.add('editing');
+  $('pavmenu').hidden = !open;
+  $('pavmenuopen').setAttribute('aria-expanded', String(open));
+  $('pav').setAttribute('aria-expanded', String(open));
+};
+$('pavpick').onclick = () => { closePavMenu(); $('pfile').click(); };
+document.addEventListener('click', e => { if(!e.target.closest('#pavEditWrap')) closePavMenu(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePavMenu(); });
 $('pfile').onchange = async () => {
   const f = $('pfile').files[0]; $('pfile').value = '';
   if(!f) return;
@@ -4032,8 +4076,8 @@ $('pavdel').onclick = async () => {
   try{
     const r = await api('/api/avatar/remove', {method: 'POST'});
     if(!r.ok) throw new Error('av');
-    applyProfile(await r.json()); pmsg('Şəkil silindi', true);
-  }catch(e){ pmsg('Şəkil silinmədi, yenidən cəhd et'); }
+    applyProfile(await r.json()); closePavMenu(); pmsg('Şəkil silindi', true);
+  }catch(e){ closePavMenu(); pmsg('Şəkil silinmədi, yenidən cəhd et'); }
 };
 
 // ad
@@ -4947,7 +4991,15 @@ boot();
     'Hər kəs':['Herkes','Everyone'],
     'Dostlar':['Arkadaşlar','Friends'],
     'Heç kim':['Hiç kimse','Nobody'],
-    'Əlaqə problemi, yenidən cəhd et':['Bağlantı sorunu, tekrar dene','Connection problem; try again']
+    'Əlaqə problemi, yenidən cəhd et':['Bağlantı sorunu, tekrar dene','Connection problem; try again'],
+    'Profil şəklini redaktə et':['Profil fotoğrafını düzenle','Edit profile photo'],
+    'Şəkli sürüşdürərək yerini dəyiş, yaxınlaşdırmanı tənzimlə.':['Fotoğrafı sürükleyerek konumunu değiştir, yakınlaştırmayı ayarla.','Drag the photo to reposition it and adjust zoom.'],
+    'Kəsiləcək profil şəkli':['Kırpılacak profil fotoğrafı','Profile photo crop area'],
+    'Yaxınlaşdırma':['Yakınlaştırma','Zoom'],
+    'Kəs və yüklə':['Kırp ve yükle','Crop and upload'],
+    'Şəkli sil':['Fotoğrafı sil','Remove photo'],
+    'Şəkil əməliyyatlarını aç':['Fotoğraf işlemlerini aç','Open photo actions'],
+    'Şəkil əməliyyatları':['Fotoğraf işlemleri','Photo actions']
   };
   Object.keys(EXTRA).forEach(function(k){ D[k] = EXTRA[k]; });
   var O = new WeakMap(), AT = ['placeholder','title','aria-label'], busy = false, lang = 'az';
