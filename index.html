@@ -13,7 +13,7 @@
 <title>Birlikdə İzlə</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <style>
 :root{
@@ -21,7 +21,7 @@
   --rose:#ff7a9c; --rose-deep:#e8567d; --amber:#ffc46b;
   --paper:#f8e7e1; --ink:#2b0f26; --ink-soft:#7a5469;
   --text:#f6ecf7; --muted:#b7a2cf; --line:rgba(255,255,255,.09);
-  --font:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 :root{--H:100dvh}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -466,7 +466,7 @@ body.invoice #vmic{display:none}
 .phead{display:flex;align-items:center;gap:12px}
 .phead h1{font-size:22px;font-weight:800}
 .pavbox{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0}
-.av.big{width:104px;height:104px;font-size:44px;box-shadow:0 0 0 4px var(--seat),0 0 0 6px var(--rose)}
+.av.big{width:104px;height:104px;font-size:44px;box-shadow:none;border:0}
 .pavbtns{display:flex;gap:10px;align-items:center}
 .pbtn{padding:10px 16px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:15px;flex:none}
 .pbtn:hover:not(:disabled){background:#d94870}
@@ -863,7 +863,7 @@ body.mob #profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!import
   width:28px;height:28px;border-radius:50%;background:var(--rose) center/cover no-repeat;color:var(--ink);
   display:grid;place-items:center;font-size:14px;font-weight:800;line-height:1;
 }
-#tabbar button.on .tav{box-shadow:0 0 0 2px var(--velvet),0 0 0 3.5px var(--text)}
+#tabbar button.on .tav{box-shadow:none}
 
 /* sürüşdürmə: barmağı izləyən animasiya, yüngül */
 body.mob #menu,body.mob #profile{touch-action:pan-y}
@@ -1268,6 +1268,31 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 @media(min-width:700px){#siteSelectLayer{align-items:center}.site-select-sheet{max-height:70dvh}}
 @media(prefers-reduced-motion:reduce){#siteSelectLayer,.site-select-sheet{animation:none}.site-select-trigger,.site-select-trigger .sst-chevron{transition:none}}
 
+
+/* Profil: daha səliqəli, Azərbaycan hərflərini düzgün göstərən yazı tipi */
+#profile{gap:12px}
+#profile .phead{padding:2px 0 4px}
+#profile .pavbox{padding:8px 0 12px;gap:12px}
+#profile .av.big{width:112px;height:112px;border-radius:50%;outline:none;border:0;box-shadow:none}
+#profile .card{border-radius:22px;padding:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),0 12px 32px rgba(0,0,0,.12)}
+#profile .card h2{font-size:16px;margin-bottom:14px}
+#profile .fld{gap:8px;margin-bottom:18px}
+#profile .fld>label{font-weight:600}
+#profile .frow input,#profile .pin{min-height:48px;border-radius:14px}
+#profile .hint{line-height:1.55}
+#profile .pbtn{border-radius:14px}
+#avatarcrop{position:fixed;inset:0;z-index:250;background:rgba(10,4,15,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:20px}
+#avatarcrop[hidden]{display:none!important}
+#avatarcrop .crop-card{width:min(100%,390px);border-radius:24px;padding:20px;background:linear-gradient(155deg,rgba(67,39,83,.98),rgba(31,15,41,.98));border:1px solid rgba(255,255,255,.18);box-shadow:0 24px 70px rgba(0,0,0,.45)}
+#avatarcrop h2{font-size:20px;margin-bottom:6px}
+#avatarcrop .crop-help{font-size:14px;color:var(--muted);margin-bottom:14px}
+#cropcanvas{display:block;width:min(100%,300px);aspect-ratio:1; height:auto;margin:0 auto 16px;border-radius:18px;touch-action:none;background:#24132e;cursor:grab}
+#avatarcrop label{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);margin:12px 0 6px}
+#cropzoom{width:100%;accent-color:var(--rose)}
+#avatarcrop .crop-actions{display:flex;gap:10px;margin-top:18px}
+#avatarcrop .crop-actions button{flex:1;padding:12px;border-radius:13px;font-weight:700;background:rgba(255,255,255,.1)}
+#avatarcrop #cropapply{background:var(--rose-deep)}
+
 </style>
 </head>
 <body>
@@ -1474,6 +1499,16 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   </nav>
 </div>
 
+<div id="avatarcrop" hidden role="dialog" aria-modal="true" aria-labelledby="croptitle">
+  <div class="crop-card">
+    <h2 id="croptitle">Profil şəklini redaktə et</h2>
+    <p class="crop-help">Şəkli sürüşdürərək yerini dəyiş, yaxınlaşdırmanı tənzimlə.</p>
+    <canvas id="cropcanvas" width="320" height="320" aria-label="Kəsiləcək profil şəkli"></canvas>
+    <label for="cropzoom"><span>Yaxınlaşdırma</span><span id="cropzoomval">1.0×</span></label>
+    <input id="cropzoom" type="range" min="1" max="3" step="0.01" value="1">
+    <div class="crop-actions"><button type="button" id="cropcancel">Ləğv et</button><button type="button" id="cropapply">Kəs və yüklə</button></div>
+  </div>
+</div>
 <div id="profile" hidden>
   <div class="phead">
     <button class="ib" id="pback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
@@ -3935,32 +3970,50 @@ $('pback').onclick = () => { $('profile').hidden = true; };
 $('profilesettings').onclick = () => { const b = document.querySelector('#tabbar [data-go="settings"]'); if(b) b.click(); };
 $('settingsback').onclick = () => { const b = document.querySelector('#tabbar [data-go="profile"]'); if(b) b.click(); };
 
-// şəkil: kvadrata kəsilir, 256x256 JPEG edilir
-function toAvatar(file){
-  return new Promise((res, rej) => {
-    const u = URL.createObjectURL(file), im = new Image();
-    im.onload = () => {
-      const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
-      const w = im.naturalWidth, h = im.naturalHeight, m = Math.min(w, h);
-      if(!m){ URL.revokeObjectURL(u); rej(new Error('img')); return; }
-      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, S, S);
-      x.drawImage(im, (w - m) / 2, (h - m) / 2, m, m, 0, 0, S, S);
-      URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .85));
-    };
-    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); };
-    im.src = u;
-  });
+// Profil şəklini kəsmək/redaktə etmək: sürüşdürmə və yaxınlaşdırma
+let cropImage = null, cropObjectUrl = '', cropScale = 1, cropBase = 1, cropX = 0, cropY = 0, cropDrag = null;
+const cropCanvas = $('cropcanvas'), cropCtx = cropCanvas.getContext('2d');
+function drawCrop(){
+  if(!cropImage) return;
+  const W=cropCanvas.width,H=cropCanvas.height;
+  cropCtx.clearRect(0,0,W,H); cropCtx.fillStyle='#24132e'; cropCtx.fillRect(0,0,W,H);
+  const w=cropImage.naturalWidth,h=cropImage.naturalHeight;
+  const scale=cropBase*cropScale, dw=w*scale, dh=h*scale;
+  cropCtx.save(); cropCtx.beginPath(); cropCtx.rect(0,0,W,H); cropCtx.clip();
+  cropCtx.drawImage(cropImage,(W-dw)/2+cropX,(H-dh)/2+cropY,dw,dh);
+  cropCtx.restore();
 }
+function closeCrop(){ $('avatarcrop').hidden=true; if(cropObjectUrl) URL.revokeObjectURL(cropObjectUrl); cropObjectUrl=''; cropImage=null; cropDrag=null; }
+$('cropcancel').onclick=closeCrop;
+$('cropzoom').oninput=()=>{cropScale=Number($('cropzoom').value);$('cropzoomval').textContent=cropScale.toFixed(1)+'×';drawCrop();};
+cropCanvas.addEventListener('pointerdown',e=>{if(!cropImage)return;cropDrag={x:e.clientX,y:e.clientY,ox:cropX,oy:cropY};cropCanvas.setPointerCapture(e.pointerId);cropCanvas.style.cursor='grabbing';});
+cropCanvas.addEventListener('pointermove',e=>{if(!cropDrag)return;const r=cropCanvas.getBoundingClientRect(),k=cropCanvas.width/r.width;cropX=cropDrag.ox+(e.clientX-cropDrag.x)*k;cropY=cropDrag.oy+(e.clientY-cropDrag.y)*k;drawCrop();});
+function stopCropDrag(){cropDrag=null;cropCanvas.style.cursor='grab';}
+cropCanvas.addEventListener('pointerup',stopCropDrag);cropCanvas.addEventListener('pointercancel',stopCropDrag);
+function imageForCrop(file){return new Promise((resolve,reject)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>resolve({u,im});im.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('img'));};im.src=u;});}
 $('pavpick').onclick = () => $('pfile').click();
 $('pfile').onchange = async () => {
   const f = $('pfile').files[0]; $('pfile').value = '';
   if(!f) return;
-  pmsg('Şəkil yüklənir...', true);
+  if(!f.type || !f.type.startsWith('image/')){pmsg('Şəkil faylı seç');return;}
   try{
-    const r = await api('/api/avatar', {method: 'POST', body: JSON.stringify({image: await toAvatar(f)})});
-    if(!r.ok) throw new Error('av');
-    applyProfile(await r.json()); pmsg('Şəkil yeniləndi', true);
-  }catch(e){ pmsg('Şəkil yüklənmədi, başqa şəkil seç'); }
+    const loaded=await imageForCrop(f); cropObjectUrl=loaded.u; cropImage=loaded.im;
+    const w=cropImage.naturalWidth,h=cropImage.naturalHeight;
+    if(!w||!h) throw new Error('img');
+    cropBase=320/Math.max(w,h);cropScale=1;cropX=0;cropY=0;$('cropzoom').value='1';$('cropzoomval').textContent='1.0×';
+    $('avatarcrop').hidden=false;drawCrop();
+  }catch(e){pmsg('Şəkil açıla bilmədi, başqa şəkil seç');}
+};
+$('cropapply').onclick = async () => {
+  if(!cropImage)return;
+  const out=document.createElement('canvas');out.width=256;out.height=256;
+  const ctx=out.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,256,256);
+  ctx.drawImage(cropCanvas,0,0,320,320,0,0,256,256);
+  const image=out.toDataURL('image/jpeg',.86);closeCrop();pmsg('Şəkil yüklənir...',true);
+  try{
+    const r=await api('/api/avatar',{method:'POST',body:JSON.stringify({image})});
+    if(!r.ok)throw new Error('av');applyProfile(await r.json());pmsg('Şəkil yeniləndi',true);
+  }catch(e){pmsg('Şəkil yüklənmədi, başqa şəkil seç');}
 };
 $('pavdel').onclick = async () => {
   try{
