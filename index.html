@@ -1091,16 +1091,51 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #menu.tabs-on[data-tab="settings"] [data-t]:not([data-t="settings"]){display:none!important}
 #pnamesave,#pusersave,#pbiosave{display:none!important}
 #psaveall:disabled{opacity:.45}
+/* ================= ŞAHMAT ================= */
+#chess .cpl{display:flex;align-items:center;gap:10px;flex:none;padding:7px 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
+#chess .cpl.turn{box-shadow:inset 0 0 0 2px var(--amber)}
+#chess .cav{width:34px;height:34px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
+#chess .cav img{width:100%;height:100%;object-fit:cover}
+#chess .cwho{flex:1;min-width:0}
+#chess .cwho b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chess .cwho small{color:var(--muted);font-size:13px}
+#chess .cdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b5a7d;margin-right:5px}
+#chess .cdot.on{background:#5be08a}
+#chess .csc{font-weight:800;font-size:20px}
+#cwrap{position:relative;flex:1;min-height:0;display:grid;place-items:center;container-type:size}
+#cbd{width:min(100cqw,100cqh);aspect-ratio:1;display:grid;grid-template:repeat(8,1fr)/repeat(8,1fr);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.08);container-type:inline-size;user-select:none;-webkit-user-select:none}
+.csq{position:relative;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.csq.lt{background:#f0dccd}.csq.dk{background:#9b5b78}
+.csq.last{box-shadow:inset 0 0 0 100px rgba(255,196,107,.38)}
+.csq.sel{box-shadow:inset 0 0 0 100px rgba(255,196,107,.72)}
+.csq.chk{box-shadow:inset 0 0 0 100px rgba(255,60,90,.6)}
+.csq.tgt::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(43,15,38,.38)}
+.csq.tgt.cap::after{width:94%;height:94%;background:none;border:4px solid rgba(43,15,38,.4);box-sizing:border-box}
+.csq i{position:absolute;font-style:normal;font-weight:700;font-size:max(8px,2.4cqw);line-height:1;pointer-events:none}
+.csq i.rk{left:3%;top:4%}.csq i.fl{right:4%;bottom:3%}
+.csq.lt i{color:#9b5b78}.csq.dk i{color:#f0dccd}
+.pc{position:relative;z-index:1;font-size:10.6cqw;line-height:1;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Apple Symbols","DejaVu Sans",serif}
+.pc.w{color:#fffaf0;text-shadow:0 0 1px #000,0 1px 1px #2b0f26,0 0 4px rgba(0,0,0,.55)}
+.pc.b{color:#22112b;text-shadow:0 0 1px rgba(255,255,255,.45)}
+#cpro{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(10,4,16,.72);border-radius:14px}
+#cpro button{width:64px;height:64px;border-radius:16px;border:0;background:#f0dccd;font-size:44px;line-height:1;cursor:pointer}
+#cmsg{flex:none;min-height:22px;text-align:center;color:var(--amber);font-weight:600;font-size:15px}
+#cact{display:flex;flex:none}
+#cact .pbtn{flex:1;padding:12px}
+#cres{flex:none;text-align:center;padding:14px;border-radius:20px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line)}
+#cres h3{font-size:22px;margin-bottom:4px}
+#cres p{color:var(--muted);font-size:14px;margin-bottom:10px}
+#cres .pbtn{width:100%;padding:13px}
 /* ================= DOMINO ================= */
-#domino{position:fixed;inset:0;z-index:75;display:flex;flex-direction:column;gap:10px;
+#domino,#chess{position:fixed;inset:0;z-index:75;display:flex;flex-direction:column;gap:10px;
   padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
   background:radial-gradient(120% 70% at 50% 0%,#40224f 0%,var(--velvet) 62%);overflow:hidden}
-#domino [hidden]{display:none!important}
-#domino[hidden]{display:none!important}
-#domino .dhead{display:flex;align-items:center;gap:10px;flex:none}
-#domino .dt{flex:1;min-width:0;line-height:1.15}
-#domino .dt b{display:block;font-size:20px}
-#domino .dt small{color:var(--muted);font-size:13px;letter-spacing:.08em}
+#domino [hidden],#chess [hidden]{display:none!important}
+#domino[hidden],#chess[hidden]{display:none!important}
+#domino .dhead,#chess .dhead{display:flex;align-items:center;gap:10px;flex:none}
+#domino .dt,#chess .dt{flex:1;min-width:0;line-height:1.15}
+#domino .dt b,#chess .dt b{display:block;font-size:20px}
+#domino .dt small,#chess .dt small{color:var(--muted);font-size:13px;letter-spacing:.08em}
 #domino .dpl{display:flex;align-items:center;gap:10px;flex:none;padding:8px 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
 #domino .dpl.turn{box-shadow:inset 0 0 0 2px var(--amber)}
 #domino .dav{width:38px;height:38px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
@@ -1120,9 +1155,9 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 .tile.v.flip .hf+.hf{border-top:0;border-bottom:2px solid rgba(43,15,38,.28)}
 .tile.h.flip{flex-direction:row-reverse}
 .tile.h.flip .hf+.hf{border-left:0;border-right:2px solid rgba(43,15,38,.28)}
-#dwait{margin:auto;text-align:center;padding:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px}
-#dwait>i{font-size:28px;color:var(--amber)}
-#dwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
+#dwait,#cwait{margin:auto;text-align:center;padding:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px}
+#dwait>i,#cwait>i{font-size:28px;color:var(--amber)}
+#dwait b,#cwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
 .dempty{color:var(--muted);padding:0 24px;text-align:center;white-space:normal;width:240px}
 .tile{--s:30px;--t:calc(var(--s)*.78);display:inline-flex;flex:none;background:var(--paper);border-radius:calc(var(--s)*.2);box-shadow:0 2px 0 #cdb7b0,0 4px 8px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease,opacity .15s}
 .tile.h{flex-direction:row}.tile.v{flex-direction:column}
@@ -1152,8 +1187,10 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #dres p{color:var(--muted);font-size:14px;margin-bottom:10px}
 #dres .dleft{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
 #dres .pbtn{width:100%;padding:13px}
-#domMsg{min-height:0;margin-top:8px;font-size:14px;color:var(--amber)}
-#domMsg:empty{display:none}
+#dends{flex:none;text-align:center;font-size:13px;color:var(--muted);min-height:16px}
+#dends b{color:var(--text)}
+#domMsg,#chMsg{min-height:0;margin-top:8px;font-size:14px;color:var(--amber)}
+#domMsg:empty,#chMsg:empty{display:none}
 </style>
 </head>
 <body>
@@ -1235,12 +1272,24 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <h2><i class="fa-solid fa-dice" aria-hidden="true"></i>Domino</h2>
     <div class="hint">Domino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.</div>
     <button class="pbtn" id="domNew" style="width:100%;padding:13px;margin-top:10px">Domino otağı aç</button>
+    <button class="pbtn alt" id="domBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="domResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
     <div class="frow" style="gap:10px;margin-top:10px">
       <input id="domCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Domino kodu">
       <button class="pbtn alt" id="domEnter">Gir</button>
     </div>
     <div id="domMsg" role="status"></div>
+  </div>
+  <div class="card" id="chCard">
+    <h2><i class="fa-solid fa-chess-knight" aria-hidden="true"></i>Şahmat</h2>
+    <div class="hint">Dostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.</div>
+    <button class="pbtn" id="chNew" style="width:100%;padding:13px;margin-top:10px">Şahmat otağı aç</button>
+    <button class="pbtn alt" id="chResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="chCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Şahmat kodu">
+      <button class="pbtn alt" id="chEnter">Gir</button>
+    </div>
+    <div id="chMsg" role="status"></div>
   </div>
   <div class="card" id="pwacard" hidden>
     <h2><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>Tətbiq kimi quraşdır</h2>
@@ -1572,6 +1621,29 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   </div>
 </div>
 
+<div id="chess" hidden role="dialog" aria-modal="true" aria-label="Şahmat">
+  <div class="dhead">
+    <button class="ib" id="cback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Şahmat</b><small id="ccode"></small></div>
+    <button class="ib" id="cshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+  </div>
+  <div class="cpl" id="copp"></div>
+  <div id="cwrap">
+    <div id="cbd"></div>
+    <div id="cpro" hidden></div>
+    <div id="cwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Rəqib gözlənilir...</span>
+      <small>Kodu rəqibinə göndər:</small>
+      <b id="cwcode"></b>
+      <button class="pbtn" id="cwshare">Dəvət linkini göndər</button>
+    </div>
+  </div>
+  <div class="cpl" id="cme"></div>
+  <div id="cmsg" role="status"></div>
+  <div id="cres" hidden></div>
+  <div id="cact"><button class="pbtn alt" id="cresign" hidden>Təslim ol</button></div>
+</div>
 <div id="domino" hidden role="dialog" aria-modal="true" aria-label="Domino">
   <div class="dhead">
     <button class="ib" id="dback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
@@ -1589,9 +1661,10 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       <button class="pbtn" id="dwshare">Dəvət linkini göndər</button>
     </div>
   </div>
+  <div id="dends"></div>
   <div id="dmsg" role="status"></div>
-  <div id="dact"><button class="pbtn" id="ddraw" hidden></button></div>
-  <div id="dres" hidden></div>
+  <div id="dact"><button class="pbtn" id="ddraw" hidden></button><button class="pbtn alt" id="dclaim" hidden>Rəqib gəlmir: oyunu bitir</button></div>
+    <div id="dres" hidden></div>
   <div id="dhand"></div>
 </div>
 <script>window.__ytReady = false; window.onYouTubeIframeAPIReady = function(){ window.__ytReady = true; };</script>
@@ -4276,7 +4349,7 @@ boot();
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
   var ORDER = ['home','plans','friends','hist','settings','profile'], PAGES = ORDER.slice(0,5);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','home'],
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','home'],['#chCard','home'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
     ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
   map.forEach(function(m){
@@ -4670,6 +4743,240 @@ boot();
 })();
 </script>
 <script>
+/* ---------- Şahmat otağı (2 nəfər, onlayn) ---------- */
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var LS = 'wt_chess';
+  var ch = {code: '', v: 0, s: null, sel: null, gen: 0, flashT: null, flashTx: '', to: null};
+  var busy = false, pending = '';
+  var GL = {K: '\u265A', Q: '\u265B', R: '\u265C', B: '\u265D', N: '\u265E', P: '\u265F'};
+  var REASON = {mate: 'Mat', stalemate: 'Pat: gediş yoxdur, bərabərlik', resign: 'Təslim oldu', fifty: '50 gediş qaydası: bərabərlik', repetition: 'Üç dəfə təkrar: bərabərlik', material: 'Mat üçün fiqur çatmır: bərabərlik'};
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
+  function avatar(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function fm(n){ return n % 1 ? n.toFixed(1) : String(n); }
+  function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
+  function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
+  function refreshResume(){ var b = $('chResume'); if(b) b.hidden = !saved(); }
+  function cardMsg(t){ var e = $('chMsg'); if(e) e.textContent = t || ''; }
+  function flash(t){
+    ch.flashTx = t; clearTimeout(ch.flashT);
+    ch.flashT = setTimeout(function(){ ch.flashTx = ''; if(ch.s) renderMsg(); }, 2600);
+    renderMsg();
+  }
+  function colName(c){ return c === 'w' ? 'Ağ' : 'Qara'; }
+
+  function renderStrips(s){
+    var o = s.opp, oc = s.color === 'w' ? 'b' : 'w';
+    $('copp').classList.toggle('turn', s.turn === 'opp');
+    $('cme').classList.toggle('turn', s.turn === 'me');
+    if(!o){
+      $('copp').innerHTML = '<div class="cav">?</div><div class="cwho"><b>Rəqib</b><small>Rəqib gözlənilir...</small></div>';
+    }else{
+      $('copp').innerHTML = '<div class="cav">' + avatar(o) + '</div><div class="cwho"><b>' + esc(o.name) + '</b><small><span class="cdot' + (s.opp_online ? ' on' : '') + '"></span>' + colName(oc) + '</small></div><div class="csc">' + fm(s.score.opp) + '</div>';
+    }
+    var m = s.me || {};
+    $('cme').innerHTML = '<div class="cav">' + avatar(m) + '</div><div class="cwho"><b>' + esc(m.name || 'Sən') + '</b><small>' + (s.color ? colName(s.color) : '') + '</small></div><div class="csc">' + fm(s.score.me) + '</div>';
+  }
+
+  function renderBoard(s){
+    var bd = $('cbd'), wait = $('cwait');
+    var isWait = s.status === 'wait';
+    wait.hidden = !isWait; bd.hidden = isWait;
+    if(isWait){ $('cwcode').textContent = s.code.toUpperCase(); return; }
+    bd.innerHTML = '';
+    var flip = s.color === 'b';
+    var tg = {}, mv = {};
+    s.moves.forEach(function(m){ mv[m[0]] = 1; if(ch.sel === m[0]) tg[m[1]] = 1; });
+    var turnCol = s.turn === 'me' ? s.color : (s.color === 'w' ? 'b' : 'w');
+    var ks = s.check ? s.b.indexOf(turnCol + 'K') : -1;
+    for(var i = 0; i < 64; i++){
+      var sq = flip ? 63 - i : i, r = Math.floor(sq / 8), c = sq % 8, p = s.b[sq];
+      var d = document.createElement('div');
+      d.className = 'csq ' + ((r + c) % 2 ? 'dk' : 'lt') +
+        (ch.sel === sq ? ' sel' : '') +
+        (s.last && (s.last[0] === sq || s.last[1] === sq) ? ' last' : '') +
+        (sq === ks ? ' chk' : '') +
+        (tg[sq] ? ' tgt' + (p ? ' cap' : '') : '');
+      d.setAttribute('data-sq', sq);
+      var h = '';
+      if(i % 8 === 0) h += '<i class="rk">' + (8 - r) + '</i>';
+      if(i >= 56) h += '<i class="fl">' + 'abcdefgh'.charAt(c) + '</i>';
+      if(p) h += '<span class="pc ' + p.charAt(0) + '">' + GL[p.charAt(1)] + '\uFE0E</span>';
+      d.innerHTML = h;
+      bd.appendChild(d);
+    }
+  }
+
+  function renderMsg(){
+    var s = ch.s, e = $('cmsg');
+    if(!s){ e.textContent = ''; return; }
+    if(ch.flashTx){ e.textContent = ch.flashTx; return; }
+    var t = '';
+    if(s.status === 'play'){
+      if(s.turn === 'me') t = s.check ? 'Şah! Sənin növbən' : 'Sənin növbən';
+      else t = s.opp_online ? (s.check ? 'Rəqibə şah! Rəqibin növbəsi...' : 'Rəqibin növbəsi...') : 'Rəqib əlaqədə deyil';
+    }
+    e.textContent = t;
+  }
+
+  function renderRes(s){
+    var box = $('cres'), over = s.status === 'over';
+    box.hidden = !over;
+    $('cresign').hidden = s.status !== 'play';
+    if(!over){ box.innerHTML = ''; return; }
+    var title = s.result === 'me' ? 'Qazandın!' : (s.result === 'opp' ? 'Rəqib qazandı' : 'Bərabərlik');
+    box.innerHTML = '<h3>' + title + '</h3><p>' + esc(REASON[s.reason] || '') + '</p><button class="pbtn" id="cagain">Yenidən oyna (rənglər dəyişir)</button>';
+    $('cagain').onclick = function(){ again(); };
+  }
+
+  function render(){
+    var s = ch.s; if(!s) return;
+    $('ccode').textContent = 'KOD: ' + s.code.toUpperCase();
+    renderStrips(s); renderBoard(s); renderMsg(); renderRes(s);
+    if(!ch.to) $('cpro').hidden = true;
+  }
+
+  function apply(s){
+    var prev = ch.s;
+    if(prev && s.v < prev.v) return;
+    var changed = !prev || s.v !== prev.v || s.opp_online !== prev.opp_online;
+    ch.v = s.v; ch.s = s;
+    if(prev && s.round !== prev.round){ ch.sel = null; ch.to = null; }
+    if(s.turn !== 'me'){ ch.sel = null; ch.to = null; }
+    if(prev && s.v !== prev.v && prev.turn !== 'me' && s.turn === 'me'){ try{ navigator.vibrate && navigator.vibrate(40); }catch(e){} }
+    if(changed) render();
+    remember(s.status === 'wait' ? '' : s.code);
+  }
+
+  async function post(path, body){
+    if(busy || !ch.code) return;
+    busy = true;
+    try{
+      var r = await api('/api/chess/' + path, {method: 'POST', body: JSON.stringify(Object.assign({room: ch.code}, body || {}))});
+      if(r.ok) apply(await r.json()); else flash('Alınmadı, yenidən cəhd et');
+    }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+    busy = false;
+  }
+  function send(f, t, promo){ ch.sel = null; ch.to = null; $('cpro').hidden = true; post('move', {action: 'move', f: f, t: t, promo: promo}); }
+  function again(){ if(ch.s) post('again', {round: ch.s.round}); }
+
+  function tap(sq){
+    var s = ch.s;
+    if(!s || s.status !== 'play' || s.turn !== 'me' || busy) return;
+    if(ch.sel != null && s.moves.some(function(m){ return m[0] === ch.sel && m[1] === sq; })){
+      var p = s.b[ch.sel], row = Math.floor(sq / 8);
+      if(p && p.charAt(1) === 'P' && (row === 0 || row === 7)){
+        ch.to = sq;
+        var box = $('cpro'); box.innerHTML = '';
+        ['Q', 'R', 'B', 'N'].forEach(function(k){
+          var b = document.createElement('button');
+          b.innerHTML = '<span class="pc ' + s.color + '" style="font-size:44px">' + GL[k] + '\uFE0E</span>';
+          b.style.background = s.color === 'w' ? '#9b5b78' : '#f0dccd';
+          b.onclick = function(){ send(ch.sel, ch.to, k); };
+          box.appendChild(b);
+        });
+        box.hidden = false; return;
+      }
+      send(ch.sel, sq, 'Q'); return;
+    }
+    if(s.b[sq] && s.b[sq].charAt(0) === s.color && s.moves.some(function(m){ return m[0] === sq; })) ch.sel = (ch.sel === sq ? null : sq);
+    else ch.sel = null;
+    ch.to = null; $('cpro').hidden = true;
+    renderBoard(s);
+  }
+  $('cbd').addEventListener('click', function(e){ var q = e.target.closest('.csq'); if(q) tap(+q.getAttribute('data-sq')); });
+
+  async function poll(gen){
+    var fails = 0;
+    while(ch.gen === gen){
+      try{
+        var r = await api('/api/chess/poll?room=' + encodeURIComponent(ch.code) + '&v=' + ch.v);
+        if(ch.gen !== gen) return;
+        if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
+        if(!r.ok) throw new Error(String(r.status));
+        apply(await r.json()); fails = 0;
+      }catch(e){
+        if(ch.gen !== gen) return;
+        if(!token){ close(false); return; }
+        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * (++fails))); });
+      }
+    }
+  }
+
+  function open(s){
+    ch.gen++; ch.code = s.code; ch.v = 0; ch.s = null; ch.sel = null; ch.to = null; ch.flashTx = ''; busy = false;
+    $('chess').hidden = false;
+    apply(s);
+    poll(ch.gen);
+  }
+  function close(leave){
+    var c = ch.code, st = ch.s && ch.s.status;
+    ch.gen++; ch.code = ''; ch.s = null;
+    $('chess').hidden = true;
+    if(leave && c) api('/api/chess/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    if(st === 'wait' || st === 'over') remember('');
+  }
+
+  async function enter(code, isCreate){
+    cardMsg('');
+    try{
+      var r = isCreate
+        ? await api('/api/chess/create', {method: 'POST', body: '{}'})
+        : await api('/api/chess/join', {method: 'POST', body: JSON.stringify({room: code})});
+      if(r.ok){ open(await r.json()); return true; }
+      if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
+      else if(r.status === 403) cardMsg('Bu otaq doludur');
+      else if(r.status === 429) cardMsg('Çox sorğu göndərdin, bir az gözlə');
+      else cardMsg('Əlaqə problemi, yenidən cəhd et');
+    }catch(e){ cardMsg('Əlaqə problemi, yenidən cəhd et'); }
+    return false;
+  }
+
+  async function share(){
+    var s = ch.s; if(!s) return;
+    var url = location.origin + '/?chess=' + encodeURIComponent(s.code.toUpperCase());
+    var text = 'Şahmat oynayaq! Kod: ' + s.code.toUpperCase();
+    try{ if(navigator.share){ await navigator.share({title: 'Şahmat', text: text, url: url}); return; } }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(url); flash('Link kopyalandı'); }
+    catch(e){ flash('Kod: ' + s.code.toUpperCase()); }
+  }
+
+  $('chNew').onclick = function(){ enter('', true); };
+  $('chEnter').onclick = function(){
+    var c = clean($('chCodeIn').value);
+    if(!c){ cardMsg('Şahmat kodunu yaz'); return; }
+    enter(c, false);
+  };
+  $('chCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('chEnter').click(); } });
+  $('chResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
+  $('cback').onclick = function(){ close(ch.s && ch.s.status === 'wait'); };
+  $('cshare').onclick = share;
+  $('cwshare').onclick = share;
+  $('cresign').onclick = function(){ if(confirm('Təslim olmaq istəyirsən?')) post('move', {action: 'resign'}); };
+  $('cpro').addEventListener('click', function(e){ if(e.target === this){ ch.to = null; this.hidden = true; } });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && ch.code && !$('chess').hidden){ ch.gen++; var g = ch.gen; ch.v = 0; poll(g); }
+  });
+
+  try{
+    var q = new URLSearchParams(location.search).get('chess');
+    if(q){ pending = clean(q); history.replaceState(null, '', location.pathname); }
+  }catch(e){}
+  if(pending){
+    var tries = 0, iv = setInterval(function(){
+      tries++;
+      var menuOn = false;
+      try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
+      if(token && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      else if(tries > 120) clearInterval(iv);
+    }, 500);
+  }
+  refreshResume();
+})();
+
 /* ---------- Domino otağı (2 nəfər, onlayn) ---------- */
 (function(){
   var $ = function(id){ return document.getElementById(id); };
@@ -4691,7 +4998,7 @@ boot();
     return el;
   }
   function same(a, b){ return a && b && a[0] === b[0] && a[1] === b[1]; }
-  function avatar(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function avatar(p){ if(p && p.username === 'bot') return '\uD83E\uDD16'; return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
   function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
   function refreshResume(){
@@ -4862,7 +5169,7 @@ boot();
     var t = '';
     if(s.status === 'play'){
       if(s.turn === 'me') t = s.moves.length ? 'Sənin növbən: daş seç' : (s.can_draw ? 'Gedişin yoxdur, bazardan daş çək' : '');
-      else t = s.opp_online ? 'Rəqibin növbəsi...' : 'Rəqib əlaqədə deyil';
+      else t = s.bot ? 'Kompüter düşünür...' : (s.opp_online ? 'Rəqibin növbəsi...' : 'Rəqib əlaqədə deyil');
     }
     e.textContent = t;
   }
@@ -4874,7 +5181,7 @@ boot();
     if(!over){ box.innerHTML = ''; return; }
     var title = s.match ? (s.match === 'me' ? 'Oyunu qazandın!' : 'Rəqib oyunu qazandı')
       : (s.result === 'me' ? 'Qazandın!' : (s.result === 'opp' ? 'Rəqib qazandı' : 'Bərabərlik'));
-    var why = s.reason === 'out' ? 'Bütün daşlar bitdi' : 'Oyun bloklandı, daşların cəminə görə';
+    var why = s.reason === 'out' ? 'Bütün daşlar bitdi' : (s.reason === 'left' ? (s.result === 'me' ? 'Rəqib oyundan çıxdı' : 'Oyundan çıxdın') : 'Oyun bloklandı, daşların cəminə görə');
     var pts = s.pts ? '<div class="dpts">' + (s.result === 'opp' ? '<span>Rəqib</span> ' : '') + '+' + s.pts + ' <span>xal</span></div>' : '';
     box.innerHTML = '<h3>' + title + '</h3>' + pts + '<p>' + why + '</p><div class="dleft"></div><button class="pbtn" id="dagain">' + (s.match ? 'Yeni oyun' : 'Növbəti raund') + '</button>';
     var L = box.querySelector('.dleft');
@@ -4887,12 +5194,27 @@ boot();
     var show = s.status === 'play' && s.can_draw;
     b.hidden = !show;
     if(show) b.innerHTML = '<span>Bazardan daş çək</span> <b>' + s.stock + '</b>';
+    $('dclaim').hidden = !(s.status === 'play' && s.turn === 'opp' && !s.opp_online);
+  }
+
+  /* açıq uclar + əlindəki xal */
+  function renderExtra(s){
+    var e = $('dends'), t = '';
+    if(s.status === 'play' || s.status === 'over'){
+      if(s.board.length) t += 'Açıq uclar: <b>' + s.board[0][0] + '</b> · <b>' + s.board[s.board.length - 1][1] + '</b>';
+      if(s.status === 'play' && s.hand.length){
+        var sum = s.hand.reduce(function(a, x){ return a + x[0] + x[1]; }, 0);
+        t += (t ? ' &nbsp;|&nbsp; ' : '') + 'Əlindəki xal: <b>' + sum + '</b>';
+      }
+    }
+    e.innerHTML = t;
   }
 
   function render(){
     var s = dom.s; if(!s) return;
     $('dcode').textContent = 'KOD: ' + s.code.toUpperCase();
-    renderStrip(s); renderBoard(s); renderHand(s); renderMsg(); renderRes(s); renderAct(s);
+    renderStrip(s); renderBoard(s); renderHand(s); renderMsg(); renderRes(s); renderAct(s); renderExtra(s);
+    $('dshare').hidden = !!s.bot;
   }
 
   /* ---- vəziyyət ---- */
@@ -4911,6 +5233,7 @@ boot();
         else if(s.note.k === 'draw' && !s.note.mine) flash('Rəqib bazardan daş çəkdi');
       }
     }
+    if(s.bot && s.status === 'play' && s.turn === 'opp') scheduleBot();
     if(changed) render();
     remember(s.status === 'wait' ? '' : s.code);
   }
@@ -4923,6 +5246,20 @@ boot();
       if(r.ok) apply(await r.json()); else flash('Alınmadı, yenidən cəhd et');
     }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
     busy = false;
+  }
+  function scheduleBot(){
+    clearTimeout(dom.bt);
+    var g = dom.gen;
+    dom.bt = setTimeout(async function(){
+      if(dom.gen !== g || !dom.code) return;
+      if(busy){ scheduleBot(); return; }
+      busy = true;
+      try{
+        var r = await api('/api/domino/bot', {method: 'POST', body: JSON.stringify({room: dom.code})});
+        if(dom.gen === g && r.ok) apply(await r.json());
+      }catch(e){ if(dom.gen === g) setTimeout(scheduleBot, 1500); }
+      busy = false;
+    }, 800 + Math.random() * 700);
   }
   async function again(){
     if(!dom.s || busy) return;
@@ -4972,7 +5309,7 @@ boot();
   }
   function close(leave){
     var c = dom.code, st = dom.s && dom.s.status;
-    dom.gen++; dom.code = ''; dom.s = null;
+    dom.gen++; dom.code = ''; dom.s = null; clearTimeout(dom.bt);
     $('domino').hidden = true;
     if(leave && c){
       api('/api/domino/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
@@ -4980,11 +5317,11 @@ boot();
     if(st === 'wait' || st === 'over') remember('');
   }
 
-  async function enter(code, isCreate){
+  async function enter(code, isCreate, bot){
     cardMsg('');
     try{
       var r = isCreate
-        ? await api('/api/domino/create', {method: 'POST', body: '{}'})
+        ? await api('/api/domino/create', {method: 'POST', body: bot ? '{"bot":true}' : '{}'})
         : await api('/api/domino/join', {method: 'POST', body: JSON.stringify({room: code})});
       if(r.ok){ open(await r.json()); return true; }
       if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
@@ -5008,6 +5345,7 @@ boot();
 
   /* ---- düymələr ---- */
   $('domNew').onclick = function(){ enter('', true); };
+  $('domBot').onclick = function(){ enter('', true, true); };
   $('domEnter').onclick = function(){
     var c = clean($('domCodeIn').value);
     if(!c){ cardMsg('Domino kodunu yaz'); return; }
@@ -5016,12 +5354,20 @@ boot();
   $('domCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('domEnter').click(); } });
   $('domResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
   $('dback').onclick = function(){
-    var st = dom.s && dom.s.status;
-    close(st === 'wait');
+    close(true);      /* oyundan çıxanda server rəqibə dərhal "əlaqədə deyil" göstərsin */
   };
   $('dshare').onclick = share;
   $('dwshare').onclick = share;
   $('ddraw').onclick = function(){ act('draw'); };
+  $('dclaim').onclick = async function(){
+    if(!dom.code || busy) return;
+    busy = true;
+    try{
+      var r = await api('/api/domino/claim', {method: 'POST', body: JSON.stringify({room: dom.code})});
+      if(r.ok){ apply(await r.json()); if(dom.s && dom.s.status === 'play') flash('Rəqibə 1 dəqiqə vaxt ver, sonra yenə bas'); }
+    }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+    busy = false;
+  };
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible' && dom.code && !$('domino').hidden){
       var c = dom.code; dom.gen++; var g = dom.gen; dom.v = 0; poll(g);      // telefon yatıbsa, yenidən qoşul

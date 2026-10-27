@@ -1,5 +1,6 @@
 import os, re, json, base64, time, secrets, threading, ipaddress, socket, sqlite3, smtplib, hashlib, hmac, shutil, datetime, zlib, struct, html as htmllib
 from urllib.parse import urlparse, urljoin, parse_qs
+import random
 import requests
 from werkzeug.exceptions import HTTPException
 from email.message import EmailMessage
@@ -2537,6 +2538,7 @@ DOMINO = {}
 DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
 DOM_MAX = 200
 DOM_TARGET = 101             # ilk bu xala çatan oyunu qazanır
+DOM_CLAIM = 60               # rəqib bu qədər saniyə yoxdursa, oyunu bitirmək olar
 
 
 def _dom_other(g, sub):
@@ -2638,6 +2640,71 @@ def _dom_settle(g):
         g["turn"] = _dom_other(g, cur)
 
 
+def _dom_do_play(g, who, t, end):
+    """Daşı qoyur (server qaydaları ilə). Uğurludursa True."""
+    hand = g["hands"][who]
+    mv = next((m for m in _dom_moves(g, hand) if m["t"] == t), None)
+    if not mv:
+        return False
+    if end not in mv["e"]:
+        end = mv["e"][0]
+    a, b = t
+    bd = g["board"]
+    if not bd:
+        bd.append([a, b])
+        g["cx"] = 0
+    elif end == "L":
+        bd.insert(0, [a, b] if b == bd[0][0] else [b, a])
+        g["cx"] = g.get("cx", 0) + 1
+    else:
+        bd.append([a, b] if a == bd[-1][1] else [b, a])
+    hand.remove(t)
+    g["passes"] = 0
+    g["last"] = {"who": who, "t": t}
+    if not hand:
+        _dom_finish(g, who, "out")
+    else:
+        g["turn"] = _dom_other(g, who)
+        _dom_settle(g)
+    return True
+
+
+def _dom_do_draw(g, who):
+    hand = g["hands"][who]
+    if _dom_moves(g, hand) or not g["stock"]:
+        return False
+    hand.append(g["stock"].pop())
+    hand.sort()
+    g["note"] = {"who": who, "k": "draw"}
+    _dom_settle(g)
+    return True
+
+
+def _dom_bot_step(g):
+    """Kompüterin bir hərəkəti: ən yaxşı daşı qoyur, yoxdursa bazardan çəkir."""
+    hand = g["hands"]["bot"]
+    mv = _dom_moves(g, hand)
+    if not mv:
+        _dom_do_draw(g, "bot")
+        return
+    bd = g["board"]
+    best = None
+    for m in mv:
+        t = m["t"]
+        for e in m["e"]:
+            rest = [x for x in hand if x != t]
+            if not bd:
+                new_end = t[1]
+            else:
+                end_val = bd[0][0] if e == "L" else bd[-1][1]
+                new_end = t[1] if t[0] == end_val else t[0]
+            keep = sum(1 for x in rest if new_end in x)           # açıq ucda əlimizdə neçə daş davam edir
+            score = t[0] + t[1] + (3 if t[0] == t[1] else 0) + 2 * keep + random.random()
+            if best is None or score > best[0]:
+                best = (score, t, e)
+    _dom_do_play(g, "bot", best[1], best[2])
+
+
 def _dom_touch(g):
     g["v"] += 1
     g["upd"] = time.time()
@@ -2657,9 +2724,9 @@ def _dom_view(g, sub):
         turn=(("me" if g["turn"] == sub else "opp") if st == "play" else None),
         opp_n=len(g["hands"].get(opp, [])) if opp else 0,
         me=g["names"].get(sub), opp=g["names"].get(opp) if opp else None,
-        opp_online=bool(opp and now - g["seen"].get(opp, 0) < 35),
+        opp_online=bool(opp and (opp == "bot" or now - g["seen"].get(opp, 0) < 35)),
         score=dict(me=g["score"].get(sub, 0), opp=g["score"].get(opp, 0) if opp else 0),
-        last=g["last"], reason=g["reason"], target=DOM_TARGET,
+        last=g["last"], reason=g["reason"], target=DOM_TARGET, bot=bool(g.get("bot")),
     )
     if g["note"]:
         out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"]}
@@ -2693,6 +2760,7 @@ def api_domino_create():
     sub, tok = auth_sub()
     if not rate_hit("domc", sub, 12, 60):
         abort(429)
+    vs_bot = bool((request.get_json(silent=True) or {}).get("bot"))
     nm = _dom_names(tok)
     now = time.time()
     with CV:
@@ -2708,6 +2776,12 @@ def api_domino_create():
         g = dict(code=c, players=[sub], names={sub: nm}, hands={}, stock=[], board=[], turn=None,
                  status="wait", winner=None, reason="", passes=0, v=1, round=1, score={},
                  seen={sub: now}, upd=now, last=None, note=None, pts=0, match=None)
+        if vs_bot:
+            g["players"].append("bot")
+            g["names"]["bot"] = dict(name="Kompüter", username="bot", avatar="", badge=None)
+            g["seen"]["bot"] = now
+            g["bot"] = True
+            _dom_deal(g)
         DOMINO[c] = g
         return jsonify(_dom_view(g, sub))
 
@@ -2788,36 +2862,11 @@ def api_domino_move():
                 abort(400)
             if len(t) != 2 or not all(0 <= x <= 6 for x in t) or t not in hand:
                 abort(400)
-            mv = next((m for m in _dom_moves(g, hand) if m["t"] == t), None)
-            if not mv:
+            if not _dom_do_play(g, sub, t, end):
                 abort(400)
-            if end not in mv["e"]:
-                end = mv["e"][0]
-            a, b = t
-            bd = g["board"]
-            if not bd:
-                bd.append([a, b])
-                g["cx"] = 0
-            elif end == "L":
-                bd.insert(0, [a, b] if b == bd[0][0] else [b, a])
-                g["cx"] = g.get("cx", 0) + 1
-            else:
-                bd.append([a, b] if a == bd[-1][1] else [b, a])
-            hand.remove(t)
-            g["passes"] = 0
-            g["last"] = {"who": sub, "t": t}
-            if not hand:
-                _dom_finish(g, sub, "out")
-            else:
-                g["turn"] = _dom_other(g, sub)
-                _dom_settle(g)
         elif act == "draw":
-            if _dom_moves(g, hand) or not g["stock"]:
+            if not _dom_do_draw(g, sub):
                 abort(400)
-            hand.append(g["stock"].pop())
-            hand.sort()
-            g["note"] = {"who": sub, "k": "draw"}
-            _dom_settle(g)
         else:
             abort(400)
         _dom_touch(g)
@@ -2858,6 +2907,414 @@ def api_domino_leave():
             g["seen"][sub] = 0
             _dom_touch(g)
     return jsonify(ok=True)
+
+
+# ---------------------------------------------------------------
+#  Şahmat otağı: 2 nəfərlik onlayn oyun. Bütün qaydalar serverdə yoxlanılır
+#  (rok, en passant, piyada yüksəlişi, şah/mat/pat, təkrar, 50 gediş).
+# ---------------------------------------------------------------
+CHESS = {}
+CH_MAX = 200
+_CN = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+_CK = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+_CR = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+_CB = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+
+
+def _ch_start():
+    back = "RNBQKBNR"
+    b = [None] * 64
+    for c in range(8):
+        b[c] = "b" + back[c]
+        b[8 + c] = "bP"
+        b[48 + c] = "wP"
+        b[56 + c] = "w" + back[c]
+    return b
+
+
+def _ch_att(b, sq, by):
+    r, c = divmod(sq, 8)
+    pr = r + (1 if by == "w" else -1)
+    for dc in (-1, 1):
+        if 0 <= pr < 8 and 0 <= c + dc < 8 and b[pr * 8 + c + dc] == by + "P":
+            return True
+    for pc, offs in (("N", _CN), ("K", _CK)):
+        for dr, dc in offs:
+            rr, cc = r + dr, c + dc
+            if 0 <= rr < 8 and 0 <= cc < 8 and b[rr * 8 + cc] == by + pc:
+                return True
+    for dirs, pcs in ((_CR, "RQ"), (_CB, "BQ")):
+        for dr, dc in dirs:
+            rr, cc = r + dr, c + dc
+            while 0 <= rr < 8 and 0 <= cc < 8:
+                p = b[rr * 8 + cc]
+                if p:
+                    if p[0] == by and p[1] in pcs:
+                        return True
+                    break
+                rr += dr
+                cc += dc
+    return False
+
+
+def _ch_pseudo(g):
+    b, me = g["b"], g["turn"]
+    op = "b" if me == "w" else "w"
+    out = []
+    for sq in range(64):
+        p = b[sq]
+        if not p or p[0] != me:
+            continue
+        r, c = divmod(sq, 8)
+        k = p[1]
+        if k == "P":
+            d = -1 if me == "w" else 1
+            start = 6 if me == "w" else 1
+            rr = r + d
+            if 0 <= rr < 8:
+                if not b[rr * 8 + c]:
+                    out.append((sq, rr * 8 + c))
+                    if r == start and not b[(r + 2 * d) * 8 + c]:
+                        out.append((sq, (r + 2 * d) * 8 + c))
+                for dc in (-1, 1):
+                    cc = c + dc
+                    if 0 <= cc < 8:
+                        t = rr * 8 + cc
+                        if (b[t] and b[t][0] == op) or (t == g["ep"] and not b[t]):
+                            out.append((sq, t))
+        elif k in "NK":
+            for dr, dc in (_CN if k == "N" else _CK):
+                rr, cc = r + dr, c + dc
+                if 0 <= rr < 8 and 0 <= cc < 8:
+                    t = rr * 8 + cc
+                    if not b[t] or b[t][0] == op:
+                        out.append((sq, t))
+            home = 60 if me == "w" else 4
+            if k == "K" and sq == home and not _ch_att(b, sq, op):
+                ks, qs = ("K", "Q") if me == "w" else ("k", "q")
+                cr = g["cr"]
+                if ks in cr and not b[sq + 1] and not b[sq + 2] and b[sq + 3] == me + "R" \
+                        and not _ch_att(b, sq + 1, op) and not _ch_att(b, sq + 2, op):
+                    out.append((sq, sq + 2))
+                if qs in cr and not b[sq - 1] and not b[sq - 2] and not b[sq - 3] and b[sq - 4] == me + "R" \
+                        and not _ch_att(b, sq - 1, op) and not _ch_att(b, sq - 2, op):
+                    out.append((sq, sq - 2))
+        else:
+            dirs = _CR if k == "R" else (_CB if k == "B" else _CR + _CB)
+            for dr, dc in dirs:
+                rr, cc = r + dr, c + dc
+                while 0 <= rr < 8 and 0 <= cc < 8:
+                    t = rr * 8 + cc
+                    if not b[t]:
+                        out.append((sq, t))
+                    else:
+                        if b[t][0] == op:
+                            out.append((sq, t))
+                        break
+                    rr += dr
+                    cc += dc
+    return out
+
+
+def _ch_do(b, f, t, promo, ep):
+    b = b[:]
+    p = b[f]
+    if p[1] == "P" and t == ep and f % 8 != t % 8 and not b[t]:
+        b[(f // 8) * 8 + t % 8] = None
+    if p[1] == "K" and abs(t - f) == 2:
+        if t > f:
+            b[f + 1], b[f + 3] = b[f + 3], None
+        else:
+            b[f - 1], b[f - 4] = b[f - 4], None
+    b[t] = p
+    b[f] = None
+    if p[1] == "P" and t // 8 in (0, 7):
+        b[t] = p[0] + (promo if promo in ("Q", "R", "B", "N") else "Q")
+    return b
+
+
+def _ch_legal(g):
+    me = g["turn"]
+    op = "b" if me == "w" else "w"
+    res = []
+    for f, t in _ch_pseudo(g):
+        nb = _ch_do(g["b"], f, t, "Q", g["ep"])
+        if not _ch_att(nb, nb.index(me + "K"), op):
+            res.append((f, t))
+    return res
+
+
+def _ch_sub(g, col):
+    return next((s for s, c in g["col"].items() if c == col), None)
+
+
+def _ch_end(g, win, reason):
+    g["status"] = "over"
+    g["reason"] = reason
+    g["win"] = win
+    sc = g["score"]
+    if win:
+        sc[win] = sc.get(win, 0) + 1
+    else:
+        for p in g["players"]:
+            sc[p] = sc.get(p, 0) + 0.5
+
+
+def _ch_play(g, f, t, promo):
+    b, me = g["b"], g["turn"]
+    p = b[f]
+    cap = b[t] is not None or (p[1] == "P" and t == g["ep"] and f % 8 != t % 8)
+    nb = _ch_do(b, f, t, promo, g["ep"])
+    cr = g["cr"]
+    for sq, fl in ((60, "KQ"), (63, "K"), (56, "Q"), (4, "kq"), (7, "k"), (0, "q")):
+        if f == sq or t == sq:
+            for ch in fl:
+                cr = cr.replace(ch, "")
+    g["cr"] = cr
+    g["ep"] = (f + t) // 2 if p[1] == "P" and abs(t - f) == 16 else None
+    g["hm"] = 0 if (p[1] == "P" or cap) else g["hm"] + 1
+    g["b"] = nb
+    g["last"] = [f, t]
+    g["turn"] = nxt = "b" if me == "w" else "w"
+    key = (tuple(nb), nxt, cr, g["ep"])
+    g["rep"][key] = g["rep"].get(key, 0) + 1
+    chk = _ch_att(nb, nb.index(nxt + "K"), me)
+    g["check"] = chk
+    if not _ch_legal(g):
+        if chk:
+            _ch_end(g, _ch_sub(g, me), "mate")
+        else:
+            _ch_end(g, None, "stalemate")
+        return
+    pcs = [x for x in nb if x and x[1] != "K"]
+    if g["hm"] >= 100:
+        _ch_end(g, None, "fifty")
+    elif g["rep"][key] >= 3:
+        _ch_end(g, None, "repetition")
+    elif not pcs or (len(pcs) == 1 and pcs[0][1] in "NB"):
+        _ch_end(g, None, "material")
+
+
+def _ch_reset(g, swap=False):
+    a, b = g["players"][0], g["players"][1]
+    if swap:
+        g["col"] = {a: g["col"][b], b: g["col"][a]}
+    else:
+        x = secrets.choice("wb")
+        g["col"] = {a: x, b: "b" if x == "w" else "w"}
+    g.update(b=_ch_start(), turn="w", cr="KQkq", ep=None, hm=0, rep={}, last=None,
+             check=False, win=None, reason="", status="play")
+
+
+def _ch_cleanup(now):
+    for c in [c for c, g in CHESS.items() if now - g["upd"] > DOM_IDLE]:
+        CHESS.pop(c, None)
+
+
+def _ch_get(code, sub):
+    g = CHESS.get(code)
+    if not g or sub not in g["players"]:
+        abort(404)
+    return g
+
+
+def _ch_view(g, sub):
+    opp = _dom_other(g, sub)
+    now = time.time()
+    st = g["status"]
+    col = g["col"].get(sub)
+    mine = st == "play" and g["turn"] == col
+    out = dict(
+        v=g["v"], code=g["code"], status=st, round=g["round"], color=col,
+        b=g["b"] if st != "wait" else [], check=g["check"] if st != "wait" else False,
+        moves=[list(m) for m in _ch_legal(g)] if mine else [],
+        turn=(("me" if mine else "opp") if st == "play" else None),
+        me=g["names"].get(sub), opp=g["names"].get(opp) if opp else None,
+        opp_online=bool(opp and now - g["seen"].get(opp, 0) < 35),
+        score=dict(me=g["score"].get(sub, 0), opp=g["score"].get(opp, 0) if opp else 0),
+        last=g["last"], reason=g["reason"],
+    )
+    if st == "over":
+        out["result"] = "draw" if not g["win"] else ("me" if g["win"] == sub else "opp")
+    return out
+
+
+@app.route("/api/chess/create", methods=["POST"])
+def api_chess_create():
+    sub, tok = auth_sub()
+    if not rate_hit("chc", sub, 12, 60):
+        abort(429)
+    nm = _dom_names(tok)
+    now = time.time()
+    with CV:
+        _ch_cleanup(now)
+        if len(CHESS) >= CH_MAX:
+            abort(503)
+        for _ in range(50):
+            c = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
+            if c not in CHESS:
+                break
+        else:
+            abort(503)
+        g = dict(code=c, players=[sub], names={sub: nm}, col={}, b=[], turn="w", cr="", ep=None, hm=0,
+                 rep={}, last=None, check=False, win=None, reason="", status="wait", v=1, round=1,
+                 score={}, seen={sub: now}, upd=now)
+        CHESS[c] = g
+        return jsonify(_ch_view(g, sub))
+
+
+@app.route("/api/chess/join", methods=["POST"])
+def api_chess_join():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    if not code:
+        abort(400)
+    nm = _dom_names(tok)
+    now = time.time()
+    with CV:
+        g = CHESS.get(code)
+        if not g:
+            abort(404)
+        if sub not in g["players"]:
+            if len(g["players"]) >= 2:
+                return jsonify(error="full"), 403
+            g["players"].append(sub)
+            g["names"][sub] = nm
+            _ch_reset(g)
+            _dom_touch(g)
+        else:
+            g["names"][sub] = nm
+        g["seen"][sub] = now
+        return jsonify(_ch_view(g, sub))
+
+
+@app.route("/api/chess/poll")
+def api_chess_poll():
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    try:
+        v = int(request.args.get("v", "0"))
+    except ValueError:
+        abort(400)
+    deadline = time.time() + 20
+    with CV:
+        g = _ch_get(code, sub)
+        now = time.time()
+        if now - g["seen"].get(sub, 0) > 30:
+            g["seen"][sub] = now
+            _dom_touch(g)
+        g["seen"][sub] = now
+        while g["v"] == v:
+            left = deadline - time.time()
+            if left <= 0:
+                break
+            CV.wait(timeout=left)
+            g = CHESS.get(code)
+            if not g:
+                abort(404)
+            g["seen"][sub] = time.time()
+        resp = jsonify(_ch_view(g, sub))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/api/chess/move", methods=["POST"])
+def api_chess_move():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    act = str(d.get("action", "move"))
+    with CV:
+        g = _ch_get(code, sub)
+        g["seen"][sub] = time.time()
+        if g["status"] != "play":
+            return jsonify(_ch_view(g, sub))
+        me = g["col"][sub]
+        if act == "resign":
+            _ch_end(g, _ch_sub(g, "b" if me == "w" else "w"), "resign")
+        elif act == "move":
+            if g["turn"] != me:
+                return jsonify(_ch_view(g, sub))
+            try:
+                f, t = int(d.get("f")), int(d.get("t"))
+            except (TypeError, ValueError):
+                abort(400)
+            if (f, t) not in _ch_legal(g):
+                abort(400)
+            _ch_play(g, f, t, str(d.get("promo") or "Q")[:1].upper())
+        else:
+            abort(400)
+        _dom_touch(g)
+        return jsonify(_ch_view(g, sub))
+
+
+@app.route("/api/chess/again", methods=["POST"])
+def api_chess_again():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    with CV:
+        g = _ch_get(code, sub)
+        g["seen"][sub] = time.time()
+        try:
+            rd = int(d.get("round", 0))
+        except (TypeError, ValueError):
+            rd = 0
+        if g["status"] == "over" and rd == g["round"] and len(g["players"]) == 2:
+            g["round"] += 1
+            _ch_reset(g, swap=True)
+            _dom_touch(g)
+        return jsonify(_ch_view(g, sub))
+
+
+@app.route("/api/chess/leave", methods=["POST"])
+def api_chess_leave():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = CHESS.get(code)
+        if g and sub in g["players"] and g["status"] == "wait":
+            CHESS.pop(code, None)
+        elif g and sub in g["players"]:
+            g["seen"][sub] = 0
+            g.setdefault("gone", {})[sub] = time.time()
+            _dom_touch(g)
+    return jsonify(ok=True)
+
+
+@app.route("/api/domino/bot", methods=["POST"])
+def api_domino_bot():
+    """Kompüterin növbəsi: client gecikmə ilə çağırır, hər çağırış bir hərəkətdir."""
+    sub, tok = auth_sub()
+    if not rate_hit("domb", sub, 240, 60):
+        abort(429)
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = _dom_get(code, sub)
+        g["seen"][sub] = time.time()
+        if g.get("bot") and g["status"] == "play" and g["turn"] == "bot":
+            g["note"] = None
+            _dom_bot_step(g)
+            _dom_touch(g)
+        return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/claim", methods=["POST"])
+def api_domino_claim():
+    """Rəqib DOM_CLAIM saniyədən çox yoxdursa və növbə onundursa, oyunu bitirir."""
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = _dom_get(code, sub)
+        now = time.time()
+        opp = _dom_other(g, sub)
+        if g["status"] == "play" and opp and opp != "bot" and g["turn"] == opp:
+            last = g["seen"].get(opp, 0) or g.get("gone", {}).get(opp, 0)
+            if now - last > DOM_CLAIM:
+                _dom_finish(g, sub, "left")
+                _dom_touch(g)
+        g["seen"][sub] = now
+        return jsonify(_dom_view(g, sub))
 
 
 if __name__ == "__main__":
