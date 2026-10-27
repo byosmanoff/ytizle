@@ -1319,6 +1319,20 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #profile .pav-edit-menu #pavdel[hidden]{display:none!important}
 #avatarcrop h2,#avatarcrop .crop-help,#avatarcrop label{line-height:1.45}
 @media(max-width:380px){#avatarcrop{padding:12px}#avatarcrop .crop-card{padding:16px}#cropcanvas{width:min(100%,270px)}}
+
+/* Profil şəklinin sağındakı boşluğu hesab kartı ilə doldur */
+#profile #profile-account-row{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:start;gap:14px;width:100%;min-width:0}
+#profile #profile-account-row .pavbox{width:86px;min-width:0;padding:8px 0 0;display:flex;justify-content:center;align-items:flex-start}
+#profile #profile-account-row .account-card{min-width:0;width:100%;padding:16px 14px;border-radius:20px}
+#profile #profile-account-row .account-card h2{margin-bottom:12px}
+#profile #profile-account-row .fld{min-width:0;margin-bottom:13px}
+#profile #profile-account-row .frow{min-width:0;gap:6px}
+#profile #profile-account-row .frow input{width:100%;min-width:0;padding:0 10px;font-size:14px}
+#profile #profile-account-row .at{flex:none}
+#profile #profile-account-row .hint{font-size:12px;overflow-wrap:anywhere}
+@media(min-width:700px){#profile #profile-account-row{grid-template-columns:112px minmax(0,1fr);gap:18px}#profile #profile-account-row .pavbox{width:112px}#profile #profile-account-row .pav-edit-wrap{transform:scale(1.08);transform-origin:top center}}
+@media(max-width:360px){#profile #profile-account-row{grid-template-columns:72px minmax(0,1fr);gap:9px}#profile #profile-account-row .pavbox,#profile #profile-account-row .pav-edit-wrap{width:72px;height:72px}#profile #profile-account-row #pav.av.big{width:72px;height:72px;min-width:72px;font-size:28px}#profile #profile-account-row .account-card{padding:13px 10px}#profile #profile-account-row .frow input{font-size:13px}}
+
 </style>
 </head>
 <body>
@@ -1541,18 +1555,19 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <h1>Profil</h1>
     <button type="button" class="ib profile-settings" id="profilesettings" aria-label="Ayarlar" title="Ayarlar"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
   </div>
-  <div class="pavbox">
-    <div class="pav-edit-wrap" id="pavEditWrap">
-      <button type="button" class="av big" id="pav" aria-label="Profil şəklini redaktə et" title="Profil şəklini redaktə et" aria-expanded="false">?</button>
-      <button type="button" class="pav-pencil" id="pavmenuopen" aria-label="Şəkil əməliyyatlarını aç" title="Şəkil əməliyyatları" aria-expanded="false"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
-      <div class="pav-edit-menu" id="pavmenu" hidden>
-        <button type="button" id="pavpick"><i class="fa-regular fa-image" aria-hidden="true"></i><span>Şəkli dəyiş</span></button>
-        <button type="button" id="pavdel" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Şəkli sil</span></button>
+  <div id="profile-account-row">
+    <div class="pavbox">
+      <div class="pav-edit-wrap" id="pavEditWrap">
+        <button type="button" class="av big" id="pav" aria-label="Profil şəklini redaktə et" title="Profil şəklini redaktə et" aria-expanded="false">?</button>
+        <button type="button" class="pav-pencil" id="pavmenuopen" aria-label="Şəkil əməliyyatlarını aç" title="Şəkil əməliyyatları" aria-expanded="false"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+        <div class="pav-edit-menu" id="pavmenu" hidden>
+          <button type="button" id="pavpick"><i class="fa-regular fa-image" aria-hidden="true"></i><span>Şəkli dəyiş</span></button>
+          <button type="button" id="pavdel" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Şəkli sil</span></button>
+        </div>
       </div>
+      <input type="file" id="pfile" accept="image/*" hidden>
     </div>
-    <input type="file" id="pfile" accept="image/*" hidden>
-  </div>
-  <div class="card">
+    <div class="card account-card">
     <h2>Hesab</h2>
     <div class="fld">
       <label for="pname">Ad</label>
@@ -1568,6 +1583,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave" hidden>Saxla</button></div>
     </div>
     <button class="pbtn" id="psaveall" style="width:100%;padding:13px;margin-top:6px" disabled>Saxla</button>
+    </div>
   </div>
   <div class="card">
     <h2>Gizlilik</h2>
@@ -5141,7 +5157,18 @@ boot();
   document.getElementById('setlang').addEventListener('click', function(e){
     var b = e.target.closest('button[data-l]'); if(b) setLang(b.getAttribute('data-l'), true);
   });
-  var sv = 'az'; try{ sv = localStorage.getItem('wt_lang_v2') || 'az'; }catch(e){}
+  /* İlk açılışda Azərbaycan dili defoltdur. Köhnə versiyadan qalmış en/tr seçimini
+     bir dəfə sıfırla; bundan sonra istifadəçinin öz seçimini yadda saxla. */
+  var sv = 'az';
+  try{
+    if(localStorage.getItem('wt_lang_default_az_v3') !== '1'){
+      localStorage.setItem('wt_lang_v2', 'az');
+      localStorage.setItem('wt_lang_default_az_v3', '1');
+      sv = 'az';
+    } else {
+      sv = localStorage.getItem('wt_lang_v2') || 'az';
+    }
+  }catch(e){ sv = 'az'; }
   setLang(sv === 'tr' || sv === 'en' ? sv : 'az', false);
 })();
 </script>
