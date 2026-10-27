@@ -720,6 +720,7 @@ body.invoice #vmic{display:none}
 .fr .tx{flex:1;min-width:0;font-size:13px;line-height:1.3;color:var(--muted)}
 .fr .tx b{display:block;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fb{flex:none;padding:8px 13px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:13px}
+.presence{display:block!important;font-size:11px;color:var(--muted);margin-top:3px}.presence.online{color:#279a62;font-weight:700}#pbpresence{font-size:12px;margin:5px 0;color:var(--muted)}#pbpresence.online{color:#279a62;font-weight:700}#blockedlist{display:grid;gap:8px}#pbBlock{background:#b02a52;color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
 .fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
 .ftag{flex:none;color:var(--muted);font-size:12px;font-weight:600}
 .fsub{margin:12px 0 2px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -1234,6 +1235,31 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #dres .dlab{font-size:12px;color:var(--muted);margin:2px 0 4px}
 #dres .dleftw{margin-bottom:10px}
 #dres .dleftw .dleft{margin-bottom:6px}
+
+
+/* Saytın fonuna uyğun daxili seçim pəncərələri — mobil brauzerin standart siyahısı istifadə edilmir */
+.site-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;left:-9999px!important}
+.site-select-wrap{position:relative;width:100%;min-width:0}
+.site-select-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:46px;padding:11px 14px;border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035)),var(--velvet-2);color:var(--text);text-align:left;box-shadow:inset 0 0 0 1.5px var(--line),0 7px 18px rgba(0,0,0,.12);font:inherit;transition:box-shadow .18s,background .18s}
+.site-select-trigger:focus-visible,.site-select-trigger[aria-expanded="true"]{box-shadow:inset 0 0 0 1.5px var(--rose),0 0 0 3px rgba(255,196,107,.18)}
+.site-select-trigger .sst-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site-select-trigger .sst-chevron{color:var(--muted);font-size:13px;transition:transform .18s}
+.site-select-trigger[aria-expanded="true"] .sst-chevron{transform:rotate(180deg);color:var(--rose)}
+#siteSelectLayer{position:fixed;inset:0;z-index:10000;display:none;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom));background:rgba(8,4,13,.58);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+#siteSelectLayer.open{display:flex;animation:ssFade .16s ease-out}
+.site-select-sheet{width:min(100%,520px);max-height:min(72dvh,620px);overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:28px;background:linear-gradient(155deg,rgba(71,43,91,.97),rgba(29,15,40,.985) 58%,rgba(48,23,52,.98));box-shadow:0 24px 70px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.13);padding:8px;transform:translateY(8px);animation:ssRise .2s ease-out forwards}
+.site-select-heading{padding:12px 14px 14px;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.02em}
+.site-select-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:62px;padding:15px 16px;border-radius:17px;background:transparent;color:var(--text);text-align:left;font:inherit;font-size:18px;border:1px solid transparent}
+.site-select-option+.site-select-option{margin-top:3px}
+.site-select-option:active{transform:scale(.99)}
+.site-select-option.selected{background:linear-gradient(110deg,rgba(255,122,156,.19),rgba(255,196,107,.075));border-color:rgba(255,122,156,.27);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.site-select-option .ss-check{display:grid;place-items:center;flex:none;width:25px;height:25px;border:2px solid rgba(246,236,247,.48);border-radius:50%;color:transparent;font-size:12px}
+.site-select-option.selected .ss-check{border-color:var(--rose);background:var(--rose-deep);color:#fff;box-shadow:0 0 0 4px rgba(255,122,156,.12)}
+@keyframes ssFade{from{opacity:0}to{opacity:1}}
+@keyframes ssRise{to{transform:translateY(0)}}
+@media(min-width:700px){#siteSelectLayer{align-items:center}.site-select-sheet{max-height:70dvh}}
+@media(prefers-reduced-motion:reduce){#siteSelectLayer,.site-select-sheet{animation:none}.site-select-trigger,.site-select-trigger .sst-chevron{transition:none}}
+
 </style>
 </head>
 <body>
@@ -1477,6 +1503,19 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       </select>
       <div class="hint">Standart seçim: Hər kəs.</div>
     </div>
+    <div class="fld">
+      <label for="plastseen">Son görülmə və onlayn statusunu kim görə bilər?</label>
+      <select id="plastseen" class="pin" aria-label="Son görülmə və onlayn statusunun gizliliyi">
+        <option value="everyone">Hər kəs</option>
+        <option value="friends">Dostlar</option>
+        <option value="nobody">Heç kim</option>
+      </select>
+      <div class="hint">Onlayn statusu son görülmə ilə eyni gizlilik qaydasına tabedir. Standart seçim: Hər kəs.</div>
+    </div>
+    <div class="fld">
+      <label>Blokladığın istifadəçilər</label>
+      <div id="blockedlist" class="fres"><div class="hint">Yüklənir...</div></div>
+    </div>
     <label class="swrow" for="pinv">
       <span><b>Otağa dəvətlər</b><small id="pinvhint">Açıq: hər kəs səni otağa dəvət edə bilər.</small></span>
       <input type="checkbox" id="pinv" class="sw" checked>
@@ -1588,10 +1627,12 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <h2 id="pbname" data-nt></h2>
     <div id="pbuser" data-nt></div>
     <div id="pbbio" data-nt></div>
+    <div id="pbpresence" role="status"></div>
     <div id="pbrel" role="status"></div>
     <div class="lv-btns">
       <button id="pbClose">Bağla</button>
       <button id="pbAct" hidden></button>
+      <button id="pbBlock" class="danger" hidden>Blok et</button>
     </div>
   </div>
 </div>
@@ -3525,7 +3566,7 @@ async function sendInvite(){
   try{
     const r = await api('/api/invite', {method: 'POST', body: JSON.stringify({username: u, room})});
     if(r.ok){ invMsg('Dəvət göndərildi. @' + u + ' ana menyuda görəcək.', true); $('invuser').value = ''; setTimeout(() => { $('invbox').hidden = true; }, 1600); }
-    else if(r.status === 403) invMsg('Bu istifadəçi otaq dəvətlərini bağlayıb');
+    else if(r.status === 403) invMsg('Dəvət göndərilə bilmədi: gizlilik və ya blok məhdudiyyəti');
     else if(r.status === 404){ const d = await r.json().catch(() => ({})); invMsg(d.error === 'room' ? 'Otaq tapılmadı' : 'Belə istifadəçi tapılmadı'); }
     else if(r.status === 429) invMsg('Çox dəvət göndərdin, bir az sonra yenidən yoxla');
     else if(r.status === 400) invMsg('Özünü dəvət edə bilməzsən');
@@ -3553,6 +3594,7 @@ function frRow(p, sub, btns){
   const b = document.createElement('b'); b.dataset.nt = ''; b.textContent = p.name; if(p.badge) b.appendChild(vbEl());
   const s = document.createElement('span'); s.textContent = sub || ('@' + p.username);
   tx.appendChild(b); tx.appendChild(s);
+  if(p.presence){ const ps=document.createElement('small'); ps.className = p.online ? 'presence online' : 'presence'; ps.textContent=p.presence; tx.appendChild(ps); }
   r.appendChild(av); r.appendChild(tx); (btns || []).forEach(x => r.appendChild(x));
   return r;
 }
@@ -3567,10 +3609,15 @@ async function frAct(path, body){
   loadFriends(); if($('fq').value.trim().replace(/^@/, '').length >= 2) doSearch();
 }
 function searchBtns(p){
-  if(p.rel === 'friend') return [frTag('Dostsunuz')];
-  if(p.rel === 'out') return [frTag('Göndərildi')];
-  if(p.rel === 'in') return [frBtn('Qəbul et', '', () => frAct('/api/friend/respond', {username: p.username, accept: true}))];
-  return [frBtn('<i class="fa-solid fa-user-plus" aria-hidden="true"></i> Əlavə et', '', () => frAct('/api/friend/request', {username: p.username}))];
+  if(p.blocked) return [frBtn('Blokdan çıxar','',async()=>{ await frAct('/api/unblock',{username:p.username}); doSearch(); loadBlocked(); },'Blokdan çıxar')];
+  if(p.blocked_me) return [frTag('Səni bloklayıb')];
+  const block = frBtn('Blok et','no',async()=>{ const ok=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(ok){ await frAct('/api/block',{username:p.username}); doSearch(); loadBlocked(); } },'Blok et');
+  let main;
+  if(p.rel === 'friend') main = frTag('Dostsunuz');
+  else if(p.rel === 'out') main = frTag('Göndərildi');
+  else if(p.rel === 'in') main = frBtn('Qəbul et', '', () => frAct('/api/friend/respond', {username: p.username, accept: true}));
+  else main = frBtn('<i class="fa-solid fa-user-plus" aria-hidden="true"></i> Əlavə et', '', () => frAct('/api/friend/request', {username: p.username}));
+  return [main, block];
 }
 let fqTimer = null, fqSeq = 0;
 async function doSearch(){
@@ -3604,7 +3651,8 @@ function renderFriends(d){
   if(fr.length){
     frSection(fl, 'Dostların');
     fr.forEach(p => fl.appendChild(frRow(p, null, [
-      frBtn('<i class="fa-solid fa-user-minus" aria-hidden="true"></i>', 'no', () => { wtConfirm('@' + p.username + ' dostlardan çıxarılsın?', {ok: 'Dostlardan çıxar', danger: true}).then(y => { if(y) frAct('/api/friend/remove', {username: p.username}); }); }, 'Dostlardan çıxar')])));
+      frBtn('<i class="fa-solid fa-user-minus" aria-hidden="true"></i>', 'no', () => { wtConfirm('@' + p.username + ' dostlardan çıxarılsın?', {ok: 'Dostlardan çıxar', danger: true}).then(y => { if(y) frAct('/api/friend/remove', {username: p.username}); }); }, 'Dostlardan çıxar'),
+      frBtn('Blok et','no',async()=>{ const y=await wtConfirm('@'+p.username+' bloklansın?',{ok:'Blok et',danger:true}); if(y){ await frAct('/api/block',{username:p.username}); loadBlocked(); } },'Blok et')])));
   }
   if(out.length){
     frSection(fl, 'Göndərilən sorğular');
@@ -3637,6 +3685,37 @@ async function fillInvFriends(){
 }
 function pinvHint(){
   $('pinvhint').textContent = $('pinv').checked ? 'Açıq: hər kəs səni otağa dəvət edə bilər.' : 'Bağlı: heç kim səni otağa dəvət edə bilməz.';
+}
+async function sendPresence(){
+  if(!token) return;
+  try{ await api('/api/presence', {method:'POST', body:'{}'}); }catch(e){}
+}
+setInterval(() => { if(token && !document.hidden) sendPresence(); }, 20000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) sendPresence(); });
+$('plastseen').onchange = async () => {
+  const sel = $('plastseen'), value = sel.value;
+  try{
+    const r = await api('/api/settings/last-seen-visibility', {method:'POST', body:JSON.stringify({visibility:value})});
+    if(!r.ok) throw new Error('privacy');
+    if(account) account.last_seen_visibility = value;
+    pmsg('Son görülmə və onlayn statusunun gizliliyi yadda saxlandı', true);
+  }catch(e){
+    sel.value = account && account.last_seen_visibility || 'everyone';
+    pmsg('Gizlilik dəyişmədi, yenidən cəhd et');
+  }
+};
+async function loadBlocked(){
+  if(!token || !$('blockedlist')) return;
+  const box = $('blockedlist');
+  try{
+    const r = await api('/api/blocks'); if(!r.ok) return;
+    const list = (await r.json()).blocked || []; box.textContent = '';
+    if(!list.length){ const n=document.createElement('div'); n.className='hint'; n.textContent='Heç kimi bloklamamısan.'; box.appendChild(n); return; }
+    list.forEach(p => {
+      const b=frBtn('Blokdan çıxar','',async()=>{ await frAct('/api/unblock',{username:p.username}); loadBlocked(); },'Blokdan çıxar');
+      box.appendChild(frRow(p, '@'+p.username, [b]));
+    });
+  }catch(e){}
 }
 $('pavprivacy').onchange = async () => {
   const sel = $('pavprivacy'), value = sel.value;
@@ -3674,6 +3753,8 @@ function fillPeerHead(p){
   const n = $('pbname'); n.textContent = p.name || 'Qarşı tərəf'; if(p.badge) n.appendChild(vbEl());
   $('pbuser').textContent = p.username ? '@' + p.username : '';
   $('pbbio').textContent = p.bio || '';
+  $('pbpresence').textContent = p.presence || '';
+  $('pbpresence').className = p.online ? 'presence online' : 'presence';
 }
 function setPeerRel(rel){
   const a = $('pbAct'), t = $('pbrel');
@@ -3690,13 +3771,18 @@ async function loadPeerRel(u){
     const p = ((await r.json()).users || []).find(x => x.username === u);
     if(!p) return;
     fillPeerHead(p); setPeerRel(p.rel);
+    $('pbBlock').hidden = !!p.blocked_me;
+    $('pbBlock').textContent = p.blocked ? 'Blokdan çıxar' : 'Blok et';
+    $('pbBlock').dataset.blocked = p.blocked ? '1' : '0';
+    if(p.blocked_me){ $('pbrel').textContent='Səni bloklayıb'; $('pbAct').hidden=true; }
   }catch(e){}
 }
 function openPeerCard(p){
   if(!p) return;
   pcUser = p.username || '';
   fillPeerHead(p);
-  $('pbrel').textContent = ''; $('pbAct').hidden = true;
+  $('pbrel').textContent = ''; $('pbAct').hidden = true; $('pbBlock').hidden = !pcUser || !token;
+  $('pbpresence').textContent = p.presence || '';
   $('pbox').hidden = false;
   if(pcUser && token) loadPeerRel(pcUser);
 }
@@ -3712,6 +3798,16 @@ $('pbAct').onclick = async () => {
     else { $('pbAct').disabled = false; $('pbrel').className = 'err'; $('pbrel').textContent = 'Alınmadı, yenidən cəhd et'; }
   }catch(e){ $('pbAct').disabled = false; }
 };
+$('pbBlock').onclick = async () => {
+  const u=pcUser; if(!u) return;
+  const blocked=$('pbBlock').dataset.blocked === '1';
+  const yes=await wtConfirm(blocked ? '@'+u+' blokdan çıxarılsın?' : '@'+u+' bloklansın?', {ok:blocked?'Blokdan çıxar':'Blok et',danger:!blocked});
+  if(!yes) return;
+  await frAct(blocked?'/api/unblock':'/api/block',{username:u});
+  $('pbBlock').textContent=blocked?'Blok et':'Blokdan çıxar'; $('pbBlock').dataset.blocked=blocked?'0':'1';
+  $('pbAct').hidden=!blocked; if(!blocked){ $('pbAct').hidden=true; $('pbrel').textContent='İstifadəçi bloklandı'; }
+  loadBlocked();
+};
 $('pbClose').onclick = () => { $('pbox').hidden = true; };
 $('pbox').addEventListener('click', e => { if(e.target === $('pbox')) $('pbox').hidden = true; });
 $('status').addEventListener('click', () => { if(connected && peerList.length) openPeerCard(peerList[0]); });
@@ -3725,7 +3821,7 @@ $('chat').addEventListener('click', e => {
 /* ---------- Ana menyuda gələn dəvətlər ---------- */
 const seenInv = new Set();
 let invTimer = null;
-function startInvitePoll(){ loadInvites(); loadFriends(); loadPlans(); if(!invTimer) invTimer = setInterval(() => { loadInvites(); if(++planTick % 4 === 0) loadPlans(); }, 4000); }
+function startInvitePoll(){ loadInvites(); loadFriends(); loadPlans(); if(!invTimer) invTimer = setInterval(() => { loadInvites(); if(++planTick % 4 === 0) { loadPlans(); loadFriends(); } }, 4000); }
 async function loadInvites(){
   if(!token || $('menu').style.display === 'none' || !$('profile').hidden || document.visibilityState !== 'visible') return;
   loadFriends();
@@ -3781,7 +3877,7 @@ function renderInvites(list, games){
 async function loadProfile(){
   try{
     const r = await api('/api/me');
-    if(r.ok) applyProfile(await r.json());
+    if(r.ok) { applyProfile(await r.json()); sendPresence(); loadBlocked(); }
   }catch(e){}
 }
 function applyProfile(p){
@@ -3806,6 +3902,7 @@ function fillProfile(){
   $('pusersave').disabled = true;
   $('pinv').checked = account.invites_open !== false; pinvHint();
   $('pavprivacy').value = ['everyone','friends','nobody'].includes(account.avatar_visibility) ? account.avatar_visibility : 'everyone';
+  $('plastseen').value = ['everyone','friends','nobody'].includes(account.last_seen_visibility) ? account.last_seen_visibility : 'everyone';
   if(typeof syncSave === 'function') syncSave();
 }
 function openProfile(){
@@ -6107,5 +6204,85 @@ window.wtInviteBox = function(o){
   refreshResume();
 })();
 </script>
+
+<script>
+/* Bütün select seçimlərini eyni, saytın bənövşəyi-çəhrayı fonuna uyğun pəncərədə göstər */
+(function(){
+  const nativeToUI = new WeakMap();
+  let active = null;
+  const layer = document.createElement('div');
+  layer.id = 'siteSelectLayer';
+  layer.innerHTML = '<div class="site-select-sheet" role="dialog" aria-modal="true" aria-label="Seçim"><div class="site-select-heading">SEÇİM ET</div><div class="site-select-options"></div></div>';
+  document.body.appendChild(layer);
+  const sheet = layer.querySelector('.site-select-sheet');
+  const optionsBox = layer.querySelector('.site-select-options');
+  function selectedText(sel){
+    const opt = sel.options[sel.selectedIndex];
+    return opt ? opt.textContent.trim() : 'Seç';
+  }
+  function sync(sel){
+    const ui = nativeToUI.get(sel); if(!ui) return;
+    ui.value.textContent = selectedText(sel);
+    ui.button.disabled = sel.disabled;
+  }
+  function close(){
+    if(!active) return;
+    active.button.setAttribute('aria-expanded','false');
+    layer.classList.remove('open');
+    layer.setAttribute('aria-hidden','true');
+    const previous = active.button; active = null;
+    setTimeout(()=>{if(previous && previous.isConnected) previous.focus({preventScroll:true});},0);
+  }
+  function open(sel){
+    const ui = nativeToUI.get(sel); if(!ui || sel.disabled) return;
+    if(active) close();
+    active = ui; ui.button.setAttribute('aria-expanded','true');
+    optionsBox.textContent = '';
+    const label = sel.getAttribute('aria-label') || (sel.labels && sel.labels[0] && sel.labels[0].textContent.trim()) || 'Seçim et';
+    layer.querySelector('.site-select-heading').textContent = label.toLocaleUpperCase('az');
+    Array.from(sel.options).forEach((opt)=>{
+      if(opt.disabled && !opt.value) return;
+      const b = document.createElement('button'); b.type='button'; b.className='site-select-option'+(opt.value===sel.value?' selected':'');
+      b.setAttribute('role','option'); b.setAttribute('aria-selected',opt.value===sel.value?'true':'false');
+      const text = document.createElement('span'); text.textContent=opt.textContent.trim();
+      const check = document.createElement('span'); check.className='ss-check'; check.innerHTML='<i class="fa-solid fa-check" aria-hidden="true"></i>';
+      b.append(text,check);
+      b.addEventListener('click',()=>{
+        if(sel.value!==opt.value){sel.value=opt.value; sel.dispatchEvent(new Event('change',{bubbles:true}));}
+        sync(sel); close();
+      });
+      optionsBox.appendChild(b);
+    });
+    layer.classList.add('open'); layer.setAttribute('aria-hidden','false');
+    const current = optionsBox.querySelector('.selected'); if(current) current.scrollIntoView({block:'nearest'});
+  }
+  function enhance(sel){
+    if(nativeToUI.has(sel)) return;
+    const wrap=document.createElement('div'); wrap.className='site-select-wrap';
+    sel.parentNode.insertBefore(wrap,sel); wrap.appendChild(sel); sel.classList.add('site-select-native');
+    sel.setAttribute('tabindex','-1');
+    const button=document.createElement('button'); button.type='button'; button.className='site-select-trigger';
+    button.setAttribute('aria-haspopup','listbox'); button.setAttribute('aria-expanded','false');
+    const value=document.createElement('span'); value.className='sst-value';
+    const chev=document.createElement('i'); chev.className='fa-solid fa-chevron-down sst-chevron'; chev.setAttribute('aria-hidden','true');
+    button.append(value,chev); wrap.appendChild(button);
+    const ui={select:sel,wrap,button,value}; nativeToUI.set(sel,ui);
+    button.addEventListener('click',()=>open(sel));
+    sel.addEventListener('change',()=>sync(sel));
+    new MutationObserver(()=>sync(sel)).observe(sel,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled']});
+    sync(sel);
+  }
+  function scan(root){
+    if(root.matches && root.matches('select')) enhance(root);
+    if(root.querySelectorAll) root.querySelectorAll('select').forEach(enhance);
+  }
+  scan(document);
+  new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1 && n!==layer) scan(n);}))).observe(document.body,{childList:true,subtree:true});
+  layer.addEventListener('click',e=>{if(e.target===layer) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape' && active){e.preventDefault();close();}});
+  document.addEventListener('click',e=>{if(active && !layer.contains(e.target) && !active.wrap.contains(e.target) && !e.target.closest('.site-select-wrap')) close();},true);
+})();
+</script>
+
 </body>
 </html>

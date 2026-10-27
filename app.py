@@ -484,6 +484,9 @@ CREATE INDEX IF NOT EXISTS visits_ts ON visits(ts);
 CREATE TABLE IF NOT EXISTS friends(a TEXT NOT NULL, b TEXT NOT NULL, status INTEGER NOT NULL DEFAULT 0, ts REAL NOT NULL,
   PRIMARY KEY(a, b));
 CREATE INDEX IF NOT EXISTS friends_b ON friends(b);
+CREATE TABLE IF NOT EXISTS blocks(blocker TEXT NOT NULL, blocked TEXT NOT NULL, ts REAL NOT NULL, PRIMARY KEY(blocker, blocked));
+CREATE INDEX IF NOT EXISTS blocks_blocked ON blocks(blocked);
+CREATE TABLE IF NOT EXISTS presence(sub TEXT PRIMARY KEY, seen REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS watch(sub TEXT NOT NULL, day TEXT NOT NULL, secs REAL NOT NULL DEFAULT 0, tog REAL NOT NULL DEFAULT 0,
   PRIMARY KEY(sub, day));
 CREATE TABLE IF NOT EXISTS plans(id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, title TEXT NOT NULL, ts REAL NOT NULL,
@@ -502,6 +505,8 @@ CREATE INDEX IF NOT EXISTS plan_inv_sub ON plan_inv(sub);
                 c.execute("ALTER TABLE users ADD COLUMN bio TEXT")
             if "avatar_visibility" not in ucols:
                 c.execute("ALTER TABLE users ADD COLUMN avatar_visibility TEXT NOT NULL DEFAULT 'everyone'")
+            if "last_seen_visibility" not in ucols:
+                c.execute("ALTER TABLE users ADD COLUMN last_seen_visibility TEXT NOT NULL DEFAULT 'everyone'")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -920,13 +925,13 @@ def is_owner(sub):
 
 
 def profile_json(sub):
-    u = dbq("SELECT name, username, invites_open, bio, avatar_visibility FROM users WHERE sub=?", (sub,), one=True)
+    u = dbq("SELECT name, username, invites_open, bio, avatar_visibility, last_seen_visibility FROM users WHERE sub=?", (sub,), one=True)
     if not u:
         abort(401)
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
-    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0), avatar_visibility=u["avatar_visibility"] or "everyone",
+    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0), avatar_visibility=u["avatar_visibility"] or "everyone", last_seen_visibility=u["last_seen_visibility"] or "everyone",
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -1370,6 +1375,8 @@ def api_invite():
         return jsonify(error="user"), 404
     if row["sub"] == sub:
         abort(400)
+    if _is_blocked_either(sub, row["sub"]):
+        return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403   # istifadəçi otaq dəvətlərini bağlayıb
     with CV:
@@ -1480,6 +1487,8 @@ def api_game_invite():
         return jsonify(error="user"), 404
     if row["sub"] == sub:
         abort(400)
+    if _is_blocked_either(sub, row["sub"]):
+        return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403
     with CV:
@@ -1537,6 +1546,93 @@ def _user_by_name(raw):
     return row["sub"]
 
 
+def _is_blocked_either(a, b):
+    return bool(dbq("SELECT 1 FROM blocks WHERE (blocker=? AND blocked=?) OR (blocker=? AND blocked=?)", (a, b, b, a), one=True))
+
+
+def _presence_info(viewer, target):
+    u = dbq("SELECT last_seen_visibility FROM users WHERE sub=?", (target,), one=True)
+    if not u:
+        return dict(presence="")
+    visibility = (u["last_seen_visibility"] or "everyone")
+    if visibility == "nobody":
+        return dict(presence="")
+    if visibility == "friends" and viewer != target and _friend_rel(viewer, target) != "friend":
+        return dict(presence="")
+    if viewer != target and _is_blocked_either(viewer, target):
+        return dict(presence="")
+    row = dbq("SELECT seen FROM presence WHERE sub=?", (target,), one=True)
+    if not row:
+        return dict(presence="")
+    seen = float(row["seen"])
+    age = max(0, int(time.time() - seen))
+    if age < 45:
+        return dict(presence="Onlayn", online=True)
+    if age < 3600:
+        label = f"Son görülmə: {max(1, age // 60)} dəq. əvvəl"
+    elif age < 86400:
+        label = f"Son görülmə: {age // 3600} saat əvvəl"
+    else:
+        label = f"Son görülmə: {age // 86400} gün əvvəl"
+    return dict(presence=label, online=False)
+
+
+@app.route("/api/presence", methods=["POST"])
+def api_presence():
+    sub, _ = auth_sub()
+    now = time.time()
+    dbq("INSERT INTO presence(sub,seen) VALUES(?,?) ON CONFLICT(sub) DO UPDATE SET seen=excluded.seen", (sub, now))
+    return jsonify(ok=True)
+
+
+@app.route("/api/settings/last-seen-visibility", methods=["POST"])
+def api_settings_last_seen_visibility():
+    sub, _ = auth_sub()
+    value = str((request.get_json(silent=True) or {}).get("visibility") or "everyone")
+    if value not in ("everyone", "friends", "nobody"):
+        abort(400)
+    dbq("UPDATE users SET last_seen_visibility=? WHERE sub=?", (value, sub))
+    return jsonify(ok=True, last_seen_visibility=value)
+
+
+@app.route("/api/blocks")
+def api_blocks():
+    sub, _ = auth_sub()
+    rows = dbq("SELECT u.name,u.username FROM blocks b JOIN users u ON u.sub=b.blocked WHERE b.blocker=? ORDER BY b.ts DESC", (sub,), many=True)
+    return jsonify(blocked=[dict(name=r["name"], username=r["username"]) for r in rows if r["username"]])
+
+
+@app.route("/api/block", methods=["POST"])
+def api_block_user():
+    sub, _ = auth_sub()
+    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
+    if other == sub:
+        abort(400)
+    dbq("INSERT OR IGNORE INTO blocks(blocker,blocked,ts) VALUES(?,?,?)", (sub, other, time.time()))
+    dbq("DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", (sub, other, other, sub))
+    dbq("DELETE FROM invites WHERE (to_sub=? AND from_sub=?) OR (to_sub=? AND from_sub=?)", (sub, other, other, sub))
+    other_row = dbq("SELECT username FROM users WHERE sub=?", (other,), one=True)
+    me_row = dbq("SELECT username FROM users WHERE sub=?", (sub,), one=True)
+    other_username = other_row["username"] if other_row else None
+    my_username = me_row["username"] if me_row else None
+    for recipient, items in list(GAME_INV.items()):
+        for key, item in list(items.items()):
+            if ((recipient == sub and item.get("username") == other_username) or
+                    (recipient == other and item.get("username") == my_username)):
+                items.pop(key, None)
+        if not items:
+            GAME_INV.pop(recipient, None)
+    return jsonify(ok=True)
+
+
+@app.route("/api/unblock", methods=["POST"])
+def api_unblock_user():
+    sub, _ = auth_sub()
+    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
+    dbq("DELETE FROM blocks WHERE blocker=? AND blocked=?", (sub, other))
+    return jsonify(ok=True)
+
+
 @app.route("/api/users/search")
 def api_users_search():
     sub, _ = auth_sub()
@@ -1549,8 +1645,14 @@ def api_users_search():
     rows = dbq("SELECT u.sub, u.name, u.username, u.bio, (SELECT ts FROM avatars a WHERE a.sub=u.sub) AS av \
 FROM users u WHERE u.username LIKE ? ESCAPE '\\' AND u.sub<>? ORDER BY (u.username=?) DESC, u.username LIMIT 8",
                (like, sub, q), many=True)
-    out = [dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
-                badge=is_owner(r["sub"]), rel=_friend_rel(sub, r["sub"]), bio=r["bio"] or "") for r in rows]
+    out = []
+    for r in rows:
+        blocked_by_me = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (sub, r["sub"]), one=True))
+        blocked_me = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (r["sub"], sub), one=True))
+        pres = _presence_info(sub, r["sub"])
+        out.append(dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
+                        badge=is_owner(r["sub"]), rel=_friend_rel(sub, r["sub"]), bio=r["bio"] or "",
+                        blocked=blocked_by_me, blocked_me=blocked_me, **pres))
     return jsonify(users=out)
 
 
@@ -1565,8 +1667,10 @@ def api_friends():
     for r in rows:
         if not r["username"]:
             continue
+        pres = _presence_info(sub, r["osub"])
+        blocked = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (sub, r["osub"]), one=True))
         it = dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
-                  badge=is_owner(r["osub"]))
+                  badge=is_owner(r["osub"]), blocked=blocked, **pres)
         if r["status"] == 1:
             friends.append(it)
         elif r["b"] == sub:
@@ -1585,6 +1689,8 @@ def api_friend_request():
     other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
     if other == sub:
         abort(400)
+    if _is_blocked_either(sub, other):
+        abort(403)
     if not rate_hit("freq", sub, 20, 600):
         abort(429)
     rel = _friend_rel(sub, other)
@@ -1604,6 +1710,8 @@ def api_friend_respond():
     sub, _ = auth_sub()
     d = request.get_json(silent=True) or {}
     other = _user_by_name(d.get("username"))
+    if _is_blocked_either(sub, other):
+        abort(403)
     if d.get("accept"):
         dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=? AND status=0", (time.time(), other, sub))
     else:
