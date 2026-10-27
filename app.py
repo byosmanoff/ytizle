@@ -500,6 +500,8 @@ CREATE INDEX IF NOT EXISTS plan_inv_sub ON plan_inv(sub);
                 c.execute("ALTER TABLE users ADD COLUMN invites_open INTEGER NOT NULL DEFAULT 1")
             if "bio" not in ucols:   # profildə qısa "Haqqında"
                 c.execute("ALTER TABLE users ADD COLUMN bio TEXT")
+            if "avatar_visibility" not in ucols:
+                c.execute("ALTER TABLE users ADD COLUMN avatar_visibility TEXT NOT NULL DEFAULT 'everyone'")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -918,13 +920,13 @@ def is_owner(sub):
 
 
 def profile_json(sub):
-    u = dbq("SELECT name, username, invites_open, bio FROM users WHERE sub=?", (sub,), one=True)
+    u = dbq("SELECT name, username, invites_open, bio, avatar_visibility FROM users WHERE sub=?", (sub,), one=True)
     if not u:
         abort(401)
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
-    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0),
+    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0), avatar_visibility=u["avatar_visibility"] or "everyone",
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -1168,16 +1170,39 @@ def api_avatar_remove():
     return jsonify(profile_json(sub))
 
 
+@app.after_request
+def remember_avatar_viewer(response):
+    tok = request.headers.get("X-Token", "")[:100]
+    if tok and dbq("SELECT 1 FROM sessions WHERE token=?", (tok,), one=True):
+        response.set_cookie("wt_session", tok, max_age=SESSION_DAYS * 86400, httponly=True,
+                            secure=request.is_secure, samesite="Lax", path="/")
+    return response
+
+
 @app.route("/api/avatar/<u>")
 def api_avatar_get(u):
     u = norm_username(u)
     if not username_valid(u):
         abort(404)
-    row = dbq("SELECT a.data FROM avatars a JOIN users x ON x.sub=a.sub WHERE x.username=?", (u,), one=True)
+    owner = dbq("SELECT sub, avatar_visibility FROM users WHERE username=?", (u,), one=True)
+    if not owner:
+        abort(404)
+    visibility = owner["avatar_visibility"] or "everyone"
+    if visibility != "everyone":
+        tok = request.cookies.get("wt_session", "")[:100]
+        viewer = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True) if tok else None
+        viewer_sub = viewer["sub"] if viewer and time.time() - viewer["created"] <= SESSION_DAYS * 86400 else None
+        allowed = viewer_sub == owner["sub"]
+        if not allowed and viewer_sub and visibility == "friends":
+            allowed = bool(dbq("SELECT 1 FROM friends WHERE status=1 AND ((a=? AND b=?) OR (a=? AND b=?))", (viewer_sub, owner["sub"], owner["sub"], viewer_sub), one=True))
+        if not allowed:
+            abort(404)
+    row = dbq("SELECT data FROM avatars WHERE sub=?", (owner["sub"],), one=True)
     if not row:
         abort(404)
     resp = Response(bytes(row["data"]), mimetype="image/jpeg")
-    resp.headers["Cache-Control"] = "public, max-age=604800"
+    resp.headers["Cache-Control"] = "private, no-store"
+    resp.headers["Vary"] = "Cookie"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     return resp
 
@@ -1383,6 +1408,16 @@ def api_invite_dismiss():
         abort(400)
     dbq("DELETE FROM invites WHERE id=? AND to_sub=?", (iid, sub))
     return jsonify(ok=True)
+
+
+@app.route("/api/settings/avatar-visibility", methods=["POST"])
+def api_settings_avatar_visibility():
+    sub, _ = auth_sub()
+    value = str((request.get_json(silent=True) or {}).get("visibility") or "everyone")
+    if value not in ("everyone", "nobody", "friends"):
+        abort(400)
+    dbq("UPDATE users SET avatar_visibility=? WHERE sub=?", (value, sub))
+    return jsonify(ok=True, avatar_visibility=value)
 
 
 @app.route("/api/settings/invites", methods=["POST"])
