@@ -1015,6 +1015,14 @@ body.mob #profile{
   background:rgba(255,255,255,.085);
 }
 
+/* Ayarlar artıq alt naviqasiyada deyil: profil başlığındakı dişlidən açılır */
+#tabbar button[data-go="settings"]{display:none!important}
+#profile .phead{display:flex;align-items:center;gap:12px}
+#profile .phead h1{flex:1;min-width:0}
+#profile .profile-settings{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+#setCards .settings-head{display:flex;align-items:center;gap:12px}
+#setCards .settings-head h2{margin:0;flex:1}
+#setCards .settings-back{flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 /* ================= AYARLAR TABI ================= */
 #setCards{display:flex;flex-direction:column;gap:14px}
 @media (min-width:1024px){#setCards{gap:18px}}
@@ -1398,6 +1406,10 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
   <p class="mquote" id="mquote"></p>
   <div id="setCards">
+  <div class="settings-head card">
+    <button type="button" class="ib settings-back" id="settingsback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <h2><i class="fa-solid fa-gear" aria-hidden="true"></i>Ayarlar</h2>
+  </div>
   <div class="card">
     <h2><i class="fa-solid fa-language" aria-hidden="true"></i>Dil</h2>
     <div class="seg" id="setlang" role="group" aria-label="Dil"><button type="button" data-l="az">Azərbaycan</button><button type="button" data-l="tr">Türkçe</button><button type="button" data-l="en">English</button></div>
@@ -1466,6 +1478,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <div class="phead">
     <button class="ib" id="pback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <h1>Profil</h1>
+    <button type="button" class="ib profile-settings" id="profilesettings" aria-label="Ayarlar" title="Ayarlar"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
   </div>
   <div class="pavbox">
     <div class="av big" id="pav">?</div>
@@ -3919,6 +3932,8 @@ $('editname').onclick = openProfile;
 $('mav').onclick = openProfile;
 $('mav').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openProfile(); } });
 $('pback').onclick = () => { $('profile').hidden = true; };
+$('profilesettings').onclick = () => { const b = document.querySelector('#tabbar [data-go="settings"]'); if(b) b.click(); };
+$('settingsback').onclick = () => { const b = document.querySelector('#tabbar [data-go="profile"]'); if(b) b.click(); };
 
 // şəkil: kvadrata kəsilir, 256x256 JPEG edilir
 function toAvatar(file){
@@ -4986,7 +5001,7 @@ boot();
   }).observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: AT});
   function mark(){ [].forEach.call(document.querySelectorAll('#setlang button'), function(b){ var on = b.getAttribute('data-l') === lang; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); }
   function setLang(l, save){
-    lang = l; if(save){ try{ localStorage.setItem('wt_lang', l); }catch(e){} }
+    lang = l; if(save){ try{ localStorage.setItem('wt_lang_v2', l); }catch(e){} }
     document.documentElement.lang = l; run(document.body); mark();
     try{ window.dispatchEvent(new CustomEvent('wt:languagechange',{detail:{lang:l}})); }catch(e){}
   }
@@ -5008,7 +5023,7 @@ boot();
   document.getElementById('setlang').addEventListener('click', function(e){
     var b = e.target.closest('button[data-l]'); if(b) setLang(b.getAttribute('data-l'), true);
   });
-  var sv = 'az'; try{ sv = localStorage.getItem('wt_lang') || 'az'; }catch(e){}
+  var sv = 'az'; try{ sv = localStorage.getItem('wt_lang_v2') || 'az'; }catch(e){}
   setLang(sv === 'tr' || sv === 'en' ? sv : 'az', false);
 })();
 </script>
