@@ -1333,6 +1333,79 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 @media(min-width:700px){#profile #profile-account-row{grid-template-columns:112px minmax(0,1fr);gap:18px}#profile #profile-account-row .pavbox{width:112px}#profile #profile-account-row .pav-edit-wrap{transform:scale(1.08);transform-origin:top center}}
 @media(max-width:360px){#profile #profile-account-row{grid-template-columns:72px minmax(0,1fr);gap:9px}#profile #profile-account-row .pavbox,#profile #profile-account-row .pav-edit-wrap{width:72px;height:72px}#profile #profile-account-row #pav.av.big{width:72px;height:72px;min-width:72px;font-size:28px}#profile #profile-account-row .account-card{padding:13px 10px}#profile #profile-account-row .frow input{font-size:13px}}
 
+
+/* ---- Profil ekranı: mobil düzülüş və vizual səliqə ---- */
+#profile{
+  gap:16px;
+  padding-left:18px;
+  padding-right:18px;
+  background:
+    radial-gradient(110% 32% at 100% 0,rgba(255,122,156,.13),transparent 72%),
+    radial-gradient(90% 30% at 0 55%,rgba(115,74,150,.12),transparent 72%),
+    var(--velvet);
+}
+#profile .phead{gap:12px;margin-bottom:2px}
+#profile .phead h1{font-size:25px;letter-spacing:-.5px}
+#profile #profile-account-row{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:12px;
+}
+#profile #profile-account-row .pavbox{
+  width:100%;
+  min-width:0;
+  height:auto;
+  padding:8px 0 4px;
+  justify-content:center;
+  align-items:center;
+}
+#profile #profile-account-row .pav-edit-wrap{width:92px;height:92px}
+#profile #profile-account-row #pav.av.big{
+  width:92px;height:92px;min-width:92px;font-size:36px;
+  box-shadow:0 0 0 4px rgba(255,122,156,.13),0 0 0 1px rgba(255,255,255,.18);
+}
+#profile #profile-account-row .account-card,
+#profile>.card{
+  width:100%;min-width:0;padding:20px;
+  border:1px solid rgba(255,255,255,.10);border-radius:22px;
+  background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.045));
+  box-shadow:0 12px 28px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,255,255,.045);
+}
+#profile .card h2{
+  display:flex;align-items:center;gap:9px;margin-bottom:18px;
+  color:#e3c9ee;font-size:17px;
+}
+#profile .fld{gap:8px;margin-bottom:16px}
+#profile .fld>label{font-size:13px;line-height:1.45;color:#cbb9d9}
+#profile .frow{gap:8px}
+#profile .frow input,#profile .pin{
+  height:50px;min-height:50px;width:100%;min-width:0;padding:0 14px;
+  border-radius:14px;background:rgba(21,10,29,.78);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+}
+#profile .frow input:focus,#profile .pin:focus{box-shadow:inset 0 0 0 2px var(--rose)}
+#profile .frow .pbtn{padding:10px 13px;min-height:44px}
+#profile #profile-account-row .hint{font-size:12px;line-height:1.5;margin-top:2px}
+#profile #psaveall{min-height:48px;margin-top:8px!important;box-shadow:0 7px 18px rgba(232,86,125,.14)}
+#profile .swrow{
+  display:flex;align-items:center;gap:14px;padding:14px 0 2px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+#profile .swrow span{flex:1;min-width:0}
+#profile .swrow b{display:block;font-size:14px}
+#profile .swrow small{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.45}
+#profile #blockedlist{border-radius:14px;overflow:hidden}
+#profile #pmsg{padding:2px 8px}
+@media(max-width:380px){
+  #profile{padding-left:14px;padding-right:14px;gap:13px}
+  #profile #profile-account-row .account-card,#profile>.card{padding:16px}
+  #profile .phead h1{font-size:23px}
+}
+@media(min-width:700px){
+  #profile{padding-left:calc(50% - 260px);padding-right:calc(50% - 260px)}
+}
+
 </style>
 </head>
 <body>
