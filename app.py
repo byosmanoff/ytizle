@@ -484,9 +484,6 @@ CREATE INDEX IF NOT EXISTS visits_ts ON visits(ts);
 CREATE TABLE IF NOT EXISTS friends(a TEXT NOT NULL, b TEXT NOT NULL, status INTEGER NOT NULL DEFAULT 0, ts REAL NOT NULL,
   PRIMARY KEY(a, b));
 CREATE INDEX IF NOT EXISTS friends_b ON friends(b);
-CREATE TABLE IF NOT EXISTS blocks(blocker TEXT NOT NULL, blocked TEXT NOT NULL, ts REAL NOT NULL, PRIMARY KEY(blocker, blocked));
-CREATE INDEX IF NOT EXISTS blocks_blocked ON blocks(blocked);
-CREATE TABLE IF NOT EXISTS presence(sub TEXT PRIMARY KEY, seen REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS watch(sub TEXT NOT NULL, day TEXT NOT NULL, secs REAL NOT NULL DEFAULT 0, tog REAL NOT NULL DEFAULT 0,
   PRIMARY KEY(sub, day));
 CREATE TABLE IF NOT EXISTS plans(id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, title TEXT NOT NULL, ts REAL NOT NULL,
@@ -503,10 +500,6 @@ CREATE INDEX IF NOT EXISTS plan_inv_sub ON plan_inv(sub);
                 c.execute("ALTER TABLE users ADD COLUMN invites_open INTEGER NOT NULL DEFAULT 1")
             if "bio" not in ucols:   # profildə qısa "Haqqında"
                 c.execute("ALTER TABLE users ADD COLUMN bio TEXT")
-            if "avatar_visibility" not in ucols:
-                c.execute("ALTER TABLE users ADD COLUMN avatar_visibility TEXT NOT NULL DEFAULT 'everyone'")
-            if "last_seen_visibility" not in ucols:
-                c.execute("ALTER TABLE users ADD COLUMN last_seen_visibility TEXT NOT NULL DEFAULT 'everyone'")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -925,13 +918,13 @@ def is_owner(sub):
 
 
 def profile_json(sub):
-    u = dbq("SELECT name, username, invites_open, bio, avatar_visibility, last_seen_visibility FROM users WHERE sub=?", (sub,), one=True)
+    u = dbq("SELECT name, username, invites_open, bio FROM users WHERE sub=?", (sub,), one=True)
     if not u:
         abort(401)
     uname = u["username"] or ensure_username(sub)
     cr = primary_cred(sub)
     av = dbq("SELECT ts FROM avatars WHERE sub=?", (sub,), one=True)
-    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0), avatar_visibility=u["avatar_visibility"] or "everyone", last_seen_visibility=u["last_seen_visibility"] or "everyone",
+    return dict(bio=u["bio"] or "", name=u["name"], username=uname, email=cr["email"] if cr else "", badge=is_owner(sub), invites_open=(u["invites_open"] != 0),
                 has_pw=bool(cr and cr["pw"]),
                 avatar=("/api/avatar/%s?v=%d" % (uname, int(av["ts"]))) if av and uname else "")
 
@@ -1175,39 +1168,16 @@ def api_avatar_remove():
     return jsonify(profile_json(sub))
 
 
-@app.after_request
-def remember_avatar_viewer(response):
-    tok = request.headers.get("X-Token", "")[:100]
-    if tok and dbq("SELECT 1 FROM sessions WHERE token=?", (tok,), one=True):
-        response.set_cookie("wt_session", tok, max_age=SESSION_DAYS * 86400, httponly=True,
-                            secure=request.is_secure, samesite="Lax", path="/")
-    return response
-
-
 @app.route("/api/avatar/<u>")
 def api_avatar_get(u):
     u = norm_username(u)
     if not username_valid(u):
         abort(404)
-    owner = dbq("SELECT sub, avatar_visibility FROM users WHERE username=?", (u,), one=True)
-    if not owner:
-        abort(404)
-    visibility = owner["avatar_visibility"] or "everyone"
-    if visibility != "everyone":
-        tok = request.cookies.get("wt_session", "")[:100]
-        viewer = dbq("SELECT sub, created FROM sessions WHERE token=?", (tok,), one=True) if tok else None
-        viewer_sub = viewer["sub"] if viewer and time.time() - viewer["created"] <= SESSION_DAYS * 86400 else None
-        allowed = viewer_sub == owner["sub"]
-        if not allowed and viewer_sub and visibility == "friends":
-            allowed = bool(dbq("SELECT 1 FROM friends WHERE status=1 AND ((a=? AND b=?) OR (a=? AND b=?))", (viewer_sub, owner["sub"], owner["sub"], viewer_sub), one=True))
-        if not allowed:
-            abort(404)
-    row = dbq("SELECT data FROM avatars WHERE sub=?", (owner["sub"],), one=True)
+    row = dbq("SELECT a.data FROM avatars a JOIN users x ON x.sub=a.sub WHERE x.username=?", (u,), one=True)
     if not row:
         abort(404)
     resp = Response(bytes(row["data"]), mimetype="image/jpeg")
-    resp.headers["Cache-Control"] = "private, no-store"
-    resp.headers["Vary"] = "Cookie"
+    resp.headers["Cache-Control"] = "public, max-age=604800"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     return resp
 
@@ -1375,8 +1345,6 @@ def api_invite():
         return jsonify(error="user"), 404
     if row["sub"] == sub:
         abort(400)
-    if _is_blocked_either(sub, row["sub"]):
-        return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403   # istifadəçi otaq dəvətlərini bağlayıb
     with CV:
@@ -1417,16 +1385,6 @@ def api_invite_dismiss():
     return jsonify(ok=True)
 
 
-@app.route("/api/settings/avatar-visibility", methods=["POST"])
-def api_settings_avatar_visibility():
-    sub, _ = auth_sub()
-    value = str((request.get_json(silent=True) or {}).get("visibility") or "everyone")
-    if value not in ("everyone", "nobody", "friends"):
-        abort(400)
-    dbq("UPDATE users SET avatar_visibility=? WHERE sub=?", (value, sub))
-    return jsonify(ok=True, avatar_visibility=value)
-
-
 @app.route("/api/settings/invites", methods=["POST"])
 def api_settings_invites():
     sub, _ = auth_sub()
@@ -1447,8 +1405,6 @@ GAME_INV_TTL = 600
 
 
 def _game_store(kind):
-    if kind == "durak":
-        return DURAK
     return DOMINO if kind == "domino" else CHESS
 
 
@@ -1480,7 +1436,7 @@ def api_game_invite():
     kind = d.get("game")
     u = norm_username(d.get("username"))
     code = clean_room(d.get("room"))
-    if kind not in ("domino", "chess", "durak") or not username_valid(u) or not code:
+    if kind not in ("domino", "chess") or not username_valid(u) or not code:
         abort(400)
     if not rate_hit("ginv", sub, 20, 600):
         abort(429)
@@ -1489,8 +1445,6 @@ def api_game_invite():
         return jsonify(error="user"), 404
     if row["sub"] == sub:
         abort(400)
-    if _is_blocked_either(sub, row["sub"]):
-        return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403
     with CV:
@@ -1548,93 +1502,6 @@ def _user_by_name(raw):
     return row["sub"]
 
 
-def _is_blocked_either(a, b):
-    return bool(dbq("SELECT 1 FROM blocks WHERE (blocker=? AND blocked=?) OR (blocker=? AND blocked=?)", (a, b, b, a), one=True))
-
-
-def _presence_info(viewer, target):
-    u = dbq("SELECT last_seen_visibility FROM users WHERE sub=?", (target,), one=True)
-    if not u:
-        return dict(presence="")
-    visibility = (u["last_seen_visibility"] or "everyone")
-    if visibility == "nobody":
-        return dict(presence="")
-    if visibility == "friends" and viewer != target and _friend_rel(viewer, target) != "friend":
-        return dict(presence="")
-    if viewer != target and _is_blocked_either(viewer, target):
-        return dict(presence="")
-    row = dbq("SELECT seen FROM presence WHERE sub=?", (target,), one=True)
-    if not row:
-        return dict(presence="")
-    seen = float(row["seen"])
-    age = max(0, int(time.time() - seen))
-    if age < 45:
-        return dict(presence="Onlayn", online=True)
-    if age < 3600:
-        label = f"Son görülmə: {max(1, age // 60)} dəq. əvvəl"
-    elif age < 86400:
-        label = f"Son görülmə: {age // 3600} saat əvvəl"
-    else:
-        label = f"Son görülmə: {age // 86400} gün əvvəl"
-    return dict(presence=label, online=False)
-
-
-@app.route("/api/presence", methods=["POST"])
-def api_presence():
-    sub, _ = auth_sub()
-    now = time.time()
-    dbq("INSERT INTO presence(sub,seen) VALUES(?,?) ON CONFLICT(sub) DO UPDATE SET seen=excluded.seen", (sub, now))
-    return jsonify(ok=True)
-
-
-@app.route("/api/settings/last-seen-visibility", methods=["POST"])
-def api_settings_last_seen_visibility():
-    sub, _ = auth_sub()
-    value = str((request.get_json(silent=True) or {}).get("visibility") or "everyone")
-    if value not in ("everyone", "friends", "nobody"):
-        abort(400)
-    dbq("UPDATE users SET last_seen_visibility=? WHERE sub=?", (value, sub))
-    return jsonify(ok=True, last_seen_visibility=value)
-
-
-@app.route("/api/blocks")
-def api_blocks():
-    sub, _ = auth_sub()
-    rows = dbq("SELECT u.name,u.username FROM blocks b JOIN users u ON u.sub=b.blocked WHERE b.blocker=? ORDER BY b.ts DESC", (sub,), many=True)
-    return jsonify(blocked=[dict(name=r["name"], username=r["username"]) for r in rows if r["username"]])
-
-
-@app.route("/api/block", methods=["POST"])
-def api_block_user():
-    sub, _ = auth_sub()
-    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
-    if other == sub:
-        abort(400)
-    dbq("INSERT OR IGNORE INTO blocks(blocker,blocked,ts) VALUES(?,?,?)", (sub, other, time.time()))
-    dbq("DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", (sub, other, other, sub))
-    dbq("DELETE FROM invites WHERE (to_sub=? AND from_sub=?) OR (to_sub=? AND from_sub=?)", (sub, other, other, sub))
-    other_row = dbq("SELECT username FROM users WHERE sub=?", (other,), one=True)
-    me_row = dbq("SELECT username FROM users WHERE sub=?", (sub,), one=True)
-    other_username = other_row["username"] if other_row else None
-    my_username = me_row["username"] if me_row else None
-    for recipient, items in list(GAME_INV.items()):
-        for key, item in list(items.items()):
-            if ((recipient == sub and item.get("username") == other_username) or
-                    (recipient == other and item.get("username") == my_username)):
-                items.pop(key, None)
-        if not items:
-            GAME_INV.pop(recipient, None)
-    return jsonify(ok=True)
-
-
-@app.route("/api/unblock", methods=["POST"])
-def api_unblock_user():
-    sub, _ = auth_sub()
-    other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
-    dbq("DELETE FROM blocks WHERE blocker=? AND blocked=?", (sub, other))
-    return jsonify(ok=True)
-
-
 @app.route("/api/users/search")
 def api_users_search():
     sub, _ = auth_sub()
@@ -1647,14 +1514,8 @@ def api_users_search():
     rows = dbq("SELECT u.sub, u.name, u.username, u.bio, (SELECT ts FROM avatars a WHERE a.sub=u.sub) AS av \
 FROM users u WHERE u.username LIKE ? ESCAPE '\\' AND u.sub<>? ORDER BY (u.username=?) DESC, u.username LIMIT 8",
                (like, sub, q), many=True)
-    out = []
-    for r in rows:
-        blocked_by_me = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (sub, r["sub"]), one=True))
-        blocked_me = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (r["sub"], sub), one=True))
-        pres = _presence_info(sub, r["sub"])
-        out.append(dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
-                        badge=is_owner(r["sub"]), rel=_friend_rel(sub, r["sub"]), bio=r["bio"] or "",
-                        blocked=blocked_by_me, blocked_me=blocked_me, **pres))
+    out = [dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
+                badge=is_owner(r["sub"]), rel=_friend_rel(sub, r["sub"]), bio=r["bio"] or "") for r in rows]
     return jsonify(users=out)
 
 
@@ -1669,10 +1530,8 @@ def api_friends():
     for r in rows:
         if not r["username"]:
             continue
-        pres = _presence_info(sub, r["osub"])
-        blocked = bool(dbq("SELECT 1 FROM blocks WHERE blocker=? AND blocked=?", (sub, r["osub"]), one=True))
         it = dict(name=r["name"], username=r["username"], avatar=_av_url(r["username"], r["av"]),
-                  badge=is_owner(r["osub"]), blocked=blocked, **pres)
+                  badge=is_owner(r["osub"]))
         if r["status"] == 1:
             friends.append(it)
         elif r["b"] == sub:
@@ -1691,8 +1550,6 @@ def api_friend_request():
     other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
     if other == sub:
         abort(400)
-    if _is_blocked_either(sub, other):
-        abort(403)
     if not rate_hit("freq", sub, 20, 600):
         abort(429)
     rel = _friend_rel(sub, other)
@@ -1712,8 +1569,6 @@ def api_friend_respond():
     sub, _ = auth_sub()
     d = request.get_json(silent=True) or {}
     other = _user_by_name(d.get("username"))
-    if _is_blocked_either(sub, other):
-        abort(403)
     if d.get("accept"):
         dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=? AND status=0", (time.time(), other, sub))
     else:
@@ -3390,603 +3245,13 @@ def api_domino_quit():
 
 
 # ---------------------------------------------------------------
-#  --- Durak mühərriki (durak_engine.py ilə eyni) ---
-"""Durak (Dürak) oyun mühərriki — yalnız insanlar üçün, kompüter (bot) yoxdur.
-
-Qaydalar:
-  * 2–4 oyunçu, 36 kartlıq dəst, hər kəsə 6 kart.
-  * Açılan son kart kozır (trump) rəngini göstərir.
-  * İlk hücum edən: ən kiçik kozırı olan (yoxdursa təsadüfi).
-  * Hücum edən kart atır; digər hücumçular eyni rəqəmli (rank) kartları əlavə edə bilər.
-  * Müdafiəçi hər kartı daha yüksək eyni rəngli və ya kozır kartla bağlayır.
-  * perevod=True: müdafiəçi, hələ heç bir kart bağlamadan, eyni rəqəmli kartla hücumu
-    növbəti oyunçuya ötürə bilər.
-  * Müdafiəçi götürə bilər: bütün masadakı kartlar ona gedir, hücum davam edir, növbə
-    ondan sonrakıya keçir.
-  * Bağlanmış hər şey atılır; oyunçular 6 karta qədər çəkir (əvvəl hücumçu, sonda müdafiəçi).
-  * Kartı bitən oyunçu çıxır. Son kartı qalan oyunçu "durak" (axmaq) olur.
-
-Ev qaydası: bir raundda hücum kartlarının sayı müdafiəçinin raund başında kart sayından
-və 6-dan çox ola bilməz.
-"""
-
-SUITS = "SHDC"
-RANKS = tuple(range(6, 15))  # 6..10, J=11, Q=12, K=13, A=14
-HAND = 6
-MAX_BOUT = 6
-
-
-class GameError(Exception):
-    pass
-
-
-def _beats(d, a, trump):
-    """d kartı a kartını bağlayırmı?"""
-    if d[1] == a[1]:
-        return d[0] > a[0]
-    return d[1] == trump and a[1] != trump
-
-
-class Durak:
-    def __init__(self, players, perevod=True, rng=None):
-        if not 2 <= len(players) <= 4 or len(set(players)) != len(players):
-            raise ValueError("2–4 fərqli oyunçu lazımdır")
-        self.players = list(players)
-        self.perevod = bool(perevod)
-        self.rng = rng or random.Random()
-
-        deck = [(r, s) for s in SUITS for r in RANKS]
-        self.rng.shuffle(deck)
-        self.deck = deck              # kartlar sondan çəkilir
-        self.trump = deck[0][1]       # ən alt kart kozırı göstərir (deck[0] dəstdə qalır)
-
-        self.hands = {p: [] for p in self.players}
-        self.discard = []
-        self.out = []                 # çıxan oyunçular, çıxma sırası ilə
-        self.table = []               # {"a": hücum kartı, "d": bağlayan kart və ya None}
-        self.over = False
-        self.loser = None             # durak; None = heç kim (bərabərlik)
-
-        for _ in range(HAND):
-            for p in self.players:
-                self.hands[p].append(self.deck.pop())
-
-        low = [(min(c[0] for c in self.hands[p] if c[1] == self.trump), p)
-               for p in self.players if any(c[1] == self.trump for c in self.hands[p])]
-        first = min(low)[1] if low else self.rng.choice(self.players)
-        self._start_round(first)
-
-    # ------------------------------------------------------------------ yardımçı
-    def _seat_from(self, p):
-        i = self.players.index(p)
-        seq = self.players[i:] + self.players[:i]
-        return [q for q in seq if q not in self.out]
-
-    def _next_active(self, p):
-        i = self.players.index(p)
-        n = len(self.players)
-        for k in range(1, n + 1):
-            q = self.players[(i + k) % n]
-            if q not in self.out:
-                return q
-        return None
-
-    def _adders(self):
-        return [p for p in self._seat_from(self.attacker)
-                if p != self.defender and self.hands[p]]
-
-    def _can_add(self, p):
-        return self.bout_n < self.cap and any(c[0] in self.bout_ranks for c in self.hands[p])
-
-    def _guard(self):
-        if self.over:
-            raise GameError("oyun bitib")
-
-    def _start_round(self, att):
-        self.attacker = att
-        self.defender = self._next_active(att)
-        self.started = False
-        self.took = False
-        self.passed = set()
-        self.bout_ranks = set()
-        self.bout_n = 0
-        self.cap = min(MAX_BOUT, len(self.hands[self.defender]))
-
-    # ------------------------------------------------------------------ hərəkətlər
-    def attack(self, pid, card):
-        self._guard()
-        card = tuple(card)
-        if pid not in self.players or pid in self.out:
-            raise GameError("oyunçu deyil")
-        if not self.started:
-            if pid != self.attacker:
-                raise GameError("hücum sənin növbən deyil")
-        else:
-            if pid == self.defender:
-                raise GameError("müdafiəçi hücum edə bilməz")
-            if card[0] not in self.bout_ranks:
-                raise GameError("bu rəqəm masada yoxdur")
-            if self.bout_n >= self.cap:
-                raise GameError("hücum limiti dolub")
-        if card not in self.hands[pid]:
-            raise GameError("bu kart əlində yoxdur")
-        self.hands[pid].remove(card)
-        self.started = True
-        self.bout_ranks.add(card[0])
-        self.bout_n += 1
-        if self.took:
-            self.hands[self.defender].append(card)
-        else:
-            self.table.append({"a": card, "d": None})
-        self.passed = set()
-        self._settle()
-
-    def defend(self, pid, attack, card):
-        self._guard()
-        attack, card = tuple(attack), tuple(card)
-        if pid != self.defender or self.took:
-            raise GameError("müdafiə sənin növbən deyil")
-        pair = next((p for p in self.table if p["a"] == attack and p["d"] is None), None)
-        if pair is None:
-            raise GameError("bu kart artıq bağlanıb və ya masada yoxdur")
-        if card not in self.hands[pid]:
-            raise GameError("bu kart əlində yoxdur")
-        if not _beats(card, attack, self.trump):
-            raise GameError("bu kart onu bağlamır")
-        self.hands[pid].remove(card)
-        pair["d"] = card
-        self._settle()
-
-    def transfer(self, pid, card):
-        self._guard()
-        card = tuple(card)
-        if not self.perevod:
-            raise GameError("perevod qaydası söndürülüb")
-        if pid != self.defender or self.took or not self.table:
-            raise GameError("perevod etmək olmaz")
-        if any(p["d"] is not None for p in self.table):
-            raise GameError("perevod yalnız heç nə bağlanmamışkən olar")
-        if {p["a"][0] for p in self.table} != {card[0]}:
-            raise GameError("perevod üçün eyni rəqəmli kart lazımdır")
-        if card not in self.hands[pid]:
-            raise GameError("bu kart əlində yoxdur")
-        nd = self._next_active(pid)
-        if len(self.hands[nd]) < self.bout_n + 1 or self.bout_n + 1 > MAX_BOUT:
-            raise GameError("yeni müdafiəçinin kartı çatmır")
-        self.hands[pid].remove(card)
-        self.table.append({"a": card, "d": None})
-        self.bout_n += 1
-        self.defender = nd
-        self.cap = min(MAX_BOUT, len(self.hands[nd]))
-        self.passed = set()
-        self._settle()
-
-    def take(self, pid):
-        self._guard()
-        if pid != self.defender or self.took or not any(p["d"] is None for p in self.table):
-            raise GameError("götürmək olmaz")
-        for p in self.table:
-            self.hands[pid].append(p["a"])
-            if p["d"]:
-                self.hands[pid].append(p["d"])
-        self.table = []
-        self.took = True
-        self.passed = set()
-        self._settle()
-
-    def pass_turn(self, pid):
-        self._guard()
-        if not self.started or any(p["d"] is None for p in self.table):
-            raise GameError("pas keçmək olmaz")
-        if pid not in self._adders():
-            raise GameError("pas keçə bilməzsən")
-        self.passed.add(pid)
-        self._settle()
-
-    def apply(self, pid, action):
-        kind = action[0]
-        if kind == "attack":
-            return self.attack(pid, action[1])
-        if kind == "defend":
-            return self.defend(pid, action[1], action[2])
-        if kind == "transfer":
-            return self.transfer(pid, action[1])
-        if kind == "take":
-            return self.take(pid)
-        if kind == "pass":
-            return self.pass_turn(pid)
-        raise GameError("naməlum hərəkət")
-
-    # ------------------------------------------------------------------ dövrü bağlamaq
-    def _settle(self):
-        if self.over or not self.started:
-            return
-        if any(p["d"] is None for p in self.table):
-            return                                   # müdafiəçi hələ cavab verməlidir
-        if not self.took and not self.hands[self.defender]:
-            return self._end_round()                 # müdafiəçi hamısını bağladı, kartı bitdi
-        if self.bout_n >= self.cap:
-            return self._end_round()
-        adders = [p for p in self._adders() if self._can_add(p)]
-        if not adders or all(p in self.passed for p in adders):
-            self._end_round()
-
-    def _end_round(self):
-        for p in self.table:                         # masadakı bütün kartlar atılır
-            self.discard.append(p["a"])
-            if p["d"]:
-                self.discard.append(p["d"])
-        self.table = []
-
-        order = [p for p in self._seat_from(self.attacker) if p != self.defender]
-        order.append(self.defender)                  # müdafiəçi ən sonda çəkir
-        for p in order:
-            while len(self.hands[p]) < HAND and self.deck:
-                self.hands[p].append(self.deck.pop())
-        for p in self.players:
-            if p not in self.out and not self.hands[p] and not self.deck:
-                self.out.append(p)
-
-        active = [p for p in self.players if p not in self.out]
-        if len(active) <= 1:
-            self.over = True
-            self.loser = active[0] if active else None
-            self.attacker = self.defender = None
-            self.started = False
-            return
-        self._start_round(self._next_active(self.defender))
-
-    # ------------------------------------------------------------------ mümkün hərəkətlər
-    def actions(self, pid):
-        if self.over or pid not in self.players or pid in self.out:
-            return []
-        acts = []
-        if not self.started:
-            if pid == self.attacker:
-                acts = [("attack", c) for c in self.hands[pid]]
-            return acts
-
-        undef = [p["a"] for p in self.table if p["d"] is None]
-        if pid == self.defender:
-            if self.took:
-                return []
-            for a in undef:
-                for c in self.hands[pid]:
-                    if _beats(c, a, self.trump):
-                        acts.append(("defend", a, c))
-            if undef:
-                acts.append(("take",))
-            if self.perevod and self.table and not any(p["d"] for p in self.table):
-                ranks = {p["a"][0] for p in self.table}
-                if len(ranks) == 1:
-                    nd = self._next_active(pid)
-                    if len(self.hands[nd]) >= self.bout_n + 1 and self.bout_n + 1 <= MAX_BOUT:
-                        acts += [("transfer", c) for c in self.hands[pid] if c[0] in ranks]
-            return acts
-
-        if pid in self._adders():
-            if self.bout_n < self.cap:
-                acts += [("attack", c) for c in self.hands[pid] if c[0] in self.bout_ranks]
-            if not undef:
-                acts.append(("pass",))
-        return acts
-
-    # ------------------------------------------------------------------ görünüş (client üçün)
-    def view(self, pid):
-        return {
-            "trump": self.trump,
-            "deck": len(self.deck),
-            "discard": len(self.discard),
-            "attacker": self.attacker,
-            "defender": self.defender,
-            "took": self.took,
-            "cap": self.cap,
-            "table": [{"a": list(p["a"]), "d": list(p["d"]) if p["d"] else None} for p in self.table],
-            "hand": [list(c) for c in self.hands.get(pid, [])],
-            "players": [{"id": q, "n": len(self.hands[q]), "out": q in self.out} for q in self.players],
-            "passed": sorted(self.passed),
-            "actions": [[a[0], *[list(x) if isinstance(x, tuple) else x for x in a[1:]]]
-                        for a in self.actions(pid)],
-            "over": self.over,
-            "loser": self.loser,
-        }
-
-    def card_count(self):
-        """Test üçün: bütün kartların sayı (36 olmalıdır)."""
-        table = sum(1 + (1 if p["d"] else 0) for p in self.table)
-        return sum(len(h) for h in self.hands.values()) + len(self.deck) + len(self.discard) + table
-
-# ---------------------------------------------------------------
-#  Durak otağı: 2–4 nəfərlik onlayn kart oyunu (kompüter yoxdur).
-#  Qayda mühərriki yuxarıdakı Durak sinfidir. Səsli otaq (GV) və dəvət sistemi
-#  domino ilə eyni yolla işləyir.
-# ---------------------------------------------------------------
-DURAK = {}
-DUR_IDLE = 3 * 3600
-DUR_MAX = 200
-
-
-def _du_touch(g):
-    g["v"] += 1
-    g["upd"] = time.time()
-    CV.notify_all()
-
-
-def _du_names(tok):
-    i = ident_for(tok, "")
-    return dict(name=i["name"], username=i["username"], avatar=i["avatar"], badge=i["badge"])
-
-
-def _du_cleanup(now):
-    for c in [c for c, g in DURAK.items() if now - g["upd"] > DUR_IDLE]:
-        DURAK.pop(c, None)
-
-
-def _du_get(code, sub):
-    g = DURAK.get(code)
-    if not g or sub not in g["players"]:
-        abort(404)
-    return g
-
-
-def _du_idx(g, x):
-    return g["players"].index(x) if x in g["players"] else -1
-
-
-def _du_card(x):
-    r, s = x
-    r = int(r)
-    s = str(s)
-    if r not in RANKS or s not in SUITS:
-        raise ValueError("card")
-    return (r, s)
-
-
-def _du_start(g):
-    g["eng"] = Durak(list(g["players"]), perevod=g["perevod"])
-    g["status"] = "play"
-
-
-def _du_view(g, sub):
-    now = time.time()
-    ps = g["players"]
-    eng = g["eng"]
-    out = dict(v=g["v"], code=g["code"], status=g["status"], size=g["size"], perevod=g["perevod"],
-               joined=len(ps), round=g["round"], host=bool(ps and ps[0] == sub),
-               me=ps.index(sub) if sub in ps else -1, started=False, actions=[], hand=[], table=[],
-               quit=None, attacker=-1, defender=-1, took=False, cap=0, deck=0, discard=0, trump="")
-    evp = []
-    if eng:
-        ev = eng.view(sub)
-        evp = ev["players"]
-        out.update(trump=ev["trump"], deck=ev["deck"], discard=ev["discard"],
-                   attacker=_du_idx(g, eng.attacker), defender=_du_idx(g, eng.defender),
-                   took=ev["took"], cap=ev["cap"], table=ev["table"], hand=ev["hand"],
-                   actions=ev["actions"], started=eng.started,
-                   passed=[_du_idx(g, p) for p in ev["passed"]])
-        if eng.over:
-            out["over"] = True
-            out["loser"] = _du_idx(g, eng.loser)
-    players = []
-    for i, p in enumerate(ps):
-        nm = g["names"].get(p) or {}
-        ep = evp[i] if i < len(evp) else {}
-        players.append(dict(name=nm.get("name", ""), avatar=nm.get("avatar", ""),
-                            username=nm.get("username", ""), me=(p == sub),
-                            online=bool(now - g["seen"].get(p, 0) < 35),
-                            n=ep.get("n", 0), out=bool(ep.get("out", False))))
-    out["players"] = players
-    if g.get("quit"):
-        out["quit"] = _du_idx(g, g["quit"])
-    out["vc"], out["vk"] = _gv_view("durak", g)
-    return out
-
-
-@app.route("/api/durak/create", methods=["POST"])
-def api_durak_create():
-    sub, tok = auth_sub()
-    if not rate_hit("durc", sub, 12, 60):
-        abort(429)
-    d0 = request.get_json(silent=True) or {}
-    try:
-        size = max(2, min(4, int(d0.get("size") or 2)))
-    except (TypeError, ValueError):
-        size = 2
-    perevod = bool(d0.get("perevod", True))
-    nm = _du_names(tok)
-    now = time.time()
-    with CV:
-        _du_cleanup(now)
-        if len(DURAK) >= DUR_MAX:
-            abort(503)
-        for _ in range(50):
-            c = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
-            if c not in DURAK:
-                break
-        else:
-            abort(503)
-        g = dict(code=c, players=[sub], names={sub: nm}, seen={sub: now}, size=size, perevod=perevod,
-                 status="wait", eng=None, v=1, vk=0, upd=now, round=1, quit=None)
-        DURAK[c] = g
-        return jsonify(_du_view(g, sub))
-
-
-@app.route("/api/durak/join", methods=["POST"])
-def api_durak_join():
-    sub, tok = auth_sub()
-    code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    if not code:
-        abort(400)
-    nm = _du_names(tok)
-    now = time.time()
-    with CV:
-        g = DURAK.get(code)
-        if not g:
-            abort(404)
-        if sub not in g["players"]:
-            if len(g["players"]) >= g["size"] or g["status"] != "wait":
-                return jsonify(error="full"), 403
-            g["players"].append(sub)
-            g["names"][sub] = nm
-            g["seen"][sub] = now
-            if len(g["players"]) >= g["size"]:
-                _du_start(g)
-            _du_touch(g)
-        else:
-            g["names"][sub] = nm
-        g["seen"][sub] = now
-        return jsonify(_du_view(g, sub))
-
-
-@app.route("/api/durak/poll")
-def api_durak_poll():
-    sub, tok = auth_sub()
-    code = clean_room(request.args.get("room"))
-    try:
-        v = int(request.args.get("v", "0"))
-    except ValueError:
-        abort(400)
-    try:
-        vk = int(request.args["vk"]) if "vk" in request.args else None
-    except ValueError:
-        abort(400)
-    deadline = time.time() + 20
-    with CV:
-        g = _du_get(code, sub)
-        now = time.time()
-        if now - g["seen"].get(sub, 0) > 30:
-            g["seen"][sub] = now
-            _du_touch(g)
-        g["seen"][sub] = now
-        while g["v"] == v and (vk is None or g.get("vk", 0) == vk):
-            left = deadline - time.time()
-            if left <= 0:
-                break
-            CV.wait(timeout=left)
-            g = DURAK.get(code)
-            if not g:
-                abort(404)
-            g["seen"][sub] = time.time()
-        resp = jsonify(_du_view(g, sub))
-    resp.headers["Cache-Control"] = "no-store"
-    return resp
-
-
-@app.route("/api/durak/check")
-def api_durak_check():
-    sub, tok = auth_sub()
-    code = clean_room(request.args.get("room"))
-    with CV:
-        g = DURAK.get(code)
-        if not g or sub not in g["players"]:
-            abort(404)
-        return jsonify(ok=True, status=g["status"])
-
-
-@app.route("/api/durak/move", methods=["POST"])
-def api_durak_move():
-    sub, tok = auth_sub()
-    d = request.get_json(silent=True) or {}
-    code = clean_room(d.get("room"))
-    act = str(d.get("action", ""))
-    with CV:
-        g = _du_get(code, sub)
-        g["seen"][sub] = time.time()
-        eng = g["eng"]
-        if g["status"] != "play" or eng is None:
-            return jsonify(_du_view(g, sub))
-        try:
-            if act == "attack":
-                eng.attack(sub, _du_card(d.get("card")))
-            elif act == "defend":
-                eng.defend(sub, _du_card(d.get("attack")), _du_card(d.get("card")))
-            elif act == "transfer":
-                eng.transfer(sub, _du_card(d.get("card")))
-            elif act == "take":
-                eng.take(sub)
-            elif act == "pass":
-                eng.pass_turn(sub)
-            else:
-                abort(400)
-        except GameError as e:
-            return jsonify(error=str(e)), 400
-        except (TypeError, ValueError, IndexError):
-            abort(400)
-        if eng.over:
-            g["status"] = "over"
-        _du_touch(g)
-        return jsonify(_du_view(g, sub))
-
-
-@app.route("/api/durak/again", methods=["POST"])
-def api_durak_again():
-    sub, tok = auth_sub()
-    d = request.get_json(silent=True) or {}
-    code = clean_room(d.get("room"))
-    with CV:
-        g = _du_get(code, sub)
-        g["seen"][sub] = time.time()
-        try:
-            rd = int(d.get("round", 0))
-        except (TypeError, ValueError):
-            rd = 0
-        if g["status"] == "over" and rd == g["round"]:
-            g["round"] += 1
-            q = g.get("quit")
-            if q:                                  # çıxan oyunçu silinir, yer boşalır
-                g["quit"] = None
-                if q in g["players"]:
-                    g["players"].remove(q)
-                g["names"].pop(q, None)
-                g["seen"].pop(q, None)
-                g["eng"] = None
-                g["status"] = "wait"
-            elif len(g["players"]) == g["size"]:
-                _du_start(g)
-            else:
-                g["eng"] = None
-                g["status"] = "wait"
-            _du_touch(g)
-        return jsonify(_du_view(g, sub))
-
-
-@app.route("/api/durak/quit", methods=["POST"])
-def api_durak_quit():
-    """Oyundan həqiqətən çıx. Gözləmədə: yer boşalır, yaradan çıxsa otaq bağlanır.
-    Gedən oyunda: oyun çıxana görə bitir, çıxan durak sayılır."""
-    sub, tok = auth_sub()
-    code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = DURAK.get(code)
-        if not g or sub not in g["players"]:
-            return jsonify(ok=True)
-        if g["status"] == "wait":
-            if g["players"][0] == sub:
-                DURAK.pop(code, None)
-                return jsonify(ok=True)
-            g["players"].remove(sub)
-            g["names"].pop(sub, None)
-            g["seen"].pop(sub, None)
-        elif g["status"] == "play" and g["eng"] and not g["eng"].over:
-            eng = g["eng"]
-            eng.over = True
-            eng.loser = sub
-            eng.started = False
-            g["status"] = "over"
-            g["quit"] = sub
-        elif g["status"] == "over" and not g.get("quit"):
-            g["quit"] = sub
-        _du_touch(g)
-    return jsonify(ok=True)
-
-
 #  Oyun səsli otağı (domino / şahmat): WebRTC siqnalı. Səsin özü cihazlar arasında gedir,
 #  server yalnız offer/answer/ice mesajlarını ötürür. Domino-da 4 nəfərə qədər (hər kəs hər kəslə).
 #  Oyunun öz dict-indən ayrı saxlanır (kompüter hərəkəti deepcopy edir, SDP mesajları ora düşməsin).
 # ---------------------------------------------------------------
 GV = {}              # (oyun, kod) -> {"mem": {vid: {name, muted, ts}}, "q": [mesajlar], "s": say}
 GV_TTL = 45          # long-poll bu müddətdən uzun yoxdursa, iştirakçı "səsdə" sayılmır
-GV_KINDS = ("domino", "chess", "durak")
+GV_KINDS = ("domino", "chess")
 GV_SIG = ("offer", "answer", "ice")
 
 
