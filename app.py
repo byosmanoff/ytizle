@@ -3950,6 +3950,28 @@ def api_durak_again():
         return jsonify(_du_view(g, sub))
 
 
+@app.route("/api/durak/leave", methods=["POST"])
+def api_durak_leave():
+    """Geri düyməsi: oyundan çıxmadan ekranı bağla. Gözləmədə yer boşalır (yaradan çıxsa otaq bağlanır),
+    oyunda isə oyunçu qısa müddət 'əlaqədə deyil' görünür."""
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = DURAK.get(code)
+        if g and sub in g["players"] and g["status"] == "wait":
+            if g["players"][0] == sub:
+                DURAK.pop(code, None)
+            else:
+                g["players"].remove(sub)
+                g["names"].pop(sub, None)
+                g["seen"].pop(sub, None)
+                _du_touch(g)
+        elif g and sub in g["players"]:
+            g["seen"][sub] = 0
+            _du_touch(g)
+    return jsonify(ok=True)
+
+
 @app.route("/api/durak/quit", methods=["POST"])
 def api_durak_quit():
     """Oyundan həqiqətən çıx. Gözləmədə: yer boşalır, yaradan çıxsa otaq bağlanır.
