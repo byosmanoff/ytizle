@@ -4178,5 +4178,326 @@ def api_domino_claim():
         return jsonify(_dom_view(g, sub))
 
 
+
+# ---------------------------------------------------------------
+#  Durak otağı: server tərəfindən idarə olunan kart oyunu.
+#  API: /api/durak/create, /join, /state, /move, /leave
+# ---------------------------------------------------------------
+DURAK = {}
+DURAK_IDLE = 3 * 3600
+DURAK_MAX = 200
+DURAK_RANKS = list(range(6, 15))  # 6..10, J, Q, K, A
+DURAK_SUITS = ["♠", "♥", "♦", "♣"]
+
+
+def _durak_card_text(card):
+    rank, suit = card
+    return (str(rank) if rank <= 10 else {11: "J", 12: "Q", 13: "K", 14: "A"}[rank]) + suit
+
+
+def _durak_sort(hand):
+    return sorted(hand, key=lambda c: (c[0], DURAK_SUITS.index(c[1])))
+
+
+def _durak_touch(g):
+    g["updated"] = time.time()
+    g["v"] += 1
+    CV.notify_all()
+
+
+def _durak_cleanup(now):
+    for code in [c for c, g in DURAK.items() if now - g.get("updated", now) > DURAK_IDLE]:
+        DURAK.pop(code, None)
+
+
+def _durak_names(tok):
+    i = ident_for(tok, "")
+    return {"name": i["name"], "username": i["username"], "avatar": i["avatar"], "badge": i["badge"]}
+
+
+def _durak_new_deck():
+    deck = [(r, s) for r in DURAK_RANKS for s in DURAK_SUITS]
+    random.shuffle(deck)
+    return deck
+
+
+def _durak_deal(g):
+    deck = _durak_new_deck()
+    g["hands"] = {p: [] for p in g["players"]}
+    for _ in range(6):
+        for p in g["players"]:
+            if deck:
+                g["hands"][p].append(deck.pop())
+    g["stock"] = deck[:-1]
+    g["trump"] = deck[-1] if deck else (14, "♠")
+    g["table"] = []  # entries: {attack, defender, defense}
+    g["status"] = "play" if len(g["players"]) >= 2 else "wait"
+    g["attacker"] = g["players"][0]
+    g["defender"] = g["players"][1] if len(g["players"]) > 1 else None
+    g["turn"] = g["attacker"]
+    g["phase"] = "attack"
+    g["last_action"] = "Kartlar paylandı"
+    g["winner"] = None
+    g["round"] = g.get("round", 0) + 1
+
+
+def _durak_beats(defense, attack, trump):
+    dr, ds = defense
+    ar, ass = attack
+    return (ds == ass and dr > ar) or (ds == trump[1] and ass != trump[1])
+
+
+def _durak_next_player(g, player):
+    players = g["players"]
+    if player not in players:
+        return players[0]
+    return players[(players.index(player) + 1) % len(players)]
+
+
+def _durak_bot_action(g):
+    """Bir sadə bot gedişi; hərəkət serverdə icra olunur."""
+    for _ in range(8):
+        if g["status"] != "play" or g["turn"] != "bot":
+            return
+        hand = g["hands"].get("bot", [])
+        if g["phase"] == "attack":
+            if not g["table"]:
+                if hand:
+                    card = min(hand)
+                    hand.remove(card)
+                    g["table"].append({"attack": card, "defense": None})
+                    g["phase"] = "defend"
+                    g["turn"] = g["defender"]
+                    g["last_action"] = "Kompüter hücum etdi"
+                else:
+                    g["status"] = "over"; g["winner"] = "bot"
+                    return
+            else:
+                ranks = {x["attack"][0] for x in g["table"]}
+                ranks.update(x["defense"][0] for x in g["table"] if x["defense"])
+                candidates = [c for c in hand if c[0] in ranks]
+                if candidates and len(g["table"]) < 6:
+                    card = min(candidates); hand.remove(card)
+                    g["table"].append({"attack": card, "defense": None})
+                    g["phase"] = "defend"; g["turn"] = g["defender"]
+                    g["last_action"] = "Kompüter əlavə hücum etdi"
+                else:
+                    g["phase"] = "finish"; g["turn"] = g["defender"]
+                    g["last_action"] = "Kompüter hücumu bitirdi"
+                    return
+        elif g["phase"] == "defend":
+            pending = next((x for x in g["table"] if x["defense"] is None), None)
+            if pending:
+                candidates = [c for c in hand if _durak_beats(c, pending["attack"], g["trump"])]
+                if candidates:
+                    card = min(candidates); hand.remove(card); pending["defense"] = card
+                    g["phase"] = "attack"; g["turn"] = g["attacker"]
+                    g["last_action"] = "Kompüter müdafiə etdi"
+                else:
+                    g["hands"].setdefault(g["defender"], []).extend(x["attack"] for x in g["table"])
+                    g["hands"][g["defender"]].extend(x["defense"] for x in g["table"] if x["defense"])
+                    g["table"] = []; g["attacker"] = _durak_next_player(g, g["defender"])
+                    g["defender"] = _durak_next_player(g, g["attacker"])
+                    g["turn"] = g["attacker"]; g["phase"] = "attack"
+                    g["last_action"] = "Kompüter kartları götürdü"
+                    return
+        elif g["phase"] == "finish":
+            g["table"] = []; g["attacker"] = g["defender"]
+            g["defender"] = _durak_next_player(g, g["attacker"])
+            g["turn"] = g["attacker"]; g["phase"] = "attack"
+            g["last_action"] = "Yeni raund"
+            return
+
+
+def _durak_public(g, sub):
+    hand = _durak_sort(g["hands"].get(sub, []))
+    players = []
+    for p in g["players"]:
+        info = dict(g["names"].get(p, {}))
+        info.update(id=p, cards=len(g["hands"].get(p, [])), me=(p == sub), bot=(p == "bot"),
+                    turn=(p == g["turn"]), attacker=(p == g["attacker"]), defender=(p == g["defender"]))
+        players.append(info)
+    return dict(ok=True, code=g["code"], v=g["v"], status=g["status"], players=players,
+                hand=[list(c) for c in hand], table=[{"attack": list(x["attack"]), "defense": list(x["defense"]) if x["defense"] else None} for x in g["table"]],
+                stock=len(g["stock"]), trump=list(g["trump"]), mode=g["mode"], transfer=bool(g["transfer"]),
+                size=g["size"], turn=g["turn"], phase=g["phase"], attacker=g["attacker"], defender=g["defender"],
+                last_action=g["last_action"], winner=g["winner"], me=sub)
+
+
+def _durak_get(code, sub):
+    g = DURAK.get(code)
+    if not g or sub not in g["players"]:
+        abort(404)
+    return g
+
+
+@app.route("/api/durak/create", methods=["POST"])
+def api_durak_create():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    try:
+        size = max(2, min(4, int(d.get("size", 2))))
+    except (TypeError, ValueError):
+        size = 2
+    bot = bool(d.get("bot", False))
+    mode = "transfer" if str(d.get("mode", "classic")).lower() in ("transfer", "perevod", "perevod-durak") else "classic"
+    now = time.time()
+    with CV:
+        _durak_cleanup(now)
+        if len(DURAK) >= DURAK_MAX:
+            abort(503)
+        for _ in range(50):
+            code = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
+            if code not in DURAK:
+                break
+        else:
+            abort(503)
+        g = dict(code=code, players=[sub], names={sub: _durak_names(tok)}, hands={}, stock=[], trump=None,
+                 table=[], status="wait", turn=None, attacker=None, defender=None, phase="attack", winner=None,
+                 mode=mode, transfer=bool(d.get("transfer", mode == "transfer")), size=size, v=1,
+                 updated=now, last_action="Otaq yaradıldı", seen={sub: now})
+        if bot:
+            g["players"].extend(["bot"] + [f"bot{i}" for i in range(2, size)])
+            for p in g["players"][1:]:
+                g["names"][p] = dict(name="Kompüter" if p == "bot" else f"Kompüter {p[-1]}", username=p, avatar="", badge=None)
+            _durak_deal(g)
+        DURAK[code] = g
+        return jsonify(_durak_public(g, sub))
+
+
+@app.route("/api/durak/join", methods=["POST"])
+def api_durak_join():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    if not code:
+        abort(400)
+    with CV:
+        g = DURAK.get(code)
+        if not g:
+            abort(404)
+        if sub not in g["players"]:
+            if g["status"] != "wait" or len(g["players"]) >= g["size"]:
+                return jsonify(error="full"), 403
+            g["players"].append(sub); g["names"][sub] = _durak_names(tok); g["seen"][sub] = time.time()
+            if len(g["players"]) >= g["size"]:
+                _durak_deal(g)
+            _durak_touch(g)
+        return jsonify(_durak_public(g, sub))
+
+
+@app.route("/api/durak/state")
+def api_durak_state():
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    try:
+        version = int(request.args.get("v", "-1"))
+    except ValueError:
+        abort(400)
+    with CV:
+        g = _durak_get(code, sub)
+        g["seen"][sub] = time.time()
+        deadline = time.time() + 20
+        while g["v"] == version:
+            left = deadline - time.time()
+            if left <= 0:
+                break
+            CV.wait(timeout=left)
+            g = _durak_get(code, sub)
+        resp = jsonify(_durak_public(g, sub))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/api/durak/move", methods=["POST"])
+def api_durak_move():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room")); action = str(d.get("action", ""))
+    with CV:
+        g = _durak_get(code, sub)
+        if g["status"] != "play" or g["turn"] != sub:
+            return jsonify(_durak_public(g, sub))
+        hand = g["hands"].get(sub, [])
+        try:
+            card = tuple(d.get("card", [])) if d.get("card") is not None else None
+            target = int(d.get("target", -1))
+        except (TypeError, ValueError):
+            abort(400)
+        if action == "attack":
+            if g["phase"] != "attack" or card not in hand or len(g["table"]) >= 6:
+                abort(400)
+            if g["table"]:
+                ranks = {x["attack"][0] for x in g["table"]}
+                ranks.update(x["defense"][0] for x in g["table"] if x["defense"])
+                if card[0] not in ranks: abort(400)
+            hand.remove(card); g["table"].append({"attack": card, "defense": None})
+            g["phase"] = "defend"; g["turn"] = g["defender"]; g["last_action"] = "Hücum edildi"
+        elif action == "defend":
+            if g["phase"] != "defend" or card not in hand or not (0 <= target < len(g["table"])): abort(400)
+            entry = g["table"][target]
+            if entry["defense"] is not None or not _durak_beats(card, entry["attack"], g["trump"]): abort(400)
+            hand.remove(card); entry["defense"] = card; g["phase"] = "attack"; g["turn"] = g["attacker"]
+            g["last_action"] = "Müdafiə edildi"
+        elif action == "take":
+            if sub != g["defender"] or g["phase"] not in ("defend", "finish"): abort(400)
+            hand.extend(x["attack"] for x in g["table"]); hand.extend(x["defense"] for x in g["table"] if x["defense"])
+            g["table"] = []; g["attacker"] = g["defender"]; g["defender"] = _durak_next_player(g, g["attacker"])
+            g["turn"] = g["attacker"]; g["phase"] = "attack"; g["last_action"] = "Kartlar götürüldü"
+        elif action == "pass":
+            if sub != g["defender"] or g["phase"] != "attack" or not g["table"] or any(x["defense"] is None for x in g["table"]): abort(400)
+            g["phase"] = "finish"; g["turn"] = g["defender"]; g["last_action"] = "Hücum bitdi"
+        elif action == "finish":
+            if sub != g["defender"] or g["phase"] != "finish": abort(400)
+            g["table"] = []; g["attacker"] = g["defender"]; g["defender"] = _durak_next_player(g, g["attacker"])
+            g["turn"] = g["attacker"]; g["phase"] = "attack"; g["last_action"] = "Yeni raund"
+        else:
+            abort(400)
+        # Raunddan sonra hamı 6 karta tamamlayır; hücum edən birinci çəkir.
+        if g["phase"] == "attack" and not g["table"]:
+            draw_order = [g["attacker"]] + [p for p in g["players"] if p != g["attacker"]]
+            for p in draw_order:
+                while len(g["hands"].get(p, [])) < 6 and g["stock"]:
+                    g["hands"][p].append(g["stock"].pop())
+            active = [p for p in g["players"] if g["hands"].get(p)]
+            if len(active) <= 1 and not g["stock"]:
+                g["status"] = "over"; g["winner"] = active[0] if active else None
+        g["updated"] = time.time(); g["v"] += 1
+        # Bot turns are processed in a bounded loop.
+        for _ in range(8):
+            if g["turn"] not in ("bot", "bot2", "bot3") or g["status"] != "play": break
+            bot_id = g["turn"]
+            # Reuse the simple bot logic by treating each bot id as the active bot.
+            if bot_id != "bot":
+                g["players"] = ["bot" if p == bot_id else p for p in g["players"]]
+                g["hands"]["bot"] = g["hands"].pop(bot_id, [])
+                g["names"]["bot"] = g["names"].pop(bot_id, {})
+                g["turn"] = "bot"
+            _durak_bot_action(g)
+            if bot_id != "bot" and "bot" in g["hands"]:
+                g["hands"][bot_id] = g["hands"].pop("bot")
+                g["names"][bot_id] = g["names"].pop("bot", {})
+                g["players"] = [bot_id if p == "bot" else p for p in g["players"]]
+                if g["turn"] == "bot": g["turn"] = bot_id
+        CV.notify_all()
+        return jsonify(_durak_public(g, sub))
+
+
+@app.route("/api/durak/leave", methods=["POST"])
+def api_durak_leave():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = DURAK.get(code)
+        if g and sub in g["players"]:
+            if g["status"] == "wait" and g["players"][0] == sub:
+                DURAK.pop(code, None)
+            elif g["status"] == "wait":
+                g["players"].remove(sub); g["names"].pop(sub, None); g["hands"].pop(sub, None); _durak_touch(g)
+            else:
+                g["seen"][sub] = 0
+                _durak_touch(g)
+    return jsonify(ok=True)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), threaded=True)
