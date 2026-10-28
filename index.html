@@ -4886,7 +4886,8 @@ boot();
         track.style.transition = 'none'; prof.style.transition = 'none';
       }
       if(mode === 'pager'){
-        var edge = (i0 === 0 && dx > 0) || (i0 === 5 && dx < 0);
+        /* Ayarlar gizli sekmədir: Tarixçə səhifəsindən sola sürüşdürmə onu açmamalıdır. */
+        var edge = (i0 === 0 && dx > 0) || (i0 >= 4 && dx < 0);
         d = edge ? dx * .3 : dx;
       } else d = Math.max(0, dx);
       if(!raf) raf = requestAnimationFrame(paint);
@@ -4898,7 +4899,7 @@ boot();
       var v = Math.abs(d) / Math.max(1, Date.now() - st), far = Math.abs(d) > W * .25 || (v > .4 && Math.abs(d) > 30);
       if(mode === 'pager'){
         var dir = d < 0 ? 1 : -1, j = i0 + dir;
-        if(far && j >= 0 && j <= 5) setTab(PAGES[j], true);
+        if(far && j >= 0 && j <= 5 && !(i0 === 4 && j === 5)) setTab(PAGES[j], true);
         else if(far && j === 6){
           go(5, true); setTab('profile', false);
           prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
