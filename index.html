@@ -1487,10 +1487,6 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <div class="stat"><b id="str">0</b><small><i class="fa-solid fa-door-open" aria-hidden="true"></i>otaq</small></div>
     <div class="stat now"><b id="stl">0</b><small><i class="fa-solid fa-circle live-dot" aria-hidden="true"></i>indi izləyir</small></div>
   </div>
-  <div class="card" id="gamesHead">
-    <h2><i class="fa-solid fa-gamepad" aria-hidden="true"></i>Oyunlar</h2>
-    <div class="hint">Dostunla onlayn oyna: oyun seç, otaq aç və kodu göndər.</div>
-  </div>
   <div class="card" id="domCard">
     <h2><i class="fa-solid fa-dice" aria-hidden="true"></i>Domino</h2>
     <div class="hint">Domino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.</div>
@@ -4792,7 +4788,7 @@ boot();
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
   var ORDER = ['home','plans','friends','games','hist','settings','profile'], PAGES = ORDER.slice(0,6);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#gamesHead','games'],['#domCard','games'],['#chCard','games'],
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#chCard','games'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
     ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
   map.forEach(function(m){
