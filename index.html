@@ -888,6 +888,10 @@ body.mob #menu,body.mob #profile{touch-action:pan-y}
   padding:10px max(16px,calc((100% - 488px)/2)) calc(96px + env(safe-area-inset-bottom))}
 .pg>*{flex:none}
 body.mob #profile{will-change:transform}
+/* Ayarlar profilin içindədir: yanaşı səhifələrin (pager) bir hissəsi deyil, yalnız dişli düyməsi ilə açılan ayrıca təbəqədir */
+.pager>.pg-set{position:absolute;left:0;top:0;right:0;bottom:0;width:auto;height:auto;z-index:2;visibility:hidden}
+#menu[data-tab="settings"] .pager>.pg-set{visibility:visible}
+#menu[data-tab="settings"] .pager>.track{visibility:hidden}
 
 /* ================= LIQUID GLASS (üst təbəqə — köhnə dizaynın üzərinə) ================= */
 :root{
@@ -4797,7 +4801,7 @@ boot();
     el.setAttribute('data-t', m[1]);
   });
   var btns = [].slice.call(document.querySelectorAll('#tabbar button')), cur = 'home', prev = 'home';
-  var pager = null, track = null;
+  var pager = null, track = null, setPg = null;
 
   /* telefon/planşet: səhifələri yanaşı düzürük; kompüter: köhnə kimi göstər/gizlət */
   var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
@@ -4809,11 +4813,13 @@ boot();
     track = document.createElement('div'); track.className = 'track';
     var pgs = {};
     PAGES.forEach(function(n){
-      var pg = document.createElement('div'); pg.className = 'pg'; pg.setAttribute('data-p', n);
-      track.appendChild(pg); pgs[n] = pg;
+      var pg = document.createElement('div'); pg.className = n === 'settings' ? 'pg pg-set' : 'pg'; pg.setAttribute('data-p', n);
+      if(n !== 'settings') track.appendChild(pg);
+      pgs[n] = pg;
     });
     [].slice.call(menu.querySelectorAll('[data-t]')).forEach(function(el){ pgs[el.getAttribute('data-t')].appendChild(el); });
     pager.appendChild(track);
+    setPg = pgs.settings; pager.appendChild(setPg);
     menu.insertBefore(pager, document.getElementById('tabbar'));
     menu.classList.add('pager-on');
   } else {
@@ -4824,14 +4830,14 @@ boot();
   }
   var idx = function(){ return cur === 'profile' ? 6 : PAGES.indexOf(cur); };
   function go(i, anim){
-    if(!track) return;
+    if(!track || i > 4) return;
     track.style.transition = anim ? 'transform .26s cubic-bezier(.22,.9,.3,1)' : 'none';
     track.style.transform = 'translate3d(' + (-i * 100) + '%,0,0)';
   }
   function mark(t){ btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === t); }); }
   function setTab(t, anim){
     if(t === 'profile'){
-      if(cur !== 'profile') prev = cur;
+      if(cur !== 'profile' && cur !== 'settings') prev = cur;
       cur = 'profile'; mark('profile');
       if(prof.hidden && typeof openProfile === 'function') openProfile();
       return;
@@ -4845,8 +4851,8 @@ boot();
 
   /* profil başqa yolla açılıb-bağlananda naviqasiya sinxron qalır */
   new MutationObserver(function(){
-    if(!prof.hidden){ if(cur !== 'profile'){ prev = cur; cur = 'profile'; mark('profile'); } }
-    else if(cur === 'profile'){ cur = prev || 'home'; mark(cur); }
+    if(!prof.hidden){ if(cur !== 'profile'){ if(cur !== 'settings') prev = cur; cur = 'profile'; mark('profile'); } }
+    else if(cur === 'profile'){ cur = prev || 'home'; mark(cur); menu.setAttribute('data-tab', cur); if(pager) go(PAGES.indexOf(cur), false); }
   }).observe(prof, {attributes: true, attributeFilter: ['hidden']});
   var mav = document.getElementById('mav'), tav = document.getElementById('tav');
   function syncAv(){ tav.style.backgroundImage = mav.style.backgroundImage; tav.textContent = mav.style.backgroundImage ? '' : mav.textContent; }
@@ -4869,6 +4875,7 @@ boot();
     var paint = function(){
       raf = 0; if(!lock) return;
       if(mode === 'pager') track.style.transform = 'translate3d(calc(' + (-i0 * 100) + '% + ' + d + 'px),0,0)';
+      else if(mode === 'set') setPg.style.transform = 'translate3d(' + d + 'px,0,0)';
       else prof.style.transform = 'translate3d(' + d + 'px,0,0)';
     };
     var onStart = function(e){
@@ -4882,12 +4889,12 @@ boot();
       if(!lock){
         if(Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)){ sOk = false; return; }
         if(!(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2)) return;
-        lock = 1; mode = cur === 'profile' ? 'prof' : 'pager'; i0 = idx();
-        track.style.transition = 'none'; prof.style.transition = 'none';
+        lock = 1; mode = cur === 'profile' ? 'prof' : (cur === 'settings' ? 'set' : 'pager'); i0 = idx();
+        track.style.transition = 'none'; prof.style.transition = 'none'; if(setPg) setPg.style.transition = 'none';
       }
       if(mode === 'pager'){
-        /* Ayarlar gizli sekmədir: Tarixçə səhifəsindən sola sürüşdürmə onu açmamalıdır. */
-        var edge = (i0 === 0 && dx > 0) || (i0 >= 4 && dx < 0);
+        /* Ayarlar sürüşdürmə zolağında deyil: Tarixçədən sola çəkəndə heç nə açılmır (yalnız yüngül rezin effekti) */
+        var edge = (i0 === 0 && dx > 0) || (i0 === 4 && dx < 0);
         d = edge ? dx * .3 : dx;
       } else d = Math.max(0, dx);
       if(!raf) raf = requestAnimationFrame(paint);
@@ -4898,21 +4905,22 @@ boot();
       sOk = false; lock = 0;
       var v = Math.abs(d) / Math.max(1, Date.now() - st), far = Math.abs(d) > W * .25 || (v > .4 && Math.abs(d) > 30);
       if(mode === 'pager'){
-  var dir = d < 0 ? 1 : -1, j = i0 + dir;
-  // Əgər Tarixçədəyiksə (i0 === 4) və sola sürüşdürürüksə (dir === 1), Ayarlara (5) keçməyi blokla.
-  // Ayarlar artıq alt paneldə gizlədilib, profil daxilindəki dişli ilə açılır.
-  var blockSettings = (i0 === 4 && dir === 1); 
-  
-  if(far && j >= 0 && j <= 5 && !blockSettings) {
-      setTab(PAGES[j], true);
-  }
-  else if(far && j === 6){
-    go(5, true); setTab('profile', false);
-    prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
-    void prof.offsetWidth;
-    prof.style.transition = 'transform .26s cubic-bezier(.22,.9,.3,1)'; prof.style.transform = '';
-  } else go(i0, true);
-} else {
+        var dir = d < 0 ? 1 : -1, j = i0 + dir;
+        if(far && j >= 0 && j <= 4) setTab(PAGES[j], true);
+        else go(i0, true);
+      } else if(mode === 'set'){
+        /* Ayarlardan sağa sürüşdürmə = profilə qayıt */
+        if(far){
+          setPg.style.transition = 'none'; setPg.style.transform = '';
+          setTab('profile', false);
+          prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + (-W) + 'px,0,0)';
+          void prof.offsetWidth;
+          prof.style.transition = 'transform .26s cubic-bezier(.22,.9,.3,1)'; prof.style.transform = '';
+        } else {
+          setPg.style.transition = 'transform .22s cubic-bezier(.22,.9,.3,1)'; setPg.style.transform = '';
+          setTimeout(function(){ setPg.style.transition = ''; }, 240);
+        }
+      } else {
         if(far){
           prof.style.transition = 'transform .2s ease-out'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
           setTimeout(function(){ prof.style.transition = ''; prof.style.transform = ''; setTab(prev || 'hist', false); }, 200);
@@ -4926,7 +4934,7 @@ boot();
       el.addEventListener('touchstart', onStart, {passive: true});
       el.addEventListener('touchmove', onMove, {passive: true});
       el.addEventListener('touchend', onEnd, {passive: true});
-      el.addEventListener('touchcancel', function(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } if(lock){ if(mode === 'pager') go(i0, true); else { prof.style.transition = 'transform .2s ease-out'; prof.style.transform = ''; } } sOk = false; lock = 0; }, {passive: true});
+      el.addEventListener('touchcancel', function(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } if(lock){ if(mode === 'pager') go(i0, true); else if(mode === 'set'){ setPg.style.transition = 'transform .2s ease-out'; setPg.style.transform = ''; } else { prof.style.transition = 'transform .2s ease-out'; prof.style.transform = ''; } } sOk = false; lock = 0; }, {passive: true});
     });
   }
 
