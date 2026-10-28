@@ -4898,15 +4898,21 @@ boot();
       sOk = false; lock = 0;
       var v = Math.abs(d) / Math.max(1, Date.now() - st), far = Math.abs(d) > W * .25 || (v > .4 && Math.abs(d) > 30);
       if(mode === 'pager'){
-        var dir = d < 0 ? 1 : -1, j = i0 + dir;
-        if(far && j >= 0 && j <= 5 && !(i0 === 4 && j === 5)) setTab(PAGES[j], true);
-        else if(far && j === 6){
-          go(5, true); setTab('profile', false);
-          prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
-          void prof.offsetWidth;
-          prof.style.transition = 'transform .26s cubic-bezier(.22,.9,.3,1)'; prof.style.transform = '';
-        } else go(i0, true);
-      } else {
+  var dir = d < 0 ? 1 : -1, j = i0 + dir;
+  // Əgər Tarixçədəyiksə (i0 === 4) və sola sürüşdürürüksə (dir === 1), Ayarlara (5) keçməyi blokla.
+  // Ayarlar artıq alt paneldə gizlədilib, profil daxilindəki dişli ilə açılır.
+  var blockSettings = (i0 === 4 && dir === 1); 
+  
+  if(far && j >= 0 && j <= 5 && !blockSettings) {
+      setTab(PAGES[j], true);
+  }
+  else if(far && j === 6){
+    go(5, true); setTab('profile', false);
+    prof.style.transition = 'none'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
+    void prof.offsetWidth;
+    prof.style.transition = 'transform .26s cubic-bezier(.22,.9,.3,1)'; prof.style.transform = '';
+  } else go(i0, true);
+} else {
         if(far){
           prof.style.transition = 'transform .2s ease-out'; prof.style.transform = 'translate3d(' + W + 'px,0,0)';
           setTimeout(function(){ prof.style.transition = ''; prof.style.transform = ''; setTab(prev || 'hist', false); }, 200);
