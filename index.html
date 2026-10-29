@@ -6445,12 +6445,19 @@ window.wtInviteBox = function(o){
     b.setAttribute('aria-label', 'Bazar: ' + s.stock);
     var stk = dom.stk || (dom.stk = []);
     while(stk.length > s.stock){ var ri = (dom.tapIdx != null && dom.tapIdx < stk.length) ? dom.tapIdx : stk.length - 1; stk.splice(ri, 1); dom.tapIdx = null; }
-    while(stk.length < s.stock) stk.push({x: Math.random() * 90, y: Math.random() * 30, r: Math.round((Math.random() - .5) * 170)});
+    while(stk.length < s.stock) stk.push({});
     b.innerHTML = '<div class="dstk-l"><small>Bazar</small><b>' + s.stock + '</b></div><div class="dstk-p"></div>';
     var pp = b.lastChild;
-    if(show) stk.forEach(function(o){
-      var tl = tile(null, {v: true, back: true});
-      tl.style.left = o.x + '%'; tl.style.top = o.y + 'px'; tl.style.rotate = o.r + 'deg';
+    var ANG = [-14, -6, 8, -10, 12, -4, 6, -12, 10, -8];   /* sabit bucaqlar: hər yenilənmədə eyni görünüş */
+    if(show) stk.forEach(function(o, i){
+      /* iki yığın: solda kiçik qrup (ilk 4 daş), sağda böyük qrup, daşlar bir-birinin üstündə */
+      var tl = tile(null, {v: true, back: true}), L, T;
+      if(i < 4){ L = 6 + i * 5; T = 10 + (i % 2) * 6; }
+      else { var j = i - 4; L = 54 + (j % 4) * 9 + Math.floor(j / 4) * 3; T = 2 + (j % 3) * 6; }
+      tl.style.left = L + '%';
+      tl.style.top = T + 'px';
+      tl.style.rotate = ANG[i % ANG.length] + 'deg';
+      tl.style.zIndex = i;
       tl.setAttribute('role', 'button'); pp.appendChild(tl);
     });
     $('dclaim').hidden = !(s.status === 'play' && s.turn === 'opp' && !s.turn_online && !s.bot);
