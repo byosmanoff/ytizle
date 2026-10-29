@@ -4068,6 +4068,7 @@ def _du_view(g, sub):
         evp = ev["players"]
         out.update(trump=ev["trump"], deck=ev["deck"], discard=ev["discard"],
                    attacker=_du_idx(g, eng.attacker), defender=_du_idx(g, eng.defender),
+                   tcard=(list(eng.deck[0]) if eng.deck else None),
                    took=ev["took"], cap=ev["cap"], table=ev["table"], hand=ev["hand"],
                    actions=ev["actions"], started=eng.started,
                    passed=[_du_idx(g, p) for p in ev["passed"]])
