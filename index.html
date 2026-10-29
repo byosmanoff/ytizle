@@ -6754,6 +6754,9 @@ window.wtInviteBox = function(o){
         remember(j.code); show(true);
         $('durhand').style.display = '';
         sync(j); startPoll(); lobbyMsg('');
+      } else if(!isCreate && r.status === 404 && code === saved()){
+        remember('');                                  // köhnə kod: oyun artıq yoxdur, "Oyuna qayıt" düyməsi yox olsun
+        lobbyMsg('Oyun bitib və ya tapılmadı');
       } else lobbyMsg(errOf(r, j));
     }catch(e){ lobbyMsg('Əlaqə problemi, yenidən cəhd et'); }
     busy = false;
@@ -6821,9 +6824,9 @@ window.wtInviteBox = function(o){
         if(!j){ again(2500); return; }
         var same = j.v === v0;
         sync(j);
-        if(same && !du.botT) again(3000);
+        if(same && !du.botT) again(1200);
       }).catch(function(){ if(g === gen && !du.botT) again(2500); });
-    }, 650 + Math.floor(Math.random() * 450));
+    }, 280 + Math.floor(Math.random() * 220));
   }
   function render(){
     var s = du.s; if(!s) return;
@@ -6995,6 +6998,10 @@ window.wtInviteBox = function(o){
   };
   $('durCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('durEnter').click(); } });
   $('durResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
+  (function(){                                          // saxlanan oyun serverdə qalmayıbsa düyməni gizlət
+    var c = saved(); if(!c) return;
+    api('/api/durak/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+  })();
   $('durBot').onclick = function(){ enter('', true, true); };
   $('durback').onclick = function(){ close(true); };
   $('dushare').onclick = share;

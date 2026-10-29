@@ -3391,7 +3391,7 @@ def api_domino_quit():
 
 # ---------------------------------------------------------------
 #  --- Durak mühərriki (durak_engine.py ilə eyni) ---
-"""Durak (Dürak) oyun mühərriki. Kompüter (bot) hərəkətləri ayrıca du_bot_pick ilə seçilir.
+"""Durak (Dürak) oyun mühərriki. Kompüter (bot) hərəkətləri du_bot_pick ilə seçilir.
 
 Qaydalar:
   * 2–4 oyunçu, 36 kartlıq dəst, hər kəsə 6 kart.
@@ -3439,6 +3439,7 @@ class Durak:
         self.rng.shuffle(deck)
         self.deck = deck              # kartlar sondan çəkilir
         self.trump = deck[0][1]       # ən alt kart kozırı göstərir (deck[0] dəstdə qalır)
+        self.trump_card = deck[0]     # hamı görür: onu çəkən oyunçunun əlində olduğu bilinir
 
         self.hands = {p: [] for p in self.players}
         self.discard = []
@@ -3446,6 +3447,7 @@ class Durak:
         self.table = []               # {"a": hücum kartı, "d": bağlayan kart və ya None}
         self.over = False
         self.loser = None             # durak; None = heç kim (bərabərlik)
+        self.known = {p: set() for p in self.players}   # oyunçunun əlində olduğu AÇIQ bilinən kartlar (bot üçün)
 
         for _ in range(HAND):
             for p in self.players:
@@ -3511,11 +3513,13 @@ class Durak:
         if card not in self.hands[pid]:
             raise GameError("bu kart əlində yoxdur")
         self.hands[pid].remove(card)
+        self.known[pid].discard(card)
         self.started = True
         self.bout_ranks.add(card[0])
         self.bout_n += 1
         if self.took:
             self.hands[self.defender].append(card)
+            self.known[self.defender].add(card)
         else:
             self.table.append({"a": card, "d": None})
         self.passed = set()
@@ -3534,6 +3538,7 @@ class Durak:
         if not _beats(card, attack, self.trump):
             raise GameError("bu kart onu bağlamır")
         self.hands[pid].remove(card)
+        self.known[pid].discard(card)
         pair["d"] = card
         self._settle()
 
@@ -3554,6 +3559,7 @@ class Durak:
         if len(self.hands[nd]) < self.bout_n + 1 or self.bout_n + 1 > MAX_BOUT:
             raise GameError("yeni müdafiəçinin kartı çatmır")
         self.hands[pid].remove(card)
+        self.known[pid].discard(card)
         self.table.append({"a": card, "d": None})
         self.bout_n += 1
         self.defender = nd
@@ -3567,8 +3573,10 @@ class Durak:
             raise GameError("götürmək olmaz")
         for p in self.table:
             self.hands[pid].append(p["a"])
+            self.known[pid].add(p["a"])
             if p["d"]:
                 self.hands[pid].append(p["d"])
+                self.known[pid].add(p["d"])
         self.table = []
         self.took = True
         self.passed = set()
@@ -3622,7 +3630,10 @@ class Durak:
         order.append(self.defender)                  # müdafiəçi ən sonda çəkir
         for p in order:
             while len(self.hands[p]) < HAND and self.deck:
-                self.hands[p].append(self.deck.pop())
+                c = self.deck.pop()
+                self.hands[p].append(c)
+                if c == self.trump_card:
+                    self.known[p].add(c)
         for p in self.players:
             if p not in self.out and not self.hands[p] and not self.deck:
                 self.out.append(p)
@@ -3691,62 +3702,230 @@ class Durak:
             "loser": self.loser,
         }
 
+    # ------------------------------------------------------------------ saxlama / bərpa (server yenilənəndə oyun qalsın)
+    def to_dict(self):
+        t = lambda c: list(c)
+        return {
+            "players": list(self.players), "perevod": self.perevod,
+            "deck": [t(c) for c in self.deck], "trump": self.trump, "trump_card": t(self.trump_card),
+            "hands": {p: [t(c) for c in h] for p, h in self.hands.items()},
+            "discard": [t(c) for c in self.discard], "out": list(self.out),
+            "table": [{"a": t(x["a"]), "d": t(x["d"]) if x["d"] else None} for x in self.table],
+            "over": self.over, "loser": self.loser,
+            "known": {p: [t(c) for c in sorted(s)] for p, s in self.known.items()},
+            "attacker": self.attacker, "defender": self.defender, "started": self.started, "took": self.took,
+            "passed": sorted(self.passed), "bout_ranks": sorted(self.bout_ranks), "bout_n": self.bout_n, "cap": self.cap,
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        e = cls.__new__(cls)
+        c = lambda x: (int(x[0]), str(x[1]))
+        e.players = list(d["players"])
+        e.perevod = bool(d["perevod"])
+        e.rng = random.Random()
+        e.deck = [c(x) for x in d["deck"]]
+        e.trump = d["trump"]
+        e.trump_card = c(d["trump_card"])
+        e.hands = {p: [c(x) for x in h] for p, h in d["hands"].items()}
+        e.discard = [c(x) for x in d["discard"]]
+        e.out = list(d["out"])
+        e.table = [{"a": c(x["a"]), "d": c(x["d"]) if x["d"] else None} for x in d["table"]]
+        e.over = bool(d["over"])
+        e.loser = d["loser"]
+        e.known = {p: {c(x) for x in s} for p, s in d.get("known", {}).items()}
+        for p in e.players:
+            e.known.setdefault(p, set())
+        e.attacker = d["attacker"]
+        e.defender = d["defender"]
+        e.started = bool(d["started"])
+        e.took = bool(d["took"])
+        e.passed = set(d["passed"])
+        e.bout_ranks = set(d["bout_ranks"])
+        e.bout_n = int(d["bout_n"])
+        e.cap = int(d["cap"])
+        return e
+
     def card_count(self):
         """Test üçün: bütün kartların sayı (36 olmalıdır)."""
         table = sum(1 + (1 if p["d"] else 0) for p in self.table)
         return sum(len(h) for h in self.hands.values()) + len(self.deck) + len(self.discard) + table
 
+
 # ------------------------------------------------------------------ kompüter (bot)
-def _bot_trump(c, trump):
-    return c[1] == trump
+# Qiymətlər: kartı xərcləməyin "xərci". Kozır baha, böyük kart baha.
+BOT = {
+    "trump_base": 7.0,    # ən kiçik kozırın xərci
+    "trump_step": 1.2,    # kozır hər rəqəm yuxarı çıxdıqca
+    "plain_step": 0.7,    # adi kart hər rəqəm yuxarı çıxdıqca
+    "liab": 5.0,          # əlimdə artıq hər kartın "yükü" (götürəndə)
+    "take_base": 2.0,     # götürəndə təşəbbüsü itirmək
+    "use_trump": 0.55,    # götürülən kozırın faydası (xərcinin hissəsi)
+    "use_plain": 0.15,    # götürülən adi kartın faydası
+    "extra": 0.8,         # götürəndə əlavə atılacaq kartların gözlənilən sayı (dəstə varkən)
+    "k_defend": 2.0,      # bağlama xərci <= götürmə xərci * k_defend olsa bağla
+    "tr_off": -20.0,       # ötürmənin əlavə xərci (mənfi = ötürməyə meyl)
+    "tr_trump": 1.0,      # 1 olsa kozırla da ötürə bilər (xərc hesabı ilə)
+    "add_lim": 14,        # müdafiəçi bağlayarkən bu rəqəmdən yüksək adi kartı əlavə etmir (14 = məhdudiyyət yoxdur)
+    "add_lim_end": 14,    # dəstə bitəndə
+    "tr_max": 99.0,       # ötürmə kartının xərci bundan çox olmasın
+    "lead_pair": 5.0,     # eyni rəqəmli kart sayına verilən üstünlük
+}
+
+
+def _cw(c, trump):
+    if c[1] == trump:
+        return BOT["trump_base"] + (c[0] - 6) * BOT["trump_step"]
+    return (c[0] - 5) * BOT["plain_step"]
+
+
+def _best_cover(hand, attacks, trump):
+    """Bütün attacks kartlarını ən ucuz yolla bağlayan [(hücum, kart)] və xərc; mümkün deyilsə None."""
+    atk = sorted(attacks, key=lambda a: (a[1] == trump, -a[0]))
+    opts = []
+    for a in atk:
+        o = sorted((c for c in hand if _beats(c, a, trump)), key=lambda c: _cw(c, trump))
+        if not o:
+            return None
+        opts.append(o)
+    best = [None, 1e9]
+    nodes = [0]
+
+    def rec(i, used, cost, plan):
+        if cost >= best[1] or nodes[0] > 6000:
+            return
+        nodes[0] += 1
+        if i == len(atk):
+            best[0], best[1] = list(plan), cost
+            return
+        for c in opts[i]:
+            if c in used:
+                continue
+            used.add(c)
+            plan.append((atk[i], c))
+            rec(i + 1, used, cost + _cw(c, trump), plan)
+            plan.pop()
+            used.discard(c)
+
+    rec(0, set(), 0.0, [])
+    return (best[0], best[1]) if best[0] else None
+
+
+def _take_cost(eng):
+    trump = eng.trump
+    tot = BOT["take_base"]
+    for pr in eng.table:
+        for c in (pr["a"], pr["d"]):
+            if c is None:
+                continue
+            use = (BOT["use_trump"] if c[1] == trump else BOT["use_plain"]) * _cw(c, trump)
+            tot += BOT["liab"] - use
+    if eng.deck:
+        tot += BOT["extra"] * BOT["liab"]
+    else:
+        tot *= 2.0                              # dəstə bitib: əlavə kart ölümcül ola bilər
+    return tot
+
+
+def _unseen(eng, p):
+    seen = set(eng.hands[p]) | set(eng.discard)
+    for pr in eng.table:
+        seen.add(pr["a"])
+        if pr["d"]:
+            seen.add(pr["d"])
+    return {(r, s) for s in SUITS for r in RANKS} - seen
+
+
+def _opp_hand(eng, p):
+    """2 nəfər qalıb və dəstə bitibsə rəqibin əli dəqiq bəllidir; yoxsa yalnız açıq bilinən kartlar."""
+    act = [q for q in eng.players if q not in eng.out and q != p]
+    if len(act) == 1 and not eng.deck:
+        return _unseen(eng, p)
+    if len(act) == 1:
+        return set(eng.known.get(act[0], ()))
+    return None
 
 
 def _bot_lead(eng, p):
-    """İlk hücum: ən kiçik kozır olmayan kart (eyni rəqəmdən çoxu olanı üstün tutur)."""
+    """İlk hücum: ucuz, rəqibin bağlaya bilməyəcəyi, eyni rəqəmli çox olan kart."""
     hand = eng.hands[p]
+    trump = eng.trump
     cnt = {}
     for c in hand:
         cnt[c[0]] = cnt.get(c[0], 0) + 1
-    best = min(hand, key=lambda c: (c[1] == eng.trump, c[0], -cnt[c[0]]))
-    return ("attack", best)
+    d = eng.defender
+    known = eng.known.get(d, set())
+    exact = _opp_hand(eng, p) if len([q for q in eng.players if q not in eng.out]) == 2 else None
+    foe = exact if exact is not None else known
+
+    def score(c):
+        s = _cw(c, trump)
+        if c[1] == trump and eng.deck:
+            s += 30
+        s -= BOT['lead_pair'] * (cnt[c[0]] - 1)
+        if foe:
+            if not any(_beats(k, c, trump) for k in foe):
+                s -= 2.0 if exact is None else 3.5
+            if eng.perevod and any(k[0] == c[0] for k in foe):
+                s += 2.5
+        return s
+
+    return ("attack", min(hand, key=score))
 
 
 def _bot_defend(eng, p, acts):
     trump = eng.trump
-    undef = [x["a"] for x in eng.table if x["d"] is None]
-    # perevod: kozır olmayan kartla ötürmək sərfəlidir
-    tr = [a for a in acts if a[0] == "transfer"]
-    if tr:
-        best = min(tr, key=lambda a: (a[1][1] == trump, a[1][0]))
-        if best[1][1] != trump:
-            return best
     hand = list(eng.hands[p])
-    plan = []
-    for a in sorted(undef, key=lambda c: (c[1] == trump, -c[0])):
-        opts = [c for c in hand if _beats(c, a, trump)]
-        if not opts:
-            return ("take",)
-        c = min(opts, key=lambda c: (c[1] == trump, c[0]))
-        hand.remove(c)
-        plan.append((a, c))
-    fresh = not any(x["d"] for x in eng.table)
-    burn = sum(1 for a, c in plan if c[1] == trump and a[1] != trump and a[0] <= 10)
-    if fresh and burn >= 2 and eng.deck:
-        return ("take",)                      # iki kozırı kiçik kartlara xərcləməkdənsə götürür
-    a, c = plan[0]
-    return ("defend", a, c)
+    undef = [x["a"] for x in eng.table if x["d"] is None]
+    spent = sum(_cw(x["d"], trump) for x in eng.table if x["d"])
+    take_c = _take_cost(eng)
+
+    cover = _best_cover(hand, undef, trump)
+    def_c = (cover[1] + spent) if cover else None
+
+    # perevod: ən ucuz ötürmə kartı
+    tr = [a for a in acts if a[0] == "transfer"]
+    tr_c = None
+    tr_best = None
+    if tr:
+        pool = tr if BOT["tr_trump"] else [a for a in tr if a[1][1] != trump]
+        pool = [a for a in pool if _cw(a[1], trump) <= BOT["tr_max"]]
+        if pool:
+            tr_best = min(pool, key=lambda a: _cw(a[1], trump))
+            tr_c = _cw(tr_best[1], trump) + BOT["tr_off"]
+
+    # seçimlər: (xərc, hərəkət)
+    options = [(take_c, ("take",))]
+    if cover is not None:
+        k = BOT["k_defend"]
+        if not eng.deck:
+            k = 99.0                               # dəstə bitib: bağlaya bilirsə həmişə bağlasın
+        options.append((def_c / max(k, 0.01), ("defend", cover[0][0][0], cover[0][0][1])))
+    if tr_best is not None:
+        options.append((tr_c, tr_best))
+    return min(options, key=lambda o: o[0])[1]
 
 
 def _bot_add(eng, p, acts):
     cs = [a[1] for a in acts if a[0] == "attack"]
     if not cs:
         return None
-    pool = [c for c in cs if c[1] != eng.trump]
-    if not eng.deck:                          # dəstə bitib: kozır da atılır
-        pool = cs
+    trump = eng.trump
+    d = eng.defender
+    plain = [c for c in cs if c[1] != trump]
+    if eng.took:
+        # müdafiəçi götürür: yüngülləşmək üçün hər şeyi at (dəstə bitibsə kozırı da)
+        pool = cs if not eng.deck else plain
+        return ("attack", min(pool, key=lambda c: _cw(c, trump))) if pool else None
+    # müdafiəçi hələ bağlayır: yalnız ucuz, adi kart əlavə et
+    lim = BOT['add_lim'] if eng.deck else BOT['add_lim_end']
+    pool = [c for c in plain if c[0] <= lim]
+    foe = eng.known.get(d, set())
+    if foe:
+        pool += [c for c in plain if c[0] > lim and not any(_beats(k, c, trump) for k in foe)]
     if not pool:
         return None
-    return ("attack", min(pool, key=lambda c: c[0]))
+    return ("attack", min(pool, key=lambda c: _cw(c, trump)))
 
 
 def du_bot_pick(eng, bots):
@@ -3788,6 +3967,56 @@ def _du_touch(g):
     g["v"] += 1
     g["upd"] = time.time()
     CV.notify_all()
+    _du_save(g)
+
+
+# ---- Durak oyunlarının bazada saxlanması: server yenilənəndə/yenidən başlayanda "Oyuna qayıt" işləsin ----
+def _du_db_init():
+    dbq("CREATE TABLE IF NOT EXISTS durak_games(code TEXT PRIMARY KEY, data TEXT NOT NULL, ts REAL NOT NULL)")
+
+
+def _du_pack(g):
+    d = {k: v for k, v in g.items() if k not in ("eng", "seen")}
+    d["eng"] = g["eng"].to_dict() if g.get("eng") else None
+    return json.dumps(d, separators=(",", ":"), default=str)
+
+
+def _du_save(g):
+    try:
+        dbq("INSERT OR REPLACE INTO durak_games(code, data, ts) VALUES(?,?,?)",
+            (g["code"], _du_pack(g), g["upd"]))
+    except Exception:
+        pass                                    # saxlama alınmasa da oyun yaddaşda davam edir
+
+
+def _du_drop(code):
+    DURAK.pop(code, None)
+    try:
+        dbq("DELETE FROM durak_games WHERE code=?", (code,))
+    except Exception:
+        pass
+
+
+def _du_load():
+    now = time.time()
+    try:
+        _du_db_init()
+        dbq("DELETE FROM durak_games WHERE ts<?", (now - DUR_IDLE,))
+        rows = dbq("SELECT code, data FROM durak_games", many=True) or []
+    except Exception:
+        return
+    for r in rows:
+        try:
+            g = json.loads(r["data"])
+            g["eng"] = Durak.from_dict(g["eng"]) if g.get("eng") else None
+            bots = g.get("bots") or []
+            g["seen"] = {p: (now if p in bots else 0) for p in g["players"]}
+            g["upd"] = now
+            g.setdefault("vk", 0)
+            g.setdefault("quit", None)
+            DURAK[g["code"]] = g
+        except Exception:
+            continue
 
 
 def _du_names(tok):
@@ -3797,7 +4026,7 @@ def _du_names(tok):
 
 def _du_cleanup(now):
     for c in [c for c, g in DURAK.items() if now - g["upd"] > DUR_IDLE]:
-        DURAK.pop(c, None)
+        _du_drop(c)
 
 
 def _du_get(code, sub):
@@ -4053,7 +4282,7 @@ def api_durak_leave():
         g = DURAK.get(code)
         if g and sub in g["players"] and g["status"] == "wait":
             if g["players"][0] == sub:
-                DURAK.pop(code, None)
+                _du_drop(code)
             else:
                 g["players"].remove(sub)
                 g["names"].pop(sub, None)
@@ -4076,11 +4305,11 @@ def api_durak_quit():
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
         if g.get("bot"):
-            DURAK.pop(code, None)
+            _du_drop(code)
             return jsonify(ok=True)
         if g["status"] == "wait":
             if g["players"][0] == sub:
-                DURAK.pop(code, None)
+                _du_drop(code)
                 return jsonify(ok=True)
             g["players"].remove(sub)
             g["names"].pop(sub, None)
@@ -4110,17 +4339,27 @@ def api_durak_bot():
         eng = g["eng"]
         if not g.get("bot") or g["status"] != "play" or eng is None:
             return jsonify(_du_view(g, sub))
-        pk = du_bot_pick(eng, set(g.get("bots") or ()))
+        bots = set(g.get("bots") or ())
+        pk = du_bot_pick(eng, bots)
         if pk:
-            try:
-                eng.apply(pk[0], pk[1])
-            except GameError:
-                pass
+            for _ in range(7):                     # müdafiəçi götürəndə atmalar bir sorğuda gedir (sürətli)
+                try:
+                    eng.apply(pk[0], pk[1])
+                except GameError:
+                    break
+                if eng.over or not eng.took:
+                    break
+                pk = du_bot_pick(eng, bots)
+                if not pk:
+                    break
             if eng.over:
                 g["status"] = "over"
             _du_touch(g)
         return jsonify(_du_view(g, sub))
 
+
+
+_du_load()
 
 
 #  Oyun səsli otağı (domino / şahmat): WebRTC siqnalı. Səsin özü cihazlar arasında gedir,
