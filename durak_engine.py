@@ -221,9 +221,12 @@ class Durak:
             return                                   # müdafiəçi hələ cavab verməlidir
         if not self.took and not self.hands[self.defender]:
             return self._end_round()                 # müdafiəçi hamısını bağladı, kartı bitdi
-        if self.bout_n >= self.cap:
-            return self._end_round()
-        adders = [p for p in self._adders() if self._can_add(p)]
+        if self.took:
+            if self.bout_n >= self.cap:
+                return self._end_round()
+            adders = [p for p in self._adders() if self._can_add(p)]
+        else:
+            adders = self._adders()                  # bitaya getmək üçün hücumçular təsdiqləməlidir (Bita düyməsi)
         if not adders or all(p in self.passed for p in adders):
             self._end_round()
 

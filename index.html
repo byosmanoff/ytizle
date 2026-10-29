@@ -6727,7 +6727,7 @@ window.wtInviteBox = function(o){
     }
     if(p.status === 'wait' && s.status === 'play'){ S.play('shuffle'); }
     if(s.table.length > p.table.length) S.play('place');
-    else if(s.table.length < p.table.length) S.play(s.took ? 'take' : 'pass');
+    else if(s.table.length < p.table.length) S.play((s.took || !(s.discard > p.discard)) ? 'take' : 'pass');
     else if(s.table.length === p.table.length && s.table.some(function(x, i){ return x.d && p.table[i] && !p.table[i].d; })) S.play('place');
     if(myTurn(s) && !myTurn(p)) S.play('turn');
     if(s.joined > p.joined) S.play('join');
@@ -6927,6 +6927,7 @@ window.wtInviteBox = function(o){
     var has = function(k){ return acts.some(function(a){ return a[0] === k; }); };
     $('dutake').hidden = !has('take');
     $('dupass').hidden = !has('pass');
+    $('dupass').textContent = T((!s.took && s.table.length && s.table.every(function(p){ return p.d; })) ? 'Bita' : 'Pas');
     $('dutrans').hidden = !has('transfer');
     $('dutrans').disabled = !(du.sel && acts.some(function(a){ return a[0] === 'transfer' && same(a[1], du.sel); }));
     $('duract').hidden = !(has('take') || has('pass') || has('transfer'));
@@ -6965,6 +6966,7 @@ window.wtInviteBox = function(o){
       if(has('defend')) return T('Müdafiə et: kartı seç, sonra bağlayacağın kartı bas');
       if(has('take')) return T('Bağlaya bilmirsən? Götür');
       if(has('attack') && !s.started) return T('Sənin növbən: kart at');
+      if(!s.took && s.table.length && s.table.every(function(p){ return p.d; })) return T('Hamısı bağlandı: bitaya getsin?');
       return T('Əlavə et və ya pas keç');
     }
     if(s.bot && s.botturn) return T('Kompüter düşünür...');
