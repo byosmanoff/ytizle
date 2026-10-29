@@ -200,8 +200,17 @@ def api_join():
         if not r["host"]:
             r["host"] = pid
         CV.notify_all()
-        return jsonify(seq=r["seq"], locked=r["locked"], epoch=r["created"], video=r.get("video"),
+        return jsonify(seq=r["seq"], locked=r["locked"], epoch=r["created"], video=r.get("video"), vpos=vpos_now(r, now),
                        role=role_of(r, pid), hostonly=r["hostonly"], rv=r["rv"])
+
+
+def vpos_now(r, now):
+    """Videonun serverdə yadda qalan cari vaxtı (oynayırsa keçən müddət əlavə olunur)."""
+    v = r.get("vpos")
+    if not v or not r.get("video") or now - v["at"] > 6 * 3600:
+        return None
+    t = v["time"] + ((now - v["at"]) if v["playing"] else 0)
+    return {"time": round(t, 2), "playing": v["playing"]}
 
 
 @app.route("/api/send", methods=["POST"])
@@ -256,6 +265,17 @@ def api_send():
             msg.pop("stk", None)
         if msg.get("t") == "load" and "/vf/" not in str(msg.get("url") or ""):
             r["video"] = None   # otaq başqa səhifəyə keçdi: yenidən girənə köhnə video açılmasın
+        if msg.get("t") in ("play", "pause", "seek", "sync") and isinstance(msg.get("time"), (int, float)) \
+                and not isinstance(msg.get("time"), bool) and 0 <= msg["time"] < 86400:
+            if msg["t"] == "pause":
+                pl = False
+            elif msg["t"] == "seek":
+                pl = bool(msg.get("playing"))
+            else:
+                pl = True
+            r["vpos"] = {"time": float(msg["time"]), "playing": pl, "at": now}   # yenidən girən buradan davam edir
+        if msg.get("t") == "load" and not msg.get("hello"):
+            r["vpos"] = None   # yeni video/səhifə açıldı: köhnə vaxt keçərsizdir
         r["seq"] += 1
         r["msgs"].append((r["seq"], pid, msg))
         del r["msgs"][:-100]
@@ -350,6 +370,7 @@ def api_upload():
     with CV:
         r = ROOMS.get(code)
         if r is not None:
+            r["vpos"] = None
             r["video"] = url   # otağa sonradan girən (və ya yenidən girən) hər kəs bunu avtomatik açır
     return jsonify(url=url)
 
@@ -1888,7 +1909,7 @@ def api_poll():
                if p != pid and now - ts < PEER_TTL]
         roles = {p: role_of(r, p) for p in [pid] + [w["id"] for w in who]}
         resp = jsonify(seq=r["seq"], peers=n, msgs=[m[2] for m in new], who=who,
-                       locked=r["locked"], epoch=r["created"], video=r.get("video"),
+                       locked=r["locked"], epoch=r["created"], video=r.get("video"), vpos=vpos_now(r, now),
                        roles=roles, hostonly=r["hostonly"], rv=r["rv"])
     resp.headers["Cache-Control"] = "no-store"
     return resp

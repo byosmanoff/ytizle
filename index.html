@@ -2125,6 +2125,7 @@ let myName = 'Mən', kind = null, curUrl = null;
 let yt = null, ytReady = false, ytIsReady = false, ytPending = null;
 let ignoreUntil = 0, lastT = null, hls = null;
 let wantPlay = false, lastRemote = {time: 0, at: 0};
+let freshLoad = false;   // video serverdən yenicə açılıb: öz vaxtımızı (0) qarşı tərəfə göndərmə
 let room = '', me = Math.random().toString(36).slice(2, 10);
 let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resolve();
 let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
@@ -2197,6 +2198,7 @@ function updatePeers(n){
     if(queue.length) send({t:'q', list: queue});
     if(curUrl && (kind === 'file' || kind === 'yt')) setTimeout(() => {   // qayıdan şəxs videonu cari yerdən davam etsin
       if(!connected || (kind !== 'file' && kind !== 'yt')) return;
+      if(freshLoad || (kind === 'file' && vid.readyState < 1)){ freshLoad = false; return; }   // yenicə qoşulan tərəf yalnız qəbul edir, qarşı tərəfi başa atmır
       const t = getTime();
       send(isPlaying() ? {t: 'sync', time: t, playing: true} : {t: 'seek', time: t, playing: false});
     }, 2500);
@@ -2295,7 +2297,7 @@ async function pollLoop(){
       if(gen !== pollGen) return;
       since = d.seq;
       applyRoles(d);
-      if(typeof d.video === 'string' && !curUrl && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(d.video)) loadPage(location.origin + d.video, true);
+      if(typeof d.video === 'string' && !curUrl && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(d.video)) loadServerVideo(d.video, d.vpos);
       if(offline){ offline = false; refreshStatus(); }
       if(roomEpoch !== null && d.epoch !== roomEpoch){
         roomEpoch = d.epoch;               // server yenidən başlayıb, kilid itib: bərpa et
@@ -2385,7 +2387,7 @@ async function enterRoom(code, create){
   lockJoin(true);
   loadIce();
   joinMsg('Qoşulur... ilk dəfə 30-50 saniyə çəkə bilər');
-  let joinVideo = null;
+  let joinVideo = null, joinVpos = null;
   while(true){
     try{
       if(create){
@@ -2416,7 +2418,7 @@ async function enterRoom(code, create){
       roomEpoch = d.epoch;
       isLocked = !!d.locked;
       myRole = d.role || 'viewer'; hostOnly = !!d.hostonly; rv = typeof d.rv === 'number' ? d.rv : -1; roleMap = {};
-      joinVideo = typeof d.video === 'string' ? d.video : null;
+      joinVideo = typeof d.video === 'string' ? d.video : null; joinVpos = d.vpos || null;
       room = code;
       try{ localStorage.setItem('wt_me_' + code, me); }catch(e){}
       try{ history.replaceState(null, '', location.pathname); }catch(e){}  // ?kod= linkdən təmizlə
@@ -2433,7 +2435,7 @@ async function enterRoom(code, create){
   updateLockUI();
   showHome();
   setStatus('Sevgilini gözləyirəm...');
-  if(joinVideo && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(joinVideo)) loadPage(location.origin + joinVideo, true);
+  if(joinVideo && /^\/vf\/[a-z0-9-]+\/[0-9a-f]{16}\.(mp4|webm|mov|ogg)$/.test(joinVideo)) loadServerVideo(joinVideo, joinVpos);
   await wait(loadChatHistory(), 4000);
   pollLoop();
 }
@@ -2810,6 +2812,17 @@ function loadPage(url, remote, tries = 0){
   else sysMsg('Səhifə dəyişdi');
   if(!/^https?:\/\/(www\.)?google\.[a-z.]+\/search/i.test(url) && url.indexOf('/vf/') < 0) track({kind: 'video', url});
 }
+/* Otağa girəndə serverdəki video: serverin yadda saxladığı vaxtdan davam et (0-dan yox) */
+function loadServerVideo(url, vp){
+  freshLoad = true;
+  loadPage(location.origin + url, true);
+  if(vp && typeof vp.time === 'number' && isFinite(vp.time)){   // loadPage → showMode vəziyyəti sıfırlayır, ona görə sonra təyin edirik
+    const now = Date.now();
+    wantPlay = !!vp.playing;
+    lastRemote = {time: vp.time, at: now};
+    remoteSt = {playing: !!vp.playing, time: vp.time, at: now};
+  }
+}
 function goBack(){
   if(kind === 'ytres' || kind === 'home'){
     if(hist.length) loadPage(hist[hist.length - 1], false);
@@ -2849,7 +2862,7 @@ function isEcho(playing, time){
   const exp = remoteSt.time + (remoteSt.playing ? (Date.now() - remoteSt.at) / 1000 : 0);
   return remoteSt.playing === playing && Math.abs(time - exp) < 1.5;
 }
-function sendLocal(o){ leader = true; send(o); }
+function sendLocal(o){ leader = true; freshLoad = false; send(o); }
 
 function applyRemote(m){
   if(kind !== 'yt' && kind !== 'file') return;
@@ -2900,7 +2913,7 @@ function ytState(e){
 vid.addEventListener('playing', () => { $('tap').style.display = 'none'; });
 vid.addEventListener('ended', () => { if(kind === 'file') qAdvance(); });
 vid.addEventListener('loadedmetadata', () => {   // video gec yüklənəndə qarşı tərəfin son vaxtına keç
-  if(kind !== 'file' || !lastRemote.at || Date.now() - lastRemote.at > 20000) return;
+  if(kind !== 'file' || !lastRemote.at || Date.now() - lastRemote.at > 90000) return;
   const t = lastRemote.time + (wantPlay ? (Date.now() - lastRemote.at) / 1000 : 0);
   mute(700);
   if(Math.abs(vid.currentTime - t) > 1) vid.currentTime = t;
@@ -6770,7 +6783,7 @@ window.wtInviteBox = function(o){
         du.code = j.code; du.v = 0; du.vk = 0; du.s = null; du.sel = null; du.flashTx = '';
         remember(j.code); show(true);
         $('durhand').style.display = '';
-        sync(j); startPoll(); lobbyMsg('');
+        startPoll(); sync(j); lobbyMsg('');
       } else if(!isCreate && r.status === 404 && code === saved()){
         remember('');                                  // köhnə kod: oyun artıq yoxdur, "Oyuna qayıt" düyməsi yox olsun
         lobbyMsg('Oyun bitib və ya tapılmadı');
@@ -6798,7 +6811,15 @@ window.wtInviteBox = function(o){
     var opts = acts.filter(function(a){ return a[0] === 'defend' && same(a[2], c); });
     var canTr = acts.some(function(a){ return a[0] === 'transfer' && same(a[1], c); });
     if(opts.length === 1 && !canTr){ send({action: 'defend', attack: opts[0][1], card: c}); return; }
-    if(opts.length === 0 && !canTr){ flash('Bu kart onu bağlamır'); return; }
+    if(opts.length === 0 && !canTr){
+      if(!acts.some(function(a){ return a[0] === 'defend'; }) && acts.some(function(a){ return a[0] === 'pass'; })){
+        var inTable = s.table.some(function(p){ return p.a[0] === c[0] || (p.d && p.d[0] === c[0]); });
+        if(!inTable) flash('Bu rəqəm masada yoxdur');
+        else if(s.cap && s.table.length >= s.cap) flash('Limit dolub: müdafiəçinin raund başındakı kart sayı qədər (' + s.cap + ') atmaq olar');
+        else flash('Bu kartı indi atmaq olmaz');
+      } else flash('Bu kart onu bağlamır');
+      return;
+    }
     du.sel = c; render();
   }
   function onTable(i){
@@ -6835,7 +6856,8 @@ window.wtInviteBox = function(o){
     function again(ms){ du.botT = setTimeout(function(){ du.botT = 0; botDrive(); }, ms); }
     du.botT = setTimeout(function(){
       du.botT = 0;
-      if(g !== gen || du.code !== c) return;
+      if(du.code !== c) return;
+      if(g !== gen){ botDrive(); return; }   // oyun yenicə açılanda gen dəyişir: dayanma, yenidən qur
       api('/api/durak/bot', {method: 'POST', body: JSON.stringify({room: c})}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
         if(g !== gen) return;
         if(!j){ again(2500); return; }
