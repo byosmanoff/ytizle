@@ -2681,8 +2681,7 @@ def admin_ban():
     ip = norm_ip(d.get("ip"))
     if not ip:
         return jsonify(error="format"), 400
-    if ip == norm_ip(client_ip()):
-        return jsonify(error="self"), 400   # admin öz IP-sini bloklaya bilməz
+    # Öz IP-ni bloklamaq üçün icazə verilir (admin giriş etmiş olduqda ban tətbiq olunmur).
     dbq("INSERT OR REPLACE INTO ip_bans(ip,note,ts) VALUES(?,?,?)", (ip, clean_text(d.get("note"), 100), time.time()))
     ban_map(force=True)
     return _nostore(jsonify(ok=True, ip=ip))
