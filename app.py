@@ -3561,6 +3561,7 @@ class Durak:
         self.hands[pid].remove(card)
         self.known[pid].discard(card)
         pair["d"] = card
+        self.bout_ranks.add(card[0])      # bağlayan kartın rəqəmi də masadadır: həmin rəqəmi əlavə etmək olar
         self._settle()
 
     def transfer(self, pid, card):
@@ -3770,6 +3771,10 @@ class Durak:
         e.took = bool(d["took"])
         e.passed = set(d["passed"])
         e.bout_ranks = set(d["bout_ranks"])
+        for _p in e.table:                # köhnə yazılmış oyunlarda bağlayan kartların rəqəmi də sayılsın
+            e.bout_ranks.add(_p["a"][0])
+            if _p["d"]:
+                e.bout_ranks.add(_p["d"][0])
         e.bout_n = int(d["bout_n"])
         e.cap = int(d["cap"])
         return e
