@@ -6448,12 +6448,12 @@ window.wtInviteBox = function(o){
     while(stk.length < s.stock) stk.push({});
     b.innerHTML = '<div class="dstk-l"><small>Bazar</small><b>' + s.stock + '</b></div><div class="dstk-p"></div>';
     var pp = b.lastChild;
-    var ANG = [-14, -6, 8, -10, 12, -4, 6, -12, 10, -8];   /* sabit bucaqlar: hər yenilənmədə eyni görünüş */
+    var ANG = [-32, 18, -12, 40, -26, 8, -38, 22, -6, 30];   /* sabit, səpələnmiş bucaqlar: şəkildəki kimi */
     if(show) stk.forEach(function(o, i){
-      /* iki yığın: solda kiçik qrup (ilk 4 daş), sağda böyük qrup, daşlar bir-birinin üstündə */
+      /* iki yığın, şəkildəki kimi: solda 4 daş, sağda qalanları bir-birinin üstündə */
       var tl = tile(null, {v: true, back: true}), L, T;
-      if(i < 4){ L = 6 + i * 5; T = 10 + (i % 2) * 6; }
-      else { var j = i - 4; L = 54 + (j % 4) * 9 + Math.floor(j / 4) * 3; T = 2 + (j % 3) * 6; }
+      if(i < 4){ L = 4 + i * 11; T = 6 + (i % 2) * 12; }
+      else { var j = i - 4; L = 56 + (j % 5) * 8 + Math.floor(j / 5) * 6; T = 4 + ((j * 7) % 4) * 5; }
       tl.style.left = L + '%';
       tl.style.top = T + 'px';
       tl.style.rotate = ANG[i % ANG.length] + 'deg';
