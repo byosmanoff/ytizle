@@ -1,4 +1,4 @@
-"""Durak (Dürak) oyun mühərriki — yalnız insanlar üçün, kompüter (bot) yoxdur.
+"""Durak (Dürak) oyun mühərriki. Kompüter (bot) hərəkətləri du_bot_pick ilə seçilir.
 
 Qaydalar:
   * 2–4 oyunçu, 36 kartlıq dəst, hər kəsə 6 kart.
@@ -303,3 +303,81 @@ class Durak:
         """Test üçün: bütün kartların sayı (36 olmalıdır)."""
         table = sum(1 + (1 if p["d"] else 0) for p in self.table)
         return sum(len(h) for h in self.hands.values()) + len(self.deck) + len(self.discard) + table
+
+
+# ------------------------------------------------------------------ kompüter (bot)
+def _bot_trump(c, trump):
+    return c[1] == trump
+
+
+def _bot_lead(eng, p):
+    """İlk hücum: ən kiçik kozır olmayan kart (eyni rəqəmdən çoxu olanı üstün tutur)."""
+    hand = eng.hands[p]
+    cnt = {}
+    for c in hand:
+        cnt[c[0]] = cnt.get(c[0], 0) + 1
+    best = min(hand, key=lambda c: (c[1] == eng.trump, c[0], -cnt[c[0]]))
+    return ("attack", best)
+
+
+def _bot_defend(eng, p, acts):
+    trump = eng.trump
+    undef = [x["a"] for x in eng.table if x["d"] is None]
+    # perevod: kozır olmayan kartla ötürmək sərfəlidir
+    tr = [a for a in acts if a[0] == "transfer"]
+    if tr:
+        best = min(tr, key=lambda a: (a[1][1] == trump, a[1][0]))
+        if best[1][1] != trump:
+            return best
+    hand = list(eng.hands[p])
+    plan = []
+    for a in sorted(undef, key=lambda c: (c[1] == trump, -c[0])):
+        opts = [c for c in hand if _beats(c, a, trump)]
+        if not opts:
+            return ("take",)
+        c = min(opts, key=lambda c: (c[1] == trump, c[0]))
+        hand.remove(c)
+        plan.append((a, c))
+    fresh = not any(x["d"] for x in eng.table)
+    burn = sum(1 for a, c in plan if c[1] == trump and a[1] != trump and a[0] <= 10)
+    if fresh and burn >= 2 and eng.deck:
+        return ("take",)                      # iki kozırı kiçik kartlara xərcləməkdənsə götürür
+    a, c = plan[0]
+    return ("defend", a, c)
+
+
+def _bot_add(eng, p, acts):
+    cs = [a[1] for a in acts if a[0] == "attack"]
+    if not cs:
+        return None
+    pool = [c for c in cs if c[1] != eng.trump]
+    if not eng.deck:                          # dəstə bitib: kozır da atılır
+        pool = cs
+    if not pool:
+        return None
+    return ("attack", min(pool, key=lambda c: c[0]))
+
+
+def du_bot_pick(eng, bots):
+    """Botlardan biri üçün bir hərəkət seç: (oyunçu, hərəkət) və ya None."""
+    if eng.over:
+        return None
+    undef = any(x["d"] is None for x in eng.table)
+    d = eng.defender
+    if d in bots and not eng.took and undef:
+        acts = eng.actions(d)
+        if acts:
+            return d, _bot_defend(eng, d, acts)
+    if not eng.started:
+        if eng.attacker in bots:
+            return eng.attacker, _bot_lead(eng, eng.attacker)
+        return None
+    if undef and not eng.took:
+        return None                           # müdafiəçi cavab verməyib
+    for p in eng._seat_from(eng.attacker):
+        if p in bots and p != d and p not in eng.passed:
+            acts = eng.actions(p)
+            if ("pass",) not in acts:
+                continue
+            return p, (_bot_add(eng, p, acts) or ("pass",))
+    return None

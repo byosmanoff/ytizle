@@ -3391,7 +3391,7 @@ def api_domino_quit():
 
 # ---------------------------------------------------------------
 #  --- Durak mühərriki (durak_engine.py ilə eyni) ---
-"""Durak (Dürak) oyun mühərriki — yalnız insanlar üçün, kompüter (bot) yoxdur.
+"""Durak (Dürak) oyun mühərriki. Kompüter (bot) hərəkətləri ayrıca du_bot_pick ilə seçilir.
 
 Qaydalar:
   * 2–4 oyunçu, 36 kartlıq dəst, hər kəsə 6 kart.
@@ -3696,8 +3696,86 @@ class Durak:
         table = sum(1 + (1 if p["d"] else 0) for p in self.table)
         return sum(len(h) for h in self.hands.values()) + len(self.deck) + len(self.discard) + table
 
+# ------------------------------------------------------------------ kompüter (bot)
+def _bot_trump(c, trump):
+    return c[1] == trump
+
+
+def _bot_lead(eng, p):
+    """İlk hücum: ən kiçik kozır olmayan kart (eyni rəqəmdən çoxu olanı üstün tutur)."""
+    hand = eng.hands[p]
+    cnt = {}
+    for c in hand:
+        cnt[c[0]] = cnt.get(c[0], 0) + 1
+    best = min(hand, key=lambda c: (c[1] == eng.trump, c[0], -cnt[c[0]]))
+    return ("attack", best)
+
+
+def _bot_defend(eng, p, acts):
+    trump = eng.trump
+    undef = [x["a"] for x in eng.table if x["d"] is None]
+    # perevod: kozır olmayan kartla ötürmək sərfəlidir
+    tr = [a for a in acts if a[0] == "transfer"]
+    if tr:
+        best = min(tr, key=lambda a: (a[1][1] == trump, a[1][0]))
+        if best[1][1] != trump:
+            return best
+    hand = list(eng.hands[p])
+    plan = []
+    for a in sorted(undef, key=lambda c: (c[1] == trump, -c[0])):
+        opts = [c for c in hand if _beats(c, a, trump)]
+        if not opts:
+            return ("take",)
+        c = min(opts, key=lambda c: (c[1] == trump, c[0]))
+        hand.remove(c)
+        plan.append((a, c))
+    fresh = not any(x["d"] for x in eng.table)
+    burn = sum(1 for a, c in plan if c[1] == trump and a[1] != trump and a[0] <= 10)
+    if fresh and burn >= 2 and eng.deck:
+        return ("take",)                      # iki kozırı kiçik kartlara xərcləməkdənsə götürür
+    a, c = plan[0]
+    return ("defend", a, c)
+
+
+def _bot_add(eng, p, acts):
+    cs = [a[1] for a in acts if a[0] == "attack"]
+    if not cs:
+        return None
+    pool = [c for c in cs if c[1] != eng.trump]
+    if not eng.deck:                          # dəstə bitib: kozır da atılır
+        pool = cs
+    if not pool:
+        return None
+    return ("attack", min(pool, key=lambda c: c[0]))
+
+
+def du_bot_pick(eng, bots):
+    """Botlardan biri üçün bir hərəkət seç: (oyunçu, hərəkət) və ya None."""
+    if eng.over:
+        return None
+    undef = any(x["d"] is None for x in eng.table)
+    d = eng.defender
+    if d in bots and not eng.took and undef:
+        acts = eng.actions(d)
+        if acts:
+            return d, _bot_defend(eng, d, acts)
+    if not eng.started:
+        if eng.attacker in bots:
+            return eng.attacker, _bot_lead(eng, eng.attacker)
+        return None
+    if undef and not eng.took:
+        return None                           # müdafiəçi cavab verməyib
+    for p in eng._seat_from(eng.attacker):
+        if p in bots and p != d and p not in eng.passed:
+            acts = eng.actions(p)
+            if ("pass",) not in acts:
+                continue
+            return p, (_bot_add(eng, p, acts) or ("pass",))
+    return None
+
+
 # ---------------------------------------------------------------
-#  Durak otağı: 2–4 nəfərlik onlayn kart oyunu (kompüter yoxdur).
+#  Durak otağı: 2–4 nəfərlik onlayn kart oyunu (insanlarla və ya kompüterə qarşı).
 #  Qayda mühərriki yuxarıdakı Durak sinfidir. Səsli otaq (GV) və dəvət sistemi
 #  domino ilə eyni yolla işləyir.
 # ---------------------------------------------------------------
@@ -3767,17 +3845,21 @@ def _du_view(g, sub):
         if eng.over:
             out["over"] = True
             out["loser"] = _du_idx(g, eng.loser)
+    bots = g.get("bots") or ()
     players = []
     for i, p in enumerate(ps):
         nm = g["names"].get(p) or {}
         ep = evp[i] if i < len(evp) else {}
         players.append(dict(name=nm.get("name", ""), avatar=nm.get("avatar", ""),
                             username=nm.get("username", ""), me=(p == sub),
-                            online=bool(now - g["seen"].get(p, 0) < 35),
+                            online=bool(p in bots or now - g["seen"].get(p, 0) < 35),
                             n=ep.get("n", 0), out=bool(ep.get("out", False))))
     out["players"] = players
     if g.get("quit"):
         out["quit"] = _du_idx(g, g["quit"])
+    if g.get("bot"):
+        out["bot"] = True
+        out["botturn"] = bool(eng and not eng.over and g["status"] == "play" and du_bot_pick(eng, set(bots)))
     out["vc"], out["vk"] = _gv_view("durak", g)
     return out
 
@@ -3793,6 +3875,7 @@ def api_durak_create():
     except (TypeError, ValueError):
         size = 2
     perevod = bool(d0.get("perevod", True))
+    vs_bot = bool(d0.get("bot"))
     nm = _du_names(tok)
     now = time.time()
     with CV:
@@ -3807,6 +3890,16 @@ def api_durak_create():
             abort(503)
         g = dict(code=c, players=[sub], names={sub: nm}, seen={sub: now}, size=size, perevod=perevod,
                  status="wait", eng=None, v=1, vk=0, upd=now, round=1, quit=None)
+        if vs_bot:
+            bots = ["bot%d" % i for i in range(1, size)]
+            for i, b in enumerate(bots, 1):
+                g["players"].append(b)
+                g["names"][b] = dict(name=("Bot %d" % i) if size > 2 else "Kompüter",
+                                     username="bot", avatar="", badge=None)
+                g["seen"][b] = now
+            g["bot"] = True
+            g["bots"] = bots
+            _du_start(g)
         DURAK[c] = g
         return jsonify(_du_view(g, sub))
 
@@ -3982,6 +4075,9 @@ def api_durak_quit():
         g = DURAK.get(code)
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
+        if g.get("bot"):
+            DURAK.pop(code, None)
+            return jsonify(ok=True)
         if g["status"] == "wait":
             if g["players"][0] == sub:
                 DURAK.pop(code, None)
@@ -4000,6 +4096,31 @@ def api_durak_quit():
             g["quit"] = sub
         _du_touch(g)
     return jsonify(ok=True)
+
+@app.route("/api/durak/bot", methods=["POST"])
+def api_durak_bot():
+    """Kompüterin bir hərəkəti. Klient növbə kompüterdə olanda çağırır (botturn=true)."""
+    sub, tok = auth_sub()
+    if not rate_hit("durb", sub, 300, 60):
+        abort(429)
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with CV:
+        g = _du_get(code, sub)
+        g["seen"][sub] = time.time()
+        eng = g["eng"]
+        if not g.get("bot") or g["status"] != "play" or eng is None:
+            return jsonify(_du_view(g, sub))
+        pk = du_bot_pick(eng, set(g.get("bots") or ()))
+        if pk:
+            try:
+                eng.apply(pk[0], pk[1])
+            except GameError:
+                pass
+            if eng.over:
+                g["status"] = "over"
+            _du_touch(g)
+        return jsonify(_du_view(g, sub))
+
 
 
 #  Oyun səsli otağı (domino / şahmat): WebRTC siqnalı. Səsin özü cihazlar arasında gedir,
