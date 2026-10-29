@@ -39,6 +39,13 @@
   .bad{color:var(--bad)}
   .muted{color:var(--muted)}
   code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px}
+  .mini{width:auto;padding:3px 9px;font-size:11px;font-weight:600;margin-left:8px;background:rgba(255,255,255,.1);border-radius:7px;vertical-align:middle}
+  .mini:hover{background:rgba(255,255,255,.18)}
+  .mini.danger{background:rgba(255,107,107,.18);color:var(--bad)}
+  .tag{font-size:11px;color:var(--bad);margin-left:8px}
+  .banform{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .banform input{margin:0;flex:1 1 160px;width:auto}
+  .banform button{width:auto;flex:0 0 auto;padding:12px 18px}
 </style>
 </head>
 <body>
@@ -59,6 +66,20 @@
   </header>
 
   <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>IP blok (ban)</h2>
+    <form class="banform" id="banForm">
+      <input id="banIp" placeholder="IP ünvanı (məs. 1.2.3.4)" autocomplete="off" required>
+      <input id="banNote" placeholder="Qeyd (istəyə bağlı)" autocomplete="off" maxlength="100">
+      <button type="submit">Blokla</button>
+    </form>
+    <div class="tablewrap"><table id="tBans">
+      <thead><tr><th>IP</th><th>Qeyd</th><th>Tarix</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Bloklanmış IP saytın heç bir səhifəsinə girə bilmir, ona nəzakətli xəbərdarlıq səhifəsi göstərilir. Aşağıdakı cədvəllərdə IP-nin yanındakı «Blokla» düyməsi ilə də blok edə bilərsən.</p>
+  </section>
 
   <section>
     <h2>İstifadəçilər</h2>
@@ -96,6 +117,64 @@ async function api(path, opts){
   return r.json();
 }
 
+let BANNED = new Set();
+function ipCell(ip){
+  if(!ip) return '<code>—</code>';
+  const e = esc(ip);
+  return '<code>' + e + '</code>' + (BANNED.has(ip)
+    ? '<span class="tag">bloklu</span>'
+    : '<button class="mini danger" data-ban="' + e + '">Blokla</button>');
+}
+async function postJson(path, body){
+  const r = await fetch(path, {method:'POST', credentials:'same-origin',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(r.status === 401){ showLogin(); throw new Error('unauth'); }
+  let d = {}; try{ d = await r.json(); }catch(x){}
+  return {ok: r.ok, data: d};
+}
+async function banIp(ip, note){
+  try{
+    const r = await postJson('/api/admin/ban', {ip: ip, note: note || ''});
+    if(!r.ok){
+      alert(r.data.error === 'self' ? 'Öz IP ünvanını bloklaya bilməzsən.' : 'IP ünvanı düzgün deyil.');
+      return false;
+    }
+    await loadAll();
+    return true;
+  }catch(x){ return false; }
+}
+async function unbanIp(ip){
+  try{
+    const r = await postJson('/api/admin/unban', {ip: ip});
+    if(!r.ok){ alert('Xəta baş verdi'); return; }
+    await loadAll();
+  }catch(x){}
+}
+document.getElementById('banForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const ip = document.getElementById('banIp').value.trim();
+  const note = document.getElementById('banNote').value.trim();
+  if(!ip) return;
+  if(await banIp(ip, note)){
+    document.getElementById('banIp').value = '';
+    document.getElementById('banNote').value = '';
+  }
+});
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-ban],[data-unban]');
+  if(!b) return;
+  if(b.dataset.ban !== undefined){
+    const ip = b.dataset.ban;
+    const note = prompt(ip + ' bloklansın?\nQeyd (istəyə bağlı):', '');
+    if(note === null) return;
+    await banIp(ip, note.trim());
+  }else{
+    const ip = b.dataset.unban;
+    if(!confirm(ip + ' blokdan çıxarılsın?')) return;
+    await unbanIp(ip);
+  }
+});
+
 function showLogin(){ location.replace('/'); }   // giriş yalnız əsas saytdadır
 function showApp(){
   document.getElementById('login').style.display = 'none';
@@ -124,12 +203,14 @@ document.getElementById('logout').addEventListener('click', async () => {
 
 async function loadAll(){
   try{
-    const [ov, us, lg, vs] = await Promise.all([
+    const [ov, us, lg, vs, bn] = await Promise.all([
       api('/api/admin/overview'),
       api('/api/admin/users?limit=200'),
       api('/api/admin/logins?limit=200'),
       api('/api/admin/visits?limit=200'),
+      api('/api/admin/bans'),
     ]);
+    BANNED = new Set(bn.bans.map(b => b.ip));
 
     document.getElementById('cards').innerHTML = `
       <div class="card"><b>${ov.people_live}</b><span>canlı istifadəçi</span></div>
@@ -137,7 +218,16 @@ async function loadAll(){
       <div class="card"><b>${ov.users_total}</b><span>qeydiyyatlı hesab</span></div>
       <div class="card"><b>${ov.visits_24h}</b><span>ziyarət (24s)</span></div>
       <div class="card"><b>${ov.logins_24h}</b><span>uğurlu giriş (24s)</span></div>
-      <div class="card"><b>${ov.fails_24h}</b><span>uğursuz cəhd (24s)</span></div>`;
+      <div class="card"><b>${ov.fails_24h}</b><span>uğursuz cəhd (24s)</span></div>
+      <div class="card"><b>${bn.bans.length}</b><span>bloklu IP</span></div>`;
+
+    document.querySelector('#tBans tbody').innerHTML = bn.bans.map(b => `
+      <tr>
+        <td><code>${esc(b.ip)}</code></td>
+        <td>${esc(b.note||'—')}</td>
+        <td class="muted">${fmt(b.ts)}</td>
+        <td><button class="mini" data-unban="${esc(b.ip)}">Blokdan çıxar</button></td>
+      </tr>`).join('') || '<tr><td colspan="4" class="muted">Bloklanmış IP yoxdur</td></tr>';
 
     document.querySelector('#tUsers tbody').innerHTML = us.users.map(u => `
       <tr>
@@ -147,7 +237,7 @@ async function loadAll(){
         <td>${u.verified ? '<span class="ok">bəli</span>' : '<span class="bad">yox</span>'}</td>
         <td class="muted">${fmt(u.created)}</td>
         <td class="muted">${fmt(u.last_login)}</td>
-        <td><code>${esc(u.last_ip||'—')}</code></td>
+        <td>${ipCell(u.last_ip)}</td>
       </tr>`).join('') || '<tr><td colspan="7" class="muted">Məlumat yoxdur</td></tr>';
 
     document.querySelector('#tLogins tbody').innerHTML = lg.logins.map(l => `
@@ -155,14 +245,14 @@ async function loadAll(){
         <td class="muted">${fmt(l.ts)}</td>
         <td>${esc(l.kind)}</td>
         <td>${esc(l.email)}</td>
-        <td><code>${esc(l.ip)}</code></td>
+        <td>${ipCell(l.ip)}</td>
         <td>${l.ok ? '<span class="ok">uğurlu</span>' : '<span class="bad">rədd</span>'}</td>
       </tr>`).join('') || '<tr><td colspan="5" class="muted">Məlumat yoxdur</td></tr>';
 
     document.querySelector('#tVisits tbody').innerHTML = vs.visits.map(v => `
       <tr>
         <td class="muted">${fmt(v.ts)}</td>
-        <td><code>${esc(v.ip)}</code></td>
+        <td>${ipCell(v.ip)}</td>
         <td class="muted">${esc(v.ua||'—')}</td>
       </tr>`).join('') || '<tr><td colspan="3" class="muted">Məlumat yoxdur</td></tr>';
   }catch(x){ /* 401 artıq login ekranını göstərir */ }
