@@ -4159,6 +4159,7 @@ def api_durak_create():
             g["bots"] = bots
             _du_start(g)
         DURAK[c] = g
+        _du_save(g)                                 # yaradılan kimi bazaya yaz: deploy/restartdan sonra "Oyuna qayıt" işləsin
         return jsonify(_du_view(g, sub))
 
 
