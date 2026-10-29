@@ -3648,7 +3648,11 @@ class Durak:
             self.attacker = self.defender = None
             self.started = False
             return
-        self._start_round(self._next_active(self.defender))
+        # uğurlu müdafiədən sonra müdafiəçi hücum edən olur; götürübsə növbə ondan sonrakıya keçir
+        if not self.took and self.defender not in self.out:
+            self._start_round(self.defender)
+        else:
+            self._start_round(self._next_active(self.defender))
 
     # ------------------------------------------------------------------ mümkün hərəkətlər
     def actions(self, pid):
