@@ -1561,6 +1561,29 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   #profile{padding-left:calc(50% - 260px);padding-right:calc(50% - 260px)}
 }
 
+
+/* ================= MAFIA ================= */
+#mafiaGame{position:fixed;inset:0;z-index:10020;display:flex;flex-direction:column;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));background:radial-gradient(100% 50% at 50% 0,#482039,var(--velvet) 72%);overflow:auto}
+#mafiaGame[hidden]{display:none!important}
+#mafiaGame .mf-head{display:flex;align-items:center;gap:10px;flex:none}
+#mafiaGame .mf-head h2{flex:1;font-size:21px}
+#mafiaGame .mf-panel{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:18px;padding:14px}
+#mafiaGame .mf-title{font-weight:800;font-size:18px}
+#mafiaGame .mf-sub{color:var(--muted);font-size:13px;margin-top:4px}
+#mafiaGame .mf-role{font-size:22px;font-weight:900;text-align:center;padding:18px;border-radius:16px;background:linear-gradient(135deg,#5b2448,#26142f);color:var(--amber)}
+#mafiaGame .mf-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#mafiaGame .mf-player{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border-radius:12px;background:var(--seat);text-align:left;border:1px solid transparent}
+#mafiaGame .mf-player:disabled{opacity:.65}
+#mafiaGame .mf-player.sel{border-color:var(--amber);background:#513044}
+#mafiaGame .mf-player.dead{opacity:.45;text-decoration:line-through}
+#mafiaGame .mf-dot{width:30px;height:30px;display:grid;place-items:center;flex:none;border-radius:50%;background:#512540;color:#ffd5e1}
+#mafiaGame .mf-player span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:700}
+#mafiaGame .mf-log{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:13px}
+#mafiaGame .mf-actions{display:flex;gap:8px}
+#mafiaGame .mf-actions button{flex:1;padding:12px;border-radius:12px}
+#mafiaGame .mf-note{color:var(--amber);font-size:14px;text-align:center;min-height:20px}
+@media(min-width:700px){#mafiaGame{padding-left:max(14px,calc((100vw - 650px)/2));padding-right:max(14px,calc((100vw - 650px)/2))}.mf-players{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
 </style>
 </head>
 <body>
@@ -1682,6 +1705,20 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     </div>
     <div id="chMsg" role="status"></div>
   </div>
+
+  <div class="card" id="mafiaCard">
+    <h2><i class="fa-solid fa-user-secret" aria-hidden="true"></i>Mafia</h2>
+    <div class="hint">Gizli rollar, gecə hərəkətləri və gündüz səsverməsi. Dostlarınla və ya kompüterlə oyna.</div>
+    <button class="pbtn" id="mfNew" style="width:100%;padding:13px;margin-top:10px">Mafia otağı aç</button>
+    <button class="pbtn alt" id="mfBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="mfResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="mfCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Mafia kodu">
+      <button class="pbtn alt" id="mfEnter">Gir</button>
+    </div>
+    <div id="mfMsg" role="status"></div>
+  </div>
+
   <div class="card" id="pwacard" hidden>
     <h2><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>Tətbiq kimi quraşdır</h2>
     <div class="hint" id="pwahint"></div>
@@ -7370,6 +7407,110 @@ window.wtInviteBox = function(o){
   layer.addEventListener('click',e=>{if(e.target===layer) close();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape' && active){e.preventDefault();close();}});
   document.addEventListener('click',e=>{if(active && !layer.contains(e.target) && !active.wrap.contains(e.target) && !e.target.closest('.site-select-wrap')) close();},true);
+})();
+</script>
+
+
+<div id="mafiaGame" hidden role="dialog" aria-modal="true" aria-label="Mafia oyunu">
+  <div class="mf-head">
+    <button class="ib" id="mfBack" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <h2><i class="fa-solid fa-user-secret"></i> Mafia <small id="mfCode" style="color:var(--muted);font-size:12px"></small></h2>
+    <button class="ib" id="mfShare" aria-label="Kodu paylaş" title="Kodu paylaş"><i class="fa-solid fa-share-nodes"></i></button>
+  </div>
+  <div class="mf-panel">
+    <div class="mf-title" id="mfPhase">Oyunçular gözlənilir</div>
+    <div class="mf-sub" id="mfDesc">Otaq kodunu dostlarına göndər.</div>
+    <div class="mf-role" id="mfRole" hidden></div>
+    <div class="mf-note" id="mfNote" role="status"></div>
+    <div class="mf-actions" id="mfControls"></div>
+  </div>
+  <div class="mf-panel"><div class="mf-title" style="margin-bottom:10px">Oyunçular</div><div class="mf-players" id="mfPlayers"></div></div>
+  <div class="mf-panel"><div class="mf-title" style="margin-bottom:8px">Hadisələr</div><div class="mf-log" id="mfLog"></div></div>
+</div>
+
+
+<script>
+/* Mafia ayrıca oyun modulu */
+(function(){
+  const $ = id => document.getElementById(id);
+  const box = $('mafiaGame'); if(!box) return;
+  let game=null, pollVersion=0, generation=0, busy=false, selected='';
+  const labels={mafia:'Mafiya',doctor:'Doktor',commissioner:'Komissar',town:'Dinc sakin'};
+  function note(t){ $('mfNote').textContent=t||''; }
+  function lobbyMsg(t){ $('mfMsg').textContent=t||''; }
+  function show(on){ box.hidden=!on; if(on) $('mfCode').textContent='· '+(game?.code||'').toUpperCase(); }
+  function save(c){try{localStorage.setItem('wt_mafia_room',c||'')}catch(e){} $('mfResume').hidden=!c;}
+  function saved(){try{return localStorage.getItem('wt_mafia_room')||''}catch(e){return ''}}
+  async function request(path,body){
+    return api(path, body===undefined?{}:{method:'POST',body:JSON.stringify(body)});
+  }
+  function render(s){
+    game=s; pollVersion=s.v||0; selected='';
+    show(true); save(s.status==='over'?'':s.code);
+    $('mfPhase').textContent=s.status==='wait'?'Oyunçular gözlənilir':s.status==='over'?'Oyun bitdi':(s.phase==='night'?'🌙 Gecə · Raund '+s.round:'☀️ Gündüz · Səsvermə');
+    $('mfDesc').textContent=s.status==='wait'?'Ən azı 4 oyunçu qoşulmalıdır. Otaq kodunu dostlarına göndər.':s.status==='over'?(s.winner==='mafia'?'Mafiya qalib gəldi!':'Şəhər qalib gəldi!'):(s.phase==='night'?'Xüsusi rolun varsa, gizli hədəf seç. Dinc sakin gecə gözləyir.':'Şübhələndiyin oyunçuya səs ver.');
+    const role=$('mfRole');
+    if(s.role){role.hidden=false;role.textContent='Sənin rolun: '+(labels[s.role]||s.role)}else{role.hidden=true;role.textContent=''}
+    const controls=$('mfControls'); controls.textContent='';
+    function btn(t,fn,cls){const b=document.createElement('button');b.className='pbtn '+(cls||'');b.textContent=t;b.onclick=fn;controls.appendChild(b);return b}
+    if(s.status==='wait' && s.host) btn('Oyunu başlat',()=>act('/api/mafia/start',{room:s.code}));
+    if(s.status==='play' && s.phase==='night' && s.role==='town') note('Gecədir. Səhərə qədər gözlə.');
+    else if(s.status==='play' && s.action_done) note('Hərəkətin qeydə alındı. Digər oyunçular gözlənilir.');
+    else if(s.status==='play') note(s.phase==='night'?'Hədəf seç və gizli hərəkət et.':'Səs vermək üçün oyunçu seç.');
+    const players=$('mfPlayers'); players.textContent='';
+    s.players.forEach(p=>{
+      const b=document.createElement('button'); b.className='mf-player'+(!p.alive?' dead':'')+(selected===p.id?' sel':'');
+      const dot=document.createElement('span');dot.className='mf-dot';dot.textContent=p.alive?'●':'×';
+      const name=document.createElement('span');name.textContent=p.name+(p.me?' (sən)':'');
+      b.append(dot,name);
+      const nightRole=['mafia','doctor','commissioner'].includes(s.role);
+      const canTarget=s.status==='play'&&p.alive&&!p.me&&!s.action_done&&((s.phase==='day')|| (s.phase==='night'&&nightRole));
+      b.disabled=!canTarget;
+      b.onclick=()=>{selected=p.id; if(s.phase==='day') act('/api/mafia/action',{room:s.code,target:p.id}); else act('/api/mafia/action',{room:s.code,target:p.id});};
+      players.appendChild(b);
+    });
+    const log=$('mfLog');log.textContent='';
+    (s.log||[]).slice().reverse().forEach(t=>{const d=document.createElement('div');d.textContent='• '+t;log.appendChild(d)});
+    if(s.status==='over'){
+      if(s.roles){const d=document.createElement('div');d.style.marginTop='10px';d.style.color='var(--amber)';d.textContent='Rollar: '+s.players.map(p=>p.name+' — '+(labels[s.roles[p.id]]||'—')).join(' · ');log.prepend(d)}
+      btn('Lobbiyə qayıt',()=>{leave(false);});
+    }
+  }
+  async function act(path,body){
+    if(busy)return;busy=true;note('');try{const r=await request(path,body);let j={};try{j=await r.json()}catch(e){}
+      if(!r.ok){note(j.error||'Əməliyyat alınmadı');}else render(j);
+    }catch(e){note('Əlaqə problemi, yenidən cəhd et')}finally{busy=false}
+  }
+  async function enter(code,create,bot){
+    if(busy)return;busy=true;lobbyMsg('');
+    try{
+      const r=await request(create?'/api/mafia/create':'/api/mafia/join',create?{bot:!!bot}:{room:code});
+      let j={};try{j=await r.json()}catch(e){}
+      if(!r.ok){lobbyMsg(j.error||(r.status===404?'Belə otaq tapılmadı':'Otağa qoşulmaq mümkün olmadı'));return}
+      generation++;game=j;save(j.code);render(j);startPoll();
+    }catch(e){lobbyMsg('Əlaqə problemi, yenidən cəhd et')}finally{busy=false}
+  }
+  function startPoll(){
+    const g=++generation;
+    (async()=>{while(g===generation&&game&&game.code){
+      try{const r=await api('/api/mafia/poll?room='+encodeURIComponent(game.code)+'&v='+pollVersion);
+        if(g!==generation)return;if(!r.ok){await new Promise(x=>setTimeout(x,1500));continue}
+        render(await r.json());
+      }catch(e){await new Promise(x=>setTimeout(x,1500))}
+    }})();
+  }
+  function leave(callApi=true){
+    const c=game&&game.code;generation++;if(callApi&&c)request('/api/mafia/leave',{room:c}).catch(()=>{});
+    game=null;save('');show(false);lobbyMsg('');
+  }
+  $('mfNew').onclick=()=>enter('',true,false);
+  $('mfBot').onclick=()=>enter('',true,true);
+  $('mfEnter').onclick=()=>{const c=$('mfCodeIn').value.trim().toLowerCase();if(!c){lobbyMsg('Mafia kodunu yaz');return}enter(c,false,false)};
+  $('mfCodeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('mfEnter').click()});
+  $('mfResume').onclick=()=>{const c=saved();if(c)enter(c,false,false)};
+  $('mfBack').onclick=()=>leave(true);
+  $('mfShare').onclick=async()=>{if(!game)return;const t='Mafia oynayaq! Otaq kodu: '+game.code.toUpperCase();try{if(navigator.share)await navigator.share({title:'Mafia',text:t});else{await navigator.clipboard.writeText(t);note('Kod kopyalandı')}}catch(e){note(t)}};
+  if(saved())$('mfResume').hidden=false;
 })();
 </script>
 

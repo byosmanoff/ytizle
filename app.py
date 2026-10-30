@@ -5296,5 +5296,291 @@ def api_domino_claim():
         return jsonify(_dom_view(g, sub))
 
 
+
+# ---------------------------------------------------------------
+# Mafia: ayrıca oyun otağı, gizli rollar, gecə/gündüz səsverməsi
+# ---------------------------------------------------------------
+MAFIA = {}
+MAFIA_MAX = 200
+MAFIA_IDLE = 3 * 3600
+
+def _mf_touch(g):
+    g["v"] += 1
+    g["upd"] = time.time()
+    CV.notify_all()
+
+def _mf_alive(g):
+    return [p for p in g["players"] if p not in g["dead"]]
+
+def _mf_required(g):
+    alive = _mf_alive(g)
+    if g.get("phase") == "night":
+        return [p for p in alive if g.get("roles", {}).get(p) in ("mafia", "doctor", "commissioner")]
+    return alive
+
+def _mf_roles(n):
+    roles = ["mafia", "doctor", "commissioner"] + ["town"] * max(1, n - 3)
+    random.shuffle(roles)
+    return roles[:n]
+
+def _mf_view(g, sub):
+    alive = _mf_alive(g)
+    role = g.get("roles", {}).get(sub) if g["status"] != "wait" else None
+    players = []
+    for p in g["players"]:
+        nm = g["names"].get(p, {})
+        players.append({
+            "id": p, "name": nm.get("name", "Kompüter" if p.startswith("bot") else "Oyunçu"),
+            "avatar": nm.get("avatar", ""), "alive": p not in g["dead"],
+            "me": p == sub, "bot": p.startswith("bot")
+        })
+    out = dict(code=g["code"], players=players, status=g["status"], phase=g["phase"],
+               round=g["round"], host=g["host"] == sub, me=sub, role=role,
+               alive=len(alive), v=g["v"], log=g["log"][-8:],
+               can_start=(g["host"] == sub and g["status"] == "wait" and len(g["players"]) >= 4),
+               action_done=sub in g["acted"], winner=g.get("winner"))
+    if g["phase"] == "day" and g["status"] == "play":
+        out["votes"] = {p: n for p, n in g["votes"].items() if p in alive}
+    if g["status"] == "over":
+        out["roles"] = {p: g["roles"].get(p) for p in g["players"]}
+    return out
+
+def _mf_finish_check(g):
+    alive = _mf_alive(g)
+    mafia = sum(1 for p in alive if g["roles"].get(p) == "mafia")
+    town = len(alive) - mafia
+    if mafia == 0:
+        g["status"], g["winner"] = "over", "town"
+        g["log"].append("Mafiya məğlub oldu — şəhər qalib gəldi!")
+        return True
+    if mafia >= town:
+        g["status"], g["winner"] = "over", "mafia"
+        g["log"].append("Mafiya üstünlük qazandı!")
+        return True
+    return False
+
+def _mf_start(g):
+    if g["status"] != "wait" or len(g["players"]) < 4:
+        return
+    g["roles"] = dict(zip(g["players"], _mf_roles(len(g["players"]))))
+    g["dead"] = set()
+    g["phase"] = "night"
+    g["status"] = "play"
+    g["round"] = 1
+    g["votes"] = {}
+    g["acted"] = set()
+    g["night_actions"] = {}
+    g["log"].append("Gecə düşdü. Rollarınızı yoxlayın və gizli hərəkətinizi edin.")
+    _mf_bots(g)
+
+def _mf_bots(g):
+    if g["status"] != "play":
+        return
+    alive = _mf_alive(g)
+    bots = [p for p in alive if p.startswith("bot")]
+    if g["phase"] == "night":
+        for p in bots:
+            role = g["roles"].get(p)
+            targets = [x for x in alive if x != p and (role != "mafia" or g["roles"].get(x) != "mafia")]
+            if role in ("mafia", "doctor", "commissioner") and targets:
+                g["night_actions"][p] = random.choice(targets)
+                g["acted"].add(p)
+        if all(p in g["acted"] for p in _mf_required(g)):
+            _mf_resolve_night(g)
+    elif g["phase"] == "day":
+        for p in bots:
+            targets = [x for x in alive if x != p]
+            if targets:
+                g["votes"][p] = random.choice(targets)
+                g["acted"].add(p)
+        if all(p in g["acted"] for p in _mf_required(g)):
+            _mf_resolve_day(g)
+
+def _mf_resolve_night(g):
+    alive = _mf_alive(g)
+    mafia_targets = [t for p,t in g["night_actions"].items()
+                     if p in alive and g["roles"].get(p) == "mafia" and t in alive]
+    target = max(set(mafia_targets), key=mafia_targets.count) if mafia_targets else None
+    saved = any(g["roles"].get(p) == "doctor" and t == target
+                for p,t in g["night_actions"].items() if p in alive)
+    checked = [(p,t) for p,t in g["night_actions"].items()
+               if p in alive and g["roles"].get(p) == "commissioner"]
+    for p,t in checked:
+        if t in alive:
+            g["log"].append("Komissarın yoxlaması: " + ("Mafiya tapıldı." if g["roles"].get(t) == "mafia" else "Mafiya deyil."))
+    if target and not saved:
+        g["dead"].add(target)
+        g["log"].append(g["names"].get(target, {}).get("name", "Oyunçu") + " gecə oyundan çıxdı.")
+    else:
+        g["log"].append("Bu gecə heç kim ölmədi.")
+    g["phase"] = "day"
+    g["votes"] = {}
+    g["acted"] = set()
+    g["night_actions"] = {}
+    if not _mf_finish_check(g):
+        g["log"].append("Gündüz başladı. Şübhələndiyiniz oyunçuya səs verin.")
+        _mf_bots(g)
+
+def _mf_resolve_day(g):
+    alive = _mf_alive(g)
+    tally = {}
+    for p,t in g["votes"].items():
+        if p in alive and t in alive and p != t:
+            tally[t] = tally.get(t, 0) + 1
+    if tally:
+        high = max(tally.values())
+        tops = [p for p,n in tally.items() if n == high]
+        if len(tops) == 1:
+            out = tops[0]
+            g["dead"].add(out)
+            g["log"].append(g["names"].get(out, {}).get("name", "Oyunçu") + " səsvermə ilə oyundan çıxarıldı.")
+        else:
+            g["log"].append("Səsvermə bərabər oldu, heç kim çıxarılmadı.")
+    else:
+        g["log"].append("Səs verilmədi.")
+    if not _mf_finish_check(g):
+        g["round"] += 1
+        g["phase"] = "night"
+        g["votes"] = {}
+        g["acted"] = set()
+        g["night_actions"] = {}
+        g["log"].append("Gecə düşdü. Xüsusi rollar hərəkət etsin.")
+        _mf_bots(g)
+
+def _mf_get(code, sub):
+    g = MAFIA.get(code)
+    if not g or sub not in g["players"]:
+        abort(404)
+    return g
+
+@app.route("/api/mafia/create", methods=["POST"])
+def api_mafia_create():
+    sub, tok = auth_sub()
+    if not rate_hit("mfc", sub, 12, 60): abort(429)
+    d = request.get_json(silent=True) or {}
+    bot = bool(d.get("bot"))
+    nm = _dom_names(tok)
+    now = time.time()
+    with CV:
+        for c,g in list(MAFIA.items()):
+            if now - g["upd"] > MAFIA_IDLE: MAFIA.pop(c, None)
+        if len(MAFIA) >= MAFIA_MAX: abort(503)
+        for _ in range(50):
+            c = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
+            if c not in MAFIA: break
+        else: abort(503)
+        g = dict(code=c, players=[sub], names={sub:nm}, host=sub, status="wait",
+                 phase="lobby", round=0, roles={}, dead=set(), votes={}, acted=set(),
+                 night_actions={}, log=[], winner=None, v=1, upd=now, bot=bot)
+        if bot:
+            for i in range(5):
+                pid = "bot" + str(i+1)
+                g["players"].append(pid)
+                g["names"][pid] = {"name":"Kompüter " + str(i+1), "avatar":""}
+            _mf_start(g)
+        MAFIA[c] = g
+        return jsonify(_mf_view(g, sub))
+
+@app.route("/api/mafia/join", methods=["POST"])
+def api_mafia_join():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    if not code: abort(400)
+    nm = _dom_names(tok)
+    with CV:
+        g = MAFIA.get(code)
+        if not g: abort(404)
+        if sub not in g["players"]:
+            if g["status"] != "wait" or len(g["players"]) >= 12:
+                return jsonify(error="full"), 403
+            g["players"].append(sub)
+            g["names"][sub] = nm
+        _mf_touch(g)
+        return jsonify(_mf_view(g, sub))
+
+@app.route("/api/mafia/poll")
+def api_mafia_poll():
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    try: v = int(request.args.get("v", "0"))
+    except ValueError: abort(400)
+    deadline = time.time() + 18
+    with CV:
+        g = _mf_get(code, sub)
+        g["upd"] = time.time()
+        while g["v"] == v:
+            left = deadline - time.time()
+            if left <= 0: break
+            CV.wait(timeout=left)
+            g = MAFIA.get(code)
+            if not g: abort(404)
+        resp = jsonify(_mf_view(g, sub))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+@app.route("/api/mafia/start", methods=["POST"])
+def api_mafia_start():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    with CV:
+        g = _mf_get(clean_room(d.get("room")), sub)
+        if g["host"] != sub: abort(403)
+        if len(g["players"]) < 4: return jsonify(error="Ən azı 4 oyunçu lazımdır"), 400
+        _mf_start(g); _mf_touch(g)
+        return jsonify(_mf_view(g, sub))
+
+@app.route("/api/mafia/action", methods=["POST"])
+def api_mafia_action():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    target = str(d.get("target") or "")[:30]
+    with CV:
+        g = _mf_get(clean_room(d.get("room")), sub)
+        alive = _mf_alive(g)
+        if g["status"] != "play" or sub not in alive:
+            return jsonify(_mf_view(g, sub))
+        if target not in alive or target == sub: abort(400)
+        if sub in g["acted"]: return jsonify(_mf_view(g, sub))
+        role = g["roles"].get(sub)
+        if g["phase"] == "night":
+            if role == "town": abort(403)
+            if role == "mafia" and g["roles"].get(target) == "mafia": abort(400)
+            if role not in ("mafia", "doctor", "commissioner"): abort(403)
+            g["night_actions"][sub] = target
+        elif g["phase"] == "day":
+            g["votes"][sub] = target
+        else: abort(400)
+        g["acted"].add(sub)
+        if all(p in g["acted"] for p in _mf_required(g)):
+            if g["phase"] == "night": _mf_resolve_night(g)
+            else: _mf_resolve_day(g)
+        else:
+            _mf_bots(g)
+        _mf_touch(g)
+        return jsonify(_mf_view(g, sub))
+
+@app.route("/api/mafia/leave", methods=["POST"])
+def api_mafia_leave():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    with CV:
+        g = MAFIA.get(code)
+        if g and sub in g["players"]:
+            if g["status"] == "wait":
+                g["players"].remove(sub)
+                g["names"].pop(sub, None)
+                if g["host"] == sub and g["players"]: g["host"] = g["players"][0]
+                if not g["players"]: MAFIA.pop(code, None)
+                else: _mf_touch(g)
+            else:
+                g["dead"].add(sub)
+                if g["status"] == "play":
+                    _mf_finish_check(g)
+                    _mf_touch(g)
+    return jsonify(ok=True)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), threaded=True)
