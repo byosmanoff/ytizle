@@ -1561,6 +1561,81 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   #profile{padding-left:calc(50% - 260px);padding-right:calc(50% - 260px)}
 }
 
+
+/* ================= MAFIA ================= */
+#mafia{position:fixed;left:0;top:0;width:100%;height:var(--H,100dvh);transform:translateY(var(--VT,0px));overscroll-behavior:none;touch-action:manipulation;z-index:75;display:flex;flex-direction:column;gap:8px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(120% 70% at 50% 0%,#40224f 0%,var(--velvet) 62%);overflow:hidden;transition:background .6s}
+#mafia.night{background:radial-gradient(120% 70% at 50% 0%,#1d2552 0%,#080b1b 68%)}
+#mafia[hidden],#mafia [hidden]{display:none!important}
+#mafia input{-webkit-user-select:text;user-select:text}
+#mafia .mhead{display:flex;align-items:center;gap:10px;flex:none}
+#mafia .mt{flex:1;min-width:0;line-height:1.15}
+#mafia .mt b{display:block;font-size:20px}
+#mafia .mt small{color:var(--muted);font-size:13px;letter-spacing:.08em}
+#mafia .mbar{flex:none;display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:16px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line)}
+#mafia .mph{flex:1;min-width:0;line-height:1.2}
+#mafia .mph b{display:block;font-size:16px}
+#mafia .mph small{display:block;color:var(--muted);font-size:13px}
+#mafia .mtm{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;color:var(--amber);min-width:48px;text-align:right}
+#mafia .mtm.low{color:#ff6b6b}
+#mafplayers{flex:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;max-height:31%;overflow-y:auto;overscroll-behavior:contain}
+#mafia .mchip{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);color:var(--text);text-align:left;font:inherit;transition:box-shadow .15s,opacity .2s}
+#mafia .mchip.dead{opacity:.45}
+#mafia .mchip.dead .mn{text-decoration:line-through}
+#mafia .mchip.tgt{box-shadow:inset 0 0 0 2px rgba(255,122,156,.55);cursor:pointer}
+#mafia .mchip.tgt:active{transform:scale(.97)}
+#mafia .mchip.pk{box-shadow:inset 0 0 0 2px var(--amber)}
+#mafia .mchip.me .mn::after{content:" •";color:var(--rose)}
+#mafia .mav{width:28px;height:28px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;font-size:13px;overflow:hidden;flex:none;position:relative}
+#mafia .mav img{width:100%;height:100%;object-fit:cover}
+#mafia .mwho{min-width:0;flex:1;line-height:1.15}
+#mafia .mn{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mafia .ms{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mafia .ms.r-mafia{color:#ff7b7b}
+#mafia .monl{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6b5a7d;margin-right:3px}
+#mafia .monl.on{background:#5be08a}
+#mafmain{flex:1;min-height:90px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border-radius:20px;background:rgba(0,0,0,.24);box-shadow:inset 0 0 0 1px var(--line);padding:12px;display:flex;flex-direction:column;gap:10px}
+#mafwait{text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0}
+#mafwait>i{font-size:28px;color:var(--amber)}
+#mafwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
+#mafwait .pbtn{width:100%;max-width:340px;padding:13px}
+#mafrole{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line)}
+#mafrole>i{font-size:26px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--seat-2);flex:none}
+#mafrole.r-mafia>i{background:#7a1f2b;color:#ffd5d5}
+#mafrole.r-doctor>i{background:#1f6b4a;color:#d6ffe9}
+#mafrole.r-sheriff>i{background:#1f4a7a;color:#d6e9ff}
+#mafrole b{display:block;font-size:17px}
+#mafrole small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin-top:2px}
+#mafact{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+#mafact .mhint{color:var(--amber);font-weight:600;font-size:15px}
+#mafact .mnote{color:var(--muted);font-size:13px}
+#mafact .pbtn{padding:13px}
+#mafact .pbtn.on{outline:2px solid var(--amber)}
+#mafchecks{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+#mafchecks b{color:var(--text)}
+#mafchecks .bad{color:#ff7b7b;font-weight:700}
+#mafchecks .good{color:#5be08a;font-weight:700}
+#maflog{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+#maflog div{padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.05);line-height:1.3}
+#maflog div.bad{color:#ffb3b3}
+#mafres{text-align:center;padding:14px;border-radius:16px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line)}
+#mafres b{display:block;font-size:22px;margin-bottom:4px}
+#mafres small{display:block;color:var(--muted);margin-bottom:10px}
+#mafres .pbtn{width:100%;padding:13px}
+#mafmsg{flex:none;min-height:0;text-align:center;font-weight:600;color:var(--amber);font-size:14px}
+#mafmsg:empty{display:none}
+#mafchat{flex:none;height:min(34%,250px);display:flex;flex-direction:column;border-radius:18px;background:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+#mafmsgs{flex:1;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:8px 12px;font-size:14px}
+#mafmsgs .mcm{margin:3px 0;line-height:1.3;word-break:break-word}
+#mafmsgs .mcm b{color:var(--rose)}
+#mafmsgs .mcm.maf b{color:#ff7b7b}
+#mafmsgs .mcm.dead{opacity:.7;font-style:italic}
+#mafmsgs .mempty{color:var(--muted);font-size:13px;text-align:center;margin-top:10px}
+#mafchat .mcin{flex:none;display:flex;gap:8px;padding:8px;border-top:1px solid var(--line)}
+#mafchat .mcin input{flex:1;min-width:0;font-size:16px}
+#mafchat .mcin .pbtn{padding:10px 14px}
+#mafchat .mcin input:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -1681,6 +1756,17 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       <button class="pbtn alt" id="chEnter">Gir</button>
     </div>
     <div id="chMsg" role="status"></div>
+  </div>
+  <div class="card" id="mafCard">
+    <h2><i class="fa-solid fa-user-secret" aria-hidden="true"></i>Mafia</h2>
+    <div class="hint">Dostlarınla onlayn Mafia oyna: 4–12 nəfər. Gecə mafiya öldürür, gündüz hamı şübhəliyə səs verir.</div>
+    <button class="pbtn" id="mafNew" style="width:100%;padding:13px;margin-top:10px">Mafia otağı aç</button>
+    <button class="pbtn alt" id="mafResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="mafCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Mafia kodu">
+      <button class="pbtn alt" id="mafEnter">Gir</button>
+    </div>
+    <div id="mafMsg" role="status"></div>
   </div>
   <div class="card" id="pwacard" hidden>
     <h2><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>Tətbiq kimi quraşdır</h2>
@@ -2177,6 +2263,48 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <div id="duract"><button class="pbtn alt" id="dutake" hidden>Götür</button><button class="pbtn alt" id="dutrans" hidden>Ötür</button><button class="pbtn" id="dupass" hidden>Pas</button></div>
   <div id="durres" hidden></div>
   <div id="durhand"></div>
+</div>
+<div id="mafia" hidden role="dialog" aria-modal="true" aria-label="Mafia">
+  <div class="mhead">
+    <button class="ib" id="mafback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="mt"><b>Mafia</b><small id="mafcode"></small></div>
+    <button class="ib sfxb" id="mafsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="mafshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="mafquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div class="mbar" id="mafbar" hidden>
+    <div class="mph"><b id="mafph"></b><small id="mafphs"></small></div>
+    <div class="mtm" id="maftm"></div>
+  </div>
+  <div id="mafplayers"></div>
+  <div id="mafmain">
+    <div id="mafwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Oyunçular gözlənilir...</span>
+      <small>Kodu dostuna göndər:</small>
+      <b id="mafwcode"></b>
+      <small id="mafwcnt"></small>
+      <button class="pbtn" id="mafstart">Oyunu başlat</button>
+      <button class="pbtn alt" id="mafwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="mafinvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="mafinvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="mafinvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="mafinvFr"></div>
+        <div class="gmsg" id="mafinvMsg" role="status"></div>
+      </div>
+    </div>
+    <div id="mafrole" hidden></div>
+    <div id="mafchecks" hidden></div>
+    <div id="mafact" hidden></div>
+    <div id="mafres" hidden></div>
+    <div id="maflog"></div>
+  </div>
+  <div id="mafmsg" role="status"></div>
+  <div id="mafchat">
+    <div id="mafmsgs"></div>
+    <div class="mcin"><input id="mafin" maxlength="200" placeholder="Mesaj yaz..." autocomplete="off" aria-label="Mesaj"><button class="pbtn" id="mafsend" type="button" aria-label="Göndər"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button></div>
+  </div>
 </div>
 <script>window.__ytReady = false; window.onYouTubeIframeAPIReady = function(){ window.__ytReady = true; };</script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
@@ -4260,12 +4388,12 @@ function renderInvites(list, games){
     if(i.avatar && /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/.test(i.avatar)){ av.style.backgroundImage = 'url("' + i.avatar + '")'; av.textContent = ''; }
     const tx = document.createElement('div'); tx.className = 'tx';
     const b = document.createElement('b'); b.textContent = i.name + (i.username ? ' (@' + i.username + ')' : '');
-    const sp = document.createElement('span'); sp.textContent = i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
+    const sp = document.createElement('span'); sp.textContent = i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
     tx.appendChild(b); tx.appendChild(sp);
     const go = document.createElement('button'); go.className = 'go'; go.textContent = 'Qoşul';
     const no = document.createElement('button'); no.className = 'no'; no.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'; no.setAttribute('aria-label', 'Rədd et');
     const drop = () => { api('/api/game/invite/dismiss', {method: 'POST', body: JSON.stringify({id: i.id})}).catch(() => {}); c.remove(); };
-    go.onclick = () => { drop(); const f = i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : window.wtJoinDomino; if(f) f(i.room); };
+    go.onclick = () => { drop(); const f = i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : i.game === 'mafia' ? window.wtJoinMafia : window.wtJoinDomino; if(f) f(i.room); };
     no.onclick = drop;
     c.appendChild(av); c.appendChild(tx); c.appendChild(go); c.appendChild(no);
     box.appendChild(c);
@@ -5017,7 +5145,7 @@ boot();
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
   var ORDER = ['home','plans','friends','games','hist','settings','profile'], PAGES = ORDER.slice(0,6);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],['#mafCard','games'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
     ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
   map.forEach(function(m){
@@ -5295,7 +5423,7 @@ boot();
    Mətn düyünləri və atributlar (placeholder, title, aria-label) lüğət, nümunə (regex), tarix və
    "a · b" qaydaları ilə tərcümə olunur. İstifadəçi məzmunu ([data-nt]) tərcümə olunmur. */
 (function(){
-  var D = Object.create(null); 'Salam|Merhaba|Hello\nBu axşam nə izləyirik?|Bu akşam ne izliyoruz?|What are we watching tonight?\nOtaq aç, kodu göndər, eyni kadrda olun.|Oda aç, kodu gönder, aynı karede olun.|Open a room, send the code, and watch together.\nOtaq aç|Oda aç|Open room\nKodun var?|Kodun var mı?|Have a code?\nGir|Gir|Join\nizlənən|izlenen|watched\notaq|oda|rooms\nindi izləyir|şimdi izliyor|watching now\nTətbiq kimi quraşdır|Uygulama olarak yükle|Install as an app\nAna ekrana əlavə et|Ana ekrana ekle|Add to home screen\nPlanlı seanslar|Planlı seanslar|Scheduled sessions\nYeni seans|Yeni seans|New session\nBildirişlər|Bildirimler|Notifications\nİzləmə statistikası|İzleme istatistikleri|Watch stats\nDostlar|Arkadaşlar|Friends\nİzlədiklərin|İzlediklerin|Watched\nOtaqların|Odaların|Your rooms\nSeans bildirişləri|Seans bildirimleri|Session notifications\nSəs və video|Ses ve video|Sound and video\nSəsli söhbətin səsi|Sesli sohbetin sesi|Voice chat volume\nVideonun səsi|Videonun sesi|Video volume\nMikrofon bağlı başlasın|Mikrofon kapalı başlasın|Start with mic muted\nSəsli söhbətə qoşulanda mikrofon söndürülmüş olur.|Sesli sohbete katılınca mikrofon kapalı olur.|The mic is muted when you join voice chat.\nSəs təmizləmə|Ses temizleme|Noise cancelling\nKüyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.|Gürültüyü ve yankıyı azaltır. Ses kötü çıkarsa kapat.|Reduces noise and echo. Turn it off if your audio sounds bad.\nHesab|Hesap|Account\nHesabdan çıx|Hesaptan çık|Log out\nTəhlükəsizlik|Güvenlik|Security\nBütün cihazlardan çıx|Tüm cihazlardan çık|Log out of all devices\nBu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.|Bu cihaz dahil tüm telefon ve bilgisayarlardan çıkarılırsın.|You will be logged out of all phones and computers, including this one.\nTəhlükəli zona|Tehlikeli bölge|Danger zone\nHesabı sil|Hesabı sil|Delete account\nHesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.|Hesabın, geçmişin, fotoğrafın ve kullanıcı adın kalıcı olarak silinecek. Bu geri alınamaz.|Your account, history, photo and username will be permanently deleted. This cannot be undone.\nLəğv et|Vazgeç|Cancel\nHəmişəlik sil|Kalıcı olarak sil|Delete forever\nTarixçəni təmizlə|Geçmişi temizle|Clear history\nProfil|Profil|Profile\nŞəkli dəyiş|Fotoğrafı değiştir|Change photo\nSil|Sil|Remove\nAd|Ad|Name\nSaxla|Kaydet|Save\nİstifadəçi adı|Kullanıcı adı|Username\nHərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.|Harf, rakam, nokta ve _ (3-20 karakter). Herkesin adı farklıdır.|Letters, digits, dots and _ (3-20 characters). Everyone\'s username is unique.\nHaqqında|Hakkında|About\nGizlilik|Gizlilik|Privacy\nOtağa dəvətlər|Odaya davetler|Room invites\nAçıq: hər kəs səni otağa dəvət edə bilər.|Açık: herkes seni odaya davet edebilir.|On: anyone can invite you to a room.\nE-poçt|E-posta|Email\nDəyiş|Değiştir|Change\nTəsdiq et|Onayla|Confirm\nŞifrəni dəyiş|Şifreyi değiştir|Change password\nŞifrəni yenilə|Şifreyi güncelle|Update password\nOtaq kodu|Oda kodu|Room code\nİstifadəçi adı ilə axtar|Kullanıcı adıyla ara|Search by username\nTəsdiq üçün şifrən|Onay için şifren|Your password to confirm\nŞifrə|Şifre|Password\nTəsdiq üçün SİL yaz|Onay için SİL yaz|Type DELETE to confirm\nTəsdiq sözü|Onay kelimesi|Confirmation word\nNaviqasiya|Gezinme|Navigation\nƏsas|Ana sayfa|Home\nSeanslar|Seanslar|Sessions\nTarixçə|Geçmiş|History\nAyarlar|Ayarlar|Settings\nGeri|Geri|Back\nQısa məlumat (məs. Komediya və qorxu filmləri)|Kısa bilgi (örn. Komedi ve korku filmleri)|Short bio (e.g. Comedy and horror films)\n6 rəqəmli kod|6 haneli kod|6-digit code\nTəsdiq kodu|Onay kodu|Confirmation code\nCari şifrə|Mevcut şifre|Current password\nYeni şifrə (ən azı 6 simvol)|Yeni şifre (en az 6 karakter)|New password (at least 6 characters)\nYeni şifrə|Yeni şifre|New password\nDil|Dil|Language\nKOD|KOD|CODE\nBaz|Paz|Sun\nB.e|Pzt|Mon\nÇ.a|Sal|Tue\nÇər|Çar|Wed\nC.a|Per|Thu\nCüm|Cum|Fri\nŞən|Cmt|Sat\nCəmi|Toplam|Total\nizləmisən,|izledin,|watched,\nbirlikdə. Son 30 gündə|birlikte. Son 30 günde|together. In the last 30 days you opened\nvideo açmısan.|video açtın.|videos.\nBu ay birlikdə|Bu ay birlikte|Together this month:\nizlədiniz|izlediniz|watched\nBu ay|Bu ay|This month:\nizlədin|izledin|watched\nNə izləyirik? (məs. Cümə filmi)|Ne izliyoruz? (örn. Cuma filmi)|What are we watching? (e.g. Friday movie)\nƏminsən?|Emin misin?|Are you sure?\nBəli|Evet|Yes\nÇıx|Çık|Log out\nBütün cihazlardan çıxılsın? Bu cihaz da daxil.|Tüm cihazlardan çıkılsın mı? Bu cihaz da dahil.|Log out of all devices, including this one?\nHesab həmişəlik silinsin?|Hesap kalıcı olarak silinsin mi?|Delete your account permanently?\nTarixçə silinsin?|Geçmiş silinsin mi?|Delete your history?\nSeans silinsin?|Seans silinsin mi?|Delete this session?\nTəslim olmaq istəyirsən?|Teslim olmak istiyor musun?|Do you want to resign?\nTəslim ol|Teslim ol|Resign\nŞahmat|Satranç|Chess\nŞahmat kodu|Satranç kodu|Chess code\nŞahmat otağı aç|Satranç odası aç|Open a chess room\nDostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.|Arkadaşınla online satranç: oda aç, kodu gönder, beyaz ve siyah rastgele düşer.|Play chess online with a friend: open a room, send the code, white and black are assigned at random.\nDomino kodu|Domino kodu|Domino code\nOyunlar|Oyunlar|Games\nDostunla onlayn oyna: oyun seç, otaq aç və kodu göndər.|Arkadaşınla online oyna: oyun seç, oda aç ve kodu gönder.|Play online with a friend: pick a game, open a room and send the code.\nKompüterlə oyna|Bilgisayarla oyna|Play against the computer\nPaylaş|Paylaş|Share\nRəqib gəlmir: oyunu bitir|Rakip gelmiyor: oyunu bitir|Opponent is not coming: end the game\nSənin növbən|Sıra sende|Your turn\nŞah! Sənin növbən|Şah! Sıra sende|Check! Your turn\nRəqibə şah! Rəqibin növbəsi...|Rakibe şah! Rakibin sırası...|Check on your opponent! Opponent\'s turn...\nMat|Mat|Checkmate\nPat: gediş yoxdur, bərabərlik|Pat: hamle yok, beraberlik|Stalemate: no legal move, draw\nTəslim oldu|Teslim oldu|Resigned\n50 gediş qaydası: bərabərlik|50 hamle kuralı: beraberlik|50-move rule: draw\nÜç dəfə təkrar: bərabərlik|Üç kez tekrar: beraberlik|Threefold repetition: draw\nMat üçün fiqur çatmır: bərabərlik|Mat için yeterli taş yok: beraberlik|Not enough pieces to checkmate: draw\nYenidən oyna (rənglər dəyişir)|Tekrar oyna (renkler değişir)|Play again (colors swap)\nAğ|Beyaz|White\nQara|Siyah|Black\nÇox sorğu göndərdin, bir az gözlə|Çok fazla istek gönderdin, biraz bekle|Too many requests, wait a moment\nŞahmat kodunu yaz|Satranç kodunu yaz|Enter the chess code\nKompüter düşünür...|Bilgisayar düşünüyor...|The computer is thinking...\nRəqib oyundan çıxdı|Rakip oyundan çıktı|Your opponent left the game\nOyundan çıxdın|Oyundan çıktın|You left the game\nAçıq uclar:|Açık uçlar:|Open ends:\nƏlindəki xal:|Elindeki puan:|Your points:\nSola|Sola|Left\nSağa|Sağa|Right\nHəssas məzmun|Hassas içerik|Sensitive content\nAçmaq üçün toxun|Açmak için dokun|Tap to open\nLinki kopyala|Bağlantıyı kopyala|Copy the link\nRəqibə 1 dəqiqə vaxt ver, sonra yenə bas|Rakibe 1 dakika süre ver, sonra tekrar bas|Give your opponent 1 minute, then press again\nGecən xeyir|İyi geceler|Good night\nSabahın xeyir|Günaydın|Good morning\nGünün xeyir|İyi günler|Good afternoon\nAxşamın xeyir|İyi akşamlar|Good evening\nHələ heç nə izləməmisən|Henüz hiçbir şey izlemedin|You haven\'t watched anything yet\nOtaqda açdığın videolar burada görünəcək|Odada açtığın videolar burada görünecek|Videos you open in a room will show up here\nHələ otaq yoxdur|Henüz oda yok|No rooms yet\nİlk otağı aç, dostunu dəvət et|İlk odayı aç, arkadaşını davet et|Open your first room and invite a friend\nOtağa yenidən gir|Odaya tekrar gir|Rejoin room\nBir film, iki ekran, tək ürək.|Bir film, iki ekran, tek yürek.|One movie, two screens, one heart.\nMəsafə uzaq, kadr eyni.|Mesafe uzak, kare aynı.|Far apart, same frame.\nPopcorn hazırdır, sən də hazırsan?|Patlamış mısır hazır, sen de hazır mısın?|Popcorn is ready, are you?\nGözlərin başqa şəhərdə, ürəyin eyni salonda.|Gözlerin başka şehirde, yüreğin aynı salonda.|Your eyes in another city, your heart in the same theater.\nIşıqlar sönür, söhbət başlayır.|Işıklar sönüyor, sohbet başlıyor.|Lights go down, the chat begins.\nBu axşamın filmini kim seçir?|Bu akşamın filmini kim seçiyor?|Who picks tonight\'s movie?\nƏn yaxşı yer, ekranın qarşısında qoşa gülmək.|En iyi yer, ekranın karşısında birlikte gülmek.|The best seat is laughing together in front of the screen.\nEyni saniyədə başla, eyni anda gül.|Aynı saniyede başla, aynı anda gül.|Press play together, laugh together.\nPlanlı seans yoxdur|Planlı seans yok|No scheduled sessions\nTarix seç, dostlarını dəvət et|Tarih seç, arkadaşlarını davet et|Pick a date and invite your friends\nOtağa gir|Odaya gir|Enter room\nBaşlat|Başlat|Start\nGəlirəm|Geliyorum|I am in\nGələ bilmirəm|Gelemiyorum|Can\'t make it\nDostluq sorğuları|Arkadaşlık istekleri|Friend requests\ndost olmaq istəyir|arkadaş olmak istiyor|wants to be friends\nQəbul et|Kabul et|Accept\nRədd et|Reddet|Decline\nGöndərilən sorğular|Gönderilen istekler|Sent requests\nSorğunu ləğv et|İsteği iptal et|Cancel request\nDostlardan çıxar|Arkadaşlıktan çıkar|Remove friend\nDost əlavə et|Arkadaş ekle|Add friend\nSorğu göndərilib|İstek gönderildi|Request sent\nHələ dostun yoxdur. Dostunun istifadəçi adını yuxarıda axtar.|Henüz arkadaşın yok. Arkadaşının kullanıcı adını yukarıda ara.|You have no friends yet. Search for a friend\'s username above.\nQoşul|Katıl|Join\nsəni otağa dəvət edir|seni odaya davet ediyor|invites you to a room\nBağlı: heç kim səni otağa dəvət edə bilməz.|Kapalı: kimse seni odaya davet edemez.|Off: nobody can invite you to a room.\nİndi otaqlar boşdur, ilk otağı sən aç|Şu an odalar boş, ilk odayı sen aç|All rooms are empty, open the first one\nBu ay hələ birlikdə izləməmisiniz. İlk filmi başlat!|Bu ay henüz birlikte izlemediniz. İlk filmi başlat!|You haven\'t watched together this month. Start the first movie!\nƏlaqə problemi, yenidən cəhd et|Bağlantı sorunu, tekrar dene|Connection problem, try again\nAlınmadı, yenidən cəhd et|Olmadı, tekrar dene|Failed, try again\nDomino otağı aç|Domino odası aç|Open a domino room\nDostunla onlayn domino oyna. Otaq aç, kodu göndər.|Arkadaşınla online domino oyna. Oda aç, kodu gönder.|Play domino online with a friend. Open a room and send the code.\nOyuna qayıt|Oyuna dön|Back to the game\nRəqib gözlənilir...|Rakip bekleniyor...|Waiting for your opponent...\nKodu rəqibinə göndər:|Kodu rakibine gönder:|Send this code to your opponent:\nSənin növbən: daş seç|Sıra sende: bir taş seç|Your turn: pick a tile\nGedişin yoxdur, bazardan daş çək|Hamlen yok, havuzdan taş çek|No move, draw a tile from the boneyard\nRəqibin növbəsi...|Rakibin sırası...|Opponent\'s turn...\nRəqib əlaqədə deyil|Rakip bağlantıda değil|Opponent is offline\nQazandın!|Kazandın!|You won!\nRəqib qazandı|Rakip kazandı|Opponent won\nBərabərlik|Beraberlik|Draw\nYenidən oyna|Tekrar oyna|Play again\nBütün daşlar bitdi|Tüm taşlar bitti|All tiles played\nOyun bloklandı, daşların cəminə görə|Oyun kilitlendi, taş toplamına göre|Game blocked, decided by pip count\nBu daş yerinə düşmür|Bu taş uymuyor|This tile doesn\'t fit\nBelə oyun tapılmadı. Kodu yoxla.|Böyle bir oyun bulunamadı. Kodu kontrol et.|No such game found. Check the code.\nBu otaq doludur|Bu oda dolu|This room is full\nLink kopyalandı|Link kopyalandı|Link copied\nBazardan daş çək|Havuzdan taş çek|Draw a tile\nRəqib|Rakip|Opponent\nXal|Puan|Score\ndaş|taş|tiles\nBazar|Havuz|Boneyard\nRəqib keçdi|Rakip pas geçti|Opponent passed\nRəqib bazardan daş çəkdi|Rakip havuzdan taş çekti|Opponent drew a tile\nGedişin olmadığı üçün keçdin|Hamlen olmadığı için pas geçtin|You passed, no move available\nSən başlayırsan: daş seç|Sen başlıyorsun: bir taş seç|You start: pick a tile\nRəqib başlayır...|Rakip başlıyor...|Opponent starts...\nOyun bitib və ya tapılmadı|Oyun bitti ya da bulunamadı|The game ended or was not found\nDomino kodunu yaz|Domino kodunu yaz|Enter the domino code\nDomino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.|Domino 101: arkadaşınla online oyna, ilk 101 puana ulaşan kazanır.|Domino 101: play online with a friend, first to reach 101 points wins.\nOyunu qazandın!|Oyunu kazandın!|You won the game!\nRəqib oyunu qazandı|Rakip oyunu kazandı|Opponent won the game\nYeni oyun|Yeni oyun|New game\nNövbəti raund|Sonraki tur|Next round\nxal|puan|points\nOyunçu sayı|Oyuncu sayısı|Players\n2 nəfər|2 kişi|2 players\n3 nəfər|3 kişi|3 players\n4 nəfər|4 kişi|4 players\nDəvət et|Davet et|Invite\nİstifadəçi adı ilə dəvət et|Kullanıcı adıyla davet et|Invite by username\nDostlarını çağır|Arkadaşlarını çağır|Invite friends\nSəs|Ses|Sound\nGözlənilir|Bekleniyor|Waiting\nÇəkilir...|Çekiliyor...|Drawing...\nsəni Domino oyununa dəvət edir|seni Domino oyununa davet ediyor|invites you to a Domino game\nsəni Şahmat oyununa dəvət edir|seni Satranç oyununa davet ediyor|invites you to a Chess game\nOyundan çıx|Oyundan çık|Leave the game\nOyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.|Oyundan çıkmak istiyor musun? Oyun senin için bitecek.|Do you want to leave? The game will end for you.\nOyundan çıxmaq istəyirsən?|Oyundan çıkmak istiyor musun?|Do you want to leave the game?\nSəsli otağa gir|Sesli odaya gir|Join voice\nSəsli otaqdan çıx|Sesli odadan çık|Leave voice\nMikrofonu aç|Mikrofonu aç|Unmute\nMikrofonu söndür|Mikrofonu kapat|Mute\nSəsli otaqdasan, gözləyirəm...|Sesli odadasın, bekliyorum...|You are in voice, waiting...\nQoşulur...|Bağlanıyor...|Connecting...\nSəs üçün toxun|Ses için dokun|Tap for sound\nMikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.|Mikrofon bu bağlantıda çalışmıyor. Site https ile açılmalı.|The microphone does not work on this connection. The site must be opened over https.\nMikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.|Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.|Microphone permission was denied. Allow it in your browser settings.\n\nPerevod|Perevod|Transfer\naçıq|açık|on\nbağlı|kapalı|off\nDurak otağı aç|Durak odası aç|Open a durak room\nDostunla onlayn durak oyna. Kartı ilk bitirən çıxır, son kart qalan axmaq olur.|Arkadaşınla online durak oyna. Kartı ilk bitiren çıkar, son kartı kalan aptal olur.|Play durak online with a friend. The first to empty their hand goes out, the last one holding cards is the durak.\nKart|Kart|Card\nKoz|Koz|Trump\nDəstədə|Destede|In deck\nAtılıb|Atıldı|Discarded\nMasa boşdur|Masa boş|The table is empty\nMüdafiə et: kartı seç, sonra bağlayacağın kartı bas|Savun: kartı seç, sonra bağlayacağın kartı tıkla|Defend: pick a card, then tap the card it beats\nBağlaya bilmirsən? Götür|Bağlayamıyor musun? Al|Cannot beat it? Take\nƏlavə et və ya pas keç|Ekle ya da pas geç|Add a card or pass\nHücum edən kart atır...|Saldıran kart atıyor...|The attacker is playing a card...\nƏlavə kartlar gözlənilir...|Ek kartlar bekleniyor...|Waiting for extra cards...\nKartların bitdi: oyunu izləyirsən|Kartların bitti: oyunu izliyorsun|You are out: watching the game\nHamının kartı bitdi|Herkesin kartı bitti|Everyone is out of cards\nKartlar sənin əlində qaldı|Kartlar sende kaldı|You are left holding cards\nSən|Sen|You\nNövbə sənin deyil|Sıra sende değil|It is not your turn\nBu kart onu bağlamır|Bu kart onu kapatmıyor|This card does not beat it\nBu hərəkət mümkün deyil|Bu hamle mümkün değil|This move is not possible\nGötür|Al|Take\nÖtür|Aktar|Transfer\nPas|Pas|Pass\nÖtürmək üçün kart seç|Aktarmak için kart seç|Pick a card to transfer\nDurak sənsən|Durak sensin|You are the durak\nBərabərlik|Beraberlik|Draw\nYenidən oyna|Tekrar oyna|Play again\noyundan çıxdı|oyundan çıktı|left the game\nOyunçu|Oyuncu|Player\nHücum|Saldırı|Attack\nMüdafiə|Savunma|Defense\nÇıxıb|Çıktı|Out\nDurak kodunu yaz|Durak kodunu yaz|Enter the durak code\nperevod|perevod|transfer\nPerevod (hücumu ötürmək)|Perevod (saldırıyı aktarma)|Transfer rule (perevod)\nAçıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.|Açık: savunan, aynı rakamlı kartla saldırıyı sıradakine aktarabilir. Kapalı: yalnızca kapatabilir veya alabilir.|On: the defender can pass the attack to the next player with a card of the same rank. Off: the defender can only beat or take.\nsəni Durak oyununa dəvət edir|seni Durak oyununa davet ediyor|invites you to a Durak game\nLink kopyalandı|Bağlantı kopyalandı|Link copied\nTəkrar|Tekrar|Again\nKart bazarı|Deste|Deck\nBita|Atılanlar|Discard'.split('\n').forEach(function(r){ var a = r.split('|'); D[a[0]] = [a[1], a[2]]; });
+  var D = Object.create(null); 'Salam|Merhaba|Hello\nBu axşam nə izləyirik?|Bu akşam ne izliyoruz?|What are we watching tonight?\nOtaq aç, kodu göndər, eyni kadrda olun.|Oda aç, kodu gönder, aynı karede olun.|Open a room, send the code, and watch together.\nOtaq aç|Oda aç|Open room\nKodun var?|Kodun var mı?|Have a code?\nGir|Gir|Join\nizlənən|izlenen|watched\notaq|oda|rooms\nindi izləyir|şimdi izliyor|watching now\nTətbiq kimi quraşdır|Uygulama olarak yükle|Install as an app\nAna ekrana əlavə et|Ana ekrana ekle|Add to home screen\nPlanlı seanslar|Planlı seanslar|Scheduled sessions\nYeni seans|Yeni seans|New session\nBildirişlər|Bildirimler|Notifications\nİzləmə statistikası|İzleme istatistikleri|Watch stats\nDostlar|Arkadaşlar|Friends\nİzlədiklərin|İzlediklerin|Watched\nOtaqların|Odaların|Your rooms\nSeans bildirişləri|Seans bildirimleri|Session notifications\nSəs və video|Ses ve video|Sound and video\nSəsli söhbətin səsi|Sesli sohbetin sesi|Voice chat volume\nVideonun səsi|Videonun sesi|Video volume\nMikrofon bağlı başlasın|Mikrofon kapalı başlasın|Start with mic muted\nSəsli söhbətə qoşulanda mikrofon söndürülmüş olur.|Sesli sohbete katılınca mikrofon kapalı olur.|The mic is muted when you join voice chat.\nSəs təmizləmə|Ses temizleme|Noise cancelling\nKüyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.|Gürültüyü ve yankıyı azaltır. Ses kötü çıkarsa kapat.|Reduces noise and echo. Turn it off if your audio sounds bad.\nHesab|Hesap|Account\nHesabdan çıx|Hesaptan çık|Log out\nTəhlükəsizlik|Güvenlik|Security\nBütün cihazlardan çıx|Tüm cihazlardan çık|Log out of all devices\nBu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.|Bu cihaz dahil tüm telefon ve bilgisayarlardan çıkarılırsın.|You will be logged out of all phones and computers, including this one.\nTəhlükəli zona|Tehlikeli bölge|Danger zone\nHesabı sil|Hesabı sil|Delete account\nHesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.|Hesabın, geçmişin, fotoğrafın ve kullanıcı adın kalıcı olarak silinecek. Bu geri alınamaz.|Your account, history, photo and username will be permanently deleted. This cannot be undone.\nLəğv et|Vazgeç|Cancel\nHəmişəlik sil|Kalıcı olarak sil|Delete forever\nTarixçəni təmizlə|Geçmişi temizle|Clear history\nProfil|Profil|Profile\nŞəkli dəyiş|Fotoğrafı değiştir|Change photo\nSil|Sil|Remove\nAd|Ad|Name\nSaxla|Kaydet|Save\nİstifadəçi adı|Kullanıcı adı|Username\nHərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.|Harf, rakam, nokta ve _ (3-20 karakter). Herkesin adı farklıdır.|Letters, digits, dots and _ (3-20 characters). Everyone\'s username is unique.\nHaqqında|Hakkında|About\nGizlilik|Gizlilik|Privacy\nOtağa dəvətlər|Odaya davetler|Room invites\nAçıq: hər kəs səni otağa dəvət edə bilər.|Açık: herkes seni odaya davet edebilir.|On: anyone can invite you to a room.\nE-poçt|E-posta|Email\nDəyiş|Değiştir|Change\nTəsdiq et|Onayla|Confirm\nŞifrəni dəyiş|Şifreyi değiştir|Change password\nŞifrəni yenilə|Şifreyi güncelle|Update password\nOtaq kodu|Oda kodu|Room code\nİstifadəçi adı ilə axtar|Kullanıcı adıyla ara|Search by username\nTəsdiq üçün şifrən|Onay için şifren|Your password to confirm\nŞifrə|Şifre|Password\nTəsdiq üçün SİL yaz|Onay için SİL yaz|Type DELETE to confirm\nTəsdiq sözü|Onay kelimesi|Confirmation word\nNaviqasiya|Gezinme|Navigation\nƏsas|Ana sayfa|Home\nSeanslar|Seanslar|Sessions\nTarixçə|Geçmiş|History\nAyarlar|Ayarlar|Settings\nGeri|Geri|Back\nQısa məlumat (məs. Komediya və qorxu filmləri)|Kısa bilgi (örn. Komedi ve korku filmleri)|Short bio (e.g. Comedy and horror films)\n6 rəqəmli kod|6 haneli kod|6-digit code\nTəsdiq kodu|Onay kodu|Confirmation code\nCari şifrə|Mevcut şifre|Current password\nYeni şifrə (ən azı 6 simvol)|Yeni şifre (en az 6 karakter)|New password (at least 6 characters)\nYeni şifrə|Yeni şifre|New password\nDil|Dil|Language\nKOD|KOD|CODE\nBaz|Paz|Sun\nB.e|Pzt|Mon\nÇ.a|Sal|Tue\nÇər|Çar|Wed\nC.a|Per|Thu\nCüm|Cum|Fri\nŞən|Cmt|Sat\nCəmi|Toplam|Total\nizləmisən,|izledin,|watched,\nbirlikdə. Son 30 gündə|birlikte. Son 30 günde|together. In the last 30 days you opened\nvideo açmısan.|video açtın.|videos.\nBu ay birlikdə|Bu ay birlikte|Together this month:\nizlədiniz|izlediniz|watched\nBu ay|Bu ay|This month:\nizlədin|izledin|watched\nNə izləyirik? (məs. Cümə filmi)|Ne izliyoruz? (örn. Cuma filmi)|What are we watching? (e.g. Friday movie)\nƏminsən?|Emin misin?|Are you sure?\nBəli|Evet|Yes\nÇıx|Çık|Log out\nBütün cihazlardan çıxılsın? Bu cihaz da daxil.|Tüm cihazlardan çıkılsın mı? Bu cihaz da dahil.|Log out of all devices, including this one?\nHesab həmişəlik silinsin?|Hesap kalıcı olarak silinsin mi?|Delete your account permanently?\nTarixçə silinsin?|Geçmiş silinsin mi?|Delete your history?\nSeans silinsin?|Seans silinsin mi?|Delete this session?\nTəslim olmaq istəyirsən?|Teslim olmak istiyor musun?|Do you want to resign?\nTəslim ol|Teslim ol|Resign\nŞahmat|Satranç|Chess\nŞahmat kodu|Satranç kodu|Chess code\nŞahmat otağı aç|Satranç odası aç|Open a chess room\nDostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.|Arkadaşınla online satranç: oda aç, kodu gönder, beyaz ve siyah rastgele düşer.|Play chess online with a friend: open a room, send the code, white and black are assigned at random.\nDomino kodu|Domino kodu|Domino code\nOyunlar|Oyunlar|Games\nDostunla onlayn oyna: oyun seç, otaq aç və kodu göndər.|Arkadaşınla online oyna: oyun seç, oda aç ve kodu gönder.|Play online with a friend: pick a game, open a room and send the code.\nKompüterlə oyna|Bilgisayarla oyna|Play against the computer\nPaylaş|Paylaş|Share\nRəqib gəlmir: oyunu bitir|Rakip gelmiyor: oyunu bitir|Opponent is not coming: end the game\nSənin növbən|Sıra sende|Your turn\nŞah! Sənin növbən|Şah! Sıra sende|Check! Your turn\nRəqibə şah! Rəqibin növbəsi...|Rakibe şah! Rakibin sırası...|Check on your opponent! Opponent\'s turn...\nMat|Mat|Checkmate\nPat: gediş yoxdur, bərabərlik|Pat: hamle yok, beraberlik|Stalemate: no legal move, draw\nTəslim oldu|Teslim oldu|Resigned\n50 gediş qaydası: bərabərlik|50 hamle kuralı: beraberlik|50-move rule: draw\nÜç dəfə təkrar: bərabərlik|Üç kez tekrar: beraberlik|Threefold repetition: draw\nMat üçün fiqur çatmır: bərabərlik|Mat için yeterli taş yok: beraberlik|Not enough pieces to checkmate: draw\nYenidən oyna (rənglər dəyişir)|Tekrar oyna (renkler değişir)|Play again (colors swap)\nAğ|Beyaz|White\nQara|Siyah|Black\nÇox sorğu göndərdin, bir az gözlə|Çok fazla istek gönderdin, biraz bekle|Too many requests, wait a moment\nŞahmat kodunu yaz|Satranç kodunu yaz|Enter the chess code\nKompüter düşünür...|Bilgisayar düşünüyor...|The computer is thinking...\nRəqib oyundan çıxdı|Rakip oyundan çıktı|Your opponent left the game\nOyundan çıxdın|Oyundan çıktın|You left the game\nAçıq uclar:|Açık uçlar:|Open ends:\nƏlindəki xal:|Elindeki puan:|Your points:\nSola|Sola|Left\nSağa|Sağa|Right\nHəssas məzmun|Hassas içerik|Sensitive content\nAçmaq üçün toxun|Açmak için dokun|Tap to open\nLinki kopyala|Bağlantıyı kopyala|Copy the link\nRəqibə 1 dəqiqə vaxt ver, sonra yenə bas|Rakibe 1 dakika süre ver, sonra tekrar bas|Give your opponent 1 minute, then press again\nGecən xeyir|İyi geceler|Good night\nSabahın xeyir|Günaydın|Good morning\nGünün xeyir|İyi günler|Good afternoon\nAxşamın xeyir|İyi akşamlar|Good evening\nHələ heç nə izləməmisən|Henüz hiçbir şey izlemedin|You haven\'t watched anything yet\nOtaqda açdığın videolar burada görünəcək|Odada açtığın videolar burada görünecek|Videos you open in a room will show up here\nHələ otaq yoxdur|Henüz oda yok|No rooms yet\nİlk otağı aç, dostunu dəvət et|İlk odayı aç, arkadaşını davet et|Open your first room and invite a friend\nOtağa yenidən gir|Odaya tekrar gir|Rejoin room\nBir film, iki ekran, tək ürək.|Bir film, iki ekran, tek yürek.|One movie, two screens, one heart.\nMəsafə uzaq, kadr eyni.|Mesafe uzak, kare aynı.|Far apart, same frame.\nPopcorn hazırdır, sən də hazırsan?|Patlamış mısır hazır, sen de hazır mısın?|Popcorn is ready, are you?\nGözlərin başqa şəhərdə, ürəyin eyni salonda.|Gözlerin başka şehirde, yüreğin aynı salonda.|Your eyes in another city, your heart in the same theater.\nIşıqlar sönür, söhbət başlayır.|Işıklar sönüyor, sohbet başlıyor.|Lights go down, the chat begins.\nBu axşamın filmini kim seçir?|Bu akşamın filmini kim seçiyor?|Who picks tonight\'s movie?\nƏn yaxşı yer, ekranın qarşısında qoşa gülmək.|En iyi yer, ekranın karşısında birlikte gülmek.|The best seat is laughing together in front of the screen.\nEyni saniyədə başla, eyni anda gül.|Aynı saniyede başla, aynı anda gül.|Press play together, laugh together.\nPlanlı seans yoxdur|Planlı seans yok|No scheduled sessions\nTarix seç, dostlarını dəvət et|Tarih seç, arkadaşlarını davet et|Pick a date and invite your friends\nOtağa gir|Odaya gir|Enter room\nBaşlat|Başlat|Start\nGəlirəm|Geliyorum|I am in\nGələ bilmirəm|Gelemiyorum|Can\'t make it\nDostluq sorğuları|Arkadaşlık istekleri|Friend requests\ndost olmaq istəyir|arkadaş olmak istiyor|wants to be friends\nQəbul et|Kabul et|Accept\nRədd et|Reddet|Decline\nGöndərilən sorğular|Gönderilen istekler|Sent requests\nSorğunu ləğv et|İsteği iptal et|Cancel request\nDostlardan çıxar|Arkadaşlıktan çıkar|Remove friend\nDost əlavə et|Arkadaş ekle|Add friend\nSorğu göndərilib|İstek gönderildi|Request sent\nHələ dostun yoxdur. Dostunun istifadəçi adını yuxarıda axtar.|Henüz arkadaşın yok. Arkadaşının kullanıcı adını yukarıda ara.|You have no friends yet. Search for a friend\'s username above.\nQoşul|Katıl|Join\nsəni otağa dəvət edir|seni odaya davet ediyor|invites you to a room\nBağlı: heç kim səni otağa dəvət edə bilməz.|Kapalı: kimse seni odaya davet edemez.|Off: nobody can invite you to a room.\nİndi otaqlar boşdur, ilk otağı sən aç|Şu an odalar boş, ilk odayı sen aç|All rooms are empty, open the first one\nBu ay hələ birlikdə izləməmisiniz. İlk filmi başlat!|Bu ay henüz birlikte izlemediniz. İlk filmi başlat!|You haven\'t watched together this month. Start the first movie!\nƏlaqə problemi, yenidən cəhd et|Bağlantı sorunu, tekrar dene|Connection problem, try again\nAlınmadı, yenidən cəhd et|Olmadı, tekrar dene|Failed, try again\nDomino otağı aç|Domino odası aç|Open a domino room\nDostunla onlayn domino oyna. Otaq aç, kodu göndər.|Arkadaşınla online domino oyna. Oda aç, kodu gönder.|Play domino online with a friend. Open a room and send the code.\nOyuna qayıt|Oyuna dön|Back to the game\nRəqib gözlənilir...|Rakip bekleniyor...|Waiting for your opponent...\nKodu rəqibinə göndər:|Kodu rakibine gönder:|Send this code to your opponent:\nSənin növbən: daş seç|Sıra sende: bir taş seç|Your turn: pick a tile\nGedişin yoxdur, bazardan daş çək|Hamlen yok, havuzdan taş çek|No move, draw a tile from the boneyard\nRəqibin növbəsi...|Rakibin sırası...|Opponent\'s turn...\nRəqib əlaqədə deyil|Rakip bağlantıda değil|Opponent is offline\nQazandın!|Kazandın!|You won!\nRəqib qazandı|Rakip kazandı|Opponent won\nBərabərlik|Beraberlik|Draw\nYenidən oyna|Tekrar oyna|Play again\nBütün daşlar bitdi|Tüm taşlar bitti|All tiles played\nOyun bloklandı, daşların cəminə görə|Oyun kilitlendi, taş toplamına göre|Game blocked, decided by pip count\nBu daş yerinə düşmür|Bu taş uymuyor|This tile doesn\'t fit\nBelə oyun tapılmadı. Kodu yoxla.|Böyle bir oyun bulunamadı. Kodu kontrol et.|No such game found. Check the code.\nBu otaq doludur|Bu oda dolu|This room is full\nLink kopyalandı|Link kopyalandı|Link copied\nBazardan daş çək|Havuzdan taş çek|Draw a tile\nRəqib|Rakip|Opponent\nXal|Puan|Score\ndaş|taş|tiles\nBazar|Havuz|Boneyard\nRəqib keçdi|Rakip pas geçti|Opponent passed\nRəqib bazardan daş çəkdi|Rakip havuzdan taş çekti|Opponent drew a tile\nGedişin olmadığı üçün keçdin|Hamlen olmadığı için pas geçtin|You passed, no move available\nSən başlayırsan: daş seç|Sen başlıyorsun: bir taş seç|You start: pick a tile\nRəqib başlayır...|Rakip başlıyor...|Opponent starts...\nOyun bitib və ya tapılmadı|Oyun bitti ya da bulunamadı|The game ended or was not found\nDomino kodunu yaz|Domino kodunu yaz|Enter the domino code\nDomino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.|Domino 101: arkadaşınla online oyna, ilk 101 puana ulaşan kazanır.|Domino 101: play online with a friend, first to reach 101 points wins.\nOyunu qazandın!|Oyunu kazandın!|You won the game!\nRəqib oyunu qazandı|Rakip oyunu kazandı|Opponent won the game\nYeni oyun|Yeni oyun|New game\nNövbəti raund|Sonraki tur|Next round\nxal|puan|points\nOyunçu sayı|Oyuncu sayısı|Players\n2 nəfər|2 kişi|2 players\n3 nəfər|3 kişi|3 players\n4 nəfər|4 kişi|4 players\nDəvət et|Davet et|Invite\nİstifadəçi adı ilə dəvət et|Kullanıcı adıyla davet et|Invite by username\nDostlarını çağır|Arkadaşlarını çağır|Invite friends\nSəs|Ses|Sound\nGözlənilir|Bekleniyor|Waiting\nÇəkilir...|Çekiliyor...|Drawing...\nsəni Domino oyununa dəvət edir|seni Domino oyununa davet ediyor|invites you to a Domino game\nsəni Şahmat oyununa dəvət edir|seni Satranç oyununa davet ediyor|invites you to a Chess game\nOyundan çıx|Oyundan çık|Leave the game\nOyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.|Oyundan çıkmak istiyor musun? Oyun senin için bitecek.|Do you want to leave? The game will end for you.\nOyundan çıxmaq istəyirsən?|Oyundan çıkmak istiyor musun?|Do you want to leave the game?\nSəsli otağa gir|Sesli odaya gir|Join voice\nSəsli otaqdan çıx|Sesli odadan çık|Leave voice\nMikrofonu aç|Mikrofonu aç|Unmute\nMikrofonu söndür|Mikrofonu kapat|Mute\nSəsli otaqdasan, gözləyirəm...|Sesli odadasın, bekliyorum...|You are in voice, waiting...\nQoşulur...|Bağlanıyor...|Connecting...\nSəs üçün toxun|Ses için dokun|Tap for sound\nMikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.|Mikrofon bu bağlantıda çalışmıyor. Site https ile açılmalı.|The microphone does not work on this connection. The site must be opened over https.\nMikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.|Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.|Microphone permission was denied. Allow it in your browser settings.\n\nPerevod|Perevod|Transfer\naçıq|açık|on\nbağlı|kapalı|off\nDurak otağı aç|Durak odası aç|Open a durak room\nDostunla onlayn durak oyna. Kartı ilk bitirən çıxır, son kart qalan axmaq olur.|Arkadaşınla online durak oyna. Kartı ilk bitiren çıkar, son kartı kalan aptal olur.|Play durak online with a friend. The first to empty their hand goes out, the last one holding cards is the durak.\nKart|Kart|Card\nKoz|Koz|Trump\nDəstədə|Destede|In deck\nAtılıb|Atıldı|Discarded\nMasa boşdur|Masa boş|The table is empty\nMüdafiə et: kartı seç, sonra bağlayacağın kartı bas|Savun: kartı seç, sonra bağlayacağın kartı tıkla|Defend: pick a card, then tap the card it beats\nBağlaya bilmirsən? Götür|Bağlayamıyor musun? Al|Cannot beat it? Take\nƏlavə et və ya pas keç|Ekle ya da pas geç|Add a card or pass\nHücum edən kart atır...|Saldıran kart atıyor...|The attacker is playing a card...\nƏlavə kartlar gözlənilir...|Ek kartlar bekleniyor...|Waiting for extra cards...\nKartların bitdi: oyunu izləyirsən|Kartların bitti: oyunu izliyorsun|You are out: watching the game\nHamının kartı bitdi|Herkesin kartı bitti|Everyone is out of cards\nKartlar sənin əlində qaldı|Kartlar sende kaldı|You are left holding cards\nSən|Sen|You\nNövbə sənin deyil|Sıra sende değil|It is not your turn\nBu kart onu bağlamır|Bu kart onu kapatmıyor|This card does not beat it\nBu hərəkət mümkün deyil|Bu hamle mümkün değil|This move is not possible\nGötür|Al|Take\nÖtür|Aktar|Transfer\nPas|Pas|Pass\nÖtürmək üçün kart seç|Aktarmak için kart seç|Pick a card to transfer\nDurak sənsən|Durak sensin|You are the durak\nBərabərlik|Beraberlik|Draw\nYenidən oyna|Tekrar oyna|Play again\noyundan çıxdı|oyundan çıktı|left the game\nOyunçu|Oyuncu|Player\nHücum|Saldırı|Attack\nMüdafiə|Savunma|Defense\nÇıxıb|Çıktı|Out\nDurak kodunu yaz|Durak kodunu yaz|Enter the durak code\nperevod|perevod|transfer\nPerevod (hücumu ötürmək)|Perevod (saldırıyı aktarma)|Transfer rule (perevod)\nAçıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.|Açık: savunan, aynı rakamlı kartla saldırıyı sıradakine aktarabilir. Kapalı: yalnızca kapatabilir veya alabilir.|On: the defender can pass the attack to the next player with a card of the same rank. Off: the defender can only beat or take.\nsəni Durak oyununa dəvət edir|seni Durak oyununa davet ediyor|invites you to a Durak game\nLink kopyalandı|Bağlantı kopyalandı|Link copied\nTəkrar|Tekrar|Again\nKart bazarı|Deste|Deck\nBita|Atılanlar|Discard\nMafia|Mafya|Mafia\nMafia otağı aç|Mafya odası aç|Open a mafia room\nDostlarınla onlayn Mafia oyna: 4–12 nəfər. Gecə mafiya öldürür, gündüz hamı şübhəliyə səs verir.|Arkadaşlarınla online Mafya oyna: 4–12 kişi. Geceleri mafya öldürür, gündüzleri herkes şüpheliye oy verir.|Play Mafia online with friends: 4–12 players. The mafia kills at night, everyone votes on a suspect by day.\nMafia kodunu yaz|Mafya kodunu yaz|Enter the mafia code\nMafiya|Mafya|Mafia\nHəkim|Doktor|Doctor\nKomissar|Komiser|Sheriff\nSakin|Sivil|Civilian\nGecə komanda yoldaşlarınla bir sakini seç və öldür. Gündüz özünü sakin kimi apar.|Gece takım arkadaşlarınla bir sivili seç ve öldür. Gündüz kendini sivil gibi göster.|At night, pick a civilian to kill together with your team. By day, act like a civilian.\nHər gecə bir nəfəri qoruyursan. Eyni adamı ardıcıl iki gecə qoruya bilməzsən.|Her gece birini koruyorsun. Aynı kişiyi üst üste iki gece koruyamazsın.|You protect one person each night. You cannot protect the same person two nights in a row.\nHər gecə bir nəfərin mafiya olub-olmadığını yoxlayırsan.|Her gece birinin mafya olup olmadığını kontrol ediyorsun.|Each night you check whether one person is mafia.\nGündüz müzakirə et, mafiyanı tap və səsvermədə oyundan çıxar.|Gündüz tartış, mafyayı bul ve oylamada oyundan çıkar.|Discuss by day, find the mafia and vote them out.\nGecə|Gece|Night\nGündüz|Gündüz|Day\nGün|Gün|Day\nSəsvermə|Oylama|Vote\nOyun bitdi|Oyun bitti|Game over\nSən oyundan çıxmısan: izləyirsən|Oyundan çıktın: izliyorsun|You are out: spectating\nQurbanı seç|Kurbanı seç|Pick the victim\nKimi qoruyursan?|Kimi koruyorsun?|Who do you protect?\nKimi yoxlayırsan?|Kimi kontrol ediyorsun?|Who do you check?\nŞəhər yatır...|Şehir uyuyor...|The town sleeps...\nMüzakirə: şübhəlini tap|Tartışma: şüpheliyi bul|Discuss: find the suspect\nKimi oyundan çıxarırıq?|Kimi oyundan çıkarıyoruz?|Who do we vote out?\nheç kim ölmədi|kimse ölmedi|nobody died\nöldürüldü|öldürüldü|was killed\noyundan çıxarıldı|oyundan çıkarıldı|was voted out\nsəs|oy|votes\nsəs bölündü, heç kim çıxarılmadı|oylar bölündü, kimse çıkarılmadı|votes were split, nobody was voted out\nBaşlamaq üçün ən azı|Başlamak için en az|Minimum to start\nSənin rolun|Senin rolün|Your role\nMafiyadır|Mafya|Is mafia\nMafiya deyil|Mafya değil|Not mafia\nMafiya qalib gəldi|Mafya kazandı|The mafia wins\nSakinlər qalib gəldi|Siviller kazandı|The town wins\nUduzdun|Kaybettin|You lost\nEv sahibinin yenidən başlatması gözlənilir|Oda sahibinin yeniden başlatması bekleniyor|Waiting for the host to restart\nQurbanı seç (yuxarıdakı siyahıdan toxun)|Kurbanı seç (yukarıdaki listeden dokun)|Pick the victim (tap from the list above)\nSeçdiyin:|Seçtiğin:|Your pick:\nKimi qoruyursan? (siyahıdan toxun)|Kimi koruyorsun? (listeden dokun)|Who do you protect? (tap from the list)\nDünən qoruduğun adamı bu gecə qoruya bilməzsən|Dün koruduğun kişiyi bu gece koruyamazsın|You cannot protect last nights person again\nBu gecə yoxlama etdin|Bu gece kontrol yaptın|You already checked tonight\nYoxlamaq üçün oyunçu seç|Kontrol için oyuncu seç|Pick a player to check\nSəsverməyə keç|Oylamaya geç|Go to voting\nOyundan çıxarmaq istədiyin oyunçunu seç|Oyundan çıkarmak istediğin oyuncuyu seç|Pick the player you want to vote out\nHeç kim (ötür)|Kimse (pas)|Nobody (skip)\nGecə yalnız mafiya yaza bilər|Geceleri yalnızca mafya yazabilir|Only the mafia can write at night\nÖlülər çatı (yalnız ölülər görür)|Ölüler sohbeti (yalnızca ölüler görür)|Dead chat (only the dead see it)\nMafiya çatı (yalnız mafiya görür)|Mafya sohbeti (yalnızca mafya görür)|Mafia chat (only the mafia sees it)\nMesaj yaz...|Mesaj yaz...|Write a message...\nHələ mesaj yoxdur|Henüz mesaj yok|No messages yet\nOyunu başlat|Oyunu başlat|Start the game\nOyunçular gözlənilir...|Oyuncular bekleniyor...|Waiting for players...'.split('\n').forEach(function(r){ var a = r.split('|'); D[a[0]] = [a[1], a[2]]; });
   var X = {"Ekranı böyüt": ["Ekranı büyüt", "Enlarge screen"], "şəffaflığı azalt": ["şeffaflığı azalt", "reduce transparency"], "Adın": ["Adın", "Your name"], "@istifadəçi_adı": ["@kullanıcı_adı", "@username"], "Dəvət linkini göndər": ["Davet linkini gönder", "Send invite link"], "İstifadəçi adı ilə dəvət et": ["Kullanıcı adıyla davet et", "Invite by username"], "Otaqdakılar və rollar": ["Odadakiler ve roller", "People in the room and roles"], "Otağı kilidlə": ["Odayı kilitle", "Lock the room"], "Otaqdan çıx": ["Odadan çık", "Leave the room"], "Ürək": ["Kalp", "Heart"], "Gülüş": ["Gülme", "Laugh"], "Ağlamaq": ["Ağlama", "Cry"], "Təəccüb": ["Şaşkınlık", "Surprise"], "Alqış": ["Alkış", "Applause"], "Alov": ["Ateş", "Fire"], "Reaksiyalar": ["Tepkiler", "Reactions"], "Ana səhifə": ["Ana sayfa", "Home page"], "Video növbəsi": ["Video sırası", "Video queue"], "Link yaz...": ["Link yaz...", "Enter a link..."], "Mikrofonu söndür": ["Mikrofonu kapat", "Mute microphone"], "Mikrofonu aç": ["Mikrofonu aç", "Unmute microphone"], "Yanıtı ləğv et": ["Yanıtı iptal et", "Cancel reply"], "Səsli söhbətə qoşul": ["Sesli sohbete katıl", "Join voice chat"], "Şəkil göndər": ["Fotoğraf gönder", "Send a photo"], "Mesaj yaz...": ["Mesaj yaz...", "Type a message..."], "Göndər": ["Gönder", "Send"], "Video linki yaz...": ["Video linki yaz...", "Enter a video link..."], "Növbəyə link əlavə et": ["Sıraya link ekle", "Add a link to the queue"], "Əlavə et": ["Ekle", "Add"], "Tarix və saat": ["Tarih ve saat", "Date and time"], "Axtar": ["Ara", "Search"], "Aç": ["Aç", "Open"], "YouTube-da axtar": ["YouTube’da ara", "Search YouTube"], "YouTube-da axtar...": ["YouTube’da ara...", "Search YouTube..."], ", istədiyin vaxt eyni kodla geri qayıda bilərsən.": [", istediğin zaman aynı kodla geri dönebilirsin.", ", you can come back with the same code any time."], "Bağla": ["Kapat", "Close"], "Biri bitəndə növbəti avtomatik açılır. YouTube nəticələrindəki": ["Biri bitince sıradaki otomatik açılır. YouTube sonuçlarındaki", "When one ends, the next one opens automatically. In YouTube results, the"], "düyməsi ilə də əlavə edə bilərsən.": ["düğmesiyle de ekleyebilirsin.", "button also adds a video to the queue."], "Davam etmək üçün daxil ol": ["Devam etmek için giriş yap", "Sign in to continue"], "Daxil ol": ["Giriş yap", "Sign in"], "Dostları dəvət et": ["Arkadaşları davet et", "Invite friends"], "Dostunun istifadəçi adını yaz. O, ana menyuda dəvətini görüb bir toxunuşla otağa qoşulacaq.": ["Arkadaşının kullanıcı adını yaz. O, ana menüde davetini görüp tek dokunuşla odaya katılacak.", "Type your friend's username. They will see the invite on the home screen and join the room with one tap."], "Dəvət et": ["Davet et", "Invite"], "E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.": ["E-postan yalnızca hesabı doğrulamak ve şifreyi kurtarmak için saklanır. Google ve e-posta aynı adresle tek hesap olur. Şifren şifrelenmiş olarak saklanır.", "Your email is stored only to verify your account and recover your password. Google and email with the same address become one account. Your password is stored encrypted."], "Host ver": ["Host devret", "Hand over host"], "Host verilsin?": ["Host devredilsin mi?", "Hand over host?"], "Hostluq kimə keçsin?": ["Hostluk kime geçsin?", "Who should become host?"], "Kodu yenidən göndər": ["Kodu yeniden gönder", "Resend code"], "Linki göndər, birlikdə izlə": ["Linki gönder, birlikte izle", "Send the link, watch together"], "Növbətiyə keç": ["Sıradakine geç", "Skip to next"], "Otaq kodu:": ["Oda kodu:", "Room code:"], "Otaqdakılar": ["Odadakiler", "In the room"], "Otaqdan çıxılsın?": ["Odadan çıkılsın mı?", "Leave the room?"], "Qal": ["Kal", "Stay"], "Sevgilin otaqda qalacaq. Otaq kodu": ["Sevgilin odada kalacak. Oda kodu", "Your partner will stay in the room. Room code"], "Səsi aç": ["Sesi aç", "Unmute"], "Səsli otaq": ["Sesli oda", "Voice room"], "Tarix seç, dostlarını dəvət et. Vaxtı çatanda otağı sən başladırsan, dostlara dəvət gedir.": ["Tarih seç, arkadaşlarını davet et. Vakti gelince odayı sen başlatırsın, arkadaşlara davet gider.", "Pick a date and invite your friends. When the time comes you start the room and the invites go out."], "Uzaqda olsanız da, eyni kadrdasınız.": ["Uzakta olsanız da, aynı karedesiniz.", "Even when you're far apart, you're in the same frame."], "Videonu başlat": ["Videoyu başlat", "Start video"], "Xeyr": ["Hayır", "No"], "Yalnız host idarə edir": ["Yalnızca host yönetir", "Only the host controls"], "host olacaq, sən isə izləyici olacaqsan.": ["host olacak, sen ise izleyici olacaksın.", "will become host, and you will become a viewer."], "və ya e-poçt ilə": ["veya e-postayla", "or with email"], "Planla": ["Planla", "Schedule"], "Qoşulur...": ["Katılıyor...", "Joining..."], "Şifrəmi unutdum": ["Şifremi unuttum", "Forgot password"], "Mən": ["Ben", "Me"], "Qonaq": ["Misafir", "Guest"], "Qarşı tərəf": ["Karşı taraf", "The other person"], "Birlikdəsiniz": ["Birlikte siniz", "You are together"], "Sevgilini gözləyirəm...": ["Sevgilini bekliyorum...", "Waiting for your partner..."], "Otaq kilidlidir, açmaq üçün bas": ["Oda kilitli, açmak için dokun", "Room is locked, tap to unlock"], "Otaq kilidləndi, yeni nəfər girə bilməz": ["Oda kilitlendi, yeni kimse giremez", "Room locked, no one new can join"], "Otaq açıldı": ["Oda açıldı", "Room unlocked"], "Kilid dəyişmədi, yenidən cəhd et": ["Kilit değişmedi, tekrar dene", "The lock did not change, try again"], "Otaq kilidlidir, bu cihaz üzv deyil": ["Oda kilitli, bu cihaz üye değil", "Room is locked, this device is not a member"], "Otaq kilidlənib, bu cihaz içəri buraxılmadı": ["Oda kilitlenmiş, bu cihaz içeri alınmadı", "The room is locked, this device was not let in"], "Əlaqə problemi, yenidən cəhd edilir...": ["Bağlantı sorunu, tekrar deneniyor...", "Connection problem, retrying..."], "Qoşulur... ilk dəfə 30-50 saniyə çəkə bilər": ["Katılıyor... ilk seferde 30-50 saniye sürebilir", "Joining... the first time may take 30-50 seconds"], "Belə otaq tapılmadı. Kodu yoxla.": ["Böyle bir oda bulunamadı. Kodu kontrol et.", "No such room found. Check the code."], "Otaq kilidlidir, girmək olmur.": ["Oda kilitli, girilemiyor.", "The room is locked, you cannot enter."], "YouTube-un öz səhifəsi açılmır, videonu burada axtar": ["YouTube’un kendi sayfası açılmıyor, videoyu burada ara", "YouTube's own page can't be opened, search for the video here"], "Əvvəlcə otağa qoşul": ["Önce odaya katıl", "Join a room first"], "Yalnız host və moderatorlar video yükləyə bilər": ["Yalnızca host ve moderatörler video yükleyebilir", "Only the host and moderators can upload videos"], "Başqa video hələ yüklənir": ["Başka bir video hâlâ yükleniyor", "Another video is still uploading"], "Serverdə saxlanır…": ["Sunucuda kaydediliyor…", "Saving on the server…"], "Yükləmə alınmadı": ["Yükleme başarısız", "Upload failed"], "Fayl çox böyükdür": ["Dosya çok büyük", "The file is too large"], "Çox yükləmə etdin, bir az sonra yenidən yoxla": ["Çok fazla yükleme yaptın, biraz sonra tekrar dene", "Too many uploads, try again in a bit"], "Yükləmə alınmadı (bağlantı kəsildi)": ["Yükleme başarısız (bağlantı koptu)", "Upload failed (connection lost)"], "Bu video formatı brauzerdə oynamır. mp4 (H.264) formatında yüklə": ["Bu video biçimi tarayıcıda oynatılmıyor. mp4 (H.264) biçiminde yükle", "This video format doesn't play in the browser. Upload it as mp4 (H.264)"], "Yalnız host və moderatorlar növbəyə əlavə edə bilər": ["Yalnızca host ve moderatörler sıraya ekleyebilir", "Only the host and moderators can add to the queue"], "Link çox uzundur": ["Link çok uzun", "The link is too long"], "Link düzgün deyil": ["Link geçerli değil", "The link is not valid"], "Növbə boşdur": ["Sıra boş", "The queue is empty"], "Yalnız host və moderatorlar növbəni dəyişə bilər": ["Yalnızca host ve moderatörler sırayı değiştirebilir", "Only the host and moderators can change the queue"], "Yalnız host və moderatorlar video seçə bilər": ["Yalnızca host ve moderatörler video seçebilir", "Only the host and moderators can pick a video"], "Növbədəki video açılır": ["Sıradaki video açılıyor", "Opening the next video in the queue"], "YouTube axtarışı": ["YouTube araması", "YouTube search"], "Sayt linki": ["Site linki", "Website link"], "Telefondan video": ["Telefondan video", "Video from phone"], "Birlikdə nə izləyək?": ["Birlikte ne izleyelim?", "What shall we watch together?"], "Birini seç və ya aşağıdakı xanaya yaz": ["Birini seç ya da aşağıdaki kutuya yaz", "Pick one or type in the box below"], "yaz, həmin sayta girir": ["yaz, o siteye girer", "type it and it opens that site"], "düyməyə bas, sözü yaz, çıxan videolardan birini seç": ["düğmeye bas, kelimeyi yaz, çıkan videolardan birini seç", "tap the button, type a word, pick one of the videos"], "bir nəfər yükləyir, ikiniz birlikdə izləyirsiniz": ["bir kişi yükler, ikiniz birlikte izlersiniz", "one person uploads, you both watch together"], "Birlikdə izləyəcəyin videonu tap": ["Birlikte izleyeceğin videoyu bul", "Find a video to watch together"], "Sözü yaz, çıxan videolardan birini seç. İkiniz də eyni anda izləyəcəksiniz.": ["Kelimeyi yaz, çıkan videolardan birini seç. İkiniz de aynı anda izleyeceksiniz.", "Type a word and pick one of the videos. You will both watch at the same time."], "Son axtarışlar": ["Son aramalar", "Recent searches"], "Təmizlə": ["Temizle", "Clear"], "Növbəyə əlavə et": ["Sıraya ekle", "Add to queue"], "Axtarılır...": ["Aranıyor...", "Searching..."], "Nəticə tapılmadı": ["Sonuç bulunamadı", "No results found"], "Axtarış alınmadı, bir az sonra yenidən yoxla": ["Arama yapılamadı, biraz sonra tekrar dene", "Search failed, try again in a bit"], "YouTube pleyeri yüklənmədi (bloklanmış ola bilər)": ["YouTube oynatıcısı yüklenmedi (engellenmiş olabilir)", "The YouTube player didn't load (it may be blocked)"], "Səhifə açdın": ["Sayfa açtın", "You opened a page"], "Səhifə dəyişdi": ["Sayfa değişti", "The page changed"], "Sayt öz-özünə yönləndirir, dayandırıldı": ["Site kendiliğinden yönlendiriyor, durduruldu", "The site redirects by itself, stopped"], "Göndərildi": ["Gönderildi", "Sent"], "Görüldü": ["Görüldü", "Seen"], "Oxundu": ["Okundu", "Read"], "Təsdiqlənmiş hesab": ["Doğrulanmış hesap", "Verified account"], "📷 Şəkil": ["📷 Fotoğraf", "📷 Photo"], "Şəkil": ["Fotoğraf", "Photo"], "Yanıt ver": ["Yanıtla", "Reply"], "Həssas": ["Hassas", "Sensitive"], "həssas deyil": ["hassas değil", "not sensitive"], "Şəkil açıla bilmədi": ["Fotoğraf açılamadı", "The photo couldn't be opened"], "Şəkil göndərilmədi, yenidən cəhd et": ["Fotoğraf gönderilmedi, tekrar dene", "The photo wasn't sent, try again"], "Yazır...": ["Yazıyor...", "Typing..."], "Qarşı tərəfi gözləyirəm...": ["Karşı tarafı bekliyorum...", "Waiting for the other person..."], "Səs qoşulmadı. Çıx və yenidən gir": ["Ses bağlanmadı. Çık ve tekrar gir", "Audio didn't connect. Leave and rejoin"], "Mikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.": ["Mikrofon bu bağlantıda çalışmıyor. Site https ile açılmalı.", "The microphone doesn't work on this connection. The site must be opened with https."], "Mikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.": ["Mikrofon izni verilmedi. Tarayıcı ayarlarından izin ver.", "Microphone permission was denied. Allow it in your browser settings."], "Səsli otağa girdin. Qulaqlıq tax ki, videonun səsi mikrofona düşməsin": ["Sesli odaya girdin. Videonun sesi mikrofona düşmesin diye kulaklık tak", "You joined the voice room. Wear headphones so the video sound does not leak into the mic"], "Səsli otaqdan çıxdın": ["Sesli odadan çıktın", "You left the voice room"], "Kod yazılıb, \"Otaq aç\" bağlıdır. Yeni otaq üçün kodu sil.": ["Kod yazılı, \"Oda aç\" kapalı. Yeni oda için kodu sil.", "A code is entered, \"Open room\" is disabled. Delete the code to open a new room."], "Otaq kodunu yaz": ["Oda kodunu yaz", "Enter the room code"], "Kod yazılıb, \"Otaq aç\" bağlıdır. Girmək üçün \"Kodla gir\" bas, yeni otaq üçün kodu sil.": ["Kod yazılı, \"Oda aç\" kapalı. Girmek için \"Gir\"e bas, yeni oda için kodu sil.", "A code is entered, \"Open room\" is disabled. Tap \"Join\" to enter, or delete the code to open a new room."], "Otağa gəl, birlikdə izləyək": ["Odaya gel, birlikte izleyelim", "Come to the room, let us watch together"], "Dəvət linki kopyalandı": ["Davet linki kopyalandı", "Invite link copied"], "Google girişi hələ qurulmayıb, e-poçt ilə daxil ola bilərsən.": ["Google girişi henüz kurulmadı, e-postayla giriş yapabilirsin.", "Google sign-in isn't set up yet, you can sign in with email."], "Google yüklənmədi, yenidən yoxla.": ["Google yüklenmedi, tekrar dene.", "Google didn't load, try again."], "Google yüklənmədi, internetini yoxla.": ["Google yüklenmedi, internetini kontrol et.", "Google didn't load, check your internet."], "Giriş alınmadı, yenidən cəhd et.": ["Giriş yapılamadı, tekrar dene.", "Sign-in failed, try again."], "Qeydiyyatdan keç": ["Kayıt ol", "Sign up"], "Kod göndər": ["Kod gönder", "Send code"], "Hesabın yoxdur? Qeydiyyatdan keç": ["Hesabın yok mu? Kayıt ol", "Don't have an account? Sign up"], "Artıq hesabın var? Daxil ol": ["Zaten hesabın var mı? Giriş yap", "Already have an account? Sign in"], "Geri qayıt": ["Geri dön", "Go back"], "Şifrə (ən azı 6 simvol)": ["Şifre (en az 6 karakter)", "Password (at least 6 characters)"], "Dostların səni bu adla tapacaq. Sonra dəyişə bilərsən.": ["Arkadaşların seni bu adla bulacak. Sonra değiştirebilirsin.", "Your friends will find you by this name. You can change it later."], "3-20 simvol: hərf, rəqəm, nöqtə, _ (əvvəl və sonda nöqtə/_ olmasın)": ["3-20 karakter: harf, rakam, nokta, _ (başta ve sonda nokta/_ olmasın)", "3-20 characters: letters, digits, dots, _ (no dot/_ at the start or end)"], "Yoxlanılır...": ["Kontrol ediliyor...", "Checking..."], "Bu ad artıq götürülüb": ["Bu ad zaten alınmış", "This username is already taken"], "Format düzgün deyil": ["Biçim geçerli değil", "Invalid format"], "Çox cəhd olundu, bir az sonra yenidən yoxla": ["Çok fazla deneme yapıldı, biraz sonra tekrar dene", "Too many attempts, try again in a bit"], "E-poçt xidməti hələ qurulmayıb, Google ilə daxil ol": ["E-posta hizmeti henüz kurulmadı, Google ile giriş yap", "The email service isn't set up yet, sign in with Google"], "Məktub göndərilmədi, bir az sonra yenidən yoxla": ["E-posta gönderilemedi, biraz sonra tekrar dene", "The email wasn't sent, try again in a bit"], "Məlumatları yoxla və yenidən cəhd et": ["Bilgileri kontrol et ve tekrar dene", "Check your details and try again"], "E-poçt ünvanı düzgün deyil": ["E-posta adresi geçerli değil", "The email address is not valid"], "İstifadəçi adı seç: 3-20 simvol, hərf, rəqəm, nöqtə, _": ["Kullanıcı adı seç: 3-20 karakter, harf, rakam, nokta, _", "Pick a username: 3-20 characters, letters, digits, dots, _"], "Şifrə ən azı 6 simvol olmalıdır": ["Şifre en az 6 karakter olmalı", "Password must be at least 6 characters"], "Şifrəni yaz": ["Şifreyi yaz", "Enter your password"], "6 rəqəmli kodu yaz": ["6 haneli kodu yaz", "Enter the 6-digit code"], "E-poçtuna 6 rəqəmli kod göndərdik. Kodu yaz.": ["E-postana 6 haneli kod gönderdik. Kodu yaz.", "We sent a 6-digit code to your email. Enter it."], "E-poçtuna 6 rəqəmli kod göndərdik. Gəlməsə 1 dəqiqə sonra \"Kodu yenidən göndər\" bas.": ["E-postana 6 haneli kod gönderdik. Gelmezse 1 dakika sonra \"Kodu yeniden gönder\"e bas.", "We sent a 6-digit code to your email. If it does not arrive, tap \"Resend code\" after 1 minute."], "E-poçtun hələ təsdiqlənməyib. Ünvanına kod göndərdik (gəlməsə 1 dəqiqə sonra yenidən göndər).": ["E-postan henüz doğrulanmadı. Adresine kod gönderdik (gelmezse 1 dakika sonra tekrar gönder).", "Your email isn't verified yet. We sent a code to your address (if it doesn't arrive, resend after 1 minute)."], "Bu e-poçtla hesab tapılmadı. Hesab yaratmaq üçün ad və şifrə yaz.": ["Bu e-postayla hesap bulunamadı. Hesap oluşturmak için ad ve şifre yaz.", "No account found with this email. Enter a name and password to create one."], "Bu istifadəçi adı götürülüb və ya düzgün deyil. Başqa ad seç.": ["Bu kullanıcı adı alınmış veya geçerli değil. Başka bir ad seç.", "This username is taken or invalid. Pick another one."], "Bu e-poçtla hesab var, daxil ol. Şifrəni unutmusansa \"Şifrəmi unutdum\" bas.": ["Bu e-postayla hesap var, giriş yap. Şifreni unuttuysan \"Şifremi unuttum\"a bas.", "An account with this email exists, sign in. If you forgot your password, tap \"Forgot password\"."], "E-poçt və ya şifrə səhvdir. Google ilə qeydiyyatdan keçmisənsə, \"Şifrəmi unutdum\" ilə şifrə qoya bilərsən.": ["E-posta veya şifre yanlış. Google ile kayıt olduysan, \"Şifremi unuttum\" ile şifre koyabilirsin.", "Wrong email or password. If you signed up with Google, you can set a password with \"Forgot password\"."], "Kod səhvdir və ya vaxtı bitib": ["Kod yanlış veya süresi dolmuş", "The code is wrong or has expired"], "Kod yenidən göndərildi": ["Kod yeniden gönderildi", "Code resent"], "Bir az gözlə, sonra yenidən göndər": ["Biraz bekle, sonra tekrar gönder", "Wait a moment, then resend"], "İstifadəçi adı düzgün deyil": ["Kullanıcı adı geçerli değil", "The username is not valid"], "Dəvət üçün hesaba daxil ol": ["Davet için hesabına giriş yap", "Sign in to send invites"], "Bu istifadəçi otaq dəvətlərini bağlayıb": ["Bu kullanıcı oda davetlerini kapatmış", "This user has turned off room invites"], "Otaq tapılmadı": ["Oda bulunamadı", "Room not found"], "Belə istifadəçi tapılmadı": ["Böyle bir kullanıcı bulunamadı", "No such user found"], "Çox dəvət göndərdin, bir az sonra yenidən yoxla": ["Çok fazla davet gönderdin, biraz sonra tekrar dene", "You sent too many invites, try again in a bit"], "Özünü dəvət edə bilməzsən": ["Kendini davet edemezsin", "You can't invite yourself"], "Dəvət getmədi, yenidən cəhd et": ["Davet gitmedi, tekrar dene", "The invite wasn't sent, try again"], "Çox sorğu göndərdin, bir az gözlə": ["Çok fazla istek gönderdin, biraz bekle", "You sent too many requests, wait a bit"], "Dostların": ["Arkadaşların", "Your friends"], "sorğu göndərilib": ["istek gönderildi", "request sent"], "Dostsunuz": ["Arkadaşsınız", "You are friends"], "Dəvətlər açıqdır": ["Davetler açık", "Invites are on"], "Dəvətlər bağlandı": ["Davetler kapatıldı", "Invites are off"], "Dəyişmədi, yenidən cəhd et": ["Değişmedi, tekrar dene", "It didn't change, try again"], "Şifrə qoy": ["Şifre koy", "Set password"], "Şəkil yüklənir...": ["Fotoğraf yükleniyor...", "Uploading photo..."], "Şəkil yeniləndi": ["Fotoğraf güncellendi", "Photo updated"], "Şəkil yüklənmədi, başqa şəkil seç": ["Fotoğraf yüklenmedi, başka bir fotoğraf seç", "The photo didn't upload, pick another one"], "Şəkil silindi": ["Fotoğraf silindi", "Photo removed"], "Şəkil silinmədi, yenidən cəhd et": ["Fotoğraf silinmedi, tekrar dene", "The photo wasn't removed, try again"], "Ad boş ola bilməz": ["Ad boş olamaz", "Name cannot be empty"], "Ad yadda saxlandı": ["Ad kaydedildi", "Name saved"], "Ad dəyişmədi, yenidən cəhd et": ["Ad değişmedi, tekrar dene", "The name didn't change, try again"], "Hazırkı istifadəçi adın": ["Mevcut kullanıcı adın", "Your current username"], "Yoxlamaq alınmadı": ["Kontrol edilemedi", "Couldn't check"], "İstifadəçi adı dəyişdi": ["Kullanıcı adı değişti", "Username changed"], "İstifadəçi adı dəyişmədi, yenidən cəhd et": ["Kullanıcı adı değişmedi, tekrar dene", "The username didn't change, try again"], "Bu, hazırkı e-poçtundur": ["Bu, mevcut e-postan", "This is your current email"], "Yeni ünvana kod göndərdik. Kodu yaz.": ["Yeni adrese kod gönderdik. Kodu yaz.", "We sent a code to the new address. Enter it."], "Bu e-poçt başqa hesabda istifadə olunur": ["Bu e-posta başka bir hesapta kullanılıyor", "This email is used by another account"], "E-poçt dəyişdi": ["E-posta değişti", "Email changed"], "E-poçt dəyişmədi, yenidən cəhd et": ["E-posta değişmedi, tekrar dene", "The email didn't change, try again"], "Mövcud şifrə": ["Mevcut şifre", "Current password"], "Yeni şifrənin təkrarı": ["Yeni şifreyi tekrar yaz", "Repeat new password"], "Mövcud şifrəni yaz": ["Mevcut şifreyi yaz", "Enter your current password"], "Yeni şifrə ən azı 6 simvol olmalıdır": ["Yeni şifre en az 6 karakter olmalı", "The new password must be at least 6 characters"], "Yeni şifrələr uyğun gəlmir": ["Yeni şifreler uyuşmuyor", "The new passwords do not match"], "Yeni şifrə mövcud şifrə ilə eyni ola bilməz": ["Yeni şifre mevcut şifreyle aynı olamaz", "The new password cannot be the same as the current one"], "Şifrə dəyişdi. Digər cihazlardan çıxarıldın.": ["Şifre değişti. Diğer cihazlardan çıkarıldın.", "Password changed. You were logged out of your other devices."], "Mövcud şifrə səhvdir": ["Mevcut şifre yanlış", "The current password is wrong"], "Şifrə dəyişmədi, yenidən cəhd et": ["Şifre değişmedi, tekrar dene", "The password didn't change, try again"], "Əlaqə problemi, yenidən cəhd et": ["Bağlantı sorunu, tekrar dene", "Connection problem, try again"], "E-poçtuna kod göndərdik. Kodu və yeni şifrəni yaz.": ["E-postana kod gönderdik. Kodu ve yeni şifreni yaz.", "We sent a code to your email. Enter the code and your new password."], "Kodu yaz": ["Kodu yaz", "Enter the code"], "Kod göndərilmədi, bir az sonra yenidən yoxla": ["Kod gönderilemedi, biraz sonra tekrar dene", "The code wasn't sent, try again in a bit"], "Kod 1 dəqiqədən bir göndərilə bilər, bir az gözlə": ["Kod dakikada bir gönderilebilir, biraz bekle", "A code can be sent once a minute, wait a bit"], "Kod səhvdir və ya vaxtı bitib, yenidən göndər": ["Kod yanlış veya süresi dolmuş, tekrar gönder", "The code is wrong or has expired, send a new one"], "Şifrə yeniləndi. Digər cihazlardan çıxarıldın.": ["Şifre güncellendi. Diğer cihazlardan çıkarıldın.", "Password updated. You were logged out of your other devices."], "Təsdiq üçün şifrəni yaz": ["Onay için şifreni yaz", "Enter your password to confirm"], "Hesabın silindi.": ["Hesabın silindi.", "Your account was deleted."], "Şifrə səhvdir": ["Şifre yanlış", "Wrong password"], "Təsdiq sözü səhvdir": ["Onay kelimesi yanlış", "Wrong confirmation word"], "Hesab silinmədi, yenidən cəhd et": ["Hesap silinmedi, tekrar dene", "The account wasn't deleted, try again"], "Sən moderator oldun": ["Moderatör oldun", "You are now a moderator"], "Sən host oldun": ["Host oldun", "You are now the host"], "Host başqasına keçdi": ["Host başkasına geçti", "The host role moved to someone else"], "Moderatorluğun alındı": ["Moderatörlüğün alındı", "Your moderator role was removed"], "İndi yalnız host və moderatorlar videonu idarə edir": ["Artık videoyu yalnızca host ve moderatörler yönetiyor", "Now only the host and moderators control the video"], "İndi hamı videonu idarə edə bilər": ["Artık herkes videoyu yönetebilir", "Now everyone can control the video"], "İzləyici": ["İzleyici", "Viewer"], "Host": ["Host", "Host"], "Moderator": ["Moderatör", "Moderator"], "Moderatorluğu al": ["Moderatörlüğü al", "Remove moderator"], "Moderator et": ["Moderatör yap", "Make moderator"], "Açıq: yalnız sən və moderatorlar videonu idarə edir.": ["Açık: videoyu yalnızca sen ve moderatörler yönetiyor.", "On: only you and the moderators control the video."], "Bağlı: hər kəs videonu idarə edə bilər.": ["Kapalı: herkes videoyu yönetebilir.", "Off: everyone can control the video."], "Açıq: videonu yalnız host və moderatorlar idarə edir.": ["Açık: videoyu yalnızca host ve moderatörler yönetiyor.", "On: only the host and moderators control the video."], "Rol dəyişmədi, yenidən cəhd et": ["Rol değişmedi, tekrar dene", "The role didn't change, try again"], "Host verildi, indi sən izləyicisən": ["Host devredildi, artık izleyicisin", "Host handed over, you are now a viewer"], "Həmin şəxs hazırda otaqda deyil": ["Bu kişi şu an odada değil", "That person is not in the room right now"], "Host verilmədi, yenidən cəhd et": ["Host devredilemedi, tekrar dene", "Host wasn't handed over, try again"], "Rejim dəyişmədi, yenidən cəhd et": ["Mod değişmedi, tekrar dene", "The mode didn't change, try again"], "Əvvəlki söhbət burada bitir": ["Önceki sohbet burada bitiyor", "The previous chat ends here"], "Reaksiya seç": ["Tepki seç", "Pick a reaction"], "başlayıb": ["başladı", "started"], "Seans başlamadı, yenidən cəhd et": ["Seans başlamadı, tekrar dene", "The session didn't start, try again"], "Yeni seans dəvəti": ["Yeni seans daveti", "New session invite"], "Seans tezliklə başlayır": ["Seans yakında başlıyor", "The session starts soon"], "Hələ dostun yoxdur. Dostsuz da seans qura bilərsən.": ["Henüz arkadaşın yok. Arkadaşsız da seans kurabilirsin.", "You have no friends yet. You can still schedule a session without friends."], "Gələcək bir tarix seç": ["Gelecek bir tarih seç", "Pick a future date"], "Seans planlandı, dostlara bildiriş getdi": ["Seans planlandı, arkadaşlara bildirim gitti", "Session scheduled, your friends were notified"], "Seans planlandı": ["Seans planlandı", "Session scheduled"], "Çox seans yaratdın, bir az sonra yenidən yoxla": ["Çok fazla seans oluşturdun, biraz sonra tekrar dene", "You created too many sessions, try again in a bit"], "Seans yaradılmadı, yenidən cəhd et": ["Seans oluşturulamadı, tekrar dene", "The session wasn't created, try again"], "Məlumat yadda saxlandı": ["Bilgi kaydedildi", "Info saved"], "Saxlanmadı, yenidən cəhd et": ["Kaydedilemedi, tekrar dene", "Couldn't save, try again"], "İstifadəçi adı düzgün deyil, ya da hələ yoxlanılır": ["Kullanıcı adı geçerli değil ya da hâlâ kontrol ediliyor", "The username is invalid or still being checked"], "Yadda saxlandı": ["Kaydedildi", "Saved"], "Ana ekrandan bir toxunuşla aç, tam ekranda işləyir.": ["Ana ekrandan tek dokunuşla aç, tam ekranda çalışır.", "Open it from your home screen with one tap, it runs full screen."], "iPhone-da: Paylaş düyməsinə bas, sonra \"Ana ekrana əlavə et\" seç.": ["iPhone’da: Paylaş düğmesine bas, sonra \"Ana ekrana ekle\"yi seç.", "On iPhone: tap Share, then choose \"Add to home screen\"."], "Bu brauzer bildirişləri dəstəkləmir.": ["Bu tarayıcı bildirimleri desteklemiyor.", "This browser doesn't support notifications."], "Brauzerdə bağlanıb. Brauzer ayarlarından icazə ver.": ["Tarayıcıda kapatılmış. Tarayıcı ayarlarından izin ver.", "Blocked in the browser. Allow it in your browser settings."], "Yeni seans dəvətləri və tezliklə başlayacaq seanslar barədə xəbər alırsan.": ["Yeni seans davetleri ve yakında başlayacak seanslar hakkında haber alırsın.", "You get notified about new session invites and sessions starting soon."], "Söndürülüb. Seans xatırlatmaları gəlmir.": ["Kapalı. Seans hatırlatmaları gelmiyor.", "Off. You will not get session reminders."], "Avtomatik (ilk moderator)": ["Otomatik (ilk moderatör)", "Automatic (first moderator)"], "Daxil olunur...": ["Giriş yapılıyor...", "Signing in..."], "yan": ["Oca", "Jan"], "fev": ["Şub", "Feb"], "mar": ["Mar", "Mar"], "apr": ["Nis", "Apr"], "may": ["May", "May"], "iyn": ["Haz", "Jun"], "iyl": ["Tem", "Jul"], "avq": ["Ağu", "Aug"], "sen": ["Eyl", "Sep"], "okt": ["Eki", "Oct"], "noy": ["Kas", "Nov"], "dek": ["Ara", "Dec"]};
   Object.keys(X).forEach(function(k){ D[k] = X[k]; });
   /* Sonradan əlavə edilən gizlilik və bloklama ekranları üçün lüğət. */
@@ -7290,6 +7418,366 @@ window.wtInviteBox = function(o){
     if(b) b.onchange = function(){ set(b.checked); };
     paint();
   })();
+})();
+</script>
+
+<script>
+/* ---------- Mafia otağı (4-12 nəfər, onlayn) ---------- */
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var LS = 'wt_maf';
+  var ma = {code: '', v: 0, s: null, at: 0, flashT: 0, flashTx: '', tmr: 0, csig: ''};
+  var busy = false, gen = 0, pending = '';
+  var inv = window.wtInviteBox({game: 'mafia', user: 'mafinvU', go: 'mafinvGo', fr: 'mafinvFr', ft: 'mafinvFrT', msg: 'mafinvMsg', code: function(){ return ma.code; }});
+
+  var ROLE = {mafia: 'Mafiya', doctor: 'Həkim', sheriff: 'Komissar', civil: 'Sakin'};
+  var RICON = {mafia: 'fa-skull', doctor: 'fa-user-doctor', sheriff: 'fa-user-shield', civil: 'fa-user'};
+  var RDESC = {
+    mafia: 'Gecə komanda yoldaşlarınla bir sakini seç və öldür. Gündüz özünü sakin kimi apar.',
+    doctor: 'Hər gecə bir nəfəri qoruyursan. Eyni adamı ardıcıl iki gecə qoruya bilməzsən.',
+    sheriff: 'Hər gecə bir nəfərin mafiya olub-olmadığını yoxlayırsan.',
+    civil: 'Gündüz müzakirə et, mafiyanı tap və səsvermədə oyundan çıxar.'
+  };
+
+  function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
+  function enc(x){ return encodeURIComponent(x); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function av(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function rname(r){ return T(ROLE[r] || ''); }
+  function pname(s, i){ return ((s.players[i] || {}).name) || '?'; }
+
+  function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
+  function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
+  function refreshResume(){ var b = $('mafResume'); if(b) b.hidden = !saved(); }
+  function lobbyMsg(t){ var e = $('mafMsg'); if(e) e.textContent = T(t || ''); }
+  function flash(t){
+    ma.flashTx = t; clearTimeout(ma.flashT);
+    ma.flashT = setTimeout(function(){ ma.flashTx = ''; paintMsg(); }, 2800);
+    paintMsg();
+  }
+  function paintMsg(){ var e = $('mafmsg'); if(e) e.textContent = ma.flashTx ? T(ma.flashTx) : ''; }
+  function errOf(r, j){
+    if(r.status === 404) return 'Belə oyun tapılmadı. Kodu yoxla.';
+    if(r.status === 403) return 'Bu otaq doludur';
+    if(r.status === 429) return 'Çox sorğu göndərdin, bir az gözlə';
+    if(j && j.error) return j.error;
+    return 'Əlaqə problemi, yenidən cəhd et';
+  }
+  function show(on){ $('mafia').hidden = !on; }
+  function stopTimer(){ clearInterval(ma.tmr); ma.tmr = 0; }
+  function close(leave){
+    var c = ma.code;
+    gen++; stopTimer();
+    ma.code = ''; ma.s = null; ma.csig = ''; clearTimeout(ma.flashT); ma.flashTx = '';
+    show(false);
+    if(leave && c) api('/api/mafia/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    remember('');
+  }
+  function gone(){ gen++; stopTimer(); ma.code = ''; ma.s = null; ma.csig = ''; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+
+  /* ---- səslər ---- */
+  function notify(p, s){
+    var S = window.wtSfx; if(!S || !p) return;
+    try{
+      if(s.status === 'over' && p.status !== 'over'){
+        var mw = s.winner === 'mafia';
+        S.play(((s.role === 'mafia') === mw) ? 'win' : 'lose');
+        return;
+      }
+      if(p.status === 'wait' && s.status === 'play'){ S.play('shuffle'); return; }
+      if(s.joined > p.joined) S.play('join');
+      if(s.phase !== p.phase || s.day !== p.day) S.play('turn');
+      else if(s.log.length > p.log.length) S.play('take');
+    }catch(e){}
+  }
+
+  /* ---- sinxronizasiya ---- */
+  function sync(s){
+    if(!s || s.code !== ma.code) return;
+    if(s.v < ma.v) return;
+    var prev = ma.s;
+    ma.v = s.v; ma.s = s; ma.at = Date.now();
+    notify(prev, s);
+    render();
+  }
+  function startPoll(){
+    var g = ++gen;
+    (async function(){
+      while(g === gen && ma.code){
+        try{
+          var r = await api('/api/mafia/poll?room=' + enc(ma.code) + '&v=' + ma.v);
+          if(g !== gen) return;
+          if(r.status === 404){ gone(); return; }
+          if(!r.ok){ await sleep(2000); continue; }
+          sync(await r.json());
+        }catch(e){ if(g !== gen) return; await sleep(2000); }
+      }
+    })();
+  }
+  async function enter(code, isCreate){
+    if(busy) return; busy = true;
+    try{
+      var r = isCreate
+        ? await api('/api/mafia/create', {method: 'POST', body: '{}'})
+        : await api('/api/mafia/join', {method: 'POST', body: JSON.stringify({room: code})});
+      var j = {}; try{ j = await r.json(); }catch(e){}
+      if(r.ok){
+        gen++; stopTimer();
+        ma.code = j.code; ma.v = 0; ma.s = null; ma.flashTx = ''; ma.csig = '';
+        remember(j.code); show(true);
+        $('mafmsgs').textContent = '';
+        startPoll(); sync(j); lobbyMsg('');
+        ma.tmr = setInterval(paintTimer, 500);
+      } else if(!isCreate && r.status === 404 && code === saved()){
+        remember(''); lobbyMsg('Oyun bitib və ya tapılmadı');
+      } else lobbyMsg(errOf(r, j));
+    }catch(e){ lobbyMsg('Əlaqə problemi, yenidən cəhd et'); }
+    busy = false;
+  }
+  function post(path, body){
+    var c = ma.code; if(!c) return Promise.resolve();
+    return api(path, {method: 'POST', body: JSON.stringify(Object.assign({room: c}, body || {}))}).then(async function(r){
+      if(c !== ma.code) return;
+      var j = {}; try{ j = await r.json(); }catch(e){}
+      if(r.status === 404){ gone(); return; }
+      if(r.ok) sync(j); else flash((j && j.error) || errOf(r, j));
+    }).catch(function(){ if(c === ma.code) flash('Əlaqə problemi, yenidən cəhd et'); });
+  }
+
+  /* ---- taymer ---- */
+  function paintTimer(){
+    var e = $('maftm'), s = ma.s; if(!e) return;
+    if(!s || s.status !== 'play'){ e.textContent = ''; return; }
+    var left = Math.max(0, s.left - Math.floor((Date.now() - ma.at) / 1000));
+    e.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
+    e.classList.toggle('low', left <= 10);
+  }
+
+  /* ---- çəkmə ---- */
+  function render(){
+    var s = ma.s; if(!s) return;
+    $('mafia').classList.toggle('night', s.status === 'play' && s.phase === 'night');
+    $('mafcode').textContent = s.code.toUpperCase();
+    renderBar(s); renderPlayers(s); renderMain(s); renderChat(s); paintTimer(); paintMsg();
+    if(s.status === 'wait'){ try{ inv.refresh(); }catch(e){} }
+  }
+  function renderBar(s){
+    var bar = $('mafbar');
+    if(s.status === 'wait'){ bar.hidden = true; return; }
+    bar.hidden = false;
+    var t = '', h = '';
+    if(s.status === 'over'){ t = 'Oyun bitdi'; h = ''; }
+    else if(s.phase === 'night'){
+      t = '\uD83C\uDF19 ' + T('Gecə') + ' ' + s.day;
+      h = !s.alive ? 'Sən oyundan çıxmısan: izləyirsən' :
+          s.role === 'mafia' ? 'Qurbanı seç' : s.role === 'doctor' ? 'Kimi qoruyursan?' :
+          s.role === 'sheriff' ? 'Kimi yoxlayırsan?' : 'Şəhər yatır...';
+    } else if(s.phase === 'day'){
+      t = '\u2600\uFE0F ' + T('Gündüz') + ' ' + s.day; h = 'Müzakirə: şübhəlini tap';
+    } else if(s.phase === 'vote'){
+      t = '\uD83D\uDDF3\uFE0F ' + T('Səsvermə'); h = !s.alive ? 'Sən oyundan çıxmısan: izləyirsən' : 'Kimi oyundan çıxarırıq?';
+    }
+    $('mafph').textContent = T(t);
+    $('mafphs').textContent = T(h);
+  }
+  function renderPlayers(s){
+    var act = s.act, tg = (act && act.targets) || [];
+    var html = s.players.map(function(p, i){
+      var cls = 'mchip' + (p.alive ? '' : ' dead') + (p.me ? ' me' : '');
+      var canTap = tg.indexOf(i) >= 0;
+      if(canTap) cls += ' tgt';
+      if(act && act.pick === i) cls += ' pk';
+      var sub = '', sc = 'ms';
+      if(s.status === 'wait'){
+        sub = '<span class="monl' + (p.online ? ' on' : '') + '"></span>' + (p.me ? T('Sən') : '');
+      } else {
+        if(!p.alive){ sub = (p.left ? T('oyundan çıxdı') : '\u271D') + (p.role ? ' ' + rname(p.role) : ''); }
+        else if(p.role){ sub = rname(p.role); if(p.role === 'mafia') sc += ' r-mafia'; }
+        if(s.phase === 'vote' && p.vote !== undefined){ sub = '\u2192 ' + (p.vote === -1 ? T('Pas') : pname(s, p.vote)); }
+        else if(s.phase === 'night' && p.pick !== undefined && p.pick >= 0){ sub = '\uD83C\uDFAF ' + pname(s, p.pick); }
+        if(!sub && p.alive) sub = '<span class="monl' + (p.online ? ' on' : '') + '"></span>';
+      }
+      var tag = canTap ? 'button' : 'div';
+      return '<' + tag + (canTap ? ' type="button" data-i="' + i + '"' : '') + ' class="' + cls + '"><span class="mav">' + av(p) + '</span><span class="mwho"><span class="mn">' + esc(p.name) + '</span><span class="' + sc + '">' + (sub.charAt(0) === '<' ? sub : esc(sub)) + '</span></span></' + tag + '>';
+    }).join('');
+    $('mafplayers').innerHTML = html;
+  }
+  function evText(s, e){
+    var nm = esc(e.p !== undefined ? pname(s, e.p) : '');
+    var r = e.r ? ' (' + esc(rname(e.r)) + ')' : '';
+    switch(e.k){
+      case 'night_none': return esc(T('Gecə')) + ' ' + e.d + ': ' + esc(T('heç kim ölmədi'));
+      case 'night_dead': return esc(T('Gecə')) + ' ' + e.d + ': ' + nm + ' ' + esc(T('öldürüldü')) + r;
+      case 'vote_dead': return esc(T('Gün')) + ' ' + e.d + ': ' + nm + ' ' + esc(T('oyundan çıxarıldı')) + r + ' \u2014 ' + e.n + ' ' + esc(T('səs'));
+      case 'vote_none': return esc(T('Gün')) + ' ' + e.d + ': ' + esc(T('səs bölündü, heç kim çıxarılmadı'));
+      case 'left': return nm + ' ' + esc(T('oyundan çıxdı')) + r;
+    }
+    return '';
+  }
+  function renderMain(s){
+    var wait = s.status === 'wait', play = s.status === 'play', over = s.status === 'over';
+    $('mafwait').hidden = !wait;
+    if(wait){
+      $('mafwcode').textContent = s.code.toUpperCase();
+      $('mafwcnt').textContent = s.joined + ' / ' + s.size + ' \u00B7 ' + T('Başlamaq üçün ən azı') + ' ' + s.min;
+      var st = $('mafstart');
+      st.hidden = !s.host;
+      st.disabled = s.joined < s.min;
+      st.style.opacity = s.joined < s.min ? '.5' : '';
+    }
+    /* rol kartı */
+    var rb = $('mafrole');
+    if(play && s.role){
+      rb.hidden = false; rb.className = 'r-' + s.role;
+      var d = RDESC[s.role];
+      rb.innerHTML = '<i class="fa-solid ' + RICON[s.role] + '" aria-hidden="true"></i><div><small style="margin:0">' + esc(T('Sənin rolun')) + '</small><b>' + esc(rname(s.role)) + '</b><small>' + esc(T(d)) + '</small></div>';
+    } else rb.hidden = true;
+    /* komissarın yoxlama nəticələri */
+    var cb = $('mafchecks');
+    if(play && s.role === 'sheriff' && s.checks && s.checks.length){
+      cb.hidden = false;
+      cb.innerHTML = s.checks.map(function(c){
+        return '<div>' + esc(T('Gecə')) + ' ' + c.d + ': <b>' + esc(pname(s, c.p)) + '</b> \u2014 ' + (c.m ? '<span class="bad">' + esc(T('Mafiyadır')) + '</span>' : '<span class="good">' + esc(T('Mafiya deyil')) + '</span>') + '</div>';
+      }).join('');
+    } else cb.hidden = true;
+    renderAct(s, play);
+    /* nəticə */
+    var rs = $('mafres');
+    if(over){
+      var mw = s.winner === 'mafia', mine = (s.role === 'mafia') === mw;
+      rs.hidden = false;
+      rs.innerHTML = '<b>' + esc(T(mw ? 'Mafiya qalib gəldi' : 'Sakinlər qalib gəldi')) + '</b><small>' + esc(T(mine ? 'Qazandın!' : 'Uduzdun')) + '</small>' +
+        (s.host ? '<button class="pbtn" id="mafagain">' + esc(T('Yenidən oyna')) + '</button>' : '<small style="margin:0">' + esc(T('Ev sahibinin yenidən başlatması gözlənilir')) + '</small>');
+      var b = $('mafagain'); if(b) b.onclick = function(){ post('/api/mafia/again'); };
+    } else rs.hidden = true;
+    /* hadisələr (yeni üstdə) */
+    $('maflog').innerHTML = (s.log || []).slice().reverse().map(function(e){
+      return '<div' + ((e.k === 'night_dead' || e.k === 'vote_dead') ? ' class="bad"' : '') + '>' + evText(s, e) + '</div>';
+    }).join('');
+  }
+  function renderAct(s, play){
+    var box = $('mafact'), a = s.act;
+    if(!play || !a){ box.hidden = true; box.textContent = ''; return; }
+    box.hidden = false;
+    var h = '';
+    if(a.kind === 'kill'){
+      h = '<div class="mhint">' + esc(T('Qurbanı seç (yuxarıdakı siyahıdan toxun)')) + '</div>' +
+          (a.pick >= 0 ? '<div class="mnote">' + esc(T('Seçdiyin:')) + ' ' + esc(pname(s, a.pick)) + '</div>' : '');
+    } else if(a.kind === 'save'){
+      h = '<div class="mhint">' + esc(T('Kimi qoruyursan? (siyahıdan toxun)')) + '</div>' +
+          (a.pick >= 0 ? '<div class="mnote">' + esc(T('Seçdiyin:')) + ' ' + esc(pname(s, a.pick)) + '</div>' : '') +
+          (a.block >= 0 ? '<div class="mnote">' + esc(T('Dünən qoruduğun adamı bu gecə qoruya bilməzsən')) + ': ' + esc(pname(s, a.block)) + '</div>' : '');
+    } else if(a.kind === 'check'){
+      h = a.done ? '<div class="mnote">' + esc(T('Bu gecə yoxlama etdin')) + '</div>' : '<div class="mhint">' + esc(T('Yoxlamaq üçün oyunçu seç')) + '</div>';
+    } else if(a.kind === 'skip'){
+      var al = s.players.filter(function(p){ return p.alive; }).length, need = Math.floor(al / 2) + 1;
+      h = '<button type="button" class="pbtn' + (a.done ? ' on' : '') + '" id="mafskip"' + (a.done ? ' disabled' : '') + '>' +
+          esc(T(a.done ? 'Gözlənilir' : 'Səsverməyə keç')) + ' (' + (s.skips || 0) + '/' + need + ')</button>';
+    } else if(a.kind === 'vote'){
+      h = '<div class="mhint">' + esc(T('Oyundan çıxarmaq istədiyin oyunçunu seç')) + '</div>' +
+          '<button type="button" class="pbtn alt' + (a.pick === -1 ? ' on' : '') + '" id="mafnone">' + esc(T('Heç kim (ötür)')) + '</button>';
+    }
+    box.innerHTML = h;
+    var sk = $('mafskip'); if(sk) sk.onclick = function(){ post('/api/mafia/act', {kind: 'skip'}); };
+    var nn = $('mafnone'); if(nn) nn.onclick = function(){ post('/api/mafia/act', {kind: 'vote', t: -1}); };
+  }
+  function canTalk(s){ if(s.status !== 'play') return true; if(!s.alive) return true; if(s.phase === 'night') return s.role === 'mafia'; return true; }
+  function renderChat(s){
+    var inp = $('mafin'), ok = canTalk(s);
+    inp.disabled = !ok; $('mafsend').disabled = !ok;
+    var ph = !ok ? 'Gecə yalnız mafiya yaza bilər' :
+      (s.status === 'play' && !s.alive) ? 'Ölülər çatı (yalnız ölülər görür)' :
+      (s.status === 'play' && s.phase === 'night') ? 'Mafiya çatı (yalnız mafiya görür)' : 'Mesaj yaz...';
+    inp.placeholder = T(ph);
+    var last = s.chat.length ? s.chat[s.chat.length - 1].id : 0;
+    var sig = s.chat.length + ':' + last + ':' + s.players.map(function(p){ return p.name; }).join('|');
+    if(sig === ma.csig) return;
+    ma.csig = sig;
+    var box = $('mafmsgs');
+    var atBot = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+    box.innerHTML = s.chat.length ? s.chat.map(function(m){
+      var p = s.players[m.f] || {};
+      var mark = m.ch === 'maf' ? ' \uD83D\uDD2A' : m.ch === 'dead' ? ' \u271D' : '';
+      return '<div class="mcm ' + (m.ch === 'maf' ? 'maf' : m.ch === 'dead' ? 'dead' : '') + '"><b>' + esc(p.name || '?') + mark + ':</b> ' + esc(m.t) + '</div>';
+    }).join('') : '<div class="mempty">' + esc(T('Hələ mesaj yoxdur')) + '</div>';
+    if(atBot) box.scrollTop = box.scrollHeight;
+  }
+
+  /* ---- hərəkətlər ---- */
+  $('mafplayers').onclick = function(e){
+    var b = e.target.closest && e.target.closest('[data-i]'); if(!b || !ma.s || !ma.s.act) return;
+    var i = +b.getAttribute('data-i'), a = ma.s.act;
+    if((a.targets || []).indexOf(i) < 0) return;
+    post('/api/mafia/act', {kind: a.kind, t: i});
+  };
+  function sendChat(){
+    var inp = $('mafin'), t = inp.value.trim();
+    if(!t || inp.disabled) return;
+    inp.value = '';
+    post('/api/mafia/chat', {text: t});
+  }
+  $('mafsend').onclick = sendChat;
+  $('mafin').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); sendChat(); } });
+  $('mafstart').onclick = function(){ post('/api/mafia/start'); };
+
+  /* ---- paylaş, çıx ---- */
+  async function share(){
+    var s = ma.s; if(!s) return;
+    var url = location.origin + '/?mafia=' + encodeURIComponent(s.code.toUpperCase());
+    var text = T('Mafia oynayaq! Kod: ' + s.code.toUpperCase());
+    try{ if(navigator.share){ await navigator.share({title: 'Mafia', text: text, url: url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(url); flash('Link kopyalandı'); }
+    catch(e){ flash('Kod: ' + s.code.toUpperCase()); }
+  }
+  $('mafshare').onclick = share;
+  $('mafwshare').onclick = share;
+
+  /* ---- lobbi düymələri ---- */
+  $('mafNew').onclick = function(){ enter('', true); };
+  $('mafEnter').onclick = function(){
+    var c = clean($('mafCodeIn').value);
+    if(!c){ lobbyMsg('Mafia kodunu yaz'); return; }
+    enter(c, false);
+  };
+  $('mafCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('mafEnter').click(); } });
+  $('mafResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
+  (function(){
+    var c = saved(); if(!c) return;
+    api('/api/mafia/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+  })();
+  $('mafback').onclick = function(){ close(true); };
+  $('mafquit').onclick = function(){
+    var s = ma.s, c = ma.code;
+    if(!s || !c) return;
+    var m = s.status === 'play' ? 'Oyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.' : 'Oyundan çıxmaq istəyirsən?';
+    wtConfirm(m, {ok: 'Oyundan çıx', danger: true}).then(function(y){
+      if(!y || ma.code !== c) return;
+      close(false);
+      api('/api/mafia/quit', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    });
+  };
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && ma.code && !$('mafia').hidden){ ma.v = 0; startPoll(); }
+  });
+
+  /* ---- ?mafia=KOD linki ---- */
+  try{
+    var q = new URLSearchParams(location.search).get('mafia');
+    if(q){ pending = clean(q); history.replaceState(null, '', location.pathname); }
+  }catch(e){}
+  if(pending){
+    var tries = 0, iv = setInterval(function(){
+      tries++;
+      var menuOn = false;
+      try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
+      if(token && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      else if(tries > 120) clearInterval(iv);
+    }, 500);
+  }
+  window.wtJoinMafia = function(c){ enter(clean(c), false); };
+  refreshResume();
 })();
 </script>
 
