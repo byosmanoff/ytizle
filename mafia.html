@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#150a1d">
+<title>Mafiya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --velvet:#150a1d; --velvet-2:#1e1029; --seat:#2a1739; --seat-2:#37204a;
+  --rose:#ff7a9c; --rose-deep:#e8567d; --amber:#ffc46b; --green:#5be08a; --red:#ff5d6c;
+  --text:#f6ecf7; --muted:#b7a2cf; --line:rgba(255,255,255,.09);
+  --font:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;overscroll-behavior:none}
+body{background:var(--velvet);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.35;
+  -webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body.night{background:#0a0614}
+button,input{font:inherit;color:inherit;border:0}
+button{cursor:pointer;transition:transform .12s ease,opacity .15s ease}
+button:active:not(:disabled){transform:scale(.96)}
+button:disabled{opacity:.45;cursor:default}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:12px 14px 28px;display:flex;flex-direction:column;gap:12px}
+.head{display:flex;align-items:center;gap:10px}
+.ib{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-size:18px;flex:none}
+.ht{flex:1;min-width:0;line-height:1.15}
+.ht b{display:block;font-size:20px}
+.ht small{color:var(--muted);font-size:13px;letter-spacing:.1em}
+.card{background:var(--seat);border-radius:20px;padding:16px;box-shadow:inset 0 0 0 1px var(--line)}
+.card h2{font-size:18px;margin-bottom:6px}
+.hint{color:var(--muted);font-size:14px;margin-bottom:10px}
+.pbtn{background:var(--rose-deep);color:#fff;font-weight:700;border-radius:14px;padding:13px 16px;width:100%}
+.pbtn.alt{background:rgba(255,255,255,.1)}
+.pbtn.sm{width:auto;padding:9px 14px;font-size:14px}
+.frow{display:flex;gap:10px;margin-top:10px}
+.frow input,.cin{flex:1;min-width:0;background:rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;outline:none}
+.msg{color:var(--amber);font-size:14px;min-height:20px;margin-top:8px}
+.banner{display:flex;align-items:center;gap:12px;border-radius:18px;padding:12px 14px;background:linear-gradient(135deg,#3a2150,#241338);box-shadow:inset 0 0 0 1px var(--line)}
+.banner.night{background:linear-gradient(135deg,#141a3d,#0c0f26)}
+.banner .ic{font-size:30px}
+.banner .tx{flex:1;line-height:1.2}
+.banner .tx b{display:block;font-size:17px}
+.banner .tx small{color:var(--muted);font-size:13px}
+.tm{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.role{border-radius:18px;padding:12px 14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line)}
+.role b{font-size:17px}
+.role small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.role.mafia b{color:var(--red)} .role.sheriff b{color:var(--amber)} .role.doctor b{color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pc{display:flex;align-items:center;gap:8px;text-align:left;background:rgba(255,255,255,.06);border-radius:16px;padding:8px 10px;box-shadow:inset 0 0 0 1px var(--line);min-width:0}
+.pc.can{box-shadow:inset 0 0 0 1px rgba(255,196,107,.5)}
+.pc.sel{box-shadow:inset 0 0 0 2px var(--amber);background:rgba(255,196,107,.12)}
+.pc.me .nm{color:var(--rose)}
+.pc.dead{opacity:.5}
+.pc.dead .nm{text-decoration:line-through}
+.av{width:36px;height:36px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.pi{min-width:0;flex:1}
+.nm{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6b5a7d;margin-right:4px}
+.dot.on{background:var(--green)}
+.act{border-radius:18px;padding:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line)}
+.act b{display:block;margin-bottom:4px}
+.act small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+.result{text-align:center;border-radius:20px;padding:18px;background:linear-gradient(135deg,#4a2a63,#2a1739);box-shadow:inset 0 0 0 1px var(--line)}
+.result .big{font-size:42px}
+.result b{display:block;font-size:20px;margin:4px 0}
+.log{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.log div{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05)}
+.lv{color:var(--muted);font-size:13px;margin-top:8px}
+.chat{display:flex;flex-direction:column;gap:8px}
+.cl{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;padding-right:2px}
+.cm{background:rgba(255,255,255,.07);border-radius:14px;padding:7px 11px;font-size:14px;word-break:break-word;align-self:flex-start;max-width:92%}
+.cm.mine{align-self:flex-end;background:rgba(232,86,125,.35)}
+.cm.maf{box-shadow:inset 0 0 0 1px rgba(255,93,108,.55)}
+.cm b{display:block;font-size:12px;color:var(--amber);margin-bottom:1px}
+.cm.maf b{color:var(--red)}
+.cf{display:flex;gap:8px}
+.cf button{background:var(--rose-deep);border-radius:14px;padding:0 16px;font-weight:700}
+.lab{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:2px 2px -4px}
+.code{font-size:30px;font-weight:800;letter-spacing:.2em;text-align:center;margin:6px 0}
+.center{text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+  <!-- ===== GİRİŞ YOXDUR ===== -->
+  <div id="sNo" hidden>
+    <div class="card center">
+      <h2>🕶 Mafiya</h2>
+      <div class="hint">Oynamaq üçün əvvəlcə saytda hesabına daxil ol.</div>
+      <a href="/" style="text-decoration:none"><button class="pbtn" type="button">Saytı aç</button></a>
+    </div>
+  </div>
+
+  <!-- ===== LOBBİ ===== -->
+  <div id="sLobby" hidden>
+    <div class="head" style="margin-bottom:12px">
+      <button class="ib" id="lbBack" type="button" aria-label="Geri">‹</button>
+      <div class="ht"><b>Mafiya</b><small>4-12 OYUNÇU</small></div>
+    </div>
+    <div class="card">
+      <h2>🕶 Mafiya oyunu</h2>
+      <div class="hint">Gecə mafiya öldürür, həkim qoruyur, komissar yoxlayır. Gündüz hamı müzakirə edib səs verir. Dostların azdırsa, botlarla doldura bilərsən.</div>
+      <button class="pbtn" id="lbNew" type="button">Mafiya otağı aç</button>
+      <button class="pbtn alt" id="lbResume" type="button" hidden style="margin-top:10px">Oyuna qayıt</button>
+      <div class="frow">
+        <input id="lbCode" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Mafiya kodu">
+        <button class="pbtn alt sm" id="lbEnter" type="button">Gir</button>
+      </div>
+      <div class="msg" id="lbMsg" role="status"></div>
+    </div>
+  </div>
+
+  <!-- ===== GÖZLƏMƏ OTAĞI ===== -->
+  <div id="sWait" hidden>
+    <div class="head" style="margin-bottom:12px">
+      <button class="ib" id="wBack" type="button" aria-label="Geri">‹</button>
+      <div class="ht"><b>Mafiya</b><small>GÖZLƏMƏ OTAĞI</small></div>
+      <button class="ib" id="wShare" type="button" aria-label="Paylaş">🔗</button>
+    </div>
+    <div class="card center">
+      <div class="hint" style="margin:0">Kodu dostlarına göndər:</div>
+      <div class="code" id="wCode"></div>
+      <button class="pbtn alt" id="wShare2" type="button">Dəvət linkini göndər</button>
+    </div>
+    <div class="lab" style="margin-top:14px" id="wCnt"></div>
+    <div class="grid" id="wList" style="margin-top:10px"></div>
+    <div id="wHost" style="margin-top:12px" hidden>
+      <div class="frow" style="margin-top:0">
+        <button class="pbtn alt sm" id="wBotAdd" type="button" style="flex:1">+ Bot</button>
+        <button class="pbtn alt sm" id="wBotFill" type="button" style="flex:1">4-ə çatdır</button>
+        <button class="pbtn alt sm" id="wBotDel" type="button" style="flex:1">− Bot</button>
+      </div>
+      <button class="pbtn" id="wStart" type="button" style="margin-top:10px">Oyunu başlat</button>
+    </div>
+    <div class="hint center" id="wGuest" hidden style="margin-top:12px">Otaq sahibinin oyunu başlatması gözlənilir...</div>
+    <div class="msg center" id="wMsg" role="status"></div>
+    <div class="card" style="margin-top:12px"><div class="chat" id="wChat"></div></div>
+  </div>
+
+  <!-- ===== OYUN ===== -->
+  <div id="sGame" hidden>
+    <div class="head" style="margin-bottom:12px">
+      <button class="ib" id="gBack" type="button" aria-label="Geri">‹</button>
+      <div class="ht"><b>Mafiya</b><small id="gCode"></small></div>
+      <button class="ib" id="gShare" type="button" aria-label="Paylaş">🔗</button>
+      <button class="ib" id="gQuit" type="button" aria-label="Oyundan çıx">⏻</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="banner" id="gBanner"><div class="ic" id="gIc"></div><div class="tx"><b id="gPh"></b><small id="gSub"></small></div><div class="tm" id="gTm"></div></div>
+      <div class="role" id="gRole" hidden><b id="gRoleN"></b><small id="gRoleD"></small></div>
+      <div class="result" id="gRes" hidden>
+        <div class="big" id="gResIc"></div><b id="gResT"></b><div class="hint" id="gResS" style="margin:0 0 12px"></div>
+        <button class="pbtn" id="gAgain" type="button">Yenidən oyna</button>
+      </div>
+      <div class="act" id="gAct"></div>
+      <div class="grid" id="gList"></div>
+      <div class="msg" id="gMsg" role="status" style="margin:0"></div>
+      <div class="card"><div class="lab" style="margin:0 0 8px">Hadisələr</div><div class="log" id="gLog"></div><div class="lv" id="gLv" hidden></div></div>
+      <div class="card"><div class="chat" id="gChat"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var TOKEN = ''; try{ TOKEN = localStorage.getItem('wt_token') || ''; }catch(e){}
+var SAVE = 'wt_mafia';
+var $ = function(id){ return document.getElementById(id); };
+var enc = encodeURIComponent;
+var ROLES = {
+  mafia:   ['Mafiya', 'Gecələr sakinlərdən birini öldür. Gündüz özünü dinc göstər.'],
+  sheriff: ['Komissar', 'Hər gecə bir nəfərin mafiya olub-olmadığını öyrən.'],
+  doctor:  ['Həkim', 'Hər gecə birini qoru. Eyni adamı ardıcıl iki gecə qoruya bilməzsən.'],
+  civil:   ['Dinc sakin', 'Gündüz müzakirə et, mafiyanı tapıb səsvermə ilə çıxart.']
+};
+
+function h(tag, props, kids){
+  var e = document.createElement(tag);
+  for(var k in (props || {})){
+    var v = props[k];
+    if(v === null || v === undefined || v === false) continue;
+    if(k === 'class') e.className = v;
+    else if(k === 'text') e.textContent = v;
+    else if(k.slice(0, 2) === 'on') e[k] = v;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  (kids || []).forEach(function(c){ if(c == null) return; e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function api(path, body){
+  var o = {headers: {'X-Token': TOKEN}, cache: 'no-store'};
+  if(body !== undefined){ o.method = 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
+  return fetch(path, o);
+}
+function show(id){
+  ['sNo', 'sLobby', 'sWait', 'sGame'].forEach(function(s){ $(s).hidden = (s !== id); });
+}
+function saved(){ try{ return localStorage.getItem(SAVE) || ''; }catch(e){ return ''; } }
+function remember(c){ try{ if(c) localStorage.setItem(SAVE, c); else localStorage.removeItem(SAVE); }catch(e){} }
+function cleanCode(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
+
+var S = null, code = '', gen = 0, endAt = 0;
+
+function nm(i){ var p = S && S.players[i]; return (p && p.name) || ('Oyunçu ' + (i + 1)); }
+function txt(s){ return String(s || '').replace(/\{(\d+)\}/g, function(_, i){ return nm(+i); }); }
+function avatar(p){
+  var d = h('div', {class: 'av'});
+  if(p.avatar){ d.appendChild(h('img', {src: p.avatar, alt: '', loading: 'lazy'})); }
+  else d.textContent = p.bot ? '🤖' : ((p.name || '?').trim().charAt(0).toUpperCase() || '?');
+  return d;
+}
+function say(el, t){ el.textContent = t || ''; }
+
+/* ---------- söhbət ---------- */
+function Chat(root, onSend){
+  var list = h('div', {class: 'cl'});
+  var inp = h('input', {class: 'cin', maxlength: 200, placeholder: 'Mesaj yaz...', autocomplete: 'off', 'aria-label': 'Mesaj'});
+  var btn = h('button', {type: 'button', text: '➤'});
+  var form = h('div', {class: 'cf'}, [inp, btn]);
+  root.appendChild(h('div', {class: 'lab', text: 'Söhbət'}));
+  root.appendChild(list); root.appendChild(form);
+  function send(){
+    var t = inp.value.trim(); if(!t) return;
+    inp.value = '';
+    onSend(t);
+  }
+  btn.onclick = send;
+  inp.onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); send(); } };
+  var lastN = -1;
+  return function update(msgs, can){
+    form.hidden = !can;
+    var n = (msgs || []).length;
+    if(n === lastN) return;
+    lastN = n;
+    var atEnd = list.scrollTop + list.clientHeight >= list.scrollHeight - 30;
+    list.textContent = '';
+    (msgs || []).forEach(function(m){
+      var mine = S && m[0] === S.me;
+      list.appendChild(h('div', {class: 'cm' + (mine ? ' mine' : '') + (m[1] === 'mafia' ? ' maf' : '')}, [
+        h('b', {text: (m[1] === 'mafia' ? '🕶 ' : '') + nm(m[0])}), txt(m[2])
+      ]));
+    });
+    if(atEnd || n < 2) list.scrollTop = list.scrollHeight;
+  };
+}
+function sendChat(t){
+  if(!code) return;
+  api('/api/mafia/chat', {room: code, text: t}).then(function(r){
+    if(!r.ok) return r.json().then(function(j){ flash((j && j.error) || 'Mesaj göndərilmədi'); }).catch(function(){});
+  }).catch(function(){});
+}
+var chatW = Chat($('wChat'), sendChat), chatG = Chat($('gChat'), sendChat);
+
+function flash(t){
+  var el = (S && S.status !== 'wait') ? $('gMsg') : $('wMsg');
+  say(el, t);
+  clearTimeout(flash.t); flash.t = setTimeout(function(){ say(el, ''); }, 3500);
+}
+
+/* ---------- giriş / çıxış ---------- */
+function reset(){
+  gen++; code = ''; S = null; remember('');
+  document.body.classList.remove('night');
+  lobby();
+}
+async function lobby(){
+  show('sLobby');
+  $('lbCode').value = '';
+  var c = saved();
+  $('lbResume').hidden = true;
+  if(c){
+    try{
+      var r = await api('/api/mafia/check?room=' + enc(c));
+      if(r.ok){ $('lbResume').hidden = false; $('lbResume').dataset.c = c; }
+      else if(r.status === 404) remember('');
+    }catch(e){}
+  }
+}
+async function enter(c, create){
+  var m = $('lbMsg'); say(m, '');
+  try{
+    var r = create ? await api('/api/mafia/create', {}) : await api('/api/mafia/join', {room: c});
+    if(r.status === 401){ show('sNo'); return; }
+    if(r.status === 429){ say(m, 'Çox sorğu göndərdin, bir az gözlə'); return; }
+    if(r.status === 404){ say(m, 'Belə oyun tapılmadı. Kodu yoxla.'); remember(''); return; }
+    if(r.status === 403){
+      var j = await r.json().catch(function(){ return {}; });
+      say(m, j.error === 'started' ? 'Oyun artıq başlayıb' : 'Bu otaq doludur'); return;
+    }
+    if(!r.ok){ say(m, 'Alınmadı, yenidən cəhd et'); return; }
+    S = await r.json(); code = S.code; remember(code); render(true); poll();
+  }catch(e){ say(m, 'Əlaqə problemi, yenidən cəhd et'); }
+}
+async function poll(){
+  var my = ++gen;
+  while(my === gen && code){
+    try{
+      var r = await api('/api/mafia/poll?room=' + enc(code) + '&v=' + (S ? S.v : 0));
+      if(my !== gen) return;
+      if(r.status === 404){ reset(); return; }
+      if(r.status === 401){ show('sNo'); return; }
+      if(!r.ok){ await sleep(2000); continue; }
+      var d = await r.json();
+      if(my !== gen) return;
+      var changed = !S || d.v !== S.v || d.status !== S.status;
+      S = d;
+      if(changed) render(false);
+    }catch(e){ await sleep(2000); }
+  }
+}
+function link(){ return location.origin + '/mafia?room=' + encodeURIComponent(code.toUpperCase()); }
+async function share(){
+  if(!code) return;
+  var t = 'Mafiya oynayaq! Kod: ' + code.toUpperCase();
+  try{ if(navigator.share){ await navigator.share({title: 'Mafiya', text: t, url: link()}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(link()); flash('Link kopyalandı'); }catch(e){ flash(link()); }
+}
+
+/* ---------- render ---------- */
+function render(force){
+  if(!S) return;
+  endAt = Date.now() + (S.left || 0) * 1000;
+  document.body.classList.toggle('night', S.phase === 'night');
+  if(S.status === 'wait') renderWait(); else renderGame();
+}
+
+function renderWait(){
+  show('sWait');
+  $('wCode').textContent = S.code.toUpperCase();
+  $('wCnt').textContent = 'Oyunçular: ' + S.joined + '/' + S.size + (S.joined < S.min ? ' (ən azı ' + S.min + ' lazımdır)' : '');
+  var box = $('wList'); box.textContent = '';
+  S.players.forEach(function(p){
+    box.appendChild(h('div', {class: 'pc' + (p.me ? ' me' : '')}, [
+      avatar(p),
+      h('div', {class: 'pi'}, [
+        h('span', {class: 'nm', text: p.name || 'Oyunçu'}),
+        h('span', {class: 'st'}, [h('span', {class: 'dot' + (p.online ? ' on' : '')}), p.bot ? 'bot' : (p.online ? 'onlayn' : 'əlaqədə deyil')])
+      ])
+    ]));
+  });
+  $('wHost').hidden = !S.host; $('wGuest').hidden = S.host;
+  $('wStart').disabled = S.joined < S.min;
+  $('wBotAdd').disabled = S.joined >= S.size;
+  $('wBotFill').disabled = S.joined >= S.min;
+  $('wBotDel').disabled = !S.players.some(function(p){ return p.bot; });
+  chatW(S.chat, true);
+}
+
+function canTarget(i){
+  var p = S.players[i];
+  if(S.over || !S.alive) return false;
+  if(S.phase === 'night') return !!S.kind && (S.targets || []).indexOf(i) >= 0;
+  if(S.phase === 'day') return p.alive && !p.me;
+  return false;
+}
+
+function renderGame(){
+  show('sGame');
+  $('gCode').textContent = S.code.toUpperCase();
+  var night = S.phase === 'night', day = S.phase === 'day';
+  $('gBanner').className = 'banner' + (night ? ' night' : '');
+  $('gIc').textContent = S.over ? '🏁' : (night ? '🌙' : '☀️');
+  $('gPh').textContent = S.over ? 'Oyun bitdi' : (night ? S.day + '-ci gecə' : S.day + '-ci gün');
+  $('gSub').textContent = S.over ? '' : (night ? 'Şəhər yatır' : 'Müzakirə və səsvermə');
+  $('gTm').hidden = !!S.over;
+
+  var r = S.role && ROLES[S.role];
+  $('gRole').hidden = !r;
+  if(r){
+    $('gRole').className = 'role ' + S.role;
+    var mates = S.role === 'mafia' ? S.players.map(function(p, i){ return (p.role === 'mafia' && !p.me) ? nm(i) : null; }).filter(Boolean) : [];
+    $('gRoleN').textContent = 'Sənin rolun: ' + r[0];
+    $('gRoleD').textContent = r[1] + (mates.length ? ' Komandan: ' + mates.join(', ') + '.' : '');
+  }
+
+  // nəticə
+  $('gRes').hidden = !S.over;
+  if(S.over){
+    var iMafia = S.role === 'mafia', won = (S.winner === 'mafia') === iMafia;
+    $('gResIc').textContent = S.winner === 'mafia' ? '🕶' : '🏆';
+    $('gResT').textContent = S.winner === 'mafia' ? 'Mafiya qalib gəldi' : 'Sakinlər qalib gəldi';
+    $('gResS').textContent = won ? 'Sən qazandın!' : 'Bu dəfə uduzdun';
+  }
+
+  // hərəkət paneli
+  var act = $('gAct'); act.textContent = '';
+  act.hidden = !!S.over;
+  if(!S.over){
+    if(!S.alive){
+      act.appendChild(h('b', {text: 'Sən oyundan çıxdın'}));
+      act.appendChild(h('small', {text: 'Oyunu izləyirsən. Rollar hamıya açıqdır.'}));
+    }else if(night){
+      if(S.kind){
+        var q = {kill: 'Kimi öldürək?', save: 'Kimi qoruyaq?', check: 'Kimi yoxlayaq?'}[S.kind];
+        act.appendChild(h('b', {text: '🌙 ' + q}));
+        act.appendChild(h('small', {text: S.choice >= 0 ? 'Seçdin: ' + nm(S.choice) + '. İstəsən dəyişə bilərsən.' : 'Aşağıdan oyunçuya toxun.'}));
+        if(S.kind === 'kill' && S.mates){
+          var o = Object.keys(S.mates).filter(function(k){ return +k !== S.me; }).map(function(k){ return nm(+k) + ' → ' + nm(S.mates[k]); });
+          if(o.length) act.appendChild(h('small', {text: 'Komanda: ' + o.join(', ')}));
+        }
+        if(S.kind === 'save') act.appendChild(h('small', {text: 'Ötən gecə qorunan adamı yenə qoruya bilməzsən.'}));
+      }else{
+        act.appendChild(h('b', {text: '🌙 Şəhər yatır'}));
+        act.appendChild(h('small', {text: 'Səhəri gözlə. Gecə hərəkətləri bitəndə gün başlayacaq.'}));
+      }
+    }else if(day){
+      act.appendChild(h('b', {text: '☀️ Kimi oyundan çıxaraq?'}));
+      var vt = S.vote === null || S.vote === undefined ? 'Hələ səs verməmisən.' : (S.vote === -1 ? 'Səsin: heç kim.' : 'Səsin: ' + nm(S.vote) + '.');
+      act.appendChild(h('small', {text: vt + ' (' + (S.votes_in || 0) + '/' + (S.votes_all || 0) + ' səs verib)'}));
+      act.appendChild(h('button', {class: 'pbtn alt sm', type: 'button', style: 'margin-top:10px', text: 'Heç kimi (keç)', onclick: function(){ doVote(-1); }}));
+    }
+  }
+
+  // oyunçular
+  var box = $('gList'); box.textContent = '';
+  S.players.forEach(function(p, i){
+    var can = canTarget(i);
+    var sel = night ? (S.choice === i) : (day && S.vote === i);
+    var st = [];
+    if(!p.alive) st.push(p.left ? 'çıxıb' : 'ölüb');
+    if(p.role) st.push(ROLES[p.role][0]);
+    if(S.checked && S.checked[String(i)] !== undefined) st.push(S.checked[String(i)] ? '🔍 mafiya' : '🔍 sakin');
+    if(day && p.alive && p.voted) st.push('səs verib');
+    if(!st.length) st.push(p.bot ? 'bot' : (p.online ? 'onlayn' : 'əlaqədə deyil'));
+    var el = h('button', {type: 'button', class: 'pc' + (p.alive ? '' : ' dead') + (p.me ? ' me' : '') + (can ? ' can' : '') + (sel ? ' sel' : ''), disabled: !can,
+      onclick: function(){ if(night) doAct(i); else doVote(i); }}, [
+      avatar(p),
+      h('div', {class: 'pi'}, [
+        h('span', {class: 'nm', text: (p.name || 'Oyunçu') + (p.me ? ' (sən)' : '')}),
+        h('span', {class: 'st', text: st.join(' · ')})
+      ])
+    ]);
+    box.appendChild(el);
+  });
+
+  // jurnal
+  var lg = $('gLog'); lg.textContent = '';
+  (S.log || []).slice().reverse().slice(0, 14).forEach(function(l){ lg.appendChild(h('div', {text: txt(l)})); });
+  var lv = $('gLv');
+  if(S.lastvotes && S.lastvotes.length){
+    lv.hidden = false;
+    lv.textContent = 'Son səsvermə: ' + S.lastvotes.map(function(x){ return nm(x[0]) + ' → ' + (x[1] < 0 ? 'heç kim' : nm(x[1])); }).join(', ');
+  }else lv.hidden = true;
+
+  chatG(S.chat, S.canchat);
+}
+
+async function doAct(i){
+  try{
+    var r = await api('/api/mafia/act', {room: code, target: i});
+    if(!r.ok){ var j = await r.json().catch(function(){ return {}; }); flash(j.error || 'Alınmadı'); return; }
+    S = await r.json(); render(false);
+  }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+}
+async function doVote(i){
+  try{
+    var r = await api('/api/mafia/vote', {room: code, target: i});
+    if(!r.ok){ var j = await r.json().catch(function(){ return {}; }); flash(j.error || 'Alınmadı'); return; }
+    S = await r.json(); render(false);
+  }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+}
+
+/* ---------- taymer ---------- */
+setInterval(function(){
+  if(!S || S.status === 'wait' || S.over) return;
+  var s = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+  $('gTm').textContent = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+}, 500);
+
+/* ---------- düymələr ---------- */
+$('lbBack').onclick = function(){ location.href = '/'; };
+$('lbNew').onclick = function(){ enter('', true); };
+$('lbEnter').onclick = function(){
+  var c = cleanCode($('lbCode').value);
+  if(!c){ say($('lbMsg'), 'Mafiya kodunu yaz'); return; }
+  enter(c, false);
+};
+$('lbCode').onkeydown = function(e){ if(e.key === 'Enter') $('lbEnter').onclick(); };
+$('lbResume').onclick = function(){ enter($('lbResume').dataset.c, false); };
+
+function back(){
+  var c = code;
+  gen++; code = ''; S = null;
+  document.body.classList.remove('night');
+  if(c) api('/api/mafia/leave', {room: c}).catch(function(){});
+  lobby();
+}
+$('wBack').onclick = function(){ remember(''); back(); };
+$('gBack').onclick = back;
+$('wShare').onclick = share; $('wShare2').onclick = share; $('gShare').onclick = share;
+$('gQuit').onclick = function(){
+  if(S && S.over){ var c = code; reset(); api('/api/mafia/quit', {room: c}).catch(function(){}); return; }
+  if(!confirm('Oyundan çıxmaq istəyirsən? Sən oyundan çıxmış sayılacaqsan.')) return;
+  var c2 = code; reset(); api('/api/mafia/quit', {room: c2}).catch(function(){});
+};
+function hostCall(path, body){
+  return api(path, Object.assign({room: code}, body || {})).then(function(r){
+    if(!r.ok) return r.json().then(function(j){ flash(j.error === 'few' ? 'Ən azı 4 oyunçu lazımdır' : 'Alınmadı'); }).catch(function(){});
+    return r.json().then(function(d){ S = d; render(false); });
+  }).catch(function(){ flash('Əlaqə problemi, yenidən cəhd et'); });
+}
+$('wBotAdd').onclick = function(){ hostCall('/api/mafia/bot', {action: 'add', count: 1}); };
+$('wBotFill').onclick = function(){ hostCall('/api/mafia/bot', {action: 'add', count: Math.max(1, S.min - S.joined)}); };
+$('wBotDel').onclick = function(){ hostCall('/api/mafia/bot', {action: 'remove'}); };
+$('wStart').onclick = function(){ hostCall('/api/mafia/start'); };
+$('gAgain').onclick = function(){ hostCall('/api/mafia/again', {round: S.round}); };
+
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && code){ if(S) S.v = 0; poll(); }
+});
+
+/* ---------- başlanğıc ---------- */
+(async function init(){
+  if(!TOKEN){ show('sNo'); return; }
+  var q = cleanCode(new URLSearchParams(location.search).get('room'));
+  if(q){ history.replaceState(null, '', '/mafia'); show('sLobby'); enter(q, false); return; }
+  var c = saved();
+  if(c){
+    try{
+      var r = await api('/api/mafia/check?room=' + enc(c));
+      if(r.status === 401){ show('sNo'); return; }
+      if(r.ok){ enter(c, false); return; }
+      remember('');
+    }catch(e){}
+  }
+  lobby();
+})();
+})();
+</script>
+</body>
+</html>
