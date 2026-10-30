@@ -6474,10 +6474,10 @@ window.wtInviteBox = function(o){
     if(!el) return;
     var s = dom.s;
     if(!s || s.status !== 'play') return;
-    if(!s.can_draw || busy){ if($('ddraw').onclick) $('ddraw').onclick(); return; }
+    if(!s.can_draw || busy){ if($('ddraw').onclick) $('ddraw').onclick({target: el}); return; }
     el.classList.add('taken');
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
-    $('ddraw').onclick();
+    $('ddraw').onclick({target: el});
   });
 
   function renderAct(s){
@@ -6740,7 +6740,8 @@ window.wtInviteBox = function(o){
   };
   $('dwshare').onclick = share;
   $('ddraw').onclick = function(ev){      /* hər basışda bir daş */
-    if(!ev.target.closest('.tile')) return;
+    if(!ev || !ev.target || !ev.target.closest) ev = {target: document.body};
+    if(!ev.target.closest('.tile') && !ev.target.closest('.pt')) return;
     var s = dom.s;
     if(!s || s.status !== 'play') return;
     if(!s.can_draw){ flash(s.turn !== 'me' ? 'Hələ sənin növbən deyil' : (s.moves && s.moves.length ? 'Qoyacaq daşın var, bazardan çəkmək olmaz' : 'Bazar boşdur')); return; }
