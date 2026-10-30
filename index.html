@@ -1562,27 +1562,49 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 }
 
 
-/* ================= MAFIA ================= */
-#mafiaGame{position:fixed;inset:0;z-index:10020;display:flex;flex-direction:column;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));background:radial-gradient(100% 50% at 50% 0,#482039,var(--velvet) 72%);overflow:auto}
+/* ================= MAFIA: cinematic night mode ================= */
+#mafiaCard{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(135deg,#21101c 0%,#3a1729 52%,#1b1022 100%);border:1px solid rgba(239,67,89,.35);box-shadow:0 12px 35px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.06)}
+#mafiaCard:before{content:"";position:absolute;inset:-30%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 25% 15%,rgba(207,34,58,.22),transparent 42%),radial-gradient(ellipse at 85% 80%,rgba(117,23,52,.28),transparent 48%);animation:mfCardPulse 7s ease-in-out infinite alternate}
+#mafiaCard h2{display:flex;align-items:center;gap:10px;color:#ffe4e8}
+#mafiaCard h2 i{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#8f203a,#3a1428);color:#ffd4a0;box-shadow:0 0 22px rgba(220,43,68,.28)}
+#mafiaCard .hint{color:#d5b8c2;line-height:1.55}
+#mafiaCard .pbtn:not(.alt){background:linear-gradient(110deg,#9f203c,#d33b51);box-shadow:0 8px 22px rgba(159,32,60,.25)}
+#mafiaGame{position:fixed;inset:0;z-index:10020;display:flex;flex-direction:column;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at 50% -10%,rgba(153,28,52,.42),transparent 52%),radial-gradient(ellipse at 10% 80%,rgba(85,17,46,.24),transparent 45%),linear-gradient(155deg,#0b0910,#1b0c17 48%,#09080d);overflow:auto;overscroll-behavior:contain;isolation:isolate}
+#mafiaGame:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.62) 100%);}
+#mafiaGame:after{content:"";position:fixed;inset:-30%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse,rgba(153,26,51,.12),transparent 55%);animation:mfMist 13s ease-in-out infinite alternate}
+#mafiaGame.phase-night{background:radial-gradient(ellipse at 50% -10%,rgba(45,38,99,.25),transparent 52%),linear-gradient(155deg,#070810,#130e20 48%,#08070d)}
+#mafiaGame.phase-day{background:radial-gradient(ellipse at 50% -10%,rgba(180,82,51,.18),transparent 52%),linear-gradient(155deg,#170d14,#28131b 48%,#0a080d)}
 #mafiaGame[hidden]{display:none!important}
-#mafiaGame .mf-head{display:flex;align-items:center;gap:10px;flex:none}
-#mafiaGame .mf-head h2{flex:1;font-size:21px}
-#mafiaGame .mf-panel{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:18px;padding:14px}
-#mafiaGame .mf-title{font-weight:800;font-size:18px}
-#mafiaGame .mf-sub{color:var(--muted);font-size:13px;margin-top:4px}
-#mafiaGame .mf-role{font-size:22px;font-weight:900;text-align:center;padding:18px;border-radius:16px;background:linear-gradient(135deg,#5b2448,#26142f);color:var(--amber)}
+#mafiaGame.mf-enter{animation:mfReveal .55s ease-out both}
+#mafiaGame .mf-head{display:flex;align-items:center;gap:10px;flex:none;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.09)}
+#mafiaGame .mf-head h2{flex:1;font-size:21px;letter-spacing:.02em;text-shadow:0 2px 20px rgba(219,41,67,.4)}
+#mafiaGame .mf-head h2 i{color:#e24a60;margin-right:5px}
+#mafiaGame .mf-head .ib{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+#mafiaGame .mf-panel{position:relative;background:linear-gradient(145deg,rgba(47,23,38,.88),rgba(19,14,24,.88));border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035);backdrop-filter:blur(10px)}
+#mafiaGame .mf-title{font-weight:800;font-size:18px;letter-spacing:.01em;color:#fff0f2}
+#mafiaGame .mf-sub{color:#c8aeb9;font-size:13px;margin-top:5px;line-height:1.5}
+#mafiaGame .mf-role{font-size:22px;font-weight:900;text-align:center;padding:20px 14px;margin-top:12px;border-radius:16px;background:linear-gradient(125deg,#76243b,#2b1224 65%,#17101d);border:1px solid rgba(255,196,107,.25);color:#ffd28a;text-shadow:0 0 22px rgba(255,196,107,.18);box-shadow:inset 0 0 26px rgba(220,49,69,.1);animation:mfRoleReveal .6s cubic-bezier(.2,.8,.2,1) both}
 #mafiaGame .mf-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-#mafiaGame .mf-player{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border-radius:12px;background:var(--seat);text-align:left;border:1px solid transparent}
-#mafiaGame .mf-player:disabled{opacity:.65}
-#mafiaGame .mf-player.sel{border-color:var(--amber);background:#513044}
-#mafiaGame .mf-player.dead{opacity:.45;text-decoration:line-through}
-#mafiaGame .mf-dot{width:30px;height:30px;display:grid;place-items:center;flex:none;border-radius:50%;background:#512540;color:#ffd5e1}
+#mafiaGame .mf-player{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border-radius:13px;background:linear-gradient(130deg,rgba(76,39,57,.78),rgba(36,24,39,.9));text-align:left;border:1px solid rgba(255,255,255,.065);transition:transform .16s,border-color .16s,background .16s;}
+#mafiaGame .mf-player:not(:disabled):hover{transform:translateY(-2px);border-color:rgba(255,196,107,.45)}
+#mafiaGame .mf-player:disabled{opacity:.68}
+#mafiaGame .mf-player.sel{border-color:#ffc46b;background:#56303b;box-shadow:0 0 0 1px rgba(255,196,107,.16),0 0 20px rgba(255,196,107,.08)}
+#mafiaGame .mf-player.dead{opacity:.38;filter:grayscale(1);text-decoration:line-through}
+#mafiaGame .mf-dot{width:32px;height:32px;display:grid;place-items:center;flex:none;border-radius:50%;background:linear-gradient(135deg,#7d2039,#311321);color:#ffd5e1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
 #mafiaGame .mf-player span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:700}
-#mafiaGame .mf-log{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:13px}
-#mafiaGame .mf-actions{display:flex;gap:8px}
-#mafiaGame .mf-actions button{flex:1;padding:12px;border-radius:12px}
-#mafiaGame .mf-note{color:var(--amber);font-size:14px;text-align:center;min-height:20px}
-@media(min-width:700px){#mafiaGame{padding-left:max(14px,calc((100vw - 650px)/2));padding-right:max(14px,calc((100vw - 650px)/2))}.mf-players{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#mafiaGame .mf-log{display:flex;flex-direction:column;gap:8px;color:#c9b2bf;font-size:13px;line-height:1.45}
+#mafiaGame .mf-log>div{padding:7px 9px;border-left:2px solid rgba(219,68,91,.55);background:rgba(255,255,255,.025);border-radius:0 8px 8px 0}
+#mafiaGame .mf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#mafiaGame .mf-actions button{flex:1;min-width:130px;padding:12px;border-radius:12px;background:linear-gradient(110deg,#8f203a,#c8344e);box-shadow:0 7px 18px rgba(143,32,58,.2)}
+#mafiaGame .mf-actions button.alt{background:rgba(255,255,255,.08)}
+#mafiaGame .mf-note{color:#ffd28a;font-size:14px;text-align:center;min-height:20px;margin-top:6px}
+#mafiaGame .mf-atmo{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#d06b7d;opacity:.85}
+@keyframes mfMist{from{transform:translate3d(-2%,1%,0) rotate(-4deg) scale(1)}to{transform:translate3d(3%,-2%,0) rotate(5deg) scale(1.08)}}
+@keyframes mfCardPulse{from{opacity:.55;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+@keyframes mfReveal{from{opacity:0;filter:brightness(1.7);transform:scale(1.015)}to{opacity:1;filter:brightness(1);transform:scale(1)}}
+@keyframes mfRoleReveal{from{opacity:0;transform:translateY(9px) scale(.98);filter:blur(4px)}to{opacity:1;transform:none;filter:blur(0)}}
+@media(min-width:700px){#mafiaGame{padding-left:max(14px,calc((100vw - 650px)/2));padding-right:max(14px,calc((100vw - 650px)/2))}#mafiaGame .mf-players{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#mafiaCard:before,#mafiaGame:after,#mafiaGame.mf-enter,#mafiaGame .mf-role{animation:none!important}}
 
 </style>
 </head>
@@ -5054,7 +5076,7 @@ boot();
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
   var ORDER = ['home','plans','friends','games','hist','settings','profile'], PAGES = ORDER.slice(0,6);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],['#mafiaCard','games'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
     ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
   map.forEach(function(m){
@@ -7415,8 +7437,10 @@ window.wtInviteBox = function(o){
   <div class="mf-head">
     <button class="ib" id="mfBack" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <h2><i class="fa-solid fa-user-secret"></i> Mafia <small id="mfCode" style="color:var(--muted);font-size:12px"></small></h2>
+    <button class="ib" id="mfSound" aria-label="Səsi söndür" title="Səs: açıq"><i class="fa-solid fa-volume-high"></i></button>
     <button class="ib" id="mfShare" aria-label="Kodu paylaş" title="Kodu paylaş"><i class="fa-solid fa-share-nodes"></i></button>
   </div>
+  <div class="mf-atmo"><i class="fa-solid fa-moon"></i> Şəhər yatır · Kölgələr oyanır</div>
   <div class="mf-panel">
     <div class="mf-title" id="mfPhase">Oyunçular gözlənilir</div>
     <div class="mf-sub" id="mfDesc">Otaq kodunu dostlarına göndər.</div>
@@ -7435,18 +7459,37 @@ window.wtInviteBox = function(o){
   const $ = id => document.getElementById(id);
   const box = $('mafiaGame'); if(!box) return;
   let game=null, pollVersion=0, generation=0, busy=false, selected='';
+  let soundOn=true, audioCtx=null, droneNodes=null, lastPhase='';
   const labels={mafia:'Mafiya',doctor:'Doktor',commissioner:'Komissar',town:'Dinc sakin'};
+  function audio(){
+    if(!soundOn)return null;
+    try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!audioCtx)audioCtx=new C();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}catch(e){return null}
+  }
+  function tone(freq,duration,type='sine',volume=.035,delay=0){
+    const c=audio();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,c.currentTime+delay);g.gain.setValueAtTime(.0001,c.currentTime+delay);g.gain.exponentialRampToValueAtTime(volume,c.currentTime+delay+.025);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+delay+duration);o.connect(g);g.connect(c.destination);o.start(c.currentTime+delay);o.stop(c.currentTime+delay+duration+.04);
+  }
+  function sfx(kind){if(!soundOn)return;if(kind==='enter'){tone(110,.7,'triangle',.045);tone(165,.45,'sine',.025,.08);tone(220,.3,'sine',.018,.22)}else if(kind==='night'){tone(220,.45,'sine',.025);tone(146,.8,'triangle',.035,.12)}else if(kind==='day'){tone(392,.22,'sine',.025);tone(523,.32,'sine',.025,.12)}else if(kind==='vote'){tone(660,.12,'triangle',.03);tone(440,.22,'sine',.02,.09)}else if(kind==='death'){tone(130,.6,'sawtooth',.025);tone(82,.9,'triangle',.04,.12)}else if(kind==='win'){tone(330,.3,'sine',.025);tone(440,.35,'sine',.03,.13);tone(587,.5,'sine',.035,.28)} }
+  function startDrone(){
+    const c=audio();if(!c||droneNodes)return;
+    try{const g=c.createGain();g.gain.value=.018;g.connect(c.destination);const a=c.createOscillator(),b=c.createOscillator(),lfo=c.createOscillator(),lg=c.createGain();a.type='triangle';b.type='sine';a.frequency.value=55;b.frequency.value=82.4;lfo.frequency.value=.12;lg.gain.value=3;lfo.connect(lg);lg.connect(b.frequency);a.connect(g);b.connect(g);a.start();b.start();lfo.start();droneNodes={g,a,b,lfo,lg};}catch(e){}
+  }
+  function stopDrone(){if(!droneNodes)return;try{droneNodes.a.stop();droneNodes.b.stop();droneNodes.lfo.stop();droneNodes.g.disconnect()}catch(e){}droneNodes=null;}
+  function updateSoundButton(){const b=$('mfSound');if(!b)return;b.innerHTML=soundOn?'<i class="fa-solid fa-volume-high"></i>':'<i class="fa-solid fa-volume-xmark"></i>';b.title=soundOn?'Səs: açıq':'Səs: bağlı';b.setAttribute('aria-label',soundOn?'Səsi söndür':'Səsi aç');if(!soundOn)stopDrone();else if(!box.hidden)startDrone();}
   function note(t){ $('mfNote').textContent=t||''; }
   function lobbyMsg(t){ $('mfMsg').textContent=t||''; }
-  function show(on){ box.hidden=!on; if(on) $('mfCode').textContent='· '+(game?.code||'').toUpperCase(); }
+  function show(on){ if(on){const wasHidden=box.hidden;box.hidden=false;if(wasHidden){box.classList.remove('mf-enter');void box.offsetWidth;box.classList.add('mf-enter');startDrone();sfx('enter');}$('mfCode').textContent='· '+(game?.code||'').toUpperCase();}else{box.hidden=true;box.classList.remove('mf-enter');stopDrone();lastPhase='';} }
   function save(c){try{localStorage.setItem('wt_mafia_room',c||'')}catch(e){} $('mfResume').hidden=!c;}
   function saved(){try{return localStorage.getItem('wt_mafia_room')||''}catch(e){return ''}}
   async function request(path,body){
     return api(path, body===undefined?{}:{method:'POST',body:JSON.stringify(body)});
   }
   function render(s){
-    game=s; pollVersion=s.v||0; selected='';
-    show(true); save(s.status==='over'?'':s.code);
+    const oldPhase=lastPhase; game=s; pollVersion=s.v||0; selected='';
+    show(true);
+    const phaseKey=s.status==='over'?'over':(s.status==='wait'?'wait':s.phase);
+    box.classList.toggle('phase-night',s.status==='play'&&s.phase==='night');box.classList.toggle('phase-day',s.status==='play'&&s.phase==='day');
+    if(oldPhase && oldPhase!==phaseKey){if(phaseKey==='night')sfx('night');else if(phaseKey==='day')sfx('day');else if(phaseKey==='over')sfx('win');}
+    lastPhase=phaseKey; save(s.status==='over'?'':s.code);
     $('mfPhase').textContent=s.status==='wait'?'Oyunçular gözlənilir':s.status==='over'?'Oyun bitdi':(s.phase==='night'?'🌙 Gecə · Raund '+s.round:'☀️ Gündüz · Səsvermə');
     $('mfDesc').textContent=s.status==='wait'?'Ən azı 4 oyunçu qoşulmalıdır. Otaq kodunu dostlarına göndər.':s.status==='over'?(s.winner==='mafia'?'Mafiya qalib gəldi!':'Şəhər qalib gəldi!'):(s.phase==='night'?'Xüsusi rolun varsa, gizli hədəf seç. Dinc sakin gecə gözləyir.':'Şübhələndiyin oyunçuya səs ver.');
     const role=$('mfRole');
@@ -7466,7 +7509,7 @@ window.wtInviteBox = function(o){
       const nightRole=['mafia','doctor','commissioner'].includes(s.role);
       const canTarget=s.status==='play'&&p.alive&&!p.me&&!s.action_done&&((s.phase==='day')|| (s.phase==='night'&&nightRole));
       b.disabled=!canTarget;
-      b.onclick=()=>{selected=p.id; if(s.phase==='day') act('/api/mafia/action',{room:s.code,target:p.id}); else act('/api/mafia/action',{room:s.code,target:p.id});};
+      b.onclick=()=>{selected=p.id;sfx(s.phase==='day'?'vote':'vote');act('/api/mafia/action',{room:s.code,target:p.id});};
       players.appendChild(b);
     });
     const log=$('mfLog');log.textContent='';
@@ -7482,7 +7525,7 @@ window.wtInviteBox = function(o){
     }catch(e){note('Əlaqə problemi, yenidən cəhd et')}finally{busy=false}
   }
   async function enter(code,create,bot){
-    if(busy)return;busy=true;lobbyMsg('');
+    if(busy)return;audio();busy=true;lobbyMsg('');
     try{
       const r=await request(create?'/api/mafia/create':'/api/mafia/join',create?{bot:!!bot}:{room:code});
       let j={};try{j=await r.json()}catch(e){}
@@ -7509,6 +7552,8 @@ window.wtInviteBox = function(o){
   $('mfCodeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('mfEnter').click()});
   $('mfResume').onclick=()=>{const c=saved();if(c)enter(c,false,false)};
   $('mfBack').onclick=()=>leave(true);
+  $('mfSound').onclick=()=>{soundOn=!soundOn;updateSoundButton();if(soundOn)sfx('enter')};
+  updateSoundButton();
   $('mfShare').onclick=async()=>{if(!game)return;const t='Mafia oynayaq! Otaq kodu: '+game.code.toUpperCase();try{if(navigator.share)await navigator.share({title:'Mafia',text:t});else{await navigator.clipboard.writeText(t);note('Kod kopyalandı')}}catch(e){note(t)}};
   if(saved())$('mfResume').hidden=false;
 })();
