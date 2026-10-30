@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#150a1d">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Birlikdə İzlə">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Birlikdə İzlə</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="/static/css/style.css?v=1">
+</head>
+<body>
+<div id="lightbox" hidden><img alt=""></div>
+
+<div id="join">
+  <div class="floaties" id="floaties" aria-hidden="true"></div>
+  <div class="jwrap">
+    <div class="ticket">
+      <div class="t-main">
+        <svg class="pair" viewBox="-1 -4 34 36" overflow="visible" aria-hidden="true"><path d="M16 28C4 19 1 12 1 8a7 7 0 0 1 15-3 7 7 0 0 1 15 3c0 4-3 11-15 20z" fill="#e8567d"/><path d="M13 9.5v10l8.5-5z" fill="var(--paper)"/></svg>
+        <h1>Birlikdə İzlə</h1>
+        <p class="tagline">Uzaqda olsanız da, eyni kadrdasınız.</p>
+      </div>
+      <div class="t-stub">
+        <div class="or">Davam etmək üçün daxil ol</div>
+        <div id="gbtn"></div>
+        <div class="sep"><span>və ya e-poçt ilə</span></div>
+        <form id="eform" novalidate>
+          <input id="ename" placeholder="Adın" maxlength="20" autocomplete="given-name" hidden>
+          <input id="euser" placeholder="@istifadəçi_adı" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" hidden>
+          <div id="euserhint" class="ehint" hidden></div>
+          <input id="em" type="email" placeholder="E-poçt" autocomplete="email" autocapitalize="off" autocorrect="off" inputmode="email" maxlength="254">
+          <input id="ecode" placeholder="6 rəqəmli kod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" hidden>
+          <input id="pw" type="password" placeholder="Şifrə" autocomplete="current-password" maxlength="72">
+          <button id="esubmit" type="submit" class="alt">Daxil ol</button>
+          <button id="eforgot" type="button" class="linkbtn">Şifrəmi unutdum</button>
+          <button id="eresend" type="button" class="linkbtn" hidden>Kodu yenidən göndər</button>
+          <button id="etoggle" type="button" class="linkbtn">Hesabın yoxdur? Qeydiyyatdan keç</button>
+        </form>
+        <div id="joinmsg" role="status"></div>
+        <p class="note"><i class="fa-solid fa-lock" aria-hidden="true"></i> E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.</p>
+      </div>
+    </div>
+    <div class="jextra">
+      <div class="live" id="live" hidden><i></i><span id="livetxt"></span></div>
+      <ol class="how">
+        <li><b>1</b><span>Daxil ol</span></li>
+        <li><b>2</b><span>Otaq aç</span></li>
+        <li><b>3</b><span>Linki göndər, birlikdə izlə</span></li>
+      </ol>
+      <p class="dq" id="dq"></p>
+    </div>
+  </div>
+</div>
+
+<div id="menu">
+  <div class="floaties" id="mfloat" aria-hidden="true"></div>
+  <div class="mhead">
+    <div class="av" id="mav" role="button" tabindex="0" aria-label="Profil" title="Profil">?</div>
+    <div class="mhello"><small id="mgreet">Salam</small><b id="mname"></b><span id="muser"></span></div>
+    <button class="ib" id="editname" aria-label="Profil" title="Profil"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
+    <button class="ib" id="logout" aria-label="Hesabdan çıx" title="Hesabdan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div id="invites"></div>
+  <div class="mbody"><div class="mcol mleft">
+  <div class="ticket mticket">
+    <div class="t-main">
+      <svg class="pair" viewBox="-1 -4 34 36" overflow="visible" aria-hidden="true"><path d="M16 28C4 19 1 12 1 8a7 7 0 0 1 15-3 7 7 0 0 1 15 3c0 4-3 11-15 20z" fill="#e8567d"/><path d="M13 9.5v10l8.5-5z" fill="var(--paper)"/></svg>
+      <h2 class="mt">Bu axşam nə izləyirik?</h2>
+      <p class="tagline">Otaq aç, kodu göndər, eyni kadrda olun.</p>
+      <button id="create" class="btn">Otaq aç</button>
+    </div>
+    <div class="t-stub">
+      <div class="or">Kodun var?</div>
+      <div class="crow">
+        <input id="codein" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Otaq kodu">
+        <button id="enter" class="btn">Gir</button>
+      </div>
+    </div>
+  </div>
+  <div id="menumsg" role="status"></div>
+  <div class="stats">
+    <div class="stat"><b id="stv">0</b><small><i class="fa-solid fa-clapperboard" aria-hidden="true"></i>izlənən</small></div>
+    <div class="stat"><b id="str">0</b><small><i class="fa-solid fa-door-open" aria-hidden="true"></i>otaq</small></div>
+    <div class="stat now"><b id="stl">0</b><small><i class="fa-solid fa-circle live-dot" aria-hidden="true"></i>indi izləyir</small></div>
+  </div>
+  <div class="card" id="domCard">
+    <h2><i class="fa-solid fa-dice" aria-hidden="true"></i>Domino</h2>
+    <div class="hint">Domino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.</div>
+    <div class="glab">Oyunçu sayı</div>
+    <div class="gseg" id="domSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <button class="pbtn" id="domNew" style="width:100%;padding:13px;margin-top:10px">Domino otağı aç</button>
+    <button class="pbtn alt" id="domBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="domResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="domCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Domino kodu">
+      <button class="pbtn alt" id="domEnter">Gir</button>
+    </div>
+    <div id="domMsg" role="status"></div>
+  </div>
+  <div class="card" id="durCard">
+    <h2><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Durak</h2>
+    <div class="hint">Dostunla onlayn durak oyna. Kartı ilk bitirən çıxır, son kart qalan axmaq olur.</div>
+    <div class="glab">Oyunçu sayı</div>
+    <div class="gseg" id="durSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <label class="swrow" for="durperevod" style="margin-top:14px">
+      <span><b>Perevod (hücumu ötürmək)</b><small>Açıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.</small></span>
+      <input type="checkbox" id="durperevod" class="sw" checked>
+    </label>
+    <button class="pbtn" id="durNew" style="width:100%;padding:13px;margin-top:10px">Durak otağı aç</button>
+    <button class="pbtn alt" id="durBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="durResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="durCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Durak kodu">
+      <button class="pbtn alt" id="durEnter">Gir</button>
+    </div>
+    <div id="durMsg" role="status"></div>
+  </div>
+  <div class="card" id="chCard">
+    <h2><i class="fa-solid fa-chess-knight" aria-hidden="true"></i>Şahmat</h2>
+    <div class="hint">Dostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.</div>
+    <button class="pbtn" id="chNew" style="width:100%;padding:13px;margin-top:10px">Şahmat otağı aç</button>
+    <button class="pbtn alt" id="chBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="chResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="chCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Şahmat kodu">
+      <button class="pbtn alt" id="chEnter">Gir</button>
+    </div>
+    <div id="chMsg" role="status"></div>
+  </div>
+  <div class="card" id="pwacard" hidden>
+    <h2><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>Tətbiq kimi quraşdır</h2>
+    <div class="hint" id="pwahint"></div>
+    <button class="pbtn" id="pwainst" hidden style="width:100%;padding:13px">Ana ekrana əlavə et</button>
+  </div></div><div class="mcol mright">
+  <div class="card" id="plansCard">
+    <h2><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Planlı seanslar</h2>
+    <div id="plans"></div>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <button class="pbtn" id="plnew" style="flex:1"><i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni seans</button>
+      <button class="pbtn alt" id="plnotif" hidden><i class="fa-solid fa-bell" aria-hidden="true"></i> Bildirişlər</button>
+    </div>
+  </div>
+  <div class="card" id="statsCard">
+    <h2><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>İzləmə statistikası</h2>
+    <div class="wsum" id="wsum"></div>
+    <div class="wbars" id="wbars"></div>
+    <div class="wlab" id="wlab"></div>
+    <div class="wmini" id="wmini"></div>
+  </div>
+  <div class="card" id="friendsCard">
+    <h2><i class="fa-solid fa-user-group" aria-hidden="true"></i>Dostlar</h2>
+    <input id="fq" placeholder="İstifadəçi adı ilə axtar" maxlength="21" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı ilə axtar">
+    <div id="fres"></div>
+    <div id="freqs"></div>
+    <div id="flist"></div>
+  </div>
+  <div class="card"><h2><i class="fa-solid fa-film" aria-hidden="true"></i>İzlədiklərin</h2><div id="hvids"></div></div>
+  <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
+  <p class="mquote" id="mquote"></p>
+  <div id="setCards">
+  <div class="settings-head card">
+    <button type="button" class="ib settings-back" id="settingsback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <h2><i class="fa-solid fa-gear" aria-hidden="true"></i>Ayarlar</h2>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-language" aria-hidden="true"></i>Dil</h2>
+    <div class="seg" id="setlang" role="group" aria-label="Dil"><button type="button" data-l="az">Azərbaycan</button><button type="button" data-l="tr">Türkçe</button><button type="button" data-l="en">English</button></div>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-bell" aria-hidden="true"></i>Bildirişlər</h2>
+    <label class="swrow" for="setnotif">
+      <span><b>Seans bildirişləri</b><small id="setnotifhint"></small></span>
+      <input type="checkbox" id="setnotif" class="sw">
+    </label>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Durak</h2>
+    <label class="swrow" for="setperevod">
+      <span><b>Perevod (hücumu ötürmək)</b><small>Açıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.</small></span>
+      <input type="checkbox" id="setperevod" class="sw" checked>
+    </label>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-sliders" aria-hidden="true"></i>Səs və video</h2>
+    <div class="srange">
+      <label for="setvvol"><b>Səsli söhbətin səsi</b><span id="setvvolv">100%</span></label>
+      <input type="range" id="setvvol" min="0" max="100" step="5" value="100">
+    </div>
+    <div class="srange">
+      <label for="setvidvol"><b>Videonun səsi</b><span id="setvidvolv">100%</span></label>
+      <input type="range" id="setvidvol" min="0" max="100" step="5" value="100">
+    </div>
+    <label class="swrow" for="setmuted">
+      <span><b>Mikrofon bağlı başlasın</b><small>Səsli söhbətə qoşulanda mikrofon söndürülmüş olur.</small></span>
+      <input type="checkbox" id="setmuted" class="sw">
+    </label>
+    <label class="swrow" for="setclean" style="margin-top:14px">
+      <span><b>Səs təmizləmə</b><small>Küyü və əks-sədanı azaldır. Səsin pis çıxırsa söndür.</small></span>
+      <input type="checkbox" id="setclean" class="sw" checked>
+    </label>
+  </div>
+  <div class="card">
+    <h2><i class="fa-solid fa-user" aria-hidden="true"></i>Hesab</h2>
+    <button class="pbtn alt" id="setlogout" style="width:100%;padding:13px">Hesabdan çıx</button>
+  </div>
+  <div class="card">
+    <h2>Təhlükəsizlik</h2>
+    <button class="pbtn alt" id="logoutall" style="width:100%;padding:13px">Bütün cihazlardan çıx</button>
+    <div class="hint" style="margin-top:8px">Bu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.</div>
+  </div>
+  <div class="card dz">
+    <h2>Təhlükəli zona</h2>
+    <button class="pbtn danger" id="delopen" style="width:100%;padding:13px">Hesabı sil</button>
+    <div id="delbox" hidden>
+      <p class="dzt">Hesabın, tarixçən, şəklin və istifadəçi adın həmişəlik silinəcək. Bunu geri qaytarmaq olmur.</p>
+      <div class="fld" id="delpwrow"><input id="delpw" class="pin" type="password" placeholder="Təsdiq üçün şifrən" autocomplete="current-password" aria-label="Şifrə"></div>
+      <div class="fld" id="delcfrow" hidden><input id="delcf" class="pin" placeholder="Təsdiq üçün SİL yaz" autocomplete="off" aria-label="Təsdiq sözü"></div>
+      <div class="frow" style="gap:10px"><button class="pbtn alt" id="delcancel" style="flex:1">Ləğv et</button><button class="pbtn danger" id="delgo" style="flex:1">Həmişəlik sil</button></div>
+    </div>
+  </div>
+  <div id="smsg" role="status"></div>
+  </div>
+  <button id="clearhist">Tarixçəni təmizlə</button>
+  </div></div>
+  <nav id="tabbar" aria-label="Naviqasiya">
+    <button type="button" data-go="home" class="on" aria-label="Əsas" title="Əsas"><span class="tp"><i class="fa-solid fa-house" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="plans" aria-label="Seanslar" title="Seanslar"><span class="tp"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i><span class="nav-notif-dot" id="friendNotifDot" hidden aria-label="Yeni dostluq sorğusu"></span></span></button>
+    <button type="button" data-go="games" aria-label="Oyunlar" title="Oyunlar"><span class="tp"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="hist" aria-label="Tarixçə" title="Tarixçə"><span class="tp"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="settings" aria-label="Ayarlar" title="Ayarlar"><span class="tp"><i class="fa-solid fa-gear" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="profile" aria-label="Profil" title="Profil"><span class="tp"><span class="tav" id="tav"></span></span></button>
+  </nav>
+</div>
+
+<div id="avatarcrop" hidden role="dialog" aria-modal="true" aria-labelledby="croptitle">
+  <div class="crop-card">
+    <h2 id="croptitle">Profil şəklini redaktə et</h2>
+    <p class="crop-help">Şəkli sürüşdürərək yerini dəyiş, yaxınlaşdırmanı tənzimlə.</p>
+    <canvas id="cropcanvas" width="320" height="320" aria-label="Kəsiləcək profil şəkli"></canvas>
+    <label for="cropzoom"><span>Yaxınlaşdırma</span><span id="cropzoomval">1.0×</span></label>
+    <input id="cropzoom" type="range" min="1" max="3" step="0.01" value="1">
+    <div class="crop-actions"><button type="button" id="cropcancel">Ləğv et</button><button type="button" id="cropapply">Kəs və yüklə</button></div>
+  </div>
+</div>
+<div id="profile" hidden>
+  <div class="phead">
+    <button class="ib" id="pback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <h1>Profil</h1>
+    <button type="button" class="ib profile-settings" id="profilesettings" aria-label="Ayarlar" title="Ayarlar"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
+  </div>
+  <div id="profile-account-row">
+    <div class="pavbox">
+      <div class="pav-edit-wrap" id="pavEditWrap">
+        <button type="button" class="av big" id="pav" aria-label="Profil şəklini redaktə et" title="Profil şəklini redaktə et" aria-expanded="false">?</button>
+        <button type="button" class="pav-pencil" id="pavmenuopen" aria-label="Şəkil əməliyyatlarını aç" title="Şəkil əməliyyatları" aria-expanded="false"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+        <div class="pav-edit-menu" id="pavmenu" hidden>
+          <button type="button" id="pavpick"><i class="fa-regular fa-image" aria-hidden="true"></i><span>Şəkli dəyiş</span></button>
+          <button type="button" id="pavdel" hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Şəkli sil</span></button>
+        </div>
+      </div>
+      <input type="file" id="pfile" accept="image/*" hidden>
+    </div>
+    <div class="card account-card">
+    <h2>Hesab</h2>
+    <div class="fld">
+      <label for="pname">Ad</label>
+      <div class="frow"><input id="pname" maxlength="20" autocomplete="off"><button class="pbtn" id="pnamesave" hidden>Saxla</button></div>
+    </div>
+    <div class="fld">
+      <label for="puser">İstifadəçi adı</label>
+      <div class="frow"><span class="at">@</span><input id="puser" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pbtn" id="pusersave" disabled hidden>Saxla</button></div>
+      <div class="hint" id="puserhint">Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.</div>
+    </div>
+    <div class="fld">
+      <label for="pbio">Haqqında</label>
+      <div class="frow"><input id="pbio" maxlength="80" autocomplete="off" placeholder="Qısa məlumat (məs. Komediya və qorxu filmləri)"><button class="pbtn" id="pbiosave" hidden>Saxla</button></div>
+    </div>
+    <button class="pbtn" id="psaveall" style="width:100%;padding:13px;margin-top:6px" disabled>Saxla</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Gizlilik</h2>
+    <div class="fld">
+      <label for="pavprivacy">Profil şəklini kim görə bilər?</label>
+      <select id="pavprivacy" class="pin" aria-label="Profil şəklinin gizliliyi">
+        <option value="everyone">Hər kəs</option>
+        <option value="friends">Dostlar</option>
+        <option value="nobody">Heç kim</option>
+      </select>
+      <div class="hint">Standart seçim: Hər kəs.</div>
+    </div>
+    <div class="fld">
+      <label for="plastseen">Son görülmə və onlayn statusunu kim görə bilər?</label>
+      <select id="plastseen" class="pin" aria-label="Son görülmə və onlayn statusunun gizliliyi">
+        <option value="everyone">Hər kəs</option>
+        <option value="friends">Dostlar</option>
+        <option value="nobody">Heç kim</option>
+      </select>
+      <div class="hint">Onlayn statusu son görülmə ilə eyni gizlilik qaydasına tabedir. Standart seçim: Hər kəs.</div>
+    </div>
+    <div class="fld">
+      <label>Blokladığın istifadəçilər</label>
+      <div id="blockedlist" class="fres"><div class="hint">Yüklənir...</div></div>
+    </div>
+    <label class="swrow" for="pinv">
+      <span><b>Otağa dəvətlər</b><small id="pinvhint">Açıq: hər kəs səni otağa dəvət edə bilər.</small></span>
+      <input type="checkbox" id="pinv" class="sw" checked>
+    </label>
+  </div>
+  <div class="card">
+    <h2>E-poçt</h2>
+    <div class="fld">
+      <div class="frow"><input id="pemail" type="email" autocomplete="email" autocapitalize="none" aria-label="E-poçt"><button class="pbtn alt" id="pemailsend">Dəyiş</button></div>
+      <div class="hint" id="pemailhint"></div>
+    </div>
+    <div class="fld" id="pecoderow" hidden>
+      <div class="frow"><input id="pecode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"><button class="pbtn" id="pemailok">Təsdiq et</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 id="pwtitle">Şifrəni dəyiş</h2>
+    <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Mövcud şifrə" autocomplete="current-password" aria-label="Mövcud şifrə"></div>
+    <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+    <div class="fld"><input id="pnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
+    <button class="pbtn" id="pwsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+    <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pwforgot">Şifrəmi unutdum</button></div>
+    <div id="pwfgbox" hidden style="margin-top:10px">
+      <div class="hint" id="pwfghint"></div>
+      <div class="fld"><input id="pfcode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"></div>
+      <div class="fld"><input id="pfnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+      <div class="fld"><input id="pfnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
+      <button class="pbtn" id="pfsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+      <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pfresend">Kodu yenidən göndər</button></div>
+    </div>
+  </div>
+  <div id="pmsg" role="status"></div>
+</div>
+
+<div id="app">
+<div class="stage">
+  <div id="top">
+    <div id="status" data-on="0">Qoşulur...</div>
+    <div id="codebar"><span class="lbl">Otaq kodu:</span> <b id="code"></b> <button id="copy" aria-label="Dəvət linkini göndər" title="Dəvət linkini göndər"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i></button> <button id="invite" aria-label="İstifadəçi adı ilə dəvət et" title="İstifadəçi adı ilə dəvət et"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></button> <button id="members" aria-label="Otaqdakılar və rollar" title="Otaqdakılar və rollar"><i class="fa-solid fa-users" aria-hidden="true"></i></button> <button id="lock" aria-label="Otağı kilidlə" title="Otağı kilidlə"><i class="fa-solid fa-lock" aria-hidden="true"></i></button> <button id="leave" aria-label="Otaqdan çıx" title="Otaqdan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button></div>
+  </div>
+  <div id="player">
+    <div id="ytbox"><div id="yt"></div></div>
+    <video id="vid" controls playsinline></video>
+    <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+    <div id="ytres">
+      <form class="ysb" id="ytform" action="javascript:void(0)">
+        <label class="yin"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="ytq" type="search" placeholder="YouTube-da axtar..." enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="YouTube-da axtar"></label>
+        <button type="submit" aria-label="Axtar"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+      </form>
+      <div id="ytlist"></div>
+    </div>
+    <div id="home"></div>
+    <div id="ctlock"></div>
+    <div id="ctbadge"><i class="fa-solid fa-crown" aria-hidden="true"></i> Yalnız host idarə edir</div>
+    <button id="tap"><i class="fa-solid fa-play" aria-hidden="true"></i> Videonu başlat</button>
+    <button id="pickfile" type="button"></button>
+    <input type="file" id="lfile" accept="video/*,.mp4,.m4v,.mov,.webm" hidden>
+  </div>
+  <div id="reacts" role="group" aria-label="Reaksiyalar">
+    <button data-e="❤️" aria-label="Ürək"><i class="fa-solid fa-heart" style="color:#ff5a7e" aria-hidden="true"></i></button>
+    <button data-e="😂" aria-label="Gülüş"><i class="fa-solid fa-face-laugh-squint" style="color:#ffc46b" aria-hidden="true"></i></button>
+    <button data-e="😭" aria-label="Ağlamaq"><i class="fa-solid fa-face-sad-cry" style="color:#ffc46b" aria-hidden="true"></i></button>
+    <button data-e="😮" aria-label="Təəccüb"><i class="fa-solid fa-face-surprise" style="color:#ffc46b" aria-hidden="true"></i></button>
+    <button data-e="🔥" aria-label="Alov"><i class="fa-solid fa-fire" style="color:#ff9a3c" aria-hidden="true"></i></button>
+    <button data-e="👏" aria-label="Alqış"><i class="fa-solid fa-hands-clapping" style="color:#ffc46b" aria-hidden="true"></i></button>
+  </div>
+  <div class="bar">
+    <button id="back" aria-label="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <button id="homebtn" aria-label="Ana səhifə"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
+    <button id="qbtn" aria-label="Video növbəsi"><i class="fa-solid fa-list-ol" aria-hidden="true"></i><b hidden>0</b></button>
+    <input id="url" placeholder="Link yaz..." enterkeyhint="go" autocapitalize="off" autocorrect="off">
+    <button id="load" class="pink" aria-label="Aç"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+    <button id="big" aria-label="Ekranı böyüt"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+  </div>
+</div>
+<aside class="side">
+  <div id="voice" hidden data-st="off">
+    <div class="vps">
+      <div class="vp off" id="vpMe"><span id="avMe">M</span></div>
+      <div class="vp off" id="vpPeer"><span id="avPeer">?</span></div>
+    </div>
+    <div id="vtext">Səsli otaq</div>
+    <button id="vunmute" class="vjoin" hidden>Səsi aç</button>
+    <button id="vjoin" class="vjoin" hidden>Qoşul</button>
+    <button id="vmute" class="vbtn" aria-label="Mikrofonu söndür" hidden><i class="fa-solid fa-microphone" aria-hidden="true"></i><i class="fa-solid fa-microphone-slash" aria-hidden="true"></i></button>
+    <button id="vleave" hidden>Çıx</button>
+  </div>
+  <div id="chat"></div>
+  <div id="replybar" hidden>
+    <div class="rb-body"><strong id="rbName" data-nt></strong><span id="rbText" data-nt></span></div>
+    <button id="rbX" aria-label="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+  </div>
+  <input type="file" id="imgfile" accept="image/*" hidden>
+  <audio id="raudio" autoplay playsinline></audio>
+  <div class="bar composer">
+    <button id="vmic" aria-label="Səsli söhbətə qoşul"><i class="fa-solid fa-microphone" aria-hidden="true"></i></button>
+    <button id="imgbtn" aria-label="Şəkil göndər"><i class="fa-solid fa-image" aria-hidden="true"></i></button>
+    <input id="msg" placeholder="Mesaj yaz..." autocomplete="off" maxlength="400" enterkeyhint="send">
+    <button id="send" class="pink" aria-label="Göndər"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+  </div>
+</aside>
+</div>
+
+
+<div id="pbox" hidden role="dialog" aria-modal="true" aria-label="Profil">
+  <div class="lv-card pcard">
+    <div class="av big" id="pbav">?</div>
+    <h2 id="pbname" data-nt></h2>
+    <div id="pbuser" data-nt></div>
+    <div id="pbbio" data-nt></div>
+    <div id="pbpresence" role="status"></div>
+    <div id="pbrel" role="status"></div>
+    <div class="lv-btns">
+      <button id="pbClose">Bağla</button>
+      <button id="pbAct" hidden></button>
+      <button id="pbBlock" class="danger" hidden>Blok et</button>
+    </div>
+  </div>
+</div>
+
+<div id="qbox" hidden role="dialog" aria-modal="true" aria-labelledby="qTitle">
+  <div class="lv-card">
+    <h2 id="qTitle">Video növbəsi</h2>
+    <p>Biri bitəndə növbəti avtomatik açılır. YouTube nəticələrindəki <b style="letter-spacing:0">+</b> düyməsi ilə də əlavə edə bilərsən.</p>
+    <div id="qlist"></div>
+    <div class="qnow">
+      <input id="qurl" placeholder="Video linki yaz..." autocomplete="off" autocapitalize="off" autocorrect="off" aria-label="Növbəyə link əlavə et">
+      <button id="qadd" type="button" aria-label="Əlavə et"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+    </div>
+    <div class="lv-btns">
+      <button id="qclose" class="alt">Bağla</button>
+      <button id="qskip">Növbətiyə keç</button>
+    </div>
+  </div>
+</div>
+
+<div id="invbox" hidden role="dialog" aria-modal="true" aria-labelledby="invTitle">
+  <div class="lv-card">
+    <h2 id="invTitle">Dəvət et</h2>
+    <p>Dostunun istifadəçi adını yaz. O, ana menyuda dəvətini görüb bir toxunuşla otağa qoşulacaq.</p>
+    <div id="invfr"></div>
+    <input id="invuser" placeholder="@istifadəçi_adı" maxlength="21" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı">
+    <div id="invmsg" role="status"></div>
+    <div class="lv-btns">
+      <button id="invNo">Bağla</button>
+      <button id="invYes">Göndər</button>
+    </div>
+  </div>
+</div>
+
+<div id="rolebox" hidden role="dialog" aria-modal="true" aria-labelledby="rbTitle">
+  <div class="lv-card">
+    <h2 id="rbTitle">Otaqdakılar</h2>
+    <div id="rolelist"></div>
+    <label class="swrow" for="honly" style="margin-top:14px">
+      <span><b>Yalnız host idarə edir</b><small id="honlyhint"></small></span>
+      <input type="checkbox" id="honly" class="sw">
+    </label>
+    <div class="lv-btns" style="margin-top:16px"><button class="alt" id="roleClose">Bağla</button></div>
+  </div>
+</div>
+
+<div id="planbox" hidden role="dialog" aria-modal="true" aria-labelledby="plTitle">
+  <div class="lv-card">
+    <h2 id="plTitle">Yeni seans</h2>
+    <p>Tarix seç, dostlarını dəvət et. Vaxtı çatanda otağı sən başladırsan, dostlara dəvət gedir.</p>
+    <input id="pltitle" maxlength="40" placeholder="Nə izləyirik? (məs. Cümə filmi)" autocomplete="off">
+    <input id="pldate" type="datetime-local" aria-label="Tarix və saat">
+    <div class="fsub">Dostları dəvət et</div>
+    <div id="plfr" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px"></div>
+    <div id="plmsg" role="status"></div>
+    <div class="lv-btns"><button class="alt" id="plNo">Bağla</button><button id="plYes" style="background:var(--rose-deep);color:#fff">Planla</button></div>
+  </div>
+</div>
+
+<div id="dlgbox" hidden role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="lv-card">
+    <h2 id="dlgTitle"></h2>
+    <p id="dlgText"></p>
+    <div class="lv-btns"><button type="button" id="dlgNo"></button><button type="button" id="dlgYes"></button></div>
+  </div>
+</div>
+<div id="leavebox" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
+  <div class="lv-card">
+    <h2 id="lvTitle">Otaqdan çıxılsın?</h2>
+    <p>Sevgilin otaqda qalacaq. Otaq kodu <b id="lvCode"></b>, istədiyin vaxt eyni kodla geri qayıda bilərsən.</p>
+    <label id="lvHostRow" hidden><span>Hostluq kimə keçsin?</span><select id="lvHost"></select></label>
+    <div class="lv-btns">
+      <button id="leaveNo">Qal</button>
+      <button id="leaveYes">Çıx</button>
+    </div>
+  </div>
+</div>
+
+<div id="hostbox" hidden role="dialog" aria-modal="true" aria-labelledby="hbTitle">
+  <div class="lv-card">
+    <h2 id="hbTitle">Host verilsin?</h2>
+    <p><b id="hbName" data-nt></b> host olacaq, sən isə izləyici olacaqsan.</p>
+    <div class="lv-btns">
+      <button id="hostNo" class="alt">Xeyr</button>
+      <button id="hostYes">Host ver</button>
+    </div>
+  </div>
+</div>
+
+<div id="chess" hidden role="dialog" aria-modal="true" aria-label="Şahmat">
+  <div class="dhead">
+    <button class="ib" id="cback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Şahmat</b><small id="ccode"></small></div>
+    <button class="ib sfxb" id="csfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="cshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+  </div>
+  <div class="cpl" id="copp"></div>
+  <div class="gvbar" id="cvbar">
+    <button type="button" class="gvb" id="cmic"><i class="fa-solid fa-headphones" aria-hidden="true"></i><span>Səsli otağa gir</span></button>
+    <span class="gvt" id="cvt" role="status"></span>
+    <button type="button" class="gvb gvm" id="cmute" hidden></button>
+  </div>
+  <div id="cwrap">
+    <div id="cbd"></div>
+    <div id="cpro" hidden></div>
+    <div id="cwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Rəqib gözlənilir...</span>
+      <small>Kodu rəqibinə göndər:</small>
+      <b id="cwcode"></b>
+      <button class="pbtn" id="cwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="cinvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="cinvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="cinvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="cinvFr"></div>
+        <div class="gmsg" id="cinvMsg" role="status"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cpl" id="cme"></div>
+  <div id="cmsg" role="status"></div>
+  <div id="cres" hidden></div>
+  <div id="cact"><button class="pbtn alt" id="cresign" hidden>Təslim ol</button></div>
+</div>
+<div id="domino" hidden role="dialog" aria-modal="true" aria-label="Domino">
+  <div class="dhead">
+    <button class="ib" id="dback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Domino</b><small id="dcode"></small></div>
+    <button class="ib sfxb" id="dsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="dshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="dquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div class="dpl" id="dpl"></div>
+  <div class="gvbar" id="dvbar">
+    <button type="button" class="gvb" id="dmic"><i class="fa-solid fa-headphones" aria-hidden="true"></i><span>Səsli otağa gir</span></button>
+    <span class="gvt" id="dvt" role="status"></span>
+    <button type="button" class="gvb gvm" id="dmute" hidden></button>
+  </div>
+  <div id="dboard">
+    <div id="dchain"></div>
+    <div id="dwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Rəqib gözlənilir...</span>
+      <small>Kodu rəqibinə göndər:</small>
+      <b id="dwcode"></b>
+      <small id="dwcnt"></small>
+      <button class="pbtn" id="dwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="dinvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="dinvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="dinvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="dinvFr"></div>
+        <div class="gmsg" id="dinvMsg" role="status"></div>
+      </div>
+    </div>
+  </div>
+  <div id="dpile" hidden></div>
+  <div id="dends"></div>
+  <div id="dmsg" role="status"></div>
+  <div id="dact"><div id="ddraw" role="group" aria-label="Bazar" hidden></div><button class="pbtn alt" id="dclaim" hidden>Rəqib gəlmir: oyunu bitir</button></div>
+    <div id="dres" hidden></div>
+  <div id="dhand"></div>
+</div>
+<div id="durak" hidden role="dialog" aria-modal="true" aria-label="Durak">
+  <div class="dhead">
+    <button class="ib" id="durback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Durak</b><small id="durcode"></small></div>
+    <button class="ib sfxb" id="dursfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="dushare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="durquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div class="dpl" id="durpl"></div>
+  <div class="gvbar" id="duvbar">
+    <button type="button" class="gvb" id="dumic"><i class="fa-solid fa-headphones" aria-hidden="true"></i><span>Səsli otağa gir</span></button>
+    <span class="gvt" id="duvt" role="status"></span>
+    <button type="button" class="gvb gvm" id="dumute" hidden></button>
+  </div>
+  <div id="durboard">
+    <div id="durwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Oyunçular gözlənilir...</span>
+      <small>Kodu dostuna göndər:</small>
+      <b id="durwcode"></b>
+      <small id="durwcnt"></small>
+      <button class="pbtn" id="durwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="duinvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="duinvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="duinvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="duinvFr"></div>
+        <div class="gmsg" id="duinvMsg" role="status"></div>
+      </div>
+    </div>
+    <div id="durpiles" hidden></div>
+    <div id="durtable"></div>
+  </div>
+  <div id="durinfo"></div>
+  <div id="durmsg" role="status"></div>
+  <div id="duract"><button class="pbtn alt" id="dutake" hidden>Götür</button><button class="pbtn alt" id="dutrans" hidden>Ötür</button><button class="pbtn" id="dupass" hidden>Pas</button></div>
+  <div id="durres" hidden></div>
+  <div id="durhand"></div>
+</div>
+<script>window.__ytReady = false; window.onYouTubeIframeAPIReady = function(){ window.__ytReady = true; };</script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="/static/js/01-main.js?v=1"></script>
+<script src="/static/js/02-navigation.js?v=1"></script>
+<script src="/static/js/03-keyboard.js?v=1"></script>
+<script src="/static/js/04-iphone-fixes.js?v=1"></script>
+<script src="/static/js/05-settings-notifications.js?v=1"></script>
+<script src="/static/js/06-language.js?v=1"></script>
+<script src="/static/js/07-confirm-dialog.js?v=1"></script>
+<script src="/static/js/08-game-sounds.js?v=1"></script>
+<script src="/static/js/09-game-voice.js?v=1"></script>
+
+<script src="/static/js/10-durak.js?v=1"></script>
+
+<script src="/static/js/11-select-style.js?v=1"></script>
+
+</body>
+</html>
