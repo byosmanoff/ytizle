@@ -7530,7 +7530,7 @@ window.wtInviteBox = function(o){
 
   /* ---- aparıcı: Babək səsi (/babek/<ad>.mp3 faylları, növbə ilə oxunur) ---- */
   var NAR = (function(){
-    var LSN = 'wt_nar', on = true, ctx = null, bufs = {}, loading = {}, q = [], playing = false, cur = null, gen = 0;
+    var LSN = 'wt_nar', warned = false, on = true, ctx = null, bufs = {}, loading = {}, q = [], playing = false, cur = null, gen = 0;
     var CLIPS = ['start', 'night', 'day', 'night_dead', 'night_none', 'vote', 'vote_dead', 'vote_none', 'win_mafia', 'win_town', 'warn10'];
     try{ on = localStorage.getItem(LSN) !== '0'; }catch(e){}
     function ac(){
@@ -7548,11 +7548,20 @@ window.wtInviteBox = function(o){
       if(bufs[n] !== undefined) return Promise.resolve(bufs[n]);
       if(loading[n]) return loading[n];
       var c = ac(); if(!c) return Promise.resolve(null);
-      loading[n] = fetch('/babek/' + n + '.mp3')
-        .then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
-        .then(function(ab){ return new Promise(function(res, rej){ c.decodeAudioData(ab, res, rej); }); })
+      loading[n] = fetch('/babek/' + n + '.mp3', {cache: 'no-cache'})
+        .then(function(r){ if(!r.ok){ var e = new Error('http'); e.st = r.status; throw e; } return r.arrayBuffer(); })
+        .then(function(ab){
+          return new Promise(function(res, rej){
+            var d = c.decodeAudioData(ab, res, function(){ var e = new Error('decode'); e.st = 'decode'; rej(e); });
+            if(d && d.catch) d.catch(function(){});
+          });
+        })
         .then(function(b){ bufs[n] = b; return b; })
-        .catch(function(){ bufs[n] = null; return null; });   // fayl yoxdursa səssiz keçir
+        .catch(function(e){
+          bufs[n] = null;
+          if(!warned){ warned = true; flash(e && e.st === 'decode' ? ('Aparıcı faylı oxunmadı: ' + n + '.mp3 (MP3 formatı yoxla)') : ('Aparıcı faylı tapılmadı: babek/' + n + '.mp3')); }
+          return null;
+        });
       return loading[n];
     }
     function running(c){
@@ -7573,7 +7582,7 @@ window.wtInviteBox = function(o){
         if(!b || !c){ playing = false; next(); return; }
         running(c).then(function(ok){
           if(g !== gen) return;
-          if(!ok){ playing = false; next(); return; }
+          if(!ok){ playing = false; flash('Aparıcı səsi bloklandı: ekrana bir dəfə toxun'); next(); return; }
           try{
             var s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); cur = s;
             s.onended = function(){ if(cur === s) cur = null; if(g !== gen) return; playing = false; setTimeout(next, 250); };
