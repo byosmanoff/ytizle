@@ -1798,7 +1798,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafrole .rtop small{display:block;text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;font-weight:700;opacity:.8}
 #mafrole .rtop b{display:inline-block;font-size:20px;margin:0 8px 0 0}
 #mafrole .rtop em{font-style:normal;display:inline-block;padding:2px 10px;border-radius:999px;background:rgba(0,0,0,.35);font-size:11px;font-weight:700}
-#mafrole .rlist{display:grid;gap:1px;background:rgba(255,255,255,.08)}
+#mafrole .rlist{display:none}
 #mafrole .rrow{display:flex;align-items:center;gap:10px;padding:6px 14px;background:rgba(10,3,10,.5)}
 #mafrole .rri{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.1);font-size:12px}
 #mafrole .rrow:nth-child(1) .rri{color:#ffd166}#mafrole .rrow:nth-child(2) .rri{color:#a9b2ff}#mafrole .rrow:nth-child(3) .rri{color:#ffb347}
@@ -1816,7 +1816,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafplayers{padding:5px 2px 6px;gap:8px}
 #mafia .mbar{padding:8px 14px}
 #mafchat{height:min(22%,160px)}
-#mafmain{overflow:hidden;padding:8px;gap:8px}
+#mafmain{overflow-x:hidden;overflow-y:auto;padding:8px;gap:8px}
 #mafact{padding:9px}
 #mafact .pbtn{padding:10px}
 #mafrole .rtop{padding:8px 12px;gap:10px}
@@ -1828,12 +1828,34 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafrole .rrow b{font-size:12px;line-height:1.25}
 #maflog{gap:4px}
 #maflog div{font-size:12px;padding:5px 10px}
-#maflog div:nth-child(n+2){display:none}
+#maflog div:nth-child(n+3){display:none}
 #mafres{padding:12px}
 #mafres .mres-ic{width:44px;height:44px;font-size:20px;margin-bottom:6px}
 #mafres b{font-size:20px;margin-bottom:2px}
 #mafres small{margin-bottom:8px}
 @media(prefers-reduced-motion:reduce){#mafia .mchip.tgt,#mafia .mtm.low,#mafwait>i{animation:none}}
+
+/* ===== MAFIA: musiqi düyməsi və "Necə oynanır?" ===== */
+#mafia .mhead{gap:6px}
+#mafia .mhead .ib{width:36px;height:36px}
+#mafia .musb.off{opacity:.5}
+#mafhow{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(6,2,10,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#mafhow[hidden]{display:none}
+#mafhow .hw-card{width:100%;max-width:440px;max-height:100%;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:22px;background:linear-gradient(160deg,rgba(60,20,40,.97),rgba(14,5,18,.99));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 24px 60px -12px rgba(0,0,0,.8)}
+#mafhow .hw-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#mafhow .hw-top b{display:flex;align-items:center;gap:8px;font-size:18px}
+#mafhow .hw-top b i{color:var(--mg)}
+#mafhow .hw-body{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px;min-height:0}
+#mafhow .hw-intro{margin:0;font-size:13.5px;line-height:1.45;opacity:.8}
+#mafhow h4{margin:8px 0 0;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mg)}
+#mafhow .hw-row{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+#mafhow .hw-i{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;font-size:14px;background:rgba(255,255,255,.1)}
+#mafhow .hw-row b{display:block;font-size:14px}
+#mafhow .hw-row small{display:block;margin-top:2px;font-size:12.5px;line-height:1.4;opacity:.75}
+#mafhow .r-mafia .hw-i{color:#ff7b7b;background:rgba(255,77,109,.2)}
+#mafhow .r-doctor .hw-i{color:#6fe3a5;background:rgba(46,194,126,.2)}
+#mafhow .r-sheriff .hw-i{color:#ffd166;background:rgba(245,194,66,.2)}
+#mafhow .r-civil .hw-i{color:#9ec5ff;background:rgba(91,141,239,.2)}
 </style>
 </head>
 <body>
@@ -2468,9 +2490,34 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <div class="mhead">
     <button class="ib" id="mafback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <div class="mt"><b><i class="fa-solid fa-masks-theater" aria-hidden="true"></i> Mafia</b><small id="mafcode"></small></div>
+    <button class="ib musb" id="mafmusic" aria-label="Musiqi" title="Musiqi"></button>
     <button class="ib sfxb" id="mafsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="mafhelp" aria-label="Necə oynanır?" title="Necə oynanır?"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></button>
     <button class="ib" id="mafshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
     <button class="ib" id="mafquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div id="mafhow" hidden role="dialog" aria-modal="true" aria-label="Necə oynanır?">
+    <div class="hw-card">
+      <div class="hw-top"><b><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Necə oynanır?</b><button class="ib" id="mafhowx" type="button" aria-label="Bağla"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+      <div class="hw-body">
+        <p class="hw-intro">Mafia gizli rollu oyundur. Mafiya sakinləri gizlicə aradan qaldırır, sakinlər isə müzakirə və səsvermə ilə mafiyanı tapır.</p>
+        <h4>Rollar</h4>
+        <div class="hw-row r-mafia"><span class="hw-i"><i class="fa-solid fa-user-secret" aria-hidden="true"></i></span><span><b>Mafiya</b><small>Gecə komanda yoldaşlarınla bir sakini seç və öldür. Gündüz özünü sakin kimi apar.</small></span></div>
+        <div class="hw-row r-doctor"><span class="hw-i"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i></span><span><b>Həkim</b><small>Hər gecə bir nəfəri qoruyursan. Eyni adamı ardıcıl iki gecə qoruya bilməzsən.</small></span></div>
+        <div class="hw-row r-sheriff"><span class="hw-i"><i class="fa-solid fa-star" aria-hidden="true"></i></span><span><b>Komissar</b><small>Hər gecə bir nəfərin mafiya olub-olmadığını yoxlayırsan.</small></span></div>
+        <div class="hw-row r-civil"><span class="hw-i"><i class="fa-solid fa-house-user" aria-hidden="true"></i></span><span><b>Sakin</b><small>Gündüz müzakirə et, mafiyanı tap və səsvermədə oyundan çıxar.</small></span></div>
+        <h4>Mərhələlər</h4>
+        <div class="hw-row"><span class="hw-i" style="color:#a9b2ff"><i class="fa-solid fa-moon" aria-hidden="true"></i></span><span><b>Gecə</b><small>35 saniyə. Mafiya qurbanı seçir, həkim qoruyur, komissar yoxlayır. Sakinlər yatır.</small></span></div>
+        <div class="hw-row"><span class="hw-i" style="color:#ffb347"><i class="fa-solid fa-sun" aria-hidden="true"></i></span><span><b>Gündüz</b><small>90 saniyə. Hamı çatda müzakirə edir. Yarıdan çoxu “Səsverməyə keç” basarsa, ilk 30 saniyədən sonra səsvermə tez başlayır.</small></span></div>
+        <div class="hw-row"><span class="hw-i" style="color:#ffb3c1"><i class="fa-solid fa-gavel" aria-hidden="true"></i></span><span><b>Səsvermə</b><small>45 saniyə. Hər kəs bir nəfərə səs verir və ya “Heç kim” seçir. Ən çox səs alan oyundan çıxır, səslər bərabərdirsə heç kim çıxmır.</small></span></div>
+        <h4>Qalibiyyət</h4>
+        <div class="hw-row"><span class="hw-i" style="color:#ffd166"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span><span><b>Kim qalib gəlir?</b><small>Mafiya qalmayanda sakinlər qalib gəlir. Mafiya sayı sağ qalan sakinlərin sayına çatanda mafiya qalib gəlir.</small></span></div>
+        <h4>Qeydlər</h4>
+        <div class="hw-row"><span class="hw-i"><i class="fa-solid fa-users" aria-hidden="true"></i></span><span><b>Oyunçular</b><small>Oyun 4–12 nəfərlikdir. Mafiya sayı: 4–7 nəfərdə 1, 8–11 nəfərdə 2, 12 nəfərdə 3.</small></span></div>
+        <div class="hw-row"><span class="hw-i"><i class="fa-solid fa-comments" aria-hidden="true"></i></span><span><b>Çat</b><small>Gecə yalnız mafiya yaza bilər. Oyundan çıxanların rolu hamıya açılır.</small></span></div>
+      </div>
+      <button class="pbtn" id="mafhowok" type="button">Anladım</button>
+    </div>
   </div>
   <div class="mbar" id="mafbar" hidden>
     <div class="mph"><b id="mafph"></b><small id="mafphs"></small></div>
@@ -2485,6 +2532,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       <b id="mafwcode"></b>
       <small id="mafwcnt"></small>
       <button class="pbtn" id="mafstart"><i class="fa-solid fa-play" aria-hidden="true"></i> Oyunu başlat</button>
+      <button class="pbtn alt" id="mafwhow" type="button"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Necə oynanır?</button>
       <button class="pbtn alt" id="mafwshare"><i class="fa-solid fa-link" aria-hidden="true"></i> Dəvət linkini göndər</button>
       <div class="mafbots" id="mafbots" hidden><button class="pbtn alt" id="mafbotadd" type="button"><i class="fa-solid fa-robot" aria-hidden="true"></i> Bot əlavə et</button><button class="pbtn alt" id="mafbotdel" type="button"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Botları sil</button></div>
       <div class="ginv">
@@ -5629,6 +5677,23 @@ boot();
   Object.keys(X).forEach(function(k){ D[k] = X[k]; });
   /* Sonradan əlavə edilən gizlilik və bloklama ekranları üçün lüğət. */
   var EXTRA = {
+    "Musiqi": ["Müzik", "Music"],
+    "Necə oynanır?": ["Nasıl oynanır?", "How to play"],
+    "Anladım": ["Anladım", "Got it"],
+    "Rollar": ["Roller", "Roles"],
+    "Mərhələlər": ["Aşamalar", "Phases"],
+    "Qalibiyyət": ["Kazanma", "Winning"],
+    "Qeydlər": ["Notlar", "Notes"],
+    "Kim qalib gəlir?": ["Kim kazanır?", "Who wins?"],
+    "Oyunçular": ["Oyuncular", "Players"],
+    "Çat": ["Sohbet", "Chat"],
+    "Mafia gizli rollu oyundur. Mafiya sakinləri gizlicə aradan qaldırır, sakinlər isə müzakirə və səsvermə ilə mafiyanı tapır.": ["Mafya gizli rollü bir oyundur. Mafya sivilleri gizlice ortadan kaldırır, siviller ise tartışma ve oylamayla mafyayı bulur.", "Mafia is a hidden-role game. The mafia secretly eliminates the townspeople, and the town finds the mafia through discussion and voting."],
+    "35 saniyə. Mafiya qurbanı seçir, həkim qoruyur, komissar yoxlayır. Sakinlər yatır.": ["35 saniye. Mafya kurbanı seçer, doktor korur, komiser kontrol eder. Siviller uyur.", "35 seconds. The mafia picks a victim, the doctor protects, the sheriff investigates. The town sleeps."],
+    "90 saniyə. Hamı çatda müzakirə edir. Yarıdan çoxu “Səsverməyə keç” basarsa, ilk 30 saniyədən sonra səsvermə tez başlayır.": ["90 saniye. Herkes sohbette tartışır. Yarıdan fazlası “Oylamaya geç”e basarsa, ilk 30 saniyeden sonra oylama erken başlar.", "90 seconds. Everyone discusses in chat. If more than half press “Go to voting”, voting starts early after the first 30 seconds."],
+    "45 saniyə. Hər kəs bir nəfərə səs verir və ya “Heç kim” seçir. Ən çox səs alan oyundan çıxır, səslər bərabərdirsə heç kim çıxmır.": ["45 saniye. Herkes bir kişiye oy verir ya da “Kimse”yi seçer. En çok oy alan oyundan çıkar, oylar eşitse kimse çıkmaz.", "45 seconds. Everyone votes for one person or picks “Nobody”. The player with the most votes is out; if votes are tied, nobody leaves."],
+    "Mafiya qalmayanda sakinlər qalib gəlir. Mafiya sayı sağ qalan sakinlərin sayına çatanda mafiya qalib gəlir.": ["Mafya kalmayınca siviller kazanır. Mafya sayısı hayatta kalan sivillerin sayısına ulaşınca mafya kazanır.", "The town wins when no mafia is left. The mafia wins when it equals the number of surviving townspeople."],
+    "Oyun 4–12 nəfərlikdir. Mafiya sayı: 4–7 nəfərdə 1, 8–11 nəfərdə 2, 12 nəfərdə 3.": ["Oyun 4–12 kişiliktir. Mafya sayısı: 4–7 kişide 1, 8–11 kişide 2, 12 kişide 3.", "The game is for 4–12 players. Mafia count: 1 for 4–7 players, 2 for 8–11, 3 for 12."],
+    "Gecə yalnız mafiya yaza bilər. Oyundan çıxanların rolu hamıya açılır.": ["Geceleri yalnızca mafya yazabilir. Oyundan çıkanların rolü herkese açılır.", "Only the mafia can write at night. The role of anyone who leaves the game is revealed to all."],
     'Mafiya komandası':['Mafya takımı','Mafia team'],
     'Sakinlər komandası':['Siviller takımı','Civilians team'],
     'Məqsəd':['Hedef','Goal'],
@@ -5851,6 +5916,154 @@ boot();
   yes.onclick = function(){ close(true); };
   no.onclick = function(){ close(false); };
   box.addEventListener('click', function(e){ if(e.target === box) close(false); });
+})();
+</script>
+<script>
+/* ---------- Mafia fon musiqisi: fayl yoxdur, Web Audio ilə yaradılır (sakit noir ambient) ---------- */
+window.wtMafMusic = (function(){
+  var LSK = 'wt_maf_music', on = true, ctx = null, master = null, bus = null, lp = null, echo = null, nbuf = null;
+  var timer = 0, running = false, beat = 0, nextT = 0, lastNote = 0, BEAT = 1.0, VOL = .5;
+  try{ on = localStorage.getItem(LSK) !== '0'; }catch(e){}
+  /* Am - Fmaj7 - Dm - E7: hər akkord 8 saniyə */
+  var CH = [
+    {root: 110.00, pad: [220.00, 261.63, 329.63],         mel: [440.00, 523.25, 659.25, 392.00, 329.63]},
+    {root:  87.31, pad: [174.61, 220.00, 261.63, 329.63], mel: [440.00, 523.25, 349.23, 392.00, 329.63]},
+    {root:  73.42, pad: [146.83, 174.61, 220.00, 293.66], mel: [440.00, 349.23, 293.66, 523.25, 392.00]},
+    {root:  82.41, pad: [164.81, 207.65, 246.94, 293.66], mel: [415.30, 493.88, 329.63, 587.33, 440.00]}
+  ];
+  function ac(){
+    if(!ctx){
+      var C = window.AudioContext || window.webkitAudioContext; if(!C) return null;
+      try{ ctx = new C(); }catch(e){ ctx = null; return null; }
+      master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+      bus = ctx.createGain(); lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400; lp.Q.value = .4;
+      bus.connect(lp); lp.connect(master);
+      var d = ctx.createDelay(1.5); d.delayTime.value = .62;
+      var fb = ctx.createGain(); fb.gain.value = .38;
+      var ef = ctx.createBiquadFilter(); ef.type = 'lowpass'; ef.frequency.value = 1200;
+      echo = ctx.createGain(); echo.gain.value = .55;
+      echo.connect(d); d.connect(ef); ef.connect(fb); fb.connect(d); ef.connect(master);
+      nbuf = null;
+    }
+    return ctx;
+  }
+  function noise(){
+    if(nbuf) return nbuf;
+    var n = Math.floor(ctx.sampleRate * .4); nbuf = ctx.createBuffer(1, n, ctx.sampleRate);
+    var d = nbuf.getChannelData(0); for(var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return nbuf;
+  }
+  function padNote(f, t, dur){
+    [-6, 6].forEach(function(dt){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f; o.detune.value = dt;
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.linearRampToValueAtTime(.03, t + 2.4);
+      g.gain.linearRampToValueAtTime(.022, t + dur - .5);
+      g.gain.linearRampToValueAtTime(.0001, t + dur + 2.2);
+      o.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + 2.3);
+    });
+  }
+  function bass(f, t, v){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .06); g.gain.exponentialRampToValueAtTime(.0001, t + 3);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t + 3.1);
+  }
+  function pluck(f, t, v){
+    var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = f; o2.type = 'sine'; o2.frequency.value = f * 2; g2.gain.value = .22;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + 2);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(bus); g.connect(echo);
+    o.start(t); o2.start(t); o.stop(t + 2.1); o2.stop(t + 2.1);
+  }
+  function brush(t, v){
+    var s = ctx.createBufferSource(); s.buffer = noise();
+    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 5200;
+    var g = ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .03); g.gain.exponentialRampToValueAtTime(.0001, t + .2);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t, Math.random() * .1); s.stop(t + .25);
+  }
+  function tick(t){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.02, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + .05);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + .07);
+  }
+  function phase(){
+    var b = document.getElementById('mafbar');
+    return (b && !b.hidden) ? (b.getAttribute('data-ph') || 'wait') : 'wait';
+  }
+  function sched(){
+    if(!running || !ctx) return;
+    var ph = phase();
+    try{ lp.frequency.setTargetAtTime(ph === 'night' ? 950 : ph === 'vote' ? 1300 : 1700, ctx.currentTime, 3); }catch(e){}
+    var pm = ph === 'night' ? .15 : ph === 'day' ? .28 : ph === 'vote' ? .2 : .22;
+    while(nextT < ctx.currentTime + 1.5){
+      var c = CH[Math.floor(beat / 8) % 4], bi = beat % 8;
+      if(bi === 0){ c.pad.forEach(function(f){ padNote(f, nextT, 8 * BEAT); }); bass(c.root, nextT, .24); }
+      if(bi === 4) bass(c.root * 1.5, nextT, .13);
+      [0, .5].forEach(function(off){
+        if(Math.random() < pm){
+          var f, n = 0; do{ f = c.mel[Math.floor(Math.random() * c.mel.length)]; n++; }while(f === lastNote && n < 6);
+          lastNote = f; pluck(f, nextT + off * BEAT, .05);
+        }
+      });
+      if(ph !== 'night' && ph !== 'wait' && beat % 2 === 1) brush(nextT, .016);
+      if(ph === 'vote') tick(nextT);
+      beat++; nextT += BEAT;
+    }
+  }
+  function paint(){
+    [].forEach.call(document.querySelectorAll('.musb'), function(b){
+      b.innerHTML = '<i class="fa-solid fa-music" aria-hidden="true"></i>';
+      b.classList.toggle('off', !on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function start(){
+    if(!on || running) return;
+    var c = ac(); if(!c) return;
+    running = true;
+    try{ c.resume(); }catch(e){}
+    master.gain.cancelScheduledValues(c.currentTime);
+    master.gain.setTargetAtTime(VOL, c.currentTime, 1.2);
+    beat = 0; nextT = c.currentTime + .2;
+    clearInterval(timer); timer = setInterval(sched, 300); sched();
+  }
+  function stop(){
+    if(!running) return;
+    running = false; clearInterval(timer); timer = 0;
+    var c = ctx; if(!c) return;
+    try{ master.gain.cancelScheduledValues(c.currentTime); master.gain.setTargetAtTime(0, c.currentTime, .25); }catch(e){}
+    setTimeout(function(){ if(!running && ctx === c){ try{ c.close(); }catch(e){} ctx = null; } }, 1500);
+  }
+  function toggle(){ on = !on; try{ localStorage.setItem(LSK, on ? '1' : '0'); }catch(e){} paint(); if(on) start(); else stop(); }
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function(ev){
+    document.addEventListener(ev, function(){ if(running && ctx && ctx.state !== 'running'){ try{ ctx.resume(); }catch(e){} } }, {passive: true, capture: true});
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(!running || !ctx) return;
+    try{ if(document.hidden) ctx.suspend(); else ctx.resume(); }catch(e){}
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    var b = document.getElementById('mafmusic'); if(b) b.onclick = toggle;
+    paint();
+  });
+  if(document.readyState !== 'loading'){ var b0 = document.getElementById('mafmusic'); if(b0) b0.onclick = toggle; paint(); }
+  return {start: start, stop: stop, toggle: toggle, isOn: function(){ return on; }};
+})();
+
+/* ---------- Mafia: "Necə oynanır?" pəncərəsi ---------- */
+(function(){
+  var box = document.getElementById('mafhow'); if(!box) return;
+  function open(){ box.hidden = false; var b = box.querySelector('.hw-body'); if(b) b.scrollTop = 0; }
+  function close(){ box.hidden = true; }
+  var h = document.getElementById('mafhelp'), w = document.getElementById('mafwhow');
+  if(h) h.onclick = open; if(w) w.onclick = open;
+  document.getElementById('mafhowx').onclick = close;
+  document.getElementById('mafhowok').onclick = close;
+  box.addEventListener('click', function(e){ if(e.target === box) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !box.hidden){ close(); e.stopPropagation(); } });
 })();
 </script>
 <script>
@@ -7686,7 +7899,10 @@ window.wtInviteBox = function(o){
     if(j && j.error) return j.error;
     return 'Əlaqə problemi, yenidən cəhd et';
   }
-  function show(on){ $('mafia').hidden = !on; }
+  function show(on){
+    $('mafia').hidden = !on;
+    try{ if(window.wtMafMusic){ if(on) wtMafMusic.start(); else wtMafMusic.stop(); } }catch(e){}
+  }
   function stopTimer(){ clearInterval(ma.tmr); ma.tmr = 0; }
   function close(leave){
     var c = ma.code;
@@ -7876,8 +8092,7 @@ window.wtInviteBox = function(o){
       var d = RDESC[s.role];
       var ri = RINFO[s.role];
       function rrow(ic, lbl, tx){ return '<div class="rrow"><span class="rri"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></span><span><small>' + esc(T(lbl)) + '</small><b>' + esc(T(tx)) + '</b></span></div>'; }
-      rb.innerHTML = '<div class="rtop"><i class="fa-solid ' + RICON[s.role] + '" aria-hidden="true"></i><div><small>' + esc(T('Sənin rolun')) + '</small><b>' + esc(rname(s.role)) + '</b><em>' + esc(T(ri.team)) + '</em></div></div>' +
-        '<div class="rlist">' + rrow('fa-bullseye', 'Məqsəd', ri.goal) + rrow('fa-moon', 'Gecə', ri.night) + rrow('fa-sun', 'Gündüz', ri.day) + '</div>';
+      rb.innerHTML = '<div class="rtop"><i class="fa-solid ' + RICON[s.role] + '" aria-hidden="true"></i><div><small>' + esc(T('Sənin rolun')) + '</small><b>' + esc(rname(s.role)) + '</b><em>' + esc(T(ri.team)) + '</em></div></div>';
     } else rb.hidden = true;
     /* komissarın yoxlama nəticələri */
     var cb = $('mafchecks');

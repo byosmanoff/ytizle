@@ -5312,6 +5312,7 @@ MAF_MIN = 4            # başlamaq üçün ən az oyunçu
 MAF_MAXP = 12          # otaqda ən çox oyunçu
 MAF_NIGHT = 35         # gecə (san)
 MAF_DAY = 90           # gündüz müzakirəsi (san)
+MAF_DAY_MIN = 30       # bu müddət keçməmiş "səsverməyə keç" çoxluğu mərhələni dəyişmir (san)
 MAF_VOTE = 45          # səsvermə (san)
 MAF_MSG_LEN = 200
 MAF_CHAT_KEEP = 200
@@ -5383,7 +5384,7 @@ def _ma_over(g, w):
 def _ma_start(g, now):
     ps = list(g["players"])
     n = len(ps)
-    nm = max(1, n // 3)
+    nm = max(1, n // 4)      # 4-7 nəfər: 1 mafiya, 8-11: 2, 12: 3 (n//3 oyunu çox tez bitirirdi)
     roles = ["mafia"] * nm + ["doctor", "sheriff"] + ["civil"] * (n - nm - 2)
     _MA_RND.shuffle(roles)
     g["roles"] = dict(zip(ps, roles))
@@ -5543,7 +5544,7 @@ def _ma_bots_act(g, now):
                 g["cid"] += 1
                 g["chat"].append(dict(id=g["cid"], ch="all", f=i, t=_MA_RND.choice(MAF_BOT_SAY)))
                 changed = True
-            if el > 20 and b not in g["skip"] and _MA_RND.random() < 0.3:
+            if el > MAF_DAY * 0.6 and b not in g["skip"] and _MA_RND.random() < 0.05:
                 g["skip"].append(b)
                 changed = True
         elif ph == "vote" and b not in g["votes"]:
@@ -5573,7 +5574,8 @@ def _ma_tick(g, now):
         _ma_end_night(g, now)
     elif ph == "day":
         nskip = sum(1 for p in g["skip"] if g["alive"].get(p))
-        if now < g["deadline"] and not (al and nskip * 2 > len(al)):
+        early = al and nskip * 2 > len(al) and now - (g["deadline"] - g["total"]) >= MAF_DAY_MIN
+        if now < g["deadline"] and not early:
             if bot_ch:
                 _ma_touch(g)
             return bot_ch
