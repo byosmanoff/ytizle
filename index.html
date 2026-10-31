@@ -1856,6 +1856,17 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafhow .r-doctor .hw-i{color:#6fe3a5;background:rgba(46,194,126,.2)}
 #mafhow .r-sheriff .hw-i{color:#ffd166;background:rgba(245,194,66,.2)}
 #mafhow .r-civil .hw-i{color:#9ec5ff;background:rgba(91,141,239,.2)}
+
+/* ===== Hadisələr çatın içindədir; ortada yalnız rol və hərəkət qalır ===== */
+#maflog{display:none!important}
+#mafmain{flex:0 0 auto;overflow:visible}
+#mafmain:has(#mafwait:not([hidden])){flex:1 1 auto;overflow-y:auto}
+#mafchat{flex:1 1 auto;height:auto;min-height:150px}
+#mafmsgs .mcm.sys{width:auto;max-width:100%;align-self:stretch;text-align:center;font-size:12.5px;line-height:1.35;padding:6px 10px;border-radius:12px;border-left:0;color:var(--muted);background:rgba(255,255,255,.07)}
+#mafmsgs .mcm.sys.bad{color:#ffb3b3;background:rgba(255,77,109,.14)}
+#mafia .mt b{font-size:18px;white-space:nowrap}
+#mafia .mt b i{flex:none;width:30px;height:30px;font-size:14px}
+#mafia .mt small{margin-left:39px;font-size:11px;letter-spacing:.16em}
 </style>
 </head>
 <body>
@@ -8153,16 +8164,22 @@ window.wtInviteBox = function(o){
       (s.status === 'play' && s.phase === 'night') ? 'Mafiya çatı (yalnız mafiya görür)' : 'Mesaj yaz...';
     inp.placeholder = T(ph);
     var last = s.chat.length ? s.chat[s.chat.length - 1].id : 0;
-    var sig = s.chat.length + ':' + last + ':' + s.players.map(function(p){ return p.name; }).join('|');
+    var lg = s.log || [];
+    var sig = s.chat.length + ':' + last + ':' + lg.length + ':' + s.players.map(function(p){ return p.name; }).join('|');
     if(sig === ma.csig) return;
     ma.csig = sig;
     var box = $('mafmsgs');
     var atBot = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
-    box.innerHTML = s.chat.length ? s.chat.map(function(m){
+    var parts = [], li = 0;
+    function sys(e){ return '<div class="mcm sys' + ((e.k === 'night_dead' || e.k === 'vote_dead' || e.k === 'left') ? ' bad' : '') + '">' + evText(s, e) + '</div>'; }
+    s.chat.forEach(function(m){
+      while(li < lg.length && (lg[li].c || 0) < m.id) parts.push(sys(lg[li++]));
       var p = s.players[m.f] || {};
       var mark = m.ch === 'maf' ? ' <i class="fa-solid fa-user-secret" aria-hidden="true"></i>' : m.ch === 'dead' ? ' <i class="fa-solid fa-ghost" aria-hidden="true"></i>' : '';
-      return '<div class="mcm ' + (m.ch === 'maf' ? 'maf' : m.ch === 'dead' ? 'dead' : '') + '"><b>' + esc(p.name || '?') + mark + ':</b> ' + esc(m.t) + '</div>';
-    }).join('') : '<div class="mempty">' + esc(T('Hələ mesaj yoxdur')) + '</div>';
+      parts.push('<div class="mcm ' + (m.ch === 'maf' ? 'maf' : m.ch === 'dead' ? 'dead' : '') + '"><b>' + esc(p.name || '?') + mark + ':</b> ' + esc(m.t) + '</div>');
+    });
+    while(li < lg.length) parts.push(sys(lg[li++]));
+    box.innerHTML = parts.length ? parts.join('') : '<div class="mempty">' + esc(T('Hələ mesaj yoxdur')) + '</div>';
     if(atBot) box.scrollTop = box.scrollHeight;
   }
 

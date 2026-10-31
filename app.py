@@ -5437,9 +5437,9 @@ def _ma_end_night(g, now):
     g["last_save"] = saved
     if victim:
         _ma_kill(g, victim, "night")
-        g["log"].append(dict(k="night_dead", d=g["day"], p=_ma_idx(g, victim), r=g["roles"][victim]))
+        g["log"].append(dict(k="night_dead", d=g["day"], p=_ma_idx(g, victim), r=g["roles"][victim], c=g["cid"]))
     else:
-        g["log"].append(dict(k="night_none", d=g["day"]))
+        g["log"].append(dict(k="night_none", d=g["day"], c=g["cid"]))
     _ma_reset_night(g)
     w = _ma_win(g)
     if w:
@@ -5476,9 +5476,9 @@ def _ma_end_vote(g, now):
             elim, n = cands[0], top
     if elim:
         _ma_kill(g, elim, "vote")
-        g["log"].append(dict(k="vote_dead", d=g["day"], p=_ma_idx(g, elim), r=g["roles"][elim], n=n))
+        g["log"].append(dict(k="vote_dead", d=g["day"], p=_ma_idx(g, elim), r=g["roles"][elim], n=n, c=g["cid"]))
     else:
-        g["log"].append(dict(k="vote_none", d=g["day"]))
+        g["log"].append(dict(k="vote_none", d=g["day"], c=g["cid"]))
     w = _ma_win(g)
     if w:
         _ma_over(g, w)
@@ -5600,7 +5600,7 @@ def _ma_remove_play(g, sub, now):
     g["gone"][sub] = True
     if was_alive:
         _ma_kill(g, sub, "left")
-        g["log"].append(dict(k="left", d=g["day"], p=_ma_idx(g, sub), r=g["roles"].get(sub)))
+        g["log"].append(dict(k="left", d=g["day"], p=_ma_idx(g, sub), r=g["roles"].get(sub), c=g["cid"]))
     g["n_kill"].pop(sub, None)
     if g["roles"].get(sub) == "doctor":
         g["n_save"] = None
