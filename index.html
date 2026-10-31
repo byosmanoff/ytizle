@@ -2318,6 +2318,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <button class="ib" id="mafback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <div class="mt"><b>Mafia</b><small id="mafcode"></small></div>
     <button class="ib sfxb" id="mafsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="mafnar" aria-label="Aparıcı səsi" title="Aparıcı səsi"></button>
     <button class="ib" id="mafshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
     <button class="ib" id="mafquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
   </div>
@@ -7519,16 +7520,119 @@ window.wtInviteBox = function(o){
   function stopTimer(){ clearInterval(ma.tmr); ma.tmr = 0; }
   function close(leave){
     var c = ma.code;
-    gen++; stopTimer();
+    gen++; stopTimer(); NAR.stop();
     ma.code = ''; ma.s = null; ma.csig = ''; clearTimeout(ma.flashT); ma.flashTx = '';
     show(false);
     if(leave && c) api('/api/mafia/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
     remember('');
   }
-  function gone(){ gen++; stopTimer(); ma.code = ''; ma.s = null; ma.csig = ''; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+  function gone(){ gen++; stopTimer(); NAR.stop(); ma.code = ''; ma.s = null; ma.csig = ''; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+
+  /* ---- aparıcı: Babək səsi (/babek/<ad>.mp3 faylları, növbə ilə oxunur) ---- */
+  var NAR = (function(){
+    var LSN = 'wt_nar', on = true, ctx = null, bufs = {}, loading = {}, q = [], playing = false, cur = null, gen = 0;
+    var CLIPS = ['start', 'night', 'day', 'night_dead', 'night_none', 'vote', 'vote_dead', 'vote_none', 'win_mafia', 'win_town', 'warn10'];
+    try{ on = localStorage.getItem(LSN) !== '0'; }catch(e){}
+    function ac(){
+      if(!ctx){
+        var C = window.AudioContext || window.webkitAudioContext; if(!C) return null;
+        try{ ctx = new C(); }catch(e){ ctx = null; return null; }
+      }
+      if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+      return ctx;
+    }
+    ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function(ev){
+      document.addEventListener(ev, function(){ if(on) ac(); }, {passive: true, capture: true});
+    });
+    function load(n){
+      if(bufs[n] !== undefined) return Promise.resolve(bufs[n]);
+      if(loading[n]) return loading[n];
+      var c = ac(); if(!c) return Promise.resolve(null);
+      loading[n] = fetch('/babek/' + n + '.mp3')
+        .then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+        .then(function(ab){ return new Promise(function(res, rej){ c.decodeAudioData(ab, res, rej); }); })
+        .then(function(b){ bufs[n] = b; return b; })
+        .catch(function(){ bufs[n] = null; return null; });   // fayl yoxdursa səssiz keçir
+      return loading[n];
+    }
+    function running(c){
+      if(c.state === 'running') return Promise.resolve(true);
+      return new Promise(function(res){
+        var t = setTimeout(function(){ res(c.state === 'running'); }, 700);
+        try{ c.resume().then(function(){ clearTimeout(t); res(c.state === 'running'); }, function(){ clearTimeout(t); res(false); }); }
+        catch(e){ clearTimeout(t); res(false); }
+      });
+    }
+    function next(){
+      if(playing || !on) return;
+      var n = q.shift(); if(!n) return;
+      playing = true; var g = gen;
+      load(n).then(function(b){
+        if(g !== gen) return;
+        var c = ctx;
+        if(!b || !c){ playing = false; next(); return; }
+        running(c).then(function(ok){
+          if(g !== gen) return;
+          if(!ok){ playing = false; next(); return; }
+          try{
+            var s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); cur = s;
+            s.onended = function(){ if(cur === s) cur = null; if(g !== gen) return; playing = false; setTimeout(next, 250); };
+            s.start();
+          }catch(e){ playing = false; next(); }
+        });
+      });
+    }
+    function say(list){
+      if(!on || !list || !list.length) return;
+      ac();
+      list.forEach(function(n){ q.push(n); load(n); });
+      if(q.length > 6) q.splice(0, q.length - 6);
+      if(!playing) setTimeout(next, 450);   // faza səsi (turn) ilə üst-üstə düşməsin
+    }
+    function stop(){
+      gen++; q = []; playing = false;
+      if(cur){ try{ cur.onended = null; cur.stop(); }catch(e){} cur = null; }
+    }
+    function preload(){ if(on){ ac(); CLIPS.forEach(load); } }
+    function paintBtn(){
+      var b = $('mafnar'); if(!b) return;
+      b.innerHTML = '<i class="fa-solid ' + (on ? 'fa-microphone' : 'fa-microphone-slash') + '" aria-hidden="true"></i>';
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.title = T('Aparıcı səsi');
+    }
+    function toggle(){
+      on = !on;
+      try{ localStorage.setItem(LSN, on ? '1' : '0'); }catch(e){}
+      paintBtn();
+      if(on){ ac(); preload(); } else stop();
+    }
+    var b = $('mafnar'); if(b) b.onclick = toggle;
+    paintBtn();
+    return {say: say, stop: stop, preload: preload};
+  })();
+
+  /* oyun vəziyyəti dəyişəndə aparıcı nə deyir (rollar sızmasın deyə hamıya eyni mətn) */
+  function narrate(p, s){
+    if(!p || !s) return;
+    var L = s.log || [], last = L.length ? L[L.length - 1] : null, k = last ? last.k : '';
+    var fresh = !!s.total && (s.total - s.left) <= 6;   // arxa fonda qalıb gec qayıdanda köhnə elan oxunmasın
+    var q = [];
+    if(p.status === 'wait' && s.status === 'play'){
+      q = ['start', 'night'];
+    } else if(p.status === 'play' && s.status === 'over'){
+      if(/^(night|vote)_/.test(k)) q.push(k);
+      q.push(s.winner === 'mafia' ? 'win_mafia' : 'win_town');
+    } else if(p.status === 'play' && s.status === 'play' && s.phase !== p.phase && fresh){
+      if(s.phase === 'day'){ q.push('day'); if(/^night_/.test(k)) q.push(k); }
+      else if(s.phase === 'vote'){ q.push('vote'); }
+      else if(s.phase === 'night'){ if(/^vote_/.test(k)) q.push(k); q.push('night'); }
+    }
+    if(q.length) NAR.say(q);
+  }
 
   /* ---- səslər ---- */
   function notify(p, s){
+    try{ narrate(p, s); }catch(e){}
     var S = window.wtSfx; if(!S || !p) return;
     try{
       if(s.status === 'over' && p.status !== 'over'){
@@ -7575,7 +7679,8 @@ window.wtInviteBox = function(o){
       var j = {}; try{ j = await r.json(); }catch(e){}
       if(r.ok){
         gen++; stopTimer();
-        ma.code = j.code; ma.v = 0; ma.s = null; ma.flashTx = ''; ma.csig = ''; ma.sky = undefined;
+        ma.code = j.code; ma.v = 0; ma.s = null; ma.flashTx = ''; ma.csig = ''; ma.sky = undefined; ma.warn = '';
+        NAR.stop(); NAR.preload();
         okk = true; remember(j.code); show(true);
         $('mafmsgs').textContent = '';
         startPoll(); sync(j); lobbyMsg('');
@@ -7604,6 +7709,8 @@ window.wtInviteBox = function(o){
     var left = Math.max(0, s.left - Math.floor((Date.now() - ma.at) / 1000));
     e.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
     e.classList.toggle('low', left <= 10);
+    var wk = s.day + ':' + s.phase;
+    if(s.total > 15 && left >= 8 && left <= 10 && ma.warn !== wk){ ma.warn = wk; NAR.say(['warn10']); }
   }
 
   /* ---- səma: hər faza dəyişəndə orbit 180° dönür (günəş batır, ay doğur və əksinə) ---- */

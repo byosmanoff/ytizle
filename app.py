@@ -5692,6 +5692,22 @@ def _ma_view(g, sub):
     return out
 
 
+# ---- Aparıcının səsi (Babək): audio fayllar layihədəki "babek/" qovluğunda durur ----
+#  /babek/night.mp3, /babek/day.mp3 ... (ad siyahısı babek_sozler.txt faylındadır)
+#  NARRATOR_DIR mühit dəyişəni ilə başqa qovluq göstərmək olar.
+NARR_DIR = os.environ.get("NARRATOR_DIR", os.path.join(HERE, "babek"))
+
+
+@app.route("/babek/<name>.mp3")
+def narrator_clip(name):
+    if not re.fullmatch(r"[a-z0-9_]{1,30}", name) or not os.path.isfile(os.path.join(NARR_DIR, name + ".mp3")):
+        abort(404)
+    resp = send_from_directory(NARR_DIR, name + ".mp3", mimetype="audio/mpeg", conditional=True)
+    resp.headers["Cache-Control"] = "no-cache"   # fayl dəyişəndə dərhal yenilənsin (ETag ilə yüngül yoxlama)
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
 @app.route("/api/mafia/create", methods=["POST"])
 def api_mafia_create():
     sub, tok = auth_sub()
