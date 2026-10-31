@@ -1,0 +1,23 @@
+BABƏK SƏSİ: MAFİA APARICISI ÜÇÜN SÖZLƏR
+========================================
+Hər sətir: fayl adı  ->  Babəyin deyəcəyi mətn.
+Faylları MP3 formatında "babek/" qovluğuna qoy (app.py ilə yanaşı).
+Hər fayl 2 - 6 saniyə olsa kifayətdir. Adlar dəqiq belə olmalıdır (kiçik hərflə).
+
+start.mp3       ->  Mafia oyununa xoş gəldiniz. Rollar paylandı, oyun başlayır.
+night.mp3       ->  Gecə düşür. Şəhər yuxuya gedir. Mafiya, həkim və komissar oyanır.
+day.mp3         ->  Səhər açıldı. Şəhər oyanır.
+night_dead.mp3  ->  Bu gecə şəhərimiz bir nəfəri itirdi.
+night_none.mp3  ->  Bu gecə heç kim ölmədi. Şəhər sakit yatdı.
+vote.mp3        ->  Müzakirə bitdi. Səsvermə başlayır. Kimi oyundan çıxarırıq?
+vote_dead.mp3   ->  Şəhər qərarını verdi. Bir nəfər oyundan çıxarılır.
+vote_none.mp3   ->  Səslər bölündü. Bu gün heç kim oyundan çıxarılmır.
+win_mafia.mp3   ->  Oyun bitdi. Mafiya qalib gəldi!
+win_town.mp3    ->  Oyun bitdi. Sakinlər qalib gəldi!
+warn10.mp3      ->  Vaxtın bitməsinə on saniyə qalıb.
+
+QEYD
+----
+- Ölənin / çıxarılanın adı ekranda yazılır, səslə deyilmir (hər ad üçün ayrıca fayl lazım olardı).
+- Hansı faylın olmadığı vacib deyil: olmayan fayl səssiz keçilir, oyun pozulmur.
+- Yeni fayl əlavə edəndən sonra səhifəni yeniləmək kifayətdir (serveri yenidən başlatmaq lazım deyil).
