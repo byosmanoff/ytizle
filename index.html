@@ -1566,7 +1566,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafia{position:fixed;left:0;top:0;width:100%;height:var(--H,100dvh);transform:translateY(var(--VT,0px));overscroll-behavior:none;touch-action:manipulation;z-index:75;display:flex;flex-direction:column;gap:8px;
   padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
   background:radial-gradient(120% 70% at 50% 0%,#40224f 0%,var(--velvet) 62%);overflow:hidden;transition:background .6s}
-#mafia.night{background:radial-gradient(120% 70% at 50% 0%,#1d2552 0%,#080b1b 68%)}
+#mafia.night{background:#080b1b}
 #mafia[hidden],#mafia [hidden]{display:none!important}
 #mafia input{-webkit-user-select:text;user-select:text}
 #mafia .mhead{display:flex;align-items:center;gap:10px;flex:none}
@@ -1605,11 +1605,39 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #mafCard h2 i{display:inline-grid;place-items:center;width:46px;height:46px;margin:0;border-radius:14px;background:linear-gradient(135deg,#8c1f3d,#3a1626);color:#ffd9a8;font-size:20px;box-shadow:0 6px 18px rgba(140,31,61,.45)}
 #mafCard .pbtn:not(.alt){background:linear-gradient(135deg,#a1213c,#d63a54)}
 #mafCard .frow input{background:#1f1028;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-#mafia:not(.night){background:radial-gradient(120% 70% at 50% 0%,#4a1a2c 0%,#1c0c17 64%)}
+#mafia:not(.night){background:#1c0c17}
 #mafia .ib{background:rgba(214,62,98,.18);box-shadow:inset 0 0 0 1px rgba(214,62,98,.4)}
 #mafia .pbtn:not(.alt){background:linear-gradient(135deg,#a1213c,#d63a54)}
 #mafia .pbtn:not(.alt):disabled{filter:saturate(.6) brightness(.8)}
 #mafmain,#mafchat{background:rgba(20,6,14,.45);box-shadow:inset 0 0 0 1px rgba(214,62,98,.22)}
+/* ---- gecə/gündüz səması: günəş çıxır-batır, ay doğur ---- */
+#mafsky{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;--ang:-12deg;--R:min(58dvh,150vw)}
+#mafsky .sk{position:absolute;inset:0;transition:opacity 2.6s ease}
+#mafsky .sk-d{background:radial-gradient(130% 75% at 50% 0%,#a23a4c 0%,#4a1a2c 42%,#1c0c17 78%);opacity:1}
+#mafsky .sk-n{background:radial-gradient(130% 75% at 50% 0%,#26327a 0%,#111a45 40%,#080b1b 78%);opacity:0}
+#mafia.night #mafsky .sk-d{opacity:0}
+#mafia.night #mafsky .sk-n{opacity:1}
+#mafsky .stars{position:absolute;inset:0 0 40% 0;opacity:0;transition:opacity 2.6s ease;
+  background-image:radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 28% 8%,#fff,transparent),radial-gradient(1.5px 1.5px at 44% 24%,#cfd8ff,transparent),radial-gradient(1px 1px at 61% 12%,#fff,transparent),radial-gradient(1.5px 1.5px at 76% 28%,#fff,transparent),radial-gradient(1px 1px at 90% 10%,#cfd8ff,transparent),radial-gradient(1px 1px at 20% 36%,#fff,transparent),radial-gradient(1.5px 1.5px at 84% 44%,#fff,transparent),radial-gradient(1px 1px at 52% 4%,#fff,transparent),radial-gradient(1px 1px at 6% 46%,#cfd8ff,transparent)}
+#mafia.night #mafsky .stars{opacity:1;animation:mafTw 4s ease-in-out infinite alternate}
+@keyframes mafTw{from{filter:brightness(.7)}to{filter:brightness(1.3)}}
+#mafsky .orbit{position:absolute;left:50%;top:76%;width:0;height:0;transform:rotate(var(--ang));transform-origin:0 0;transition:transform 3s cubic-bezier(.45,.05,.35,1)}
+#mafsky .sun,#mafsky .moon{position:absolute;left:0;border-radius:50%}
+#mafsky .sun{width:86px;height:86px;margin:0 0 0 -43px;top:calc(var(--R) * -1);
+  background:radial-gradient(circle at 38% 36%,#fff6c9 0%,#ffd36b 45%,#ff9a45 100%);
+  box-shadow:0 0 50px 18px rgba(255,190,90,.55),0 0 140px 50px rgba(255,120,80,.3);transform:rotate(calc(var(--ang) * -1))}
+#mafsky .moon{width:62px;height:62px;margin:0 0 0 -31px;top:var(--R);
+  background:radial-gradient(circle at 34% 34%,#fff 0%,#e4e9ff 55%,#aeb8e6 100%);
+  box-shadow:0 0 36px 10px rgba(180,195,255,.35);transform:rotate(calc(var(--ang) * -1))}
+#mafsky .moon::before,#mafsky .moon::after{content:"";position:absolute;border-radius:50%;background:rgba(120,130,175,.35)}
+#mafsky .moon::before{width:14px;height:14px;left:34px;top:12px}
+#mafsky .moon::after{width:9px;height:9px;left:16px;top:36px}
+#mafsky .glow{position:absolute;left:-20%;right:-20%;bottom:-10%;height:55%;opacity:0;
+  background:radial-gradient(60% 70% at 50% 100%,rgba(255,150,70,.75),rgba(255,90,90,.25) 55%,transparent 75%)}
+#mafsky .glow.go{animation:mafGlow 3.2s ease-in-out}
+@keyframes mafGlow{0%{opacity:0}35%{opacity:.9}100%{opacity:0}}
+#mafsky.nt .sk,#mafsky.nt .stars,#mafsky.nt .orbit{transition:none}
+@media(prefers-reduced-motion:reduce){#mafsky .sk,#mafsky .stars,#mafsky .orbit{transition-duration:.01s}#mafsky .glow.go{animation:none}}
 #mafwait .ginv{width:100%;max-width:340px;text-align:left}
 #mafwait .ginv .frow{width:100%}
 #mafwait .ginv .frow .pbtn{width:auto;max-width:none;flex:none;padding:0 16px;height:44px;white-space:nowrap}
@@ -2285,6 +2313,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
   <div id="durhand"></div>
 </div>
 <div id="mafia" hidden role="dialog" aria-modal="true" aria-label="Mafia">
+  <div id="mafsky" aria-hidden="true"><div class="sk sk-d"></div><div class="sk sk-n"></div><div class="stars"></div><div class="glow" id="mafglow"></div><div class="orbit"><div class="sun"></div><div class="moon"></div></div></div>
   <div class="mhead">
     <button class="ib" id="mafback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <div class="mt"><b>Mafia</b><small id="mafcode"></small></div>
@@ -7546,7 +7575,7 @@ window.wtInviteBox = function(o){
       var j = {}; try{ j = await r.json(); }catch(e){}
       if(r.ok){
         gen++; stopTimer();
-        ma.code = j.code; ma.v = 0; ma.s = null; ma.flashTx = ''; ma.csig = '';
+        ma.code = j.code; ma.v = 0; ma.s = null; ma.flashTx = ''; ma.csig = ''; ma.sky = undefined;
         okk = true; remember(j.code); show(true);
         $('mafmsgs').textContent = '';
         startPoll(); sync(j); lobbyMsg('');
@@ -7577,10 +7606,27 @@ window.wtInviteBox = function(o){
     e.classList.toggle('low', left <= 10);
   }
 
+  /* ---- səma: hər faza dəyişəndə orbit 180° dönür (günəş batır, ay doğur və əksinə) ---- */
+  function paintSky(n){
+    var el = $('mafsky'); if(!el) return;
+    if(ma.sky === undefined){
+      ma.sky = n; ma.ang = n ? 168 : -12;
+      el.classList.add('nt'); el.style.setProperty('--ang', ma.ang + 'deg');
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.remove('nt'); }); });
+      return;
+    }
+    if(n === ma.sky) return;
+    ma.sky = n; ma.ang += 180;
+    el.style.setProperty('--ang', ma.ang + 'deg');
+    var g = $('mafglow'); g.classList.remove('go'); void g.offsetWidth; g.classList.add('go');
+  }
+
   /* ---- çəkmə ---- */
   function render(){
     var s = ma.s; if(!s) return;
-    $('mafia').classList.toggle('night', s.status === 'play' && s.phase === 'night');
+    var isNight = s.status === 'play' && s.phase === 'night';
+    $('mafia').classList.toggle('night', isNight);
+    paintSky(isNight);
     $('mafcode').textContent = s.code.toUpperCase();
     renderBar(s); renderPlayers(s); renderMain(s); renderChat(s); paintTimer(); paintMsg();
     if(s.status === 'wait'){ try{ inv.refresh(); }catch(e){} }
