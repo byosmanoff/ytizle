@@ -7521,10 +7521,18 @@ window.wtInviteBox = function(o){
   var nar = (function(){
     var KEY = 'wt_maf_nar', on = true, voice = null, q = [], cur = null, lastBatch = [], tk = '', unlocked = false, tts = window.speechSynthesis;
     try{ on = localStorage.getItem(KEY) !== '0'; }catch(e){}
+    var MALE = /babek|babək|ahmet|tolga|cem\b|emre|mehmet|male|erkek|kişi/i, FEM = /banu|yelda|emel|seda|female|kadın|qadın|google türkçe|zira|samantha/i, isMale = false;
+    function best(a){
+      var nat = function(v){ return /natural|online/i.test(v.name) ? 0 : 1; };
+      a = a.slice().sort(function(x, y){ return nat(x) - nat(y); });
+      return a.filter(function(v){ return MALE.test(v.name); })[0] || a.filter(function(v){ return !FEM.test(v.name); })[0] || a[0] || null;
+    }
     function pick(){
       if(!tts) return;
       var vs = tts.getVoices() || [];
-      voice = vs.filter(function(v){ return /^az/i.test(v.lang); })[0] || vs.filter(function(v){ return /^tr/i.test(v.lang); })[0] || null;
+      var az = vs.filter(function(v){ return /^az/i.test(v.lang); }), tr = vs.filter(function(v){ return /^tr/i.test(v.lang); });
+      voice = best(az) || best(tr) || null;
+      isMale = !!(voice && MALE.test(voice.name));
     }
     if(tts){ pick(); try{ tts.addEventListener('voiceschanged', pick); }catch(e){} }
     function ui(t, talk){
@@ -7549,7 +7557,8 @@ window.wtInviteBox = function(o){
       if(!on || !tts){ g = setTimeout(done, Math.min(4000, 1200 + it.t.length * 55)); return; }
       var u = new SpeechSynthesisUtterance(it.t);
       if(voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = 'tr-TR';
-      u.rate = .92; u.pitch = .7;
+      pick(); if(voice){ u.voice = voice; u.lang = voice.lang; }
+      u.rate = .93; u.pitch = isMale ? .85 : .5;
       u.onend = done; u.onerror = done;
       g = setTimeout(done, 15000);
       try{ tts.speak(u); }catch(e){ done(); }
