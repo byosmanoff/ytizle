@@ -5369,7 +5369,7 @@ def _ma_reset_night(g):
 def _ma_reset_game(g):
     """Gözləmə vəziyyətinə qaytar (yeni oyun üçün)."""
     g.update(status="wait", phase=None, day=0, roles={}, alive={}, gone={}, revealed=[], log=[], chat=[],
-             skip=[], votes={}, checks={}, last_save=None, winner=None, deadline=0, total=0)
+             skip=[], votes={}, checks={}, last_save=None, winner=None, deadline=0, total=0, bot_said={})
     _ma_reset_night(g)
 
 
@@ -5485,24 +5485,104 @@ def _ma_end_vote(g, now):
     _ma_to_night(g, now)
 
 
+# ---- test botları (yalnız otaq sahibi əlavə edir; "bot:" ilə başlayan sub) ----
+MAF_BOT_NAMES = ["Aysel", "Elçin", "Nigar", "Rəşad", "Leyla", "Tural", "Səbinə", "Kamran", "Günel", "Orxan", "Fidan", "Vüsal"]
+MAF_BOT_SAY = ["Mənə şübhəli gəlmir, gəlin diqqətlə baxaq", "Kim gecə sakit idi?", "Mən günahsızam!", "Hələ tez xülasə etməyək",
+               "Bir az daha müzakirə edək", "Mənim şübhəm var, amma əminlik yoxdur", "Kimsə özünü çox müdafiə edir", "Mən sakinəm, inanın"]
+
+
+def _ma_is_bot(p):
+    return isinstance(p, str) and p.startswith("bot:")
+
+
+def _ma_humans(g):
+    return [p for p in g["players"] if not _ma_is_bot(p) and not g["gone"].get(p)]
+
+
+def _ma_bots_act(g, now):
+    """Botlar gecikmə ilə hərəkət edir. True qayıdırsa dəyişiklik olub."""
+    if g["status"] != "play":
+        return False
+    ph = g["phase"]
+    start = g["deadline"] - g["total"]
+    el = now - start
+    changed = False
+    ps = g["players"]
+    al = _ma_alive(g)
+    for i, b in enumerate(ps):
+        if not _ma_is_bot(b) or not g["alive"].get(b):
+            continue
+        g["seen"][b] = now
+        wait = 2.0 + (i * 1.7) % 7.0           # hər botun öz gecikməsi
+        if el < wait:
+            continue
+        role = g["roles"].get(b)
+        if ph == "night":
+            others = [p for p in al if p != b]
+            if role == "mafia" and b not in g["n_kill"]:
+                t = [p for p in others if g["roles"].get(p) != "mafia"]
+                if t:
+                    g["n_kill"][b] = _MA_RND.choice(t)
+                    changed = True
+            elif role == "doctor" and g["n_save"] is None:
+                t = [p for p in al if p != g["last_save"]]
+                if t:
+                    g["n_save"] = _MA_RND.choice(t)
+                    changed = True
+            elif role == "sheriff" and not g["n_check"]:
+                seen = {c["t"] for c in g["checks"].get(b, [])}
+                t = [p for p in others if p not in seen] or others
+                if t:
+                    tg = _MA_RND.choice(t)
+                    g["n_check"] = True
+                    g["checks"].setdefault(b, []).append(dict(t=tg, m=(g["roles"][tg] == "mafia"), d=g["day"]))
+                    changed = True
+        elif ph == "day":
+            if not g.setdefault("bot_said", {}).get(b) == g["day"] and _MA_RND.random() < 0.5:
+                g["bot_said"][b] = g["day"]
+                g["cid"] += 1
+                g["chat"].append(dict(id=g["cid"], ch="all", f=i, t=_MA_RND.choice(MAF_BOT_SAY)))
+                changed = True
+            if el > 20 and b not in g["skip"] and _MA_RND.random() < 0.3:
+                g["skip"].append(b)
+                changed = True
+        elif ph == "vote" and b not in g["votes"]:
+            tgt = None
+            if role == "sheriff":
+                tgt = next((c["t"] for c in g["checks"].get(b, []) if c["m"] and g["alive"].get(c["t"])), None)
+            if tgt is None:
+                pool = [p for p in al if p != b and not (role == "mafia" and g["roles"].get(p) == "mafia")]
+                tgt = _MA_RND.choice(pool) if pool and _MA_RND.random() < 0.85 else "skip"
+            g["votes"][b] = tgt
+            changed = True
+    return changed
+
+
 def _ma_tick(g, now):
     """Vaxt bitibsə və ya hamı hərəkətini edibsə mərhələni irəli aparır. CV tutulu halda çağırılır."""
     if g["status"] != "play":
         return False
+    bot_ch = _ma_bots_act(g, now)
     ph = g["phase"]
     al = _ma_alive(g)
     if ph == "night":
         if now < g["deadline"]:
-            return False
+            if bot_ch:
+                _ma_touch(g)
+            return bot_ch
         _ma_end_night(g, now)
     elif ph == "day":
         nskip = sum(1 for p in g["skip"] if g["alive"].get(p))
         if now < g["deadline"] and not (al and nskip * 2 > len(al)):
-            return False
+            if bot_ch:
+                _ma_touch(g)
+            return bot_ch
         _ma_to_vote(g, now)
     elif ph == "vote":
         if now < g["deadline"] and not (al and all(p in g["votes"] for p in al)):
-            return False
+            if bot_ch:
+                _ma_touch(g)
+            return bot_ch
         _ma_end_vote(g, now)
     else:
         return False
@@ -5526,7 +5606,7 @@ def _ma_remove_play(g, sub, now):
         g["skip"].remove(sub)
     g["votes"].pop(sub, None)
     if g.get("host") == sub:
-        nxt = next((p for p in g["players"] if not g["gone"].get(p)), None)
+        nxt = next((p for p in g["players"] if not g["gone"].get(p) and not _ma_is_bot(p)), None)
         if nxt:
             g["host"] = nxt
     if g["status"] == "play":
@@ -5572,7 +5652,7 @@ def _ma_view(g, sub):
             if p == sub or see_all or p in g["revealed"] or (is_maf and g["roles"].get(p) == "mafia"):
                 r = g["roles"].get(p)
         d = dict(name=nm.get("name", ""), avatar=nm.get("avatar", ""), username=nm.get("username", ""), me=(p == sub),
-                 online=bool(now - g["seen"].get(p, 0) < 35), alive=(bool(g["alive"].get(p)) if play else True),
+                 online=(_ma_is_bot(p) or bool(now - g["seen"].get(p, 0) < 35)), alive=(bool(g["alive"].get(p)) if play else True),
                  left=bool(g["gone"].get(p)), role=r)
         if phase == "vote" and p in votes:
             t = votes[p]
@@ -5689,6 +5769,8 @@ def api_mafia_poll():
             wt = left
             if g["status"] == "play":
                 wt = min(left, max(0.05, g["deadline"] - now + 0.05))   # mərhələ vaxtı bitəndə oyan
+                if g.get("bots"):
+                    wt = min(wt, 1.0)               # botlar üçün tez-tez yoxla
             CV.wait(timeout=wt)
             g = MAFIA.get(code)
             if not g:
@@ -5725,6 +5807,47 @@ def api_mafia_start():
                 return jsonify(error="Başlamaq üçün ən azı %d oyunçu lazımdır" % MAF_MIN), 409
             _ma_start(g, now)
             _ma_touch(g)
+        return jsonify(_ma_view(g, sub))
+
+
+@app.route("/api/mafia/bots", methods=["POST"])
+def api_mafia_bots():
+    """Test üçün: otaq sahibi gözləmə otağına bot əlavə edir / botları silir."""
+    sub, tok = auth_sub()
+    if not rate_hit("mafb", sub, 60, 60):
+        abort(429)
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    with CV:
+        g = _ma_get(code, sub)
+        now = time.time()
+        g["seen"][sub] = now
+        if g["status"] == "wait" and g.get("host") == sub:
+            if d.get("clear"):
+                for b in [p for p in g["players"] if _ma_is_bot(p)]:
+                    g["players"].remove(b)
+                    g["names"].pop(b, None)
+                    g["seen"].pop(b, None)
+                g["bots"] = False
+                _ma_touch(g)
+            else:
+                try:
+                    n = max(1, min(int(d.get("n", 1)), MAF_MAXP))
+                except (TypeError, ValueError):
+                    abort(400)
+                used = {(g["names"].get(p) or {}).get("name") for p in g["players"]}
+                for _ in range(n):
+                    if len(g["players"]) >= g["size"]:
+                        break
+                    free = [x for x in MAF_BOT_NAMES if "🤖 " + x not in used]
+                    nmx = ("🤖 " + (free[0] if free else "Bot%d" % (len(g["players"]) + 1)))
+                    b = "bot:" + secrets.token_hex(4)
+                    g["players"].append(b)
+                    g["names"][b] = dict(name=nmx, username="", avatar="", badge=False)
+                    g["seen"][b] = now
+                    used.add(nmx)
+                g["bots"] = True
+                _ma_touch(g)
         return jsonify(_ma_view(g, sub))
 
 
@@ -5857,11 +5980,12 @@ def _ma_drop_wait(g, code, sub):
     g["players"].remove(sub)
     g["names"].pop(sub, None)
     g["seen"].pop(sub, None)
-    if not g["players"]:
+    hum = [x for x in g["players"] if not _ma_is_bot(x)]
+    if not hum:
         MAFIA.pop(code, None)
         return
     if g.get("host") == sub:
-        g["host"] = g["players"][0]
+        g["host"] = hum[0]
     _ma_touch(g)
 
 
@@ -5879,17 +6003,17 @@ def api_mafia_quit():
             _ma_drop_wait(g, code, sub)
         elif g["status"] == "play":
             _ma_remove_play(g, sub, now)
-            if not [p for p in g["players"] if not g["gone"].get(p)]:
+            if not _ma_humans(g):
                 MAFIA.pop(code, None)
             else:
                 _ma_touch(g)
         else:                                       # over
             g["gone"][sub] = True
             if g.get("host") == sub:
-                nxt = next((p for p in g["players"] if not g["gone"].get(p)), None)
+                nxt = next((p for p in g["players"] if not g["gone"].get(p) and not _ma_is_bot(p)), None)
                 if nxt:
                     g["host"] = nxt
-            if not [p for p in g["players"] if not g["gone"].get(p)]:
+            if not _ma_humans(g):
                 MAFIA.pop(code, None)
             else:
                 _ma_touch(g)
