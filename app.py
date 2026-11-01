@@ -57,6 +57,8 @@ def get_room(code):
         cleanup(time.time())
         if len(ROOMS) >= MAX_ROOMS:  # send/poll ilə sonsuz otaq yaradılmasın
             abort(503)
+        if not rate_hit("newroom", client_ip(), 20, 600):   # bir IP bütün otaqları tuta bilməsin
+            abort(429)
         r = {"seq": 0, "msgs": [], "peers": {}, "created": time.time(),
              "locked": False, "members": set(),
              "host": None, "roles": {}, "hostonly": False, "rv": 0, "hist": []}
@@ -64,12 +66,41 @@ def get_room(code):
     return r
 
 
+def _req_sk():
+    """Cihazın gizli açarı (X-Sk başlığı, ?sk= və ya JSON gövdəsində sk)."""
+    sk = request.headers.get("X-Sk", "") or request.args.get("sk", "")
+    if not sk:
+        j = request.get_json(silent=True)
+        if isinstance(j, dict):
+            sk = str(j.get("sk") or "")
+    return sk[:100]
+
+
+def verify_pid(r, pid, bind=True):
+    """Açıq id (pid) /api/poll ilə otaqdakı hamıya göndərilir, ona görə kimlik sübutu deyil.
+    Hər pid ilk gələn gizli açara bağlanır; sonrakı sorğular eyni açarı göstərməlidir.
+    CV tutulu halda çağırılır."""
+    sk = _req_sk()
+    if len(sk) < 16:
+        abort(401)
+    h = hashlib.sha256(sk.encode()).hexdigest()
+    sec = r.setdefault("sec", {})
+    cur = sec.get(pid)
+    if cur is None:
+        if bind:
+            sec[pid] = h
+    elif not hmac.compare_digest(cur, h):
+        abort(401)
+
+
 def admit(r, pid):
     """Üzvü qəbul et. Otaq kilidlidirsə yalnız əvvəl girmiş cihazlar keçə bilər."""
     if pid in r["members"]:
+        verify_pid(r, pid)
         return
     if r["locked"] or len(r["members"]) >= MAX_MEMBERS:
         abort(403)
+    verify_pid(r, pid)
     r["members"].add(pid)
 
 
@@ -178,7 +209,10 @@ def _new_room(host):
 def api_create():
     pid = str((request.get_json(silent=True) or {}).get("id", ""))[:20]
     with CV:
-        return jsonify(room=_new_room(pid))
+        code = _new_room(pid)
+        if pid:
+            verify_pid(ROOMS[code], pid)   # yaradanın gizli açarını dərhal bağla
+        return jsonify(room=code)
 
 
 @app.route("/api/join", methods=["POST"])
@@ -299,6 +333,7 @@ def api_leave():
     with CV:
         r = ROOMS.get(code)
         if r is not None:
+            verify_pid(r, pid, bind=False)
             r["peers"].pop(pid, None)
             r.setdefault("left", {})[pid] = time.time()
             if r.get("host") == pid:
@@ -419,6 +454,8 @@ def api_img():
         abort(400)
     d = os.path.join(room_dir(code), "img")
     os.makedirs(d, exist_ok=True)
+    if len(os.listdir(d)) >= 200:   # otaq başına şəkil limiti (disk dolmasın)
+        abort(429)
     name = secrets.token_hex(8) + ext
     with open(os.path.join(d, name), "wb") as f:
         f.write(data)
@@ -449,6 +486,7 @@ def api_lock():
             abort(404)
         if pid not in r["members"]:
             abort(403)
+        verify_pid(r, pid)
         if r["host"] and role_of(r, pid) == "viewer":
             abort(403)   # kilidi yalnız host və moderator dəyişir
         r["locked"] = bool(d.get("locked"))
@@ -602,11 +640,26 @@ def yt_title(vid):
 RATE = {}
 
 
+# Real müştəri IP-si: müştərinin özünün göndərdiyi başlığa inanmırıq.
+#   TRUSTED_PROXIES  - sizin önünüzdəki etibarlı proxy sayı (Render tək: 1, Cloudflare + Render: 2)
+#   USE_CF_HEADER=1  - yalnız sayt həqiqətən Cloudflare arxasındadırsa CF-Connecting-IP-ə inan
+try:
+    TRUSTED_PROXIES = max(0, int(os.environ.get("TRUSTED_PROXIES", "1")))
+except ValueError:
+    TRUSTED_PROXIES = 1
+USE_CF_HEADER = os.environ.get("USE_CF_HEADER") == "1"
+
+
 def client_ip():
     h = request.headers
-    ip = (h.get("CF-Connecting-IP") or h.get("True-Client-IP")
-          or h.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr)
-    return (ip or "?")[:64]
+    ip = None
+    if USE_CF_HEADER and h.get("CF-Connecting-IP"):
+        ip = h.get("CF-Connecting-IP").strip()
+    elif TRUSTED_PROXIES:
+        parts = [p.strip() for p in h.get("X-Forwarded-For", "").split(",") if p.strip()]
+        if len(parts) >= TRUSTED_PROXIES:
+            ip = parts[-TRUSTED_PROXIES]   # sağdan sayırıq: soldakı hissəni müştəri saxtalaşdıra bilər
+    return (ip or request.remote_addr or "?")[:64]
 
 
 def rate_hit(bucket, key, limit, window):
@@ -1060,7 +1113,7 @@ def api_login():
     pw = str(d.get("password") or "")
     if not pw or len(pw) > 72:
         abort(400)
-    if too_many_fails(email):
+    if too_many_fails(email) or not rate_hit("loginip", client_ip(), 40, 600):
         abort(429)
     row = dbq("SELECT sub, pw, verified FROM creds WHERE email=?", (email,), one=True)
     ok = check_password_hash(row["pw"] if row and row["pw"] else DUMMY_HASH, pw)
@@ -1203,6 +1256,13 @@ def remember_avatar_viewer(response):
     if tok and dbq("SELECT 1 FROM sessions WHERE token=?", (tok,), one=True):
         response.set_cookie("wt_session", tok, max_age=SESSION_DAYS * 86400, httponly=True,
                             secure=request.is_secure, samesite="Lax", path="/")
+    h = response.headers
+    h.setdefault("X-Content-Type-Options", "nosniff")
+    h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    h.setdefault("X-Frame-Options", "SAMEORIGIN")
+    h.setdefault("Permissions-Policy", "geolocation=(), payment=(), usb=()")
+    if request.is_secure or request.headers.get("X-Forwarded-Proto", "") == "https":
+        h.setdefault("Strict-Transport-Security", "max-age=31536000")
     return response
 
 
@@ -1942,6 +2002,7 @@ def api_role():
         r = ROOMS.get(code)
         if r is None:
             abort(404)
+        verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
         if target == pid or target not in r["members"]:
@@ -1964,6 +2025,7 @@ def api_hostonly():
         r = ROOMS.get(code)
         if r is None:
             abort(404)
+        verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
         r["hostonly"] = bool(d.get("on"))
@@ -1983,6 +2045,7 @@ def api_host():
         r = ROOMS.get(code)
         if r is None:
             abort(404)
+        verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
         if target == pid or target not in r["members"]:
@@ -2010,6 +2073,7 @@ def api_chat_history():
             abort(404)
         if pid not in r["members"]:
             abort(403)
+        verify_pid(r, pid)
         out = []
         rx_all, mk = r.get("reacts", {}), rx_key(code, pid)
         for h in r["hist"]:
@@ -2186,6 +2250,7 @@ def api_plan_start():
             ROOMS[code]["host"] = pid
         else:
             code = _new_room(pid)
+        verify_pid(ROOMS[code], pid)
     dbq("UPDATE plans SET room=? WHERE id=?", (code, plan_id))
     now = time.time()
     for i in dbq("SELECT sub FROM plan_inv WHERE plan_id=? AND status<>2", (plan_id,), many=True):
@@ -2307,9 +2372,11 @@ def pwa_apple_icon():
 # ---------------------------------------------------------------
 @app.route("/api/yt")
 def api_yt():
-    q = request.args.get("q", "").strip()
+    q = request.args.get("q", "").strip()[:200]
     if not q:
         return jsonify([])
+    if not rate_hit("yt", client_ip(), 30, 60):
+        abort(429)
     try:
         r = requests.get(
             "https://www.youtube.com/results",
@@ -2325,8 +2392,8 @@ def api_yt():
         if not m:
             return jsonify(error="parse"), 502
         data = json.loads(m.group(1))
-    except Exception as e:
-        return jsonify(error=str(e)), 502
+    except Exception:
+        return jsonify(error="upstream"), 502
 
     out, seen = [], set()
 
@@ -2820,6 +2887,19 @@ def fetch_safe(url, headers, hops=5):
         if not safe(url):
             abort(400)
         r = requests.get(url, headers=headers, stream=True, timeout=20, allow_redirects=False)
+        # DNS rebinding: qoşulmuş real IP-ni yenidən yoxla
+        try:
+            peer = r.raw._connection.sock.getpeername()[0]
+            pip = ipaddress.ip_address(peer)
+            if pip.version == 6 and pip.ipv4_mapped:
+                pip = pip.ipv4_mapped
+            if not pip.is_global or pip.is_multicast:
+                r.close()
+                abort(400)
+        except HTTPException:
+            raise
+        except Exception:
+            pass   # sock əlçatan deyilsə (məs. keşlənmiş bağlantı) safe() yoxlaması qüvvədə qalır
         if r.is_redirect and r.headers.get("Location"):
             url = urljoin(url, r.headers["Location"])
             r.close()
@@ -2848,8 +2928,20 @@ def pick_encoding(raw, ct):
     return "utf-8"
 
 
+PROXY_CSP = "sandbox allow-scripts allow-forms allow-presentation allow-popups"
+
+
+def _proxy_headers(resp):
+    # Proxy-dən gələn məzmun heç vaxt saytın origin-i kimi işləməsin (token/admin oğurluğunun qarşısı)
+    resp.headers["Content-Security-Policy"] = PROXY_CSP
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return resp
+
+
 @app.route("/p")
 def proxy():
+    if not rate_hit("proxy", client_ip(), 120, 60):
+        abort(429)
     url = request.args.get("u", "").strip()
     if not re.match(r"^https?://", url, re.I):
         url = "https://" + url
@@ -2895,7 +2987,7 @@ def proxy():
                '<script>window.__UP=' + str(int(r.status_code)) + ';</script><script>' + INJECT + "</script>")
         m = re.search(r"<head(\s[^>]*)?>", page, re.I)
         page = page[:m.end()] + tag + page[m.end():] if m else tag + page
-        return Response(page.encode("utf-8"), content_type="text/html; charset=utf-8")
+        return _proxy_headers(Response(page.encode("utf-8"), content_type="text/html; charset=utf-8"))
 
     keep = ("content-type", "content-range", "accept-ranges")
     hdrs = {k: v for k, v in r.headers.items() if k.lower() in keep}
@@ -2903,7 +2995,7 @@ def proxy():
         hdrs["Content-Length"] = r.headers["Content-Length"]
     resp = Response(r.iter_content(65536), status=r.status_code, headers=hdrs)
     resp.call_on_close(r.close)  # bağlantı sızmasın
-    return resp
+    return _proxy_headers(resp)
 
 
 # ---------------------------------------------------------------

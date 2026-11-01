@@ -2265,7 +2265,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <div id="ytbox"><div id="yt"></div></div>
     <video id="vid" controls playsinline></video>
     <iframe id="web" allow="autoplay; fullscreen; encrypted-media" allowfullscreen
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+      sandbox="allow-scripts allow-forms allow-presentation allow-popups"></iframe>
     <div id="ytres">
       <form class="ysb" id="ytform" action="javascript:void(0)">
         <label class="yin"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="ytq" type="search" placeholder="YouTube-da axtar..." enterkeyhint="search" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="YouTube-da axtar"></label>
@@ -2633,6 +2633,26 @@ let ignoreUntil = 0, lastT = null, hls = null;
 let wantPlay = false, lastRemote = {time: 0, at: 0};
 let freshLoad = false;   // video serverdən yenicə açılıb: öz vaxtımızı (0) qarşı tərəfə göndərmə
 let room = '', me = Math.random().toString(36).slice(2, 10);
+/* Gizli cihaz açarı: açıq id (me) poll ilə hamıya göndərilir, ona görə kimlik yalnız bu açarla təsdiqlənir */
+let sk = (function(){
+  try{ const a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
+  catch(e){ return (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36) + '0123456789abcdef').slice(0, 32); }
+})();
+(function(){
+  const of = window.fetch.bind(window);
+  window.fetch = function(u, o){
+    try{
+      const s = typeof u === 'string' ? u : ((u && u.url) || '');
+      if(s.indexOf('/api/') === 0 || s.indexOf(location.origin + '/api/') === 0){
+        o = Object.assign({}, o);
+        const hd = new Headers(o.headers || (u && u.headers) || {});
+        hd.set('X-Sk', sk);
+        o.headers = hd;
+      }
+    }catch(e){}
+    return of(u, o);
+  };
+})();
 let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resolve();
 let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
 const hist = [];
@@ -2902,7 +2922,7 @@ async function enterRoom(code, create){
         code = (await rc.json()).room;
         create = false;
       }
-      try{ const sv = localStorage.getItem('wt_me_' + code); if(sv) me = sv; }catch(e){}
+      try{ const sv = localStorage.getItem('wt_me_' + code), ss = localStorage.getItem('wt_sk_' + code); if(sv && ss){ me = sv; sk = ss; } }catch(e){}
       const r = await fetch('/api/join', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -2926,7 +2946,7 @@ async function enterRoom(code, create){
       myRole = d.role || 'viewer'; hostOnly = !!d.hostonly; rv = typeof d.rv === 'number' ? d.rv : -1; roleMap = {};
       joinVideo = typeof d.video === 'string' ? d.video : null; joinVpos = d.vpos || null;
       room = code;
-      try{ localStorage.setItem('wt_me_' + code, me); }catch(e){}
+      try{ localStorage.setItem('wt_me_' + code, me); localStorage.setItem('wt_sk_' + code, sk); }catch(e){}
       try{ history.replaceState(null, '', location.pathname); }catch(e){}  // ?kod= linkdən təmizlə
       break;
     }catch(e){
@@ -3020,6 +3040,7 @@ function uploadLocal(f){
   const b = $('pickfile'), xhr = new XMLHttpRequest();
   upXhr = xhr;
   xhr.open('POST', '/api/upload?room=' + encodeURIComponent(room) + '&id=' + encodeURIComponent(me) + '&fn=' + encodeURIComponent(f.name));
+  xhr.setRequestHeader('X-Sk', sk);
   xhr.setRequestHeader('Content-Type', 'application/octet-stream');
   b.textContent = 'Yüklənir… 0%'; b.style.display = 'block';
   send({t: 'uploading', name: String(f.name).slice(0, 80)});
@@ -3471,7 +3492,7 @@ window.addEventListener('message', e => {
     autoNavs.push(now);
     loadPage(m.url, true);
   }
-  else if(m.t === 'v') send({t:'wv', e:m.e, time:m.time});
+  else if(m.t === 'v' && e.source === web.contentWindow) send({t:'wv', e:m.e, time:m.time});
 });
 
 
@@ -3966,7 +3987,7 @@ $('vmute').onclick = () => {
 };
 window.addEventListener('pagehide', () => {
   if(!voiceOn || !room) return;
-  try{ navigator.sendBeacon('/api/send', new Blob([JSON.stringify({room, id: me, msg: {t: 'voice', on: false, from: me}})], {type: 'application/json'})); }catch(e){}
+  try{ navigator.sendBeacon('/api/send', new Blob([JSON.stringify({room, id: me, sk, msg: {t: 'voice', on: false, from: me}})], {type: 'application/json'})); }catch(e){}
 });
 
 
@@ -6479,7 +6500,7 @@ window.wtInviteBox = function(o){
   var GL = {K: '\u265A', Q: '\u265B', R: '\u265C', B: '\u265D', N: '\u265E', P: '\u265F'};
   var REASON = {mate: 'Mat', stalemate: 'Pat: gediş yoxdur, bərabərlik', resign: 'Təslim oldu', fifty: '50 gediş qaydası: bərabərlik', repetition: 'Üç dəfə təkrar: bərabərlik', material: 'Mat üçün fiqur çatmır: bərabərlik'};
 
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
   function avatar(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function fm(n){ return n % 1 ? n.toFixed(1) : String(n); }
@@ -6827,7 +6848,7 @@ window.wtInviteBox = function(o){
   var inv = window.wtInviteBox({game: 'domino', user: 'dinvU', go: 'dinvGo', fr: 'dinvFr', ft: 'dinvFrT', msg: 'dinvMsg', code: function(){ return dom.code; }});
   var PIPS = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
 
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
   var SIX_H = [0, 1, 2, 6, 7, 8];
   function half(n, horiz){ var pp = (n === 6 && horiz) ? SIX_H : PIPS[n]; var h = '<div class="hf">'; for(var i = 0; i < 9; i++) h += '<i' + (pp.indexOf(i) >= 0 ? ' class="on"' : '') + '></i>'; return h + '</div>'; }
@@ -7425,7 +7446,7 @@ window.wtInviteBox = function(o){
   var inv = window.wtInviteBox({game: 'durak', user: 'duinvU', go: 'duinvGo', fr: 'duinvFr', ft: 'duinvFrT', msg: 'duinvMsg', code: function(){ return du.code; }});
 
   function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
   function enc(x){ return encodeURIComponent(x); }
   function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
@@ -7950,7 +7971,7 @@ window.wtInviteBox = function(o){
   };
 
   function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
   function enc(x){ return encodeURIComponent(x); }
   function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
