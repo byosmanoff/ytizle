@@ -3,3 +3,4 @@ requests
 gunicorn
 dnspython
 disposable-email-domains
+cryptography
