@@ -589,7 +589,7 @@ CREATE TABLE IF NOT EXISTS friends(a TEXT NOT NULL, b TEXT NOT NULL, status INTE
 CREATE INDEX IF NOT EXISTS friends_b ON friends(b);
 CREATE TABLE IF NOT EXISTS blocks(blocker TEXT NOT NULL, blocked TEXT NOT NULL, ts REAL NOT NULL, PRIMARY KEY(blocker, blocked));
 CREATE INDEX IF NOT EXISTS blocks_blocked ON blocks(blocked);
-CREATE TABLE IF NOT EXISTS presence(sub TEXT PRIMARY KEY, seen REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS presence(sub TEXT PRIMARY KEY, seen REAL NOT NULL, status TEXT);
 CREATE TABLE IF NOT EXISTS watch(sub TEXT NOT NULL, day TEXT NOT NULL, secs REAL NOT NULL DEFAULT 0, tog REAL NOT NULL DEFAULT 0,
   PRIMARY KEY(sub, day));
 CREATE TABLE IF NOT EXISTS plans(id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, title TEXT NOT NULL, ts REAL NOT NULL,
@@ -617,6 +617,10 @@ CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
                 c.execute("ALTER TABLE users ADD COLUMN avatar_visibility TEXT NOT NULL DEFAULT 'everyone'")
             if "last_seen_visibility" not in ucols:
                 c.execute("ALTER TABLE users ADD COLUMN last_seen_visibility TEXT NOT NULL DEFAULT 'everyone'")
+            
+            pcols = [r[1] for r in c.execute("PRAGMA table_info(presence)")]
+            if "status" not in pcols:
+                c.execute("ALTER TABLE presence ADD COLUMN status TEXT")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -2497,27 +2501,33 @@ def _presence_info(viewer, target):
         return dict(presence="")
     if viewer != target and _is_blocked_either(viewer, target):
         return dict(presence="")
-    row = dbq("SELECT seen FROM presence WHERE sub=?", (target,), one=True)
+    row = dbq("SELECT seen, status FROM presence WHERE sub=?", (target,), one=True)
     if not row:
         return dict(presence="")
     seen = float(row["seen"])
     age = max(0, int(time.time() - seen))
-    if age < 45:
-        return dict(presence="Onlayn", online=True)
+    st = (row["status"] or "").strip()[:40]
+    # 90 san: klient hər ~12-20 saniyədən bir presence göndərir
+    if age < 90:
+        label = st if st else "Onlayn"
+        return dict(presence=label, online=True, status=st)
     if age < 3600:
         label = f"Son görülmə: {max(1, age // 60)} dəq. əvvəl"
     elif age < 86400:
         label = f"Son görülmə: {age // 3600} saat əvvəl"
     else:
         label = f"Son görülmə: {age // 86400} gün əvvəl"
-    return dict(presence=label, online=False)
+    return dict(presence=label, online=False, status="")
 
 
 @app.route("/api/presence", methods=["POST"])
 def api_presence():
     sub, _ = auth_sub()
     now = time.time()
-    dbq("INSERT INTO presence(sub,seen) VALUES(?,?) ON CONFLICT(sub) DO UPDATE SET seen=excluded.seen", (sub, now))
+    d = request.get_json(silent=True) or {}
+    st = re.sub(r"\s+", " ", str(d.get("status") or "")).strip()[:40]
+    dbq("INSERT INTO presence(sub,seen,status) VALUES(?,?,?) ON CONFLICT(sub) DO UPDATE SET seen=excluded.seen, status=excluded.status",
+        (sub, now, st or None))
     return jsonify(ok=True)
 
 
@@ -2634,7 +2644,7 @@ def api_friends():
             incoming.append(it)
         else:
             outgoing.append(it)
-    friends.sort(key=lambda x: x["name"].lower())
+    friends.sort(key=lambda x: (0 if x.get("online") else 1, (x.get("name") or "").lower()))
     resp = jsonify(friends=friends, incoming=incoming, outgoing=outgoing)
     resp.headers["Cache-Control"] = "no-store"
     return resp

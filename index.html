@@ -1416,6 +1416,68 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #dres .dleftw{margin-bottom:10px}
 #dres .dleftw .dleft{margin-bottom:6px}
 
+/* ---- mikro animasiya, nəticə kartı, toast, reconnect ---- */
+@keyframes wtPop{0%{transform:scale(.92);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes wtRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes wtPulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes wtConfetti{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--cx),var(--cy)) rotate(240deg);opacity:0}}
+@keyframes wtToastIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:no-preference){
+  .m:not(.sys){animation:wtPop .22s cubic-bezier(.2,.9,.3,1) both}
+  #dres.res-show,#cres.res-show{animation:wtRise .35s cubic-bezier(.2,.9,.3,1) both}
+  .presence.online::before{animation:wtPulse 1.6s ease-in-out infinite}
+}
+.presence.online{position:relative;padding-left:12px}
+.presence.online::before{content:"";position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:#2dcc7a;box-shadow:0 0 0 2px rgba(45,204,122,.25)}
+#dres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#dres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#dres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#dres .res-ic{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 8px;border-radius:50%;font-size:24px;background:rgba(255,255,255,.12);box-shadow:0 0 24px rgba(255,255,255,.12)}
+#dres.win .res-ic{color:#ffd166;background:rgba(255,209,102,.16)}
+#dres.lose .res-ic{color:#ffb3c1;background:rgba(255,122,156,.14)}
+#dres.draw .res-ic{color:var(--amber);background:rgba(255,196,107,.14)}
+#dres .res-score{display:flex;justify-content:center;gap:18px;margin:8px 0 4px;font-weight:800}
+#dres .res-score span{font-size:28px;color:var(--amber)}
+#dres .res-score small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+#dres .confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:20px}
+#dres .confetti i{position:absolute;top:20%;left:50%;width:8px;height:8px;border-radius:2px;opacity:0}
+@media (prefers-reduced-motion:no-preference){
+  #dres.win .confetti i{animation:wtConfetti 1.1s ease-out forwards}
+}
+#dres{position:relative;overflow:hidden}
+#wtToast{
+  position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  z-index:99990;max-width:min(92vw,360px);padding:12px 16px;border-radius:14px;
+  background:var(--seat);color:var(--text);font-size:14px;font-weight:600;line-height:1.35;
+  box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 0 0 1px var(--line);pointer-events:none;
+}
+#wtToast[hidden]{display:none}
+@media (prefers-reduced-motion:no-preference){#wtToast:not([hidden]){animation:wtToastIn .28s cubic-bezier(.2,.9,.3,1)}}
+#wtReconnect{
+  position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);
+  z-index:99991;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;
+  background:rgba(20,8,29,.92);color:var(--amber);box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,196,107,.35);
+}
+#wtReconnect[hidden]{display:none}
+#wtReconnect.ok{color:#2dcc7a;box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 0 0 1px rgba(45,204,122,.35)}
+#guestbar{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+#guestbar input{
+  width:100%;padding:12px 14px;border-radius:12px;background:#fff7f4;color:var(--ink);
+  box-shadow:inset 0 0 0 1.5px rgba(43,15,38,.16);font-size:16px;
+}
+#guestbar input:focus{box-shadow:inset 0 0 0 2px var(--rose-deep);outline:0}
+#guestbar .ghint{font-size:12px;color:var(--ink-soft);line-height:1.35}
+#guestGo{width:100%;padding:13px;border-radius:12px;font-weight:700;background:var(--ink);color:var(--paper)}
+#guestGo:hover{background:#43203a}
+body.guest-mode #friendsCard,
+body.guest-mode #plansCard,
+body.guest-mode #statsCard,
+body.guest-mode #tabbar [data-go="friends"],
+body.guest-mode #tabbar [data-go="plans"]{opacity:.45;pointer-events:none}
+body.guest-mode #logout{display:none}
+
+
+
 
 /* Saytın fonuna uyğun daxili seçim pəncərələri — mobil brauzerin standart siyahısı istifadə edilmir */
 .site-select-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;left:-9999px!important}
@@ -1980,6 +2042,12 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
           <button id="etoggle" type="button" class="linkbtn">Hesabın yoxdur? Qeydiyyatdan keç</button>
         </form>
         <div id="joinmsg" role="status"></div>
+        <div id="guestbar">
+          <div class="or">və ya</div>
+          <input id="guestName" placeholder="Adın (qonaq)" maxlength="20" autocomplete="nickname">
+          <button type="button" id="guestGo">Qonaq kimi davam et</button>
+          <p class="ghint">Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.</p>
+        </div>
         <p class="note"><i class="fa-solid fa-lock" aria-hidden="true"></i> E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.</p>
       </div>
     </div>
@@ -2992,7 +3060,7 @@ function syncJoin(){   /* kod yazılıbsa "Otaq aç" solğunlaşır */
 function lockJoin(v){ joinBusy = v; $('create').disabled = v; $('enter').disabled = v; if(!v) syncJoin(); }
 
 async function enterRoom(code, create){
-  myName = account ? account.name : 'Mən';
+  myName = (account && account.name) || (function(){ try{ return localStorage.getItem('wt_guest_name') || 'Qonaq'; }catch(e){ return 'Qonaq'; } })();
   lockJoin(true);
   loadIce();
   joinMsg('Qoşulur... ilk dəfə 30-50 saniyə çəkə bilər');
@@ -4217,6 +4285,7 @@ let account = null, token = '', pendingCode = '', gInit = false;
 try{ token = localStorage.getItem(TOKEN_KEY) || ''; }catch(e){}
 try{ pendingCode = (new URLSearchParams(location.search).get('kod') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }catch(e){}
 if(token) $('join').style.display = 'none';        // giriş edilib: bilet bir anlıq da görünməsin
+try{ if(!token && localStorage.getItem('wt_guest')==='1'){ account={name:localStorage.getItem('wt_guest_name')||'Qonaq',username:'',guest:true}; $('join').style.display='none'; /* wt_guest_boot */ } }catch(e){}
 
 function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
@@ -4231,7 +4300,8 @@ async function api(path, o){
 function forgetLogin(){
   try{ stopStream(); }catch(e){}
   token = ''; account = null;
-  try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+  try{ localStorage.removeItem(TOKEN_KEY); localStorage.removeItem('wt_guest'); }catch(e){}
+  try{ document.body.classList.remove('guest-mode'); }catch(e){}
   try{ if(window.google && google.accounts) google.accounts.id.disableAutoSelect(); }catch(e){}
   if(!room) showLogin();                             // otaqdadırsa söhbət kəsilməsin
 }
@@ -4277,7 +4347,9 @@ function finishLogin(d){
 }
 function afterLogin(tear){
   myName = account.name;
+  try{ localStorage.removeItem('wt_guest'); document.body.classList.remove('guest-mode'); }catch(e){}
   showMenu();                                        // menyu bilet cırılanda arxada görünsün
+  try{ sendPresence(); }catch(e){}
   if(tear) tearTicket(); else $('join').style.display = 'none';
   if(pendingCode){                                   // dəvət linki ilə gəlib: birbaşa otağa
     const c = pendingCode; pendingCode = '';
@@ -4443,6 +4515,14 @@ function showMenu(){
   startInvitePoll();
   $('app').style.display = 'none';
   $('menu').style.display = 'flex';
+  if(!token && !account){
+    try{
+      if(localStorage.getItem('wt_guest') === '1'){
+        account = {name: localStorage.getItem('wt_guest_name') || 'Qonaq', username: '', guest: true};
+      }
+    }catch(e){}
+  }
+  try{ document.body.classList.toggle('guest-mode', !!(account && account.guest && !token)); }catch(e){}
   renderName();
   lastFr = ''; lastInv = '';
   loadHistory(); loadStats(); showInstall(); loadFavs(); loadBoard(); loadTourneys();
@@ -4553,7 +4633,8 @@ function frRow(p, sub, btns){
   const b = document.createElement('b'); b.dataset.nt = ''; b.textContent = p.name; if(p.badge) b.appendChild(vbEl());
   const s = document.createElement('span'); s.textContent = sub || ('@' + p.username);
   tx.appendChild(b); tx.appendChild(s);
-  if(p.presence){ const ps=document.createElement('small'); ps.className = p.online ? 'presence online' : 'presence'; ps.textContent=p.presence; tx.appendChild(ps); }
+  var presTxt = p.presence || (p.online ? 'Onlayn' : '');
+  if(presTxt){ const ps=document.createElement('small'); ps.className = p.online ? 'presence online' : 'presence'; ps.textContent=presTxt; tx.appendChild(ps); }
   r.appendChild(av); r.appendChild(tx); (btns || []).forEach(x => r.appendChild(x));
   return r;
 }
@@ -4651,10 +4732,23 @@ function pinvHint(){
 }
 async function sendPresence(){
   if(!token) return;
-  try{ await api('/api/presence', {method:'POST', body:'{}'}); }catch(e){}
+  var st = '';
+  try{
+    if(document.getElementById('domino') && !document.getElementById('domino').hidden) st = 'Domino oynayır';
+    else if(document.getElementById('chess') && !document.getElementById('chess').hidden) st = 'Şahmat oynayır';
+    else if(document.getElementById('mafia') && !document.getElementById('mafia').hidden) st = 'Mafia oynayır';
+    else if(document.getElementById('app') && document.getElementById('app').style.display !== 'none' && typeof room === 'string' && room) st = 'Birlikdə izləyir';
+  }catch(e){}
+  try{ await api('/api/presence', {method:'POST', body: JSON.stringify({status: st})}); }catch(e){}
 }
-setInterval(() => { if(token && !document.hidden) sendPresence(); }, 20000);
+setInterval(() => { if(token && !document.hidden) sendPresence(); }, 12000);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) sendPresence(); });
+window.addEventListener('offline', function(){ try{ window.wtReconnectBanner('İnternet yoxdur...'); }catch(e){} });
+window.addEventListener('online', function(){
+  try{ window.wtReconnectBanner('İnternet qayıtdı', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 2000); }catch(e){}
+  try{ sendPresence(); }catch(e){}
+});
+
 $('plastseen').onchange = async () => {
   const sel = $('plastseen'), value = sel.value;
   try{
@@ -4716,8 +4810,9 @@ function fillPeerHead(p){
   const n = $('pbname'); n.textContent = p.name || 'Qarşı tərəf'; if(p.badge) n.appendChild(vbEl());
   $('pbuser').textContent = p.username ? '@' + p.username : '';
   $('pbbio').textContent = p.bio || '';
-  $('pbpresence').textContent = p.presence || '';
+  $('pbpresence').textContent = p.presence || (p.online ? 'Onlayn' : '');
   $('pbpresence').className = p.online ? 'presence online' : 'presence';
+  $('pbpresence').hidden = !($('pbpresence').textContent);
 }
 function setPeerRel(rel){
   const a = $('pbAct'), t = $('pbrel');
@@ -4834,10 +4929,18 @@ async function sseLoop(){
   }
 }
 function sseEvent(blk){
-  let ev = 'message', id = NaN;
-  blk.split('\n').forEach(l => { if(l.startsWith('event:')) ev = l.slice(6).trim(); else if(l.startsWith('id:')) id = parseInt(l.slice(3), 10); });
+  let ev = 'message', id = NaN, data = '';
+  blk.split('\n').forEach(l => {
+    if(l.startsWith('event:')) ev = l.slice(6).trim();
+    else if(l.startsWith('id:')) id = parseInt(l.slice(3), 10);
+    else if(l.startsWith('data:')) data = l.slice(5).trim();
+  });
   if(!isNaN(id)) sseSeq = id;
   if(ev === 'invite' || ev === 'game' || ev === 'friend'){ lastInv = ''; loadInvites(); loadFriends(); }
+  if(ev === 'invite') window.wtToast && window.wtToast('Yeni otaq dəvəti');
+  else if(ev === 'game') window.wtToast && window.wtToast('Oyun dəvəti gəldi');
+  else if(ev === 'friend') window.wtToast && window.wtToast('Yeni dostluq sorğusu');
+  else if(ev === 'plan') window.wtToast && window.wtToast('Planlı seans yeniləndi');
 }
 function startStream(){ if(sseOn || !token) return; sseOn = true; sseLoop().finally(() => { sseOn = false; }); }
 function stopStream(){ sseGen++; sseLive = false; try{ if(sseAbort) sseAbort.abort(); }catch(e){} }
@@ -5814,6 +5917,15 @@ async function loadTourneys(){
   }catch(e){}
 }
 window.addEventListener('wt:languagechange', () => { if(token){ loadBoard(); loadTourneys(); } });
+document.addEventListener('click', function(e){
+  if(token || !(window.wtIsGuest && window.wtIsGuest())) return;
+  var t = e.target.closest && e.target.closest('#domBot,#domEnter,#chBot,#chEnter,#mafNew,#mafBot,#mafEnter,#durEnter');
+  if(!t) return;
+  e.preventDefault(); e.stopPropagation();
+  window.wtToast && window.wtToast('Oyunlar üçün hesaba daxil ol');
+}, true);
+/* wtGuestGameGate */
+
 document.querySelectorAll('#tabbar [data-go="games"],#tabbar [data-go="hist"]').forEach(b => b.addEventListener('click', () => { loadBoard(); loadTourneys(); loadFavs(); }));
 
 async function boot(){
@@ -5823,6 +5935,14 @@ async function boot(){
       if(r.ok){ account = await r.json(); afterLogin(false); return; }
     }catch(e){}
   }
+  try{
+    if(localStorage.getItem('wt_guest') === '1'){
+      account = {name: localStorage.getItem('wt_guest_name') || 'Qonaq', username: '', guest: true};
+      document.getElementById('join').style.display = 'none';
+      showMenu();
+      return;
+    }
+  }catch(e){}
   showLogin();
 }
 boot();
@@ -7450,13 +7570,24 @@ window.wtInviteBox = function(o){
     var box = $('dres'), over = s.status === 'over', multi = (s.opps || []).length > 1;
     box.hidden = !over;
     $('dhand').style.display = over ? 'none' : '';
-    if(!over){ box.innerHTML = ''; return; }
+    if(!over){ box.innerHTML = ''; box.className = ''; return; }
     var wn = multi ? esc(s.winner_name || '?') : 'Rəqib';
+    var win = s.match ? s.match === 'me' : s.result === 'me';
+    var lose = s.match ? s.match === 'opp' : s.result === 'opp';
     var title = s.match ? (s.match === 'me' ? 'Oyunu qazandın!' : (multi ? esc(s.match_name || '?') + ' oyunu qazandı' : 'Rəqib oyunu qazandı'))
       : (s.result === 'me' ? 'Qazandın!' : (s.result === 'opp' ? (multi ? wn + ' qazandı' : 'Rəqib qazandı') : 'Bərabərlik'));
     var why = s.reason === 'out' ? 'Bütün daşlar bitdi' : (s.reason === 'left' ? (s.result === 'me' ? 'Rəqib oyundan çıxdı' : 'Oyundan çıxdın') : 'Oyun bloklandı, daşların cəminə görə');
+    var ic = win ? 'fa-trophy' : (lose ? 'fa-heart-crack' : 'fa-handshake');
+    var oppScore = (s.opps && s.opps[0] && s.opps[0].score) || 0;
+    var scoreHtml = '<div class="res-score"><div><span>' + (s.my_score || 0) + '</span><small>Sən</small></div><div><span>' + oppScore + '</span><small>' + (multi ? 'Rəqib' : (s.bot ? 'Kompüter' : 'Rəqib')) + '</small></div></div>';
     var pts = s.pts ? '<div class="dpts">' + (s.result === 'opp' ? '<span>' + wn + '</span> ' : '') + '+' + s.pts + ' <span>xal</span></div>' : '';
-    box.innerHTML = '<h3>' + title + '</h3>' + pts + '<p>' + why + '</p><div class="dleftw"></div><button class="pbtn" id="dagain">' + (s.match ? 'Yeni oyun' : 'Növbəti raund') + '</button>';
+    var conf = win ? '<div class="confetti" aria-hidden="true">' + Array.from({length:12}, function(_,i){
+      var colors = ['#ff7a9c','#ffc46b','#2dcc7a','#7ab7ff','#e8567d'];
+      var ang = (i / 12) * Math.PI * 2, dist = 40 + (i % 4) * 18;
+      return '<i style="background:' + colors[i % colors.length] + ';--cx:' + Math.cos(ang)*dist + 'px;--cy:' + (Math.sin(ang)*dist - 30) + 'px;animation-delay:' + (i*0.04) + 's"></i>';
+    }).join('') + '</div>' : '';
+    box.className = 'res-show ' + (win ? 'win' : (lose ? 'lose' : 'draw'));
+    box.innerHTML = conf + '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + title + '</h3>' + scoreHtml + pts + '<p>' + why + '</p><div class="dleftw"></div><button class="pbtn" id="dagain">' + (s.match ? 'Yeni oyun' : 'Növbəti raund') + '</button>';
     var L = box.querySelector('.dleftw');
     (s.opp_hands || []).forEach(function(oh){
       if(multi){ var lb = document.createElement('div'); lb.className = 'dlab'; lb.textContent = oh.name; L.appendChild(lb); }
@@ -7669,11 +7800,14 @@ window.wtInviteBox = function(o){
         if(dom.gen !== gen) return;
         if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
         if(!r.ok) throw new Error(String(r.status));
+        if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
         apply(await r.json()); fails = 0;
       }catch(e){
         if(dom.gen !== gen) return;
-        if(!token){ close(false); return; }
-        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * (++fails))); });
+        fails++;
+        try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){}
+        if(!token && !(window.wtIsGuest && window.wtIsGuest())){ close(false); return; }
+        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * fails)); });
       }
     }
   }
@@ -8901,5 +9035,7 @@ window.wtInviteBox = function(o){
 })();
 </script>
 
+<div id="wtToast" hidden role="status" aria-live="polite"></div>
+<div id="wtReconnect" hidden role="status" aria-live="polite"></div>
 </body>
 </html>
