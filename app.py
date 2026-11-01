@@ -5580,7 +5580,7 @@ def _gv_view(kind, g):
     """Oyun vəziyyətinə əlavə: hazırda səs otağında olanlar və dəyişiklik sayğacı."""
     d = GV.get((kind, g["code"]))
     now = time.time()
-    vc = [dict(id=i, name=m["name"]) for i, m in d["mem"].items() if now - m["ts"] < GV_TTL] if d else []
+    vc = [dict(id=i, name=m["name"], muted=bool(m.get("muted"))) for i, m in d["mem"].items() if now - m["ts"] < GV_TTL] if d else []
     return vc, g.get("vk", 0)
 
 
@@ -5625,10 +5625,12 @@ def api_gvoice_send():
             abort(403)   # offer/answer/ice/mute yalnız səs otağındakı oyunçudan
         elif k == "mute":
             v["mem"][me]["muted"] = bool(payload)
+            g["vk"] = g.get("vk", 0) + 1
         v["s"] += 1
         v["q"].append(dict(s=v["s"], f=me, to=to, k=k, d=payload, n=nm))
         del v["q"][:-300]
         _notify(v)
+        _notify(g)   # oyun long-poll-u dərhal oyansın: səsli otağa giriş/çıxış, mikrofon dəyişikliyi qarşı tərəfdə gecikmədən görünsün
         return jsonify(seq=v["s"], id=me, members=members)
 
 

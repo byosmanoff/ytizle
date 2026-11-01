@@ -307,88 +307,6 @@ input{outline:none}
 .vjoin:hover{background:#ff93ae}
 #voice [hidden]{display:none}
 body.invoice #vmic{display:none}
-
-/* ---- Telegram-style full voice call (multi + screen share) ---- */
-#vcall{
-  position:fixed;inset:0;z-index:90;display:none;flex-direction:column;
-  background:radial-gradient(120% 80% at 50% -10%,#2a1838 0%,#150a1d 55%,#0d0612 100%);
-  color:#fff;font-family:var(--font);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-}
-#vcall.open{display:flex}
-#vcall .vc-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;flex:none}
-#vcall .vc-back,#vcall .vc-more{
-  width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;
-  display:grid;place-items:center;font-size:16px;border:0
-}
-#vcall .vc-title{text-align:center;flex:1;min-width:0}
-#vcall .vc-title b{display:block;font-size:17px;font-weight:700}
-#vcall .vc-title small{display:block;font-size:13px;color:rgba(255,255,255,.55);margin-top:2px}
-#vcall .vc-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 16px;gap:14px;min-height:0;overflow:hidden}
-#vcall .vc-avs{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 18px;
-  max-width:420px;width:100%;max-height:48vh;overflow-y:auto;padding:8px
-}
-#vcall .vc-av{
-  width:88px;height:88px;border-radius:50%;display:grid;place-items:center;
-  font-size:32px;font-weight:800;color:#2b0f26;background:var(--rose);
-  box-shadow:0 10px 28px rgba(0,0,0,.4);position:relative;overflow:hidden;flex:none
-}
-#vcall .vc-av.solo{width:120px;height:120px;font-size:44px}
-#vcall .vc-av img{width:100%;height:100%;object-fit:cover}
-#vcall .vc-av .vc-lab{
-  position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
-  max-width:90px;padding:2px 8px;border-radius:999px;background:rgba(20,8,29,.82);
-  color:#fff;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-#vcall .vc-av.muted::after{
-  content:"";position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:50%;
-  background:#1a0c22 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a9c' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14'/%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3C/svg%3E") center/12px no-repeat;
-  box-shadow:0 0 0 2px rgba(255,255,255,.12)
-}
-#vcall .vc-av.talk::before{
-  content:"";position:absolute;inset:-5px;border-radius:50%;border:3px solid var(--rose);
-  animation:vcring 1.1s ease-out infinite;pointer-events:none
-}
-#vcall .vc-av.sharing{box-shadow:0 0 0 3px var(--amber),0 10px 28px rgba(0,0,0,.4)}
-@keyframes vcring{from{transform:scale(.92);opacity:.9}to{transform:scale(1.35);opacity:0}}
-#vcall .vc-names{text-align:center}
-#vcall .vc-names b{display:block;font-size:20px;font-weight:800}
-#vcall .vc-names span{display:block;margin-top:5px;font-size:14px;color:rgba(255,255,255,.62)}
-#vcall .vc-timer{font-size:14px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.04em}
-#vcall .vc-screen{
-  display:none;width:min(100%,520px);aspect-ratio:16/9;border-radius:14px;overflow:hidden;
-  background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5);position:relative
-}
-#vcall .vc-screen.on{display:block}
-#vcall .vc-screen video{width:100%;height:100%;object-fit:contain;background:#000}
-#vcall .vc-screen .scr-lab{
-  position:absolute;left:10px;top:10px;padding:4px 10px;border-radius:999px;
-  background:rgba(0,0,0,.65);color:#fff;font-size:12px;font-weight:700
-}
-#vcall .vc-bar{
-  flex:none;display:flex;align-items:flex-end;justify-content:center;gap:12px;
-  padding:14px 12px 20px;flex-wrap:wrap
-}
-#vcall .vc-btn{
-  display:flex;flex-direction:column;align-items:center;gap:7px;background:none;color:#fff;
-  min-width:56px;padding:0;border:0
-}
-#vcall .vc-btn i.ic{
-  width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
-  background:#2a5a9e;font-size:20px;box-shadow:0 6px 18px rgba(0,0,0,.35)
-}
-#vcall .vc-btn span{font-size:11px;font-weight:600;color:rgba(255,255,255,.78);line-height:1.15;text-align:center}
-#vcall .vc-btn.mic.off i.ic{background:#e8e8e8;color:#1a1a1a}
-#vcall .vc-btn.share.on i.ic{background:#2ecc71}
-#vcall .vc-btn.spk.on i.ic{background:#2ecc71}
-#vcall .vc-btn.end i.ic{background:#c0392b}
-#vcall .vc-btn:disabled{opacity:.4}
-#vcall .vc-btn:active:not(:disabled) i.ic{transform:scale(.94)}
-#voice .vps{max-width:140px;overflow:hidden}
-#voice .vp{flex:none}
-#voice .vp.more{background:var(--seat-2);color:var(--text);font-size:12px}
-@media (prefers-reduced-motion:reduce){#vcall .vc-av.talk::before{animation:none;transform:scale(1.12)}}
-
 @media (prefers-reduced-motion:reduce){
   .vp.talk::after{animation:none;transform:scale(1.12)}
   .m.flash{animation:none;box-shadow:0 0 0 3px var(--amber)}
@@ -2959,47 +2877,6 @@ body.guest-mode .guest-only{display:block!important}
 </div>
 
 
-<!-- Telegram-style multi voice + screen share -->
-<div id="vcall" role="dialog" aria-modal="true" aria-label="Səsli söhbət">
-  <div class="vc-top">
-    <button type="button" class="vc-back" id="vcMin" aria-label="Kiçilt"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-    <div class="vc-title"><b id="vcTitle">Səsli söhbət</b><small id="vcSub">Qoşulur...</small></div>
-    <button type="button" class="vc-more" id="vcMore" aria-label="Daha çox" hidden><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></button>
-  </div>
-  <div class="vc-main">
-    <div class="vc-screen" id="vcScreen"><video id="vcScreenVid" autoplay playsinline muted></video><span class="scr-lab" id="vcScrLab">Ekran</span></div>
-    <div class="vc-avs" id="vcAvs"></div>
-    <div class="vc-names">
-      <b id="vcName">—</b>
-      <span id="vcStatus">Səsli söhbət</span>
-    </div>
-    <div class="vc-timer" id="vcTimer" hidden>00:00</div>
-  </div>
-  <div class="vc-bar">
-    <button type="button" class="vc-btn spk" id="vcSpk" aria-label="Hoparlör">
-      <i class="ic fa-solid fa-volume-high" aria-hidden="true"></i>
-      <span>Hoparlör</span>
-    </button>
-    <button type="button" class="vc-btn share" id="vcShare" aria-label="Ekran paylaş">
-      <i class="ic fa-solid fa-desktop" aria-hidden="true"></i>
-      <span>Ekran</span>
-    </button>
-    <button type="button" class="vc-btn mic" id="vcMic" aria-label="Mikrofon">
-      <i class="ic fa-solid fa-microphone" aria-hidden="true"></i>
-      <span>Səs bağla</span>
-    </button>
-    <button type="button" class="vc-btn msg" id="vcMsg" aria-label="Mesaj">
-      <i class="ic fa-solid fa-comment" aria-hidden="true"></i>
-      <span>Mesaj</span>
-    </button>
-    <button type="button" class="vc-btn end" id="vcEnd" aria-label="Ayrıl">
-      <i class="ic fa-solid fa-phone" style="transform:rotate(135deg)" aria-hidden="true"></i>
-      <span>Ayrıl</span>
-    </button>
-  </div>
-</div>
-<div id="vaudios" hidden aria-hidden="true"></div>
-
 <div id="pbox" hidden role="dialog" aria-modal="true" aria-label="Profil">
   <div class="lv-card pcard">
     <div class="av big" id="pbav">?</div>
@@ -3322,6 +3199,165 @@ body.guest-mode .guest-only{display:block!important}
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+/* ---------- Ortaq səsli otaq interfeysi (bütün səsli otaqlar üçün) ---------- */
+(function(){
+  if(!document.getElementById('gvs-css')){
+    var st = document.createElement('style'); st.id = 'gvs-css';
+    st.textContent = [
+      '.gvsheet{position:fixed;left:0;top:0;width:100%;height:var(--H,100dvh);transform:translateY(var(--VT,0px));z-index:200;display:flex;flex-direction:column;box-sizing:border-box;background:#151d28;color:#eef3f9;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 16px);-webkit-user-select:none;user-select:none;touch-action:manipulation}',
+      '.gvsheet[hidden]{display:none!important}',
+      '.gvs-head{display:flex;align-items:center;gap:10px;flex:none;padding:4px 2px 14px}',
+      '.gvs-x{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#eef3f9;font-size:17px;flex:none}',
+      '.gvs-tt{min-width:0;flex:1}',
+      '.gvs-tt b{display:block;font-size:24px;font-weight:800;line-height:1.15}',
+      '.gvs-tt small{display:block;font-size:13px;color:#8d9bb0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.gvs-list{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:#1f2937;border-radius:22px;padding:6px 0}',
+      '.gvs-row{display:flex;align-items:center;gap:14px;padding:11px 16px;position:relative}',
+      '.gvs-row+.gvs-row::before{content:"";position:absolute;left:82px;right:0;top:0;height:1px;background:rgba(255,255,255,.07)}',
+      '.gvs-av{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:21px;font-weight:800;color:#fff;flex:none;transition:box-shadow .15s}',
+      '.gvs-row.speak .gvs-av{box-shadow:0 0 0 3px #1f2937,0 0 0 6px #4cd37b}',
+      '.gvs-nm{min-width:0;flex:1}',
+      '.gvs-nm b{display:block;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.gvs-nm small{display:block;font-size:14px;color:#8d9bb0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.gvs-row.speak .gvs-nm small{color:#4cd37b}',
+      '.gvs-mi{font-size:18px;color:#8d9bb0;width:26px;text-align:center;flex:none}',
+      '.gvs-mi.live{color:#4cd37b}',
+      '.gvs-inv{width:100%;text-align:left;color:#9db0c8;font-size:17px}',
+      '.gvs-inv .gvs-av{background:none;color:#9db0c8;font-size:22px;box-shadow:none!important}',
+      '.gvs-ctl{margin-top:auto;display:flex;justify-content:space-around;align-items:flex-end;flex:none;padding:18px 0 0;gap:6px}',
+      '.gvs-c{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:76px;color:#eef3f9;font-size:13px}',
+      '.gvs-c .gvs-b{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:#1e5f86;transition:background .15s,transform .1s}',
+      '.gvs-c:active .gvs-b{transform:scale(.94)}',
+      '.gvs-c.big .gvs-b{width:78px;height:78px;font-size:29px;background:#2f9e63}',
+      '.gvs-c.big.off .gvs-b{background:#5ec5ff;color:#0b2233}',
+      '.gvs-c.spk .gvs-b{background:#5ec5ff;color:#0b2233}',
+      '.gvs-c.spk.off .gvs-b{background:#1e5f86;color:#eef3f9}',
+      '.gvs-c.lv .gvs-b{background:#8c3b43}',
+      '.gvs-c.lock .gvs-b{opacity:.45}',
+      '.gvs-c span.l{white-space:nowrap}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  function hue(s){ var h = 0; s = String(s || ''); for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+  function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
+
+  /* cfg: title, sub(), members() -> [{id,name,muted,me,st}], isMuted(), isSpeaker(), muteLocked(),
+          onMute(), onSpeaker(), onLeave(), onInvite() (ixtiyari), onClose() (ixtiyari) */
+  window.wtVoiceSheet = function(cfg){
+    var root = document.createElement('div');
+    root.className = 'gvsheet'; root.hidden = true;
+    root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true');
+    root.innerHTML =
+      '<div class="gvs-head"><button type="button" class="gvs-x" data-a="x" aria-label="Kiçilt"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>' +
+      '<div class="gvs-tt"><b></b><small></small></div></div>' +
+      '<div class="gvs-list"></div>' +
+      '<div class="gvs-ctl">' +
+        '<button type="button" class="gvs-c spk" data-a="spk"><span class="gvs-b"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></span><span class="l">Dinamik</span></button>' +
+        '<button type="button" class="gvs-c big" data-a="mic"><span class="gvs-b"><i class="fa-solid fa-microphone" aria-hidden="true"></i></span><span class="l">Səssiz et</span></button>' +
+        '<button type="button" class="gvs-c lv" data-a="lv"><span class="gvs-b"><i class="fa-solid fa-phone-slash" aria-hidden="true"></i></span><span class="l">Ayrıl</span></button>' +
+      '</div>';
+    document.body.appendChild(root);
+    var list = root.querySelector('.gvs-list'), ttl = root.querySelector('.gvs-tt b'), sub = root.querySelector('.gvs-tt small');
+    var bSpk = root.querySelector('[data-a="spk"]'), bMic = root.querySelector('[data-a="mic"]');
+    var speak = {}, an = {}, actx = null, tm = 0;
+
+    function paint(){
+      var rows = list.querySelectorAll('.gvs-row[data-id]');
+      for(var i = 0; i < rows.length; i++) rows[i].classList.toggle('speak', !!speak[rows[i].getAttribute('data-id')]);
+    }
+    function update(){
+      ttl.textContent = T(cfg.title || 'Səsli söhbət');
+      sub.textContent = cfg.sub ? cfg.sub() : '';
+      var ms = cfg.members() || [];
+      list.textContent = '';
+      ms.forEach(function(m){
+        var r = document.createElement('div'); r.className = 'gvs-row'; r.setAttribute('data-id', m.id);
+        if(speak[m.id] && !m.muted) r.classList.add('speak');
+        var av = document.createElement('span'); av.className = 'gvs-av';
+        av.style.background = 'hsl(' + hue(m.name) + ',42%,40%)';
+        av.textContent = (String(m.name || '?').trim()[0] || '?').toLocaleUpperCase('az');
+        var nm = document.createElement('span'); nm.className = 'gvs-nm';
+        var b = document.createElement('b'); b.textContent = String(m.name || '') + (m.me ? ' (' + T('Sən') + ')' : '');
+        var s = document.createElement('small'); s.textContent = m.muted ? T('Səssiz') : (m.st || T('Səsli otaqda'));
+        nm.appendChild(b); nm.appendChild(s);
+        var ic = document.createElement('i'); ic.className = 'fa-solid gvs-mi ' + (m.muted ? 'fa-microphone-slash' : 'fa-microphone live');
+        ic.setAttribute('aria-hidden', 'true');
+        r.appendChild(av); r.appendChild(nm); r.appendChild(ic);
+        list.appendChild(r);
+      });
+      if(cfg.onInvite){
+        var inv = document.createElement('button'); inv.type = 'button'; inv.className = 'gvs-row gvs-inv'; inv.setAttribute('data-a', 'inv');
+        inv.innerHTML = '<span class="gvs-av"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span><span class="gvs-nm"><b></b></span>';
+        inv.querySelector('b').textContent = T('Dostu dəvət et');
+        list.appendChild(inv);
+      }
+      var muted = !!cfg.isMuted(), lock = !!(cfg.muteLocked && cfg.muteLocked());
+      bMic.classList.toggle('off', muted || lock); bMic.classList.toggle('lock', lock);
+      bMic.querySelector('i').className = 'fa-solid ' + (muted || lock ? 'fa-microphone-slash' : 'fa-microphone');
+      bMic.querySelector('.l').textContent = lock ? T('Mikrofon bağlıdır') : T(muted ? 'Səsi aç' : 'Səssiz et');
+      var sp = cfg.isSpeaker ? !!cfg.isSpeaker() : true;
+      bSpk.classList.toggle('off', !sp);
+      bSpk.querySelector('i').className = 'fa-solid ' + (sp ? 'fa-volume-high' : 'fa-volume-xmark');
+      bSpk.style.display = cfg.onSpeaker ? '' : 'none';
+    }
+    root.addEventListener('click', function(e){
+      var t = e.target.closest('[data-a]'); if(!t) return;
+      var a = t.getAttribute('data-a');
+      if(a === 'x') close();
+      else if(a === 'mic'){ if(!(cfg.muteLocked && cfg.muteLocked())) cfg.onMute(); update(); }
+      else if(a === 'spk'){ cfg.onSpeaker(); update(); }
+      else if(a === 'lv'){ cfg.onLeave(); }
+      else if(a === 'inv'){ try{ cfg.onInvite(); }catch(x){} }
+    });
+    function tick(){
+      var ch = false;
+      Object.keys(an).forEach(function(id){
+        var x = an[id], m = 0;
+        try{ x.a.getByteTimeDomainData(x.buf); }catch(e){ return; }
+        for(var i = 0; i < x.buf.length; i++){ var v = Math.abs(x.buf[i] - 128); if(v > m) m = v; }
+        var on = m > 12;
+        if(id === 'me' && ((cfg.isMuted && cfg.isMuted()) || (cfg.muteLocked && cfg.muteLocked()))) on = false;
+        if(!!speak[id] !== on){ speak[id] = on; ch = true; }
+      });
+      if(ch) paint();
+    }
+    function open(){
+      if(!root.hidden){ update(); return; }
+      try{ if(actx && actx.state === 'suspended') actx.resume(); }catch(e){}
+      update(); root.hidden = false;
+      if(!tm) tm = setInterval(tick, 120);
+    }
+    function close(){
+      if(root.hidden) return;
+      root.hidden = true;
+      if(tm){ clearInterval(tm); tm = 0; }
+      if(cfg.onClose) try{ cfg.onClose(); }catch(e){}
+    }
+    return {
+      open: open, close: close,
+      isOpen: function(){ return !root.hidden; },
+      update: function(){ if(!root.hidden) update(); },
+      /* konuşma göstəricisi: öz analizatoru (stream) və ya xaricdən (setSpeak) */
+      watch: function(id, stream){
+        this.unwatch(id);
+        try{
+          if(!actx){ var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; actx = new AC(); }
+          var src = actx.createMediaStreamSource(stream), a = actx.createAnalyser(); a.fftSize = 256; src.connect(a);
+          an[id] = {a: a, src: src, buf: new Uint8Array(a.frequencyBinCount)};
+        }catch(e){}
+      },
+      unwatch: function(id){
+        var x = an[id]; if(x){ try{ x.src.disconnect(); }catch(e){} delete an[id]; }
+        if(speak[id]){ speak[id] = false; paint(); }
+      },
+      setSpeak: function(id, on){ if(!!speak[id] !== !!on){ speak[id] = !!on; paint(); } },
+      clear: function(){ var s = this; Object.keys(an).forEach(function(id){ s.unwatch(id); }); speak = {}; }
+    };
+  };
+})();
+</script>
+
+<script>
 const $ = id => document.getElementById(id);
 let myName = 'Mən', kind = null, curUrl = null;
 let yt = null, ytReady = false, ytIsReady = false, ytPending = null;
@@ -3436,7 +3472,6 @@ function updatePeers(n){
 const validAv = (u, av) => /^[a-z0-9._]{3,20}$/.test(String(u || '')) && /^\d{1,12}$/.test(String(av || '')) && +av > 0;
 const avUrl = (u, av) => '/api/avatar/' + u + '?v=' + av;
 function myAvVer(){ const m = account && account.avatar && String(account.avatar).match(/[?&]v=(\d+)/); return m ? +m[1] : 0; }
-const initial = n => (String(n || '').trim()[0] || '?').toLocaleUpperCase('az');
 function avEl(u, av, name){
   const e = document.createElement('i'); e.className = 'mav';
   if(validAv(u, av)) e.style.backgroundImage = 'url("' + avUrl(u, av) + '")'; else e.textContent = initial(name);
@@ -3461,7 +3496,7 @@ function handle(m){
   else if(m.t === 'dlv' || m.t === 'read'){
     (Array.isArray(m.ids) ? m.ids : []).forEach(id => setReceipt(id, m.t === 'read' ? 3 : 2));
   }
-  else if(m.t === 'voice' || m.t === 'vmute' || m.t === 'rtc' || m.t === 'vshare') voiceMsg(m);
+  else if(m.t === 'voice' || m.t === 'vmute' || m.t === 'rtc') voiceMsg(m);
   else if(m.t === 'q'){ qSet(m.list, false); }
   else if(m.t === 'load' && typeof m.url === 'string' && m.url){
     if(m.hello && (m.url === curUrl || (m.at || 0) <= navAt)) return;
@@ -4492,8 +4527,8 @@ document.querySelectorAll('#reacts button').forEach(b => b.onclick = () => {
   flyEmoji(b.dataset.e); send({t: 'fly', e: b.dataset.e});
 });
 
-/* ---------- Səsli otaq (çoxnəfərli mesh WebRTC + ekran paylaşma) ---------- */
-// Siqnal mövcud otaq kanalından keçir. TURN: /api/ice mühit dəyişənləri.
+/* ---------- Səsli otaq (WebRTC; siqnal mövcud otaq kanalından keçir) ---------- */
+// Bəzi mobil şəbəkələr yalnız STUN ilə qoşulmur. TURN serveri serverdə (app.py /api/ice) mühit dəyişənləri ilə qoşulur.
 let ICE_SERVERS = [{urls: 'stun:stun.l.google.com:19302'}, {urls: 'stun:stun1.l.google.com:19302'}];
 async function loadIce(){
   const ac = new AbortController(), to = setTimeout(() => ac.abort(), 3000);
@@ -4502,355 +4537,62 @@ async function loadIce(){
     if(r.ok){ const d = await r.json(); if(Array.isArray(d.servers) && d.servers.length) ICE_SERVERS = d.servers; }
   }catch(e){} finally{ clearTimeout(to); }
 }
+let voiceOn = false, peerVoice = false, peerId = '', peerName = '', voiceMuted = false, peerU = '', peerAv = 0;
+let rtc = null, localStream = null, pendingIce = [], vctx = null;
+let vLive = false, vFail = false, vStart = 0, vTimer = null, restarted = false;
+const raud = $('raudio'), levels = new Map();
+let vsheet = null;
 
-let voiceOn = false, voiceMuted = false, localStream = null, screenStream = null, sharing = false;
-let vPeers = new Map();   // id -> {pc, name, u, av, muted, live, pend, rs, init, aud, sharing, vstream}
-let peerVoice = false, peerId = '', peerName = '', peerU = '', peerAv = 0; // geriyə uyğunluq
-let vctx = null, vStart = 0, vTimer = null, vNeedTap = false;
-const levels = new Map();
-const raud = $('raudio');
+const initial = n => (String(n || '').trim()[0] || '?').toLocaleUpperCase('az');
 const mmss = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
 
-function vPeerList(){ return Array.from(vPeers.entries()).map(([id, p]) => ({id, ...p})); }
-function vAnyLive(){ for(const p of vPeers.values()) if(p.live) return true; return false; }
-function vFailAll(){
-  if(!vPeers.size) return false;
-  for(const p of vPeers.values()) if(p.live || (p.pc && (p.pc.connectionState === 'connecting' || p.pc.connectionState === 'new'))) return false;
-  for(const p of vPeers.values()) if(p.pc && p.pc.connectionState === 'failed') return true;
-  return false;
+function setVoiceUI(){
+  const st = voiceOn ? (!peerVoice ? 'wait' : vFail ? 'fail' : vLive ? 'live' : 'conn') : (peerVoice ? 'invite' : 'off');
+  const box = $('voice');
+  box.hidden = st === 'off'; box.dataset.st = st;
+  document.body.classList.toggle('invoice', voiceOn);
+  setVp($('vpMe'), $('avMe'), account && account.username, myAvVer(), myName);
+  setVp($('vpPeer'), $('avPeer'), peerU, peerAv, peerName);
+  $('vpMe').classList.toggle('off', !voiceOn);
+  $('vpPeer').classList.toggle('off', !peerVoice);
+  $('vjoin').hidden = st !== 'invite';
+  $('vmute').hidden = !voiceOn; $('vleave').hidden = !voiceOn;
+  if(!voiceOn || !peerVoice) $('vunmute').hidden = true;
+  $('vtext').textContent = {
+    invite: peerNm() + ' səsli otaqdadır',
+    wait: 'Qarşı tərəfi gözləyirəm...',
+    conn: 'Qoşulur...',
+    live: 'Səsli söhbət ' + mmss(vStart ? Date.now() - vStart : 0),
+    fail: 'Səs qoşulmadı. Çıx və yenidən gir',
+    off: ''
+  }[st];
+  if(vsheet){ if(!voiceOn) vsheet.close(); else vsheet.update(); }
 }
-function syncCompatPeer(){
-  const list = vPeerList();
-  peerVoice = list.length > 0;
-  if(list.length){
-    const p = list[0];
-    peerId = p.id; peerName = p.name || ''; peerU = p.u || ''; peerAv = p.av || 0;
-  } else { peerId = ''; peerName = ''; peerU = ''; peerAv = 0; }
-}
-
 function watchLevel(stream, el){
   stopLevel(el);
-  if(!stream || !el) return;
   try{
     vctx = vctx || new (window.AudioContext || window.webkitAudioContext)();
     const src = vctx.createMediaStreamSource(stream), an = vctx.createAnalyser();
     an.fftSize = 256; src.connect(an);
     const buf = new Uint8Array(an.frequencyBinCount);
     const iv = setInterval(() => {
-      an.getByteFrequencyData(buf);
-      let sum = 0; for(let i = 0; i < buf.length; i++) sum += buf[i];
-      el.classList.toggle('talk', sum / buf.length > 18);
-    }, 120);
-    levels.set(el, {iv, src, an});
+      an.getByteTimeDomainData(buf);
+      let sum = 0; for(let i = 0; i < buf.length; i++){ const x = (buf[i] - 128) / 128; sum += x * x; }
+      const tk = Math.sqrt(sum / buf.length) > 0.035;
+      el.classList.toggle('talk', tk);
+      if(vsheet) vsheet.setSpeak(el.id === 'vpMe' ? 'me' : 'peer', tk && !(el.id === 'vpMe' && voiceMuted));
+    }, 110);
+    levels.set(el, {iv, src});
   }catch(e){}
 }
 function stopLevel(el){
-  const x = levels.get(el); if(!x) return;
-  clearInterval(x.iv); try{ x.src.disconnect(); }catch(e){} levels.delete(el);
-  if(el) el.classList.remove('talk');
+  const l = levels.get(el);
+  if(l){ clearInterval(l.iv); try{ l.src.disconnect(); }catch(e){} levels.delete(el); }
+  el.classList.remove('talk');
+  if(vsheet) vsheet.setSpeak(el.id === 'vpMe' ? 'me' : 'peer', false);
 }
-
-function paintCallAvatars(){
-  const box = $('vcAvs'); if(!box) return;
-  const mine = {id: me, name: myName, u: account && account.username, av: myAvVer(), muted: voiceMuted, me: true, sharing: sharing, live: voiceOn};
-  const others = vPeerList();
-  const all = [mine].concat(others.map(p => ({...p, me: false})));
-  const solo = all.length <= 2;
-  box.textContent = '';
-  all.forEach(p => {
-    const d = document.createElement('div');
-    const key = p.me ? 'me' : (p.id || '');
-    d.className = 'vc-av' + (solo ? ' solo' : '') + (p.muted ? ' muted' : '') + (p.sharing ? ' sharing' : '') + ((p.me && !voiceOn) ? ' off' : '');
-    d.dataset.id = key;
-    if(validAv(p.u, p.av)){
-      const img = document.createElement('img'); img.alt = ''; img.src = avUrl(p.u, p.av); d.appendChild(img);
-    } else {
-      const sp = document.createElement('span'); sp.textContent = initial(p.name); d.appendChild(sp);
-    }
-    const lab = document.createElement('span'); lab.className = 'vc-lab'; lab.textContent = p.me ? 'Sən' : String(p.name || '?').slice(0, 12);
-    d.appendChild(lab);
-    if(!p.me && p.aud && p.aud.classList.contains('talk')) d.classList.add('talk');
-    if(p.me && $('vpMe') && $('vpMe').classList.contains('talk')) d.classList.add('talk');
-    box.appendChild(d);
-  });
-  const vps = document.querySelector('#voice .vps');
-  if(vps){
-    let vpMe = $('vpMe'), avMe = $('avMe');
-    if(!vpMe){
-      vpMe = document.createElement('div'); vpMe.className = 'vp'; vpMe.id = 'vpMe';
-      avMe = document.createElement('span'); avMe.id = 'avMe'; vpMe.appendChild(avMe);
-      vps.insertBefore(vpMe, vps.firstChild);
-    }
-    vpMe.classList.toggle('muted', !!voiceMuted);
-    vpMe.classList.toggle('off', !voiceOn);
-    setVp(vpMe, avMe || vpMe.querySelector('span'), account && account.username, myAvVer(), myName);
-    Array.from(vps.children).forEach(ch => { if(ch.id !== 'vpMe') ch.remove(); });
-    others.slice(0, 2).forEach((p, i) => {
-      const d = document.createElement('div');
-      d.className = 'vp' + (p.muted ? ' muted' : '') + (!p.live ? ' off' : '');
-      if(i === 0) d.id = 'vpPeer';
-      if(validAv(p.u, p.av)){ d.style.backgroundImage = 'url("' + avUrl(p.u, p.av) + '")'; d.style.backgroundSize = 'cover'; d.style.backgroundPosition = 'center'; }
-      else { const sp = document.createElement('span'); if(i === 0) sp.id = 'avPeer'; sp.textContent = initial(p.name); d.appendChild(sp); }
-      vps.appendChild(d);
-    });
-    if(others.length > 2){
-      const m = document.createElement('div'); m.className = 'vp more'; m.textContent = '+' + (others.length - 2); vps.appendChild(m);
-    }
-  }
-}
-
-function setVoiceUI(){
-  const others = vPeerList();
-  const st = !voiceOn && !others.length ? 'off'
-    : !voiceOn && others.length ? 'invite'
-    : voiceOn && !others.length ? 'wait'
-    : vFailAll() ? 'fail'
-    : vAnyLive() ? 'live' : 'conn';
-
-  const box = $('voice');
-  if(box){ box.hidden = st === 'off'; box.dataset.st = st; }
-  document.body.classList.toggle('invoice', voiceOn);
-  peerVoice = others.length > 0;
-
-  const names = others.map(p => p.name || 'Qonaq');
-  const statusMap = {
-    invite: (names.join(', ') || 'Kimsə') + ' səsli otaqdadır',
-    wait: 'Səsli otaqdasan · digərləri gözləyirəm...',
-    conn: 'Qoşulur... (' + others.length + ')',
-    live: 'Səsli · ' + (others.length + 1) + ' nəfər' + (vStart ? ' · ' + mmss(Date.now() - vStart) : ''),
-    fail: 'Səs qoşulmadı. Çıx və yenidən gir',
-    off: ''
-  };
-  if($('vtext')) $('vtext').textContent = statusMap[st] || '';
-  if($('vjoin')) $('vjoin').hidden = st !== 'invite';
-  if($('vmute')){ $('vmute').hidden = !voiceOn; $('vmute').classList.toggle('off', voiceMuted); }
-  if($('vleave')) $('vleave').hidden = !voiceOn;
-  if($('vunmute')) $('vunmute').hidden = !(voiceOn && vNeedTap);
-
-  paintCallAvatars();
-
-  const vc = $('vcall');
-  if(vc){
-    const showFull = (voiceOn || st === 'invite') && !window._vcallMin;
-    if(st === 'off') window._vcallMin = false;
-    vc.classList.toggle('open', !!showFull);
-    const title = others.length === 1 ? (others[0].name || 'Səsli söhbət')
-      : others.length > 1 ? (others.length + 1) + ' nəfər' : 'Səsli söhbət';
-    if($('vcTitle')) $('vcTitle').textContent = title;
-    if($('vcName')) $('vcName').textContent = title;
-    if($('vcStatus')) $('vcStatus').textContent = statusMap[st] || 'Səsli söhbət';
-    if($('vcSub')) $('vcSub').textContent = st === 'live' ? ((others.length + 1) + ' iştirakçı') : (statusMap[st] || '');
-    const tm = $('vcTimer');
-    if(tm){
-      if(st === 'live' && vStart){ tm.hidden = false; tm.textContent = mmss(Date.now() - vStart); }
-      else tm.hidden = true;
-    }
-    const mbtn = $('vcMic');
-    if(mbtn){
-      mbtn.classList.toggle('off', !!voiceMuted);
-      const ic = mbtn.querySelector('i.ic');
-      if(ic) ic.className = 'ic fa-solid ' + (voiceMuted ? 'fa-microphone-slash' : 'fa-microphone');
-      const sp = mbtn.querySelector('span');
-      if(sp) sp.textContent = voiceMuted ? 'Səsi aç' : 'Səs bağla';
-    }
-    const sbtn = $('vcShare');
-    if(sbtn){
-      sbtn.classList.toggle('on', !!sharing);
-      const sp = sbtn.querySelector('span');
-      if(sp) sp.textContent = sharing ? 'Dayandır' : 'Ekran';
-    }
-  }
-  updateScreenUI();
-}
-
-function updateScreenUI(){
-  const wrap = $('vcScreen'), vid = $('vcScreenVid'), lab = $('vcScrLab');
-  if(!wrap || !vid) return;
-  let src = null, label = 'Ekran';
-  if(sharing && screenStream){ src = screenStream; label = 'Sənin ekranın'; }
-  else {
-    for(const p of vPeers.values()){
-      if(p.sharing && p.vstream){ src = p.vstream; label = (p.name || 'Qonaq') + ' ekranı'; break; }
-    }
-  }
-  if(src){
-    wrap.classList.add('on');
-    if(vid.srcObject !== src) vid.srcObject = src;
-    vid.muted = true;
-    vid.play().catch(()=>{});
-    if(lab) lab.textContent = label;
-  } else {
-    wrap.classList.remove('on');
-    vid.srcObject = null;
-  }
-}
-
-function closePeer(id){
-  const p = vPeers.get(id); if(!p) return;
-  vPeers.delete(id);
-  try{ if(p.pc) p.pc.close(); }catch(e){}
-  if(p.aud){ try{ p.aud.pause(); p.aud.srcObject = null; p.aud.remove(); }catch(e){} }
-  stopLevel(p.aud);
-  syncCompatPeer();
-}
-function closeAllPeers(){ Array.from(vPeers.keys()).forEach(closePeer); }
-function closeRtc(){ closeAllPeers(); }
-
-function localTracks(){
-  const tracks = [];
-  if(localStream) localStream.getTracks().forEach(t => tracks.push(t));
-  if(screenStream) screenStream.getVideoTracks().forEach(t => tracks.push(t));
-  return tracks;
-}
-
-function mkPeer(id, name, init){
-  const pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
-  const p = {pc, name: name || '', u: '', av: 0, muted: false, live: false, pend: [], rs: false, init: !!init, aud: null, sharing: false, vstream: null};
-  vPeers.set(id, p);
-  localTracks().forEach(t => {
-    try{ pc.addTrack(t, t.kind === 'video' && screenStream ? screenStream : localStream); }catch(e){}
-  });
-  pc.onicecandidate = e => {
-    if(vPeers.get(id) === p && e.candidate)
-      send({t: 'rtc', from: me, to: id, k: 'ice', d: e.candidate.toJSON()});
-  };
-  pc.ontrack = e => {
-    if(vPeers.get(id) !== p) return;
-    const stream = e.streams[0];
-    if(e.track.kind === 'video'){
-      p.sharing = true; p.vstream = stream;
-      e.track.onended = () => { if(vPeers.get(id) === p){ p.sharing = false; p.vstream = null; setVoiceUI(); } };
-      setVoiceUI();
-      return;
-    }
-    let a = p.aud;
-    if(!a){
-      a = p.aud = document.createElement('audio');
-      a.autoplay = true; a.setAttribute('playsinline', '');
-      const box = $('vaudios') || document.body; box.appendChild(a);
-    }
-    a.srcObject = stream;
-    const pr = a.play();
-    if(pr && pr.catch) pr.catch(() => { vNeedTap = true; setVoiceUI(); });
-    else vNeedTap = false;
-    watchLevel(stream, a);
-  };
-  pc.onconnectionstatechange = () => {
-    if(vPeers.get(id) !== p) return;
-    const st = pc.connectionState;
-    p.live = st === 'connected';
-    if(st === 'connected' && !vStart){
-      vStart = Date.now();
-      if(vTimer) clearInterval(vTimer);
-      vTimer = setInterval(setVoiceUI, 1000);
-    }
-    if(st === 'failed' && p.init && !p.rs){ p.rs = true; offerPeer(id, true); }
-    setVoiceUI();
-  };
-  syncCompatPeer();
-  return p;
-}
-
-async function offerPeer(id, restart){
-  const p = vPeers.get(id); if(!p || !p.pc) return;
-  try{
-    const o = await p.pc.createOffer({iceRestart: !!restart, offerToReceiveAudio: true, offerToReceiveVideo: true});
-    await p.pc.setLocalDescription(o);
-    if(vPeers.get(id) !== p) return;
-    send({t: 'rtc', from: me, to: id, k: 'offer', d: {type: o.type, sdp: o.sdp}});
-  }catch(e){}
-}
-
-async function rtcMsg(m){
-  if(!voiceOn || m.to !== me) return;
-  const id = String(m.from || '');
-  if(!id) return;
-  try{
-    if(m.k === 'offer'){
-      let p = vPeers.get(id);
-      if(p && p.init){ closePeer(id); p = null; }
-      if(!p || !p.pc) p = mkPeer(id, (p && p.name) || peerName || '', false);
-      await p.pc.setRemoteDescription(m.d);
-      const q = p.pend.splice(0);
-      for(const c of q) await p.pc.addIceCandidate(c).catch(()=>{});
-      const a = await p.pc.createAnswer();
-      await p.pc.setLocalDescription(a);
-      if(vPeers.get(id) !== p) return;
-      send({t: 'rtc', from: me, to: id, k: 'answer', d: {type: a.type, sdp: a.sdp}});
-      setVoiceUI();
-    } else if(m.k === 'answer'){
-      const p = vPeers.get(id); if(!p || !p.pc) return;
-      await p.pc.setRemoteDescription(m.d);
-      const q = p.pend.splice(0);
-      for(const c of q) await p.pc.addIceCandidate(c).catch(()=>{});
-    } else if(m.k === 'ice'){
-      const p = vPeers.get(id);
-      if(!p) return;
-      if(p.pc && p.pc.remoteDescription) await p.pc.addIceCandidate(m.d).catch(()=>{});
-      else p.pend.push(m.d);
-    }
-  }catch(e){ setVoiceUI(); }
-}
-
 function voiceHello(re){
-  send({t: 'voice', on: true, from: me, name: myName, muted: voiceMuted, re: !!re, u: (account && account.username) || '', av: myAvVer(), share: !!sharing});
-}
-
-function voiceMsg(m){
-  if(m.t === 'rtc'){ rtcMsg(m); return; }
-  if(m.t === 'vmute'){
-    const p = vPeers.get(String(m.from || ''));
-    if(p){ p.muted = !!m.on; setVoiceUI(); }
-    return;
-  }
-  if(m.t === 'vshare'){
-    const p = vPeers.get(String(m.from || ''));
-    if(p){ p.sharing = !!m.on; if(!m.on) p.vstream = null; setVoiceUI(); }
-    return;
-  }
-  const id = String(m.from || '');
-  if(m.on){
-    if(!id || id === me) return;
-    let p = vPeers.get(id);
-    if(p && !m.re && p.pc){ closePeer(id); p = null; }
-    const name = String(m.name || '').slice(0, 20);
-    if(voiceOn){
-      if(!p || p._ghost || !p.pc){
-        if(p) vPeers.delete(id);
-        const doInit = String(me) < String(id);
-        p = mkPeer(id, name, doInit);
-        if(validAv(m.u, m.av)){ p.u = m.u; p.av = +m.av; }
-        p.muted = !!m.muted;
-        p.sharing = !!m.share;
-        if(doInit) offerPeer(id, false);
-      } else {
-        p.name = name || p.name;
-        if(validAv(m.u, m.av)){ p.u = m.u; p.av = +m.av; }
-        p.muted = !!m.muted;
-        if(m.share != null) p.sharing = !!m.share;
-      }
-      if(!m.re) voiceHello(true);
-    } else {
-      if(!p){
-        p = {pc: null, name, u: validAv(m.u, m.av) ? m.u : '', av: validAv(m.u, m.av) ? +m.av : 0, muted: !!m.muted, live: false, pend: [], rs: false, init: false, aud: null, sharing: !!m.share, vstream: null, _ghost: true};
-        vPeers.set(id, p);
-      } else {
-        p.name = name || p.name;
-        if(validAv(m.u, m.av)){ p.u = m.u; p.av = +m.av; }
-        p.muted = !!m.muted;
-      }
-      if(!m.re) sysMsg((name || 'Kimsə') + ' səsli otağa girdi');
-    }
-    syncCompatPeer();
-    setVoiceUI();
-  } else {
-    if(!id) return;
-    const p = vPeers.get(id);
-    const nm = (p && p.name) || 'Kimsə';
-    closePeer(id);
-    if(p && !p._ghost) sysMsg(nm + ' səsli otaqdan çıxdı');
-    setVoiceUI();
-  }
+  send({t: 'voice', on: true, from: me, name: myName, muted: voiceMuted, re: !!re, u: (account && account.username) || '', av: myAvVer()});
 }
 
 async function joinVoice(){
@@ -4858,151 +4600,156 @@ async function joinVoice(){
   if(!window.RTCPeerConnection || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     sysMsg('Mikrofon bu bağlantıda işləmir. Sayt https ilə açılmalıdır.'); return;
   }
-  let st;
   try{
-    st = await navigator.mediaDevices.getUserMedia({
-      audio: (window.wtAudioCons ? window.wtAudioCons() : {echoCancellation: true, noiseSuppression: true, autoGainControl: true}),
-      video: false
-    });
+    localStream = await navigator.mediaDevices.getUserMedia({audio: (window.wtAudioCons ? window.wtAudioCons() : {echoCancellation: true, noiseSuppression: true, autoGainControl: true}), video: false});
   }catch(e){
     sysMsg('Mikrofon icazəsi verilmədi. Brauzer ayarlarından icazə ver.'); return;
   }
-  try{ await loadIce(); }catch(e){}
-  localStream = st; voiceOn = true; voiceMuted = false; window._vcallMin = false; vNeedTap = false;
+  voiceOn = true; voiceMuted = false;
+  $('vmute').classList.remove('off'); $('vpMe').classList.remove('muted');
   try{ vctx = vctx || new (window.AudioContext || window.webkitAudioContext)(); vctx.resume(); }catch(e){}
-  const ghosts = Array.from(vPeers.entries()).filter(([,p]) => p._ghost || !p.pc);
-  for(const [id, g] of ghosts){
-    vPeers.delete(id);
-    const doInit = String(me) < String(id);
-    const p = mkPeer(id, g.name, doInit);
-    p.u = g.u; p.av = g.av; p.muted = g.muted; p.sharing = g.sharing;
-    if(doInit) offerPeer(id, false);
-  }
   watchLevel(localStream, $('vpMe'));
   voiceHello(false);
   sysMsg('Səsli otağa girdin. Qulaqlıq tax ki, videonun səsi mikrofona düşməsin');
   setVoiceUI();
-  if(window.wtStartMuted && window.wtStartMuted()) toggleVoiceMute();
+  maybeCall();
+  if(window.wtStartMuted && window.wtStartMuted()) $('vmute').click();
 }
-
 function leaveVoice(){
-  if(!voiceOn && !vPeers.size) return;
+  if(!voiceOn) return;
   voiceOn = false;
-  stopScreenShare(true);
-  closeAllPeers();
+  closeRtc();
   if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   stopLevel($('vpMe'));
-  if(vTimer){ clearInterval(vTimer); vTimer = null; }
-  vStart = 0; vNeedTap = false; voiceMuted = false;
+  $('vpMe').classList.remove('muted');
   send({t: 'voice', on: false, from: me});
   sysMsg('Səsli otaqdan çıxdın');
-  syncCompatPeer();
   setVoiceUI();
 }
-
-function toggleVoiceMute(){
-  if(!localStream) return;
-  voiceMuted = !voiceMuted;
-  localStream.getAudioTracks().forEach(t => { t.enabled = !voiceMuted; });
-  send({t: 'vmute', on: voiceMuted, from: me});
-  setVoiceUI();
+function closeRtc(){
+  if(rtc){ const r = rtc; rtc = null; try{ r.close(); }catch(e){} }
+  pendingIce = []; vLive = false; vFail = false; vStart = 0; restarted = false;
+  if(vTimer){ clearInterval(vTimer); vTimer = null; }
+  raud.srcObject = null; stopLevel($('vpPeer')); $('vunmute').hidden = true;
 }
-
-async function startScreenShare(){
-  if(!voiceOn || sharing) return;
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
-    sysMsg('Ekran paylaşma bu cihazda dəstəklənmir'); return;
-  }
-  let ss;
-  try{
-    ss = await navigator.mediaDevices.getDisplayMedia({video: {frameRate: 15, width: {max: 1280}, height: {max: 720}}, audio: false});
-  }catch(e){
-    if(e && e.name !== 'NotAllowedError') sysMsg('Ekran paylaşma alınmadı');
-    return;
-  }
-  screenStream = ss; sharing = true;
-  const vtrack = ss.getVideoTracks()[0];
-  if(vtrack){
-    vtrack.onended = () => stopScreenShare(false);
-    for(const [id, p] of vPeers){
-      try{
-        const sender = p.pc.getSenders().find(x => x.track && x.track.kind === 'video');
-        if(sender) await sender.replaceTrack(vtrack);
-        else p.pc.addTrack(vtrack, ss);
-        try{
-          const o = await p.pc.createOffer({offerToReceiveAudio: true, offerToReceiveVideo: true});
-          await p.pc.setLocalDescription(o);
-          send({t: 'rtc', from: me, to: id, k: 'offer', d: {type: o.type, sdp: o.sdp}});
-        }catch(e){}
-      }catch(e){}
+function maybeCall(){
+  if(!voiceOn || !peerVoice || !peerId || rtc || !localStream) return;
+  makeRtc();
+  if(me < peerId) offer(false);     // id-si kiçik olan təklif göndərir
+}
+function makeRtc(){
+  const my = rtc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+  localStream.getTracks().forEach(t => my.addTrack(t, localStream));
+  my.onicecandidate = e => {
+    if(rtc === my && e.candidate) send({t: 'rtc', from: me, to: peerId, k: 'ice', d: e.candidate.toJSON()});
+  };
+  my.ontrack = e => {
+    if(rtc !== my) return;
+    raud.srcObject = e.streams[0];
+    raud.play().then(() => { $('vunmute').hidden = true; }).catch(() => { $('vunmute').hidden = false; });
+    watchLevel(e.streams[0], $('vpPeer'));
+  };
+  my.onconnectionstatechange = () => {
+    if(rtc !== my) return;
+    const st = my.connectionState;
+    if(st === 'connected'){
+      vLive = true; vFail = false;
+      if(!vStart){ vStart = Date.now(); vTimer = setInterval(setVoiceUI, 1000); }
+    } else if(st === 'disconnected'){
+      vLive = false;
+    } else if(st === 'failed'){
+      vLive = false;
+      if(me < peerId && !restarted){ restarted = true; offer(true); } else vFail = true;
     }
-  }
-  send({t: 'vshare', on: true, from: me});
-  voiceHello(true);
-  setVoiceUI();
-  sysMsg('Ekran paylaşılır');
+    setVoiceUI();
+  };
 }
-
-function stopScreenShare(quiet){
-  if(!sharing && !screenStream) return;
-  sharing = false;
-  if(screenStream){
-    screenStream.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
-    screenStream = null;
-  }
-  for(const [id, p] of vPeers){
-    try{
-      p.pc.getSenders().filter(x => x.track && x.track.kind === 'video').forEach(s => {
-        try{ p.pc.removeTrack(s); }catch(e){ try{ s.replaceTrack(null); }catch(e2){} }
-      });
-      if(p.init) offerPeer(id, false);
-    }catch(e){}
-  }
-  if(voiceOn) send({t: 'vshare', on: false, from: me});
-  setVoiceUI();
-  if(!quiet) sysMsg('Ekran paylaşma dayandı');
+async function offer(iceRestart){
+  const my = rtc; if(!my) return;
+  try{
+    const o = await my.createOffer({iceRestart: !!iceRestart});
+    await my.setLocalDescription(o);
+    if(rtc !== my) return;
+    send({t: 'rtc', from: me, to: peerId, k: 'offer', d: {type: o.type, sdp: o.sdp}});
+  }catch(e){ vFail = true; setVoiceUI(); }
 }
-
-function toggleScreenShare(){
-  if(sharing) stopScreenShare(false);
-  else startScreenShare();
+async function rtcMsg(m){
+  if(!voiceOn || m.to !== me) return;
+  try{
+    if(m.k === 'offer'){
+      peerId = String(m.from || peerId); peerVoice = true;
+      if(!rtc) makeRtc();
+      const my = rtc;
+      await my.setRemoteDescription(m.d);
+      for(const c of pendingIce.splice(0)) await my.addIceCandidate(c).catch(() => {});
+      const a = await my.createAnswer();
+      await my.setLocalDescription(a);
+      if(rtc !== my) return;
+      send({t: 'rtc', from: me, to: peerId, k: 'answer', d: {type: a.type, sdp: a.sdp}});
+      setVoiceUI();
+    } else if(m.k === 'answer'){
+      if(!rtc) return;
+      const my = rtc;
+      await my.setRemoteDescription(m.d);
+      for(const c of pendingIce.splice(0)) await my.addIceCandidate(c).catch(() => {});
+    } else if(m.k === 'ice'){
+      if(rtc && rtc.remoteDescription) await rtc.addIceCandidate(m.d).catch(() => {});
+      else pendingIce.push(m.d);
+    }
+  }catch(e){ vFail = true; setVoiceUI(); }
 }
-
+function voiceMsg(m){
+  if(m.t === 'rtc'){ rtcMsg(m); return; }
+  if(m.t === 'vmute'){ $('vpPeer').classList.toggle('muted', !!m.on); if(vsheet) vsheet.update(); return; }
+  if(m.on){
+    if(!m.re && rtc) closeRtc();               // qarşı tərəf yenidən girib: köhnə bağlantını at
+    peerVoice = true; peerId = String(m.from || ''); peerName = String(m.name || '').slice(0, 20);
+    if(validAv(m.u, m.av)){ peerU = m.u; peerAv = +m.av; }
+    $('vpPeer').classList.toggle('muted', !!m.muted);
+    if(!m.re && !voiceOn) sysMsg(peerNm() + ' səsli otağa girdi');
+    if(voiceOn && !m.re) voiceHello(true);     // mən də buradayam
+    setVoiceUI();
+    maybeCall();
+  } else {
+    if(m.from && peerId && m.from !== peerId) return;
+    peerVoice = false; closeRtc();
+    $('vpPeer').classList.remove('muted');
+    sysMsg(peerNm() + ' səsli otaqdan çıxdı');
+    setVoiceUI();
+  }
+}
 $('vmic').onclick = joinVoice;
 $('vjoin').onclick = joinVoice;
 $('vleave').onclick = leaveVoice;
-$('vunmute').onclick = () => {
-  vNeedTap = false;
-  vPeers.forEach(p => { if(p.aud) p.aud.play().catch(()=>{}); });
-  if(raud) raud.play().catch(()=>{});
-  setVoiceUI();
+$('vunmute').onclick = () => { raud.play().then(() => { $('vunmute').hidden = true; }).catch(() => {}); };
+$('vmute').onclick = () => {
+  if(!localStream) return;
+  voiceMuted = !voiceMuted;
+  localStream.getAudioTracks().forEach(t => { t.enabled = !voiceMuted; });
+  $('vmute').classList.toggle('off', voiceMuted);
+  $('vmute').setAttribute('aria-label', voiceMuted ? 'Mikrofonu aç' : 'Mikrofonu söndür');
+  $('vpMe').classList.toggle('muted', voiceMuted);
+  send({t: 'vmute', on: voiceMuted});
+  if(vsheet) vsheet.update();
 };
-$('vmute').onclick = toggleVoiceMute;
-
-(function(){
-  const vc = $('vcall'); if(!vc) return;
-  window._vcallMin = false;
-  $('vcMic').onclick = () => { if(voiceOn) toggleVoiceMute(); else joinVoice(); };
-  $('vcEnd').onclick = () => { if(voiceOn) leaveVoice(); else { closeAllPeers(); setVoiceUI(); } };
-  $('vcMsg').onclick = () => { window._vcallMin = true; vc.classList.remove('open'); try{ $('msg').focus(); }catch(e){} };
-  $('vcMin').onclick = () => { window._vcallMin = true; vc.classList.remove('open'); };
-  $('vcShare').onclick = toggleScreenShare;
-  $('vcSpk').onclick = function(){
-    const on = !this.classList.contains('on');
-    this.classList.toggle('on', on);
-    this.querySelector('i.ic').className = 'ic fa-solid ' + (on ? 'fa-volume-high' : 'fa-volume-low');
-    vPeers.forEach(p => { if(p.aud){ p.aud.muted = false; p.aud.play().catch(()=>{}); } });
-  };
-  if($('voice')) $('voice').addEventListener('click', e => {
-    if(e.target.closest('button')) return;
-    if(voiceOn || vPeers.size){ window._vcallMin = false; vc.classList.add('open'); setVoiceUI(); }
-  });
-})();
-
+vsheet = window.wtVoiceSheet({
+  title: 'Səsli söhbət',
+  sub: () => (voiceOn && peerVoice ? (vLive ? mmss(vStart ? Date.now() - vStart : 0) : 'Qoşulur...') : 'Qarşı tərəf gözlənilir'),
+  members: () => {
+    const out = [{id: 'me', name: myName || 'Mən', me: true, muted: voiceMuted}];
+    if(peerVoice) out.push({id: 'peer', name: peerNm(), muted: $('vpPeer').classList.contains('muted'), st: vLive ? '' : 'Qoşulur...'});
+    return out;
+  },
+  isMuted: () => voiceMuted,
+  isSpeaker: () => !raud.muted,
+  onMute: () => { $('vmute').click(); },
+  onSpeaker: () => { raud.muted = !raud.muted; },
+  onLeave: () => { leaveVoice(); },
+});
+$('voice').addEventListener('click', e => { if(voiceOn && !e.target.closest('button')) vsheet.open(); });
 window.addEventListener('pagehide', () => {
   if(!voiceOn || !room) return;
   try{ navigator.sendBeacon('/api/send', new Blob([JSON.stringify({room, id: me, sk, msg: {t: 'voice', on: false, from: me}})], {type: 'application/json'})); }catch(e){}
-  try{ if(sharing) navigator.sendBeacon('/api/send', new Blob([JSON.stringify({room, id: me, sk, msg: {t: 'vshare', on: false, from: me}})], {type: 'application/json'})); }catch(e){}
 });
 
 
@@ -5055,7 +4802,7 @@ async function leaveRoom(){
   document.body.classList.remove('big');
   $('chat').textContent = ''; msgEls.clear(); rxs.clear(); rxClose(); ownState.clear(); pendingRead.clear(); clearReply();
   $('msg').value = ''; $('url').value = ''; clearUnread(); clearTyping(false);
-  try{ leaveVoice(); }catch(e){ try{ closeAllPeers(); }catch(e2){} peerVoice = false; peerId = ''; peerName = ''; peerU = ''; peerAv = 0; setVoiceUI(); }
+  peerVoice = false; peerId = ''; peerName = ''; peerU = ''; peerAv = 0; closeRtc(); setVoiceUI();
   $('status').dataset.on = '0'; $('status').textContent = 'Qoşulur...';
   $('codein').value = ''; joinMsg(''); lockJoin(false);
   showMenu();                                    // ana menyuya qayıt
@@ -7800,7 +7547,7 @@ window.wtInviteBox = function(o){
   window.wtGameVoice = function(o){
     var $ = function(id){ return document.getElementById(id); };
     var on = false, muted = false, stream = null, myId = '', since = 0, gen = 0, rc = '', needTap = false;
-    var peers = {}, vc = [], vk = 0;
+    var peers = {}, vc = [], vk = 0, speakerOn = true, sheet = null;
     var box = document.createElement('div'); box.style.display = 'none'; document.body.appendChild(box);
     function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
     function say(t){ try{ if(o.say) o.say(t); }catch(e){} }
@@ -7812,12 +7559,13 @@ window.wtInviteBox = function(o){
       return r.json();
     }
 
-    function render(){
+    function render(){ renderBar(); if(sheet) sheet.update(); }
+    function renderBar(){
       var bar = $(o.p + 'vbar'), btn = $(o.p + 'mic'), mb = $(o.p + 'mute'), tx = $(o.p + 'vt');
       if(!bar) return;
       var oth = vc.filter(function(x){ return x.id !== myId; });
       btn.classList.toggle('on', on);
-      btn.querySelector('span').textContent = T(on ? 'Səsli otaqdan çıx' : 'Səsli otağa gir');
+      btn.querySelector('span').textContent = T(on ? 'Səsli otaq' : 'Səsli otağa gir');
       mb.hidden = !on;
       mb.classList.toggle('off', muted);
       mb.innerHTML = '<i class="fa-solid ' + (muted ? 'fa-microphone-slash' : 'fa-microphone') + '" aria-hidden="true"></i>';
@@ -7840,6 +7588,7 @@ window.wtInviteBox = function(o){
       delete peers[id];
       try{ p.pc.close(); }catch(e){}
       if(p.aud){ try{ p.aud.pause(); p.aud.srcObject = null; p.aud.remove(); }catch(e){} }
+      if(sheet) sheet.unwatch(id);
     }
     function mkPeer(id, name, init){
       var pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
@@ -7852,7 +7601,8 @@ window.wtInviteBox = function(o){
         if(peers[id] !== p) return;
         var a = p.aud;
         if(!a){ a = p.aud = document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); box.appendChild(a); }
-        a.srcObject = e.streams[0];
+        a.srcObject = e.streams[0]; a.muted = !speakerOn;
+        if(sheet) sheet.watch(id, e.streams[0]);
         var pr = a.play(); if(pr && pr.catch) pr.catch(function(){ needTap = true; render(); });
       };
       pc.onconnectionstatechange = function(){
@@ -7940,12 +7690,14 @@ window.wtInviteBox = function(o){
         say('Əlaqə problemi, yenidən cəhd et'); render(); return;
       }
       on = true; myId = res.id; since = res.seq; applyTrack();
+      if(sheet) sheet.watch('me', stream);
       (res.members || []).forEach(function(m){
         var p = mkPeer(m.id, m.name, true); p.muted = !!m.muted; offer(m.id, false);   // təklifi daxil olan göndərir
       });
       loop(gen);
       render();
       if(window.wtStartMuted && window.wtStartMuted()) toggleMute();
+      if(sheet) sheet.open();
     }
     function leave(quiet){
       if(!on) return;
@@ -7953,6 +7705,7 @@ window.wtInviteBox = function(o){
       Object.keys(peers).forEach(closePeer);
       if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
       var c = rc; rc = ''; myId = ''; muted = false; needTap = false;
+      if(sheet){ sheet.close(); sheet.clear(); }
       if(c) api('/api/gvoice/send', {method: 'POST', body: JSON.stringify({game: o.game, room: c, k: 'bye', to: '', d: null})}).catch(function(){});
       render();
     }
@@ -7974,9 +7727,41 @@ window.wtInviteBox = function(o){
       if(!ok) needTap = false;
     }
 
-    $(o.p + 'mic').onclick = function(){ if(on) leave(); else join(); };
+    function members(){
+      var out = [], seen = {}, mine = null;
+      vc.forEach(function(x){ if(x.id === myId) mine = x; });
+      out.push({id: 'me', name: (mine && mine.name) || T('Mən'), me: true, muted: muted || !!(o.allow && !o.allow())});
+      vc.forEach(function(x){
+        if(x.id === myId) return; seen[x.id] = 1; var p = peers[x.id];
+        out.push({id: x.id, name: x.name, muted: p ? !!p.muted : !!x.muted, st: (p && p.live) ? '' : T('Qoşulur...')});
+      });
+      Object.keys(peers).forEach(function(id){
+        if(seen[id]) return; var p = peers[id];
+        out.push({id: id, name: p.name || '?', muted: !!p.muted, st: p.live ? '' : T('Qoşulur...')});
+      });
+      return out;
+    }
+    sheet = window.wtVoiceSheet({
+      title: 'Səsli söhbət',
+      sub: function(){ var c = o.code(); return (c ? 'KOD ' + String(c).toUpperCase() + ' · ' : '') + members().length + ' ' + T('nəfər'); },
+      members: members,
+      isMuted: function(){ return muted; },
+      muteLocked: function(){ return !!(o.allow && !o.allow()); },
+      isSpeaker: function(){ return speakerOn; },
+      onMute: toggleMute,
+      onSpeaker: function(){
+        speakerOn = !speakerOn;
+        Object.keys(peers).forEach(function(id){ if(peers[id].aud) peers[id].aud.muted = !speakerOn; });
+      },
+      onLeave: function(){ leave(); },
+      onInvite: $(o.p + 'share') ? function(){ $(o.p + 'share').click(); } : null
+    });
+    $(o.p + 'mic').onclick = function(){ if(on) sheet.open(); else join(); };
     $(o.p + 'mute').onclick = toggleMute;
-    $(o.p + 'vbar').addEventListener('click', function(e){ if(needTap && !e.target.closest('button')) playAll(); });
+    $(o.p + 'vbar').addEventListener('click', function(e){
+      if(needTap && !e.target.closest('button')) playAll();
+      else if(on && !e.target.closest('button')) sheet.open();
+    });
     render();
     return {
       leave: leave,
