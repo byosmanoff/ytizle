@@ -4402,12 +4402,19 @@ window.wtHideGuide = function(save){
   var el = document.getElementById('wtGuide'); if(el) el.hidden = true;
   if(save){ try{ localStorage.setItem('wt_guide_v1', '1'); }catch(e){} }
 };
-(function(){
-  function hide(){ window.wtHideGuide(true); }
-  var ok = document.getElementById('wtGuideOk'), sk = document.getElementById('wtGuideSkip');
-  if(ok) ok.addEventListener('click', hide);
-  if(sk) sk.addEventListener('click', hide);
-})();
+/* Düymələr HTML-in sonunda ola bilər — delegation ilə bağlanır */
+document.addEventListener('click', function(e){
+  var t = e.target && e.target.closest ? e.target.closest('#wtGuideOk, #wtGuideSkip') : null;
+  if(!t) return;
+  e.preventDefault();
+  window.wtHideGuide(true);
+});
+/* fon klikı ilə də bağlansın */
+document.addEventListener('click', function(e){
+  var g = document.getElementById('wtGuide');
+  if(!g || g.hidden) return;
+  if(e.target === g) window.wtHideGuide(true);
+});
 window.wtAskNotif = function(){
   if(!('Notification' in window)) return;
   if(Notification.permission !== 'default') return;
@@ -4415,16 +4422,22 @@ window.wtAskNotif = function(){
   var el = document.getElementById('wtNotifAsk'); if(!el) return;
   el.hidden = false;
 };
-(function(){
-  var yes = document.getElementById('wtNotifYes'), no = document.getElementById('wtNotifNo');
-  function done(){ var el = document.getElementById('wtNotifAsk'); if(el) el.hidden = true; try{ localStorage.setItem('wt_notif_ask','1'); }catch(e){} }
-  if(no) no.addEventListener('click', done);
-  if(yes) yes.addEventListener('click', async function(){
-    done();
-    try{ await Notification.requestPermission(); }catch(e){}
-    try{ if(typeof pushSync === 'function') pushSync(true); }catch(e){}
-  });
-})();
+window.wtNotifDone = function(allow){
+  var el = document.getElementById('wtNotifAsk'); if(el) el.hidden = true;
+  try{ localStorage.setItem('wt_notif_ask','1'); }catch(e){}
+  if(allow){
+    (async function(){
+      try{ await Notification.requestPermission(); }catch(e){}
+      try{ if(typeof pushSync === 'function') pushSync(true); }catch(e){}
+    })();
+  }
+};
+document.addEventListener('click', function(e){
+  var t = e.target && e.target.closest ? e.target.closest('#wtNotifYes, #wtNotifNo') : null;
+  if(!t) return;
+  e.preventDefault();
+  window.wtNotifDone(t.id === 'wtNotifYes');
+});
 
 window.wtIsGuest = function(){
   try{ return !token && localStorage.getItem('wt_guest') === '1'; }catch(e){ return false; }
@@ -9283,16 +9296,16 @@ window.wtInviteBox = function(o){
     <div class="gstep"><span class="gn">1</span><div><div class="gt">Otaq aç</div><div class="gs">Ana səhifədə «Otaq aç» düyməsinə bas.</div></div></div>
     <div class="gstep"><span class="gn">2</span><div><div class="gt">Kodu paylaş</div><div class="gs">Dostuna otaq kodunu və ya dəvət linkini göndər.</div></div></div>
     <div class="gstep"><span class="gn">3</span><div><div class="gt">Birlikdə izlə</div><div class="gs">Eyni videoda, eyni söhbətdə olun.</div></div></div>
-    <div class="gacts"><button type="button" class="pbtn" id="wtGuideOk">Başlıyaq</button></div>
-    <button type="button" class="gskip" id="wtGuideSkip">Daha sonra</button>
+    <div class="gacts"><button type="button" class="pbtn" id="wtGuideOk" onclick="window.wtHideGuide&&window.wtHideGuide(true)">Başlıyaq</button></div>
+    <button type="button" class="gskip" id="wtGuideSkip" onclick="window.wtHideGuide&&window.wtHideGuide(true)">Daha sonra</button>
   </div>
 </div>
 <div id="wtNotifAsk" hidden role="dialog" aria-live="polite">
   <b>Bildirişləri aç?</b>
   <small>Dəvət və seans xatırlatmalarını vaxtında alarsan. İstədiyin vaxt ayarlardan söndürə bilərsən.</small>
   <div class="gacts">
-    <button type="button" class="pbtn alt" id="wtNotifNo">Xeyr</button>
-    <button type="button" class="pbtn" id="wtNotifYes">İcazə ver</button>
+    <button type="button" class="pbtn alt" id="wtNotifNo" onclick="window.wtNotifDone&&window.wtNotifDone(false)">Xeyr</button>
+    <button type="button" class="pbtn" id="wtNotifYes" onclick="window.wtNotifDone&&window.wtNotifDone(true)">İcazə ver</button>
   </div>
 </div>
 <div id="wtToast" hidden role="status" aria-live="polite"></div>
