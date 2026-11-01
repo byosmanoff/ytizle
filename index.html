@@ -2166,6 +2166,8 @@ body.guest-mode .guest-only{display:block!important}
 }
 
 /* ========== MAFIA REDESIGN v5 — cinematic table ========== */
+#mafhost{display:none!important}
+
 #mafia{
   --mf-ink:#070a14;
   --mf-panel:rgba(12,16,32,.82);
@@ -3154,7 +3156,7 @@ body.guest-mode .guest-only{display:block!important}
     <span class="gvt" id="mafvt" role="status"></span>
     <button type="button" class="gvb gvm" id="mafmute" hidden></button>
   </div>
-  <div id="mafhost" hidden aria-live="polite">
+  <div id="mafhost" hidden aria-hidden="true" style="display:none!important">
     <span class="hav" aria-hidden="true"><i class="fa-solid fa-microphone-lines"></i></span>
     <div class="htx">
       <div class="hnm">Aparıcı<span class="hwave" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
@@ -9313,7 +9315,7 @@ window.wtInviteBox = function(o){
     $('mafia').classList.toggle('night', isNight);
     paintSky(isNight);
     $('mafcode').textContent = s.code.toUpperCase();
-    renderBar(s); renderHost(s); renderPlayers(s); renderMain(s); renderChat(s); paintTimer(); paintMsg();
+    renderBar(s); renderPlayers(s); renderMain(s); renderChat(s); paintTimer(); paintMsg();
     try{ voice.presence(s.vc, s.vk); voice.refresh(); }catch(e){}
     if(s.status === 'wait'){ try{ inv.refresh(); }catch(e){} }
   }
