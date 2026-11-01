@@ -1039,6 +1039,9 @@ body.mob #profile{
 /* Ayarlar artıq alt naviqasiyada deyil: profil başlığındakı dişlidən açılır */
 #tabbar button[data-go="settings"]{display:none!important}
 #profile .phead{display:flex;align-items:center;gap:12px}
+#profile #favCard,#profile #hvids,#profile #hrooms{margin-top:4px}
+#profile #clearhist{margin:8px 0 16px}
+
 #profile .phead h1{flex:1;min-width:0}
 #profile .profile-settings{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 #setCards .settings-head{display:flex;align-items:center;gap:12px}
@@ -1119,7 +1122,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #menu.tabs-on[data-tab="plans"] [data-t]:not([data-t="plans"]),
 #menu.tabs-on[data-tab="friends"] [data-t]:not([data-t="friends"]),
 #menu.tabs-on[data-tab="games"] [data-t]:not([data-t="games"]),
-#menu.tabs-on[data-tab="hist"] [data-t]:not([data-t="hist"]),
+#menu.tabs-on[data-tab="rank"] [data-t]:not([data-t="rank"]),
 #menu.tabs-on[data-tab="settings"] [data-t]:not([data-t="settings"]){display:none!important}
 #pnamesave,#pusersave,#pbiosave{display:none!important}
 #psaveall:disabled{opacity:.45}
@@ -1460,7 +1463,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 }
 #wtReconnect[hidden]{display:none}
 #wtReconnect.ok{color:#2dcc7a;box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 0 0 1px rgba(45,204,122,.35)}
-#guestbar{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+#guestbar{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px;position:relative;z-index:2}
 #guestbar input{
   width:100%;padding:12px 14px;border-radius:12px;background:#fff7f4;color:var(--ink);
   box-shadow:inset 0 0 0 1.5px rgba(43,15,38,.16);font-size:16px;
@@ -2045,7 +2048,7 @@ body.guest-mode #logout{display:none}
         <div id="guestbar">
           <div class="or">və ya</div>
           <input id="guestName" placeholder="Adın (qonaq)" maxlength="20" autocomplete="nickname">
-          <button type="button" id="guestGo">Qonaq kimi davam et</button>
+          <button type="button" id="guestGo" onclick="try{wtGuestEnter()}catch(e){console&&console.error(e)}">Qonaq kimi davam et</button>
           <p class="ghint">Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.</p>
         </div>
         <p class="note"><i class="fa-solid fa-lock" aria-hidden="true"></i> E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.</p>
@@ -2199,10 +2202,6 @@ body.guest-mode #logout{display:none}
     <div id="freqs"></div>
     <div id="flist"></div>
   </div>
-  <div class="card" id="favCard"><h2><i class="fa-solid fa-heart" aria-hidden="true"></i>Bəyəndiklərim</h2><div id="favList"></div></div>
-  <div class="card"><h2><i class="fa-solid fa-film" aria-hidden="true"></i>İzlədiklərin</h2><div id="hvids"></div></div>
-  <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
-  <p class="mquote" id="mquote"></p>
   <div id="setCards">
   <div class="settings-head card">
     <button type="button" class="ib settings-back" id="settingsback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
@@ -2217,13 +2216,6 @@ body.guest-mode #logout{display:none}
     <label class="swrow" for="setnotif">
       <span><b>Seans bildirişləri</b><small id="setnotifhint"></small></span>
       <input type="checkbox" id="setnotif" class="sw">
-    </label>
-  </div>
-  <div class="card">
-    <h2><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Durak</h2>
-    <label class="swrow" for="setperevod">
-      <span><b>Perevod (hücumu ötürmək)</b><small>Açıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.</small></span>
-      <input type="checkbox" id="setperevod" class="sw" checked>
     </label>
   </div>
   <div class="card">
@@ -2249,10 +2241,21 @@ body.guest-mode #logout{display:none}
     <h2><i class="fa-solid fa-user" aria-hidden="true"></i>Hesab</h2>
     <button class="pbtn alt" id="setlogout" style="width:100%;padding:13px">Hesabdan çıx</button>
   </div>
-  <div class="card">
-    <h2>Təhlükəsizlik</h2>
-    <button class="pbtn alt" id="logoutall" style="width:100%;padding:13px">Bütün cihazlardan çıx</button>
-    <div class="hint" style="margin-top:8px">Bu cihaz da daxil olmaqla bütün telefon və kompüterlərdən çıxarılırsan.</div>
+<div class="card">
+    <h2 id="pwtitle">Şifrəni dəyiş</h2>
+    <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Mövcud şifrə" autocomplete="current-password" aria-label="Mövcud şifrə"></div>
+    <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+    <div class="fld"><input id="pnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
+    <button class="pbtn" id="pwsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+    <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pwforgot">Şifrəmi unutdum</button></div>
+    <div id="pwfgbox" hidden style="margin-top:10px">
+      <div class="hint" id="pwfghint"></div>
+      <div class="fld"><input id="pfcode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"></div>
+      <div class="fld"><input id="pfnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
+      <div class="fld"><input id="pfnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
+      <button class="pbtn" id="pfsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
+      <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pfresend">Kodu yenidən göndər</button></div>
+    </div>
   </div>
   <div class="card dz">
     <h2>Təhlükəli zona</h2>
@@ -2266,14 +2269,14 @@ body.guest-mode #logout{display:none}
   </div>
   <div id="smsg" role="status"></div>
   </div>
-  <button id="clearhist">Tarixçəni təmizlə</button>
+  
   </div></div>
   <nav id="tabbar" aria-label="Naviqasiya">
     <button type="button" data-go="home" class="on" aria-label="Əsas" title="Əsas"><span class="tp"><i class="fa-solid fa-house" aria-hidden="true"></i></span></button>
     <button type="button" data-go="plans" aria-label="Seanslar" title="Seanslar"><span class="tp"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span></button>
     <button type="button" data-go="friends" aria-label="Dostlar" title="Dostlar"><span class="tp"><i class="fa-solid fa-user-group" aria-hidden="true"></i><span class="nav-notif-dot" id="friendNotifDot" hidden aria-label="Yeni dostluq sorğusu"></span></span></button>
     <button type="button" data-go="games" aria-label="Oyunlar" title="Oyunlar"><span class="tp"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span></button>
-    <button type="button" data-go="hist" aria-label="Tarixçə" title="Tarixçə"><span class="tp"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span></button>
+    <button type="button" data-go="rank" aria-label="Reytinq" title="Reytinq və turnirlər"><span class="tp"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span></button>
     <button type="button" data-go="settings" aria-label="Ayarlar" title="Ayarlar"><span class="tp"><i class="fa-solid fa-gear" aria-hidden="true"></i></span></button>
     <button type="button" data-go="profile" aria-label="Profil" title="Profil"><span class="tp"><span class="tav" id="tav"></span></span></button>
   </nav>
@@ -2364,23 +2367,12 @@ body.guest-mode #logout{display:none}
       <div class="frow"><input id="pecode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"><button class="pbtn" id="pemailok">Təsdiq et</button></div>
     </div>
   </div>
-  <div class="card">
-    <h2 id="pwtitle">Şifrəni dəyiş</h2>
-    <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Mövcud şifrə" autocomplete="current-password" aria-label="Mövcud şifrə"></div>
-    <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
-    <div class="fld"><input id="pnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
-    <button class="pbtn" id="pwsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
-    <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pwforgot">Şifrəmi unutdum</button></div>
-    <div id="pwfgbox" hidden style="margin-top:10px">
-      <div class="hint" id="pwfghint"></div>
-      <div class="fld"><input id="pfcode" class="pin" inputmode="numeric" maxlength="6" placeholder="6 rəqəmli kod" autocomplete="one-time-code" aria-label="Təsdiq kodu"></div>
-      <div class="fld"><input id="pfnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
-      <div class="fld"><input id="pfnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
-      <button class="pbtn" id="pfsave" style="width:100%;padding:13px">Şifrəni yenilə</button>
-      <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pfresend">Kodu yenidən göndər</button></div>
-    </div>
-  </div>
-  <div id="pmsg" role="status"></div>
+  <div class="card" id="favCard"><h2><i class="fa-solid fa-heart" aria-hidden="true"></i>Bəyəndiklərim</h2><div id="favList"></div></div>
+  <div class="card"><h2><i class="fa-solid fa-film" aria-hidden="true"></i>İzlədiklərin</h2><div id="hvids"></div></div>
+  <div class="card"><h2><i class="fa-solid fa-door-open" aria-hidden="true"></i>Otaqların</h2><div id="hrooms"></div></div>
+  <p class="mquote" id="mquote"></p>
+  <button id="clearhist">Tarixçəni təmizlə</button>
+<div id="pmsg" role="status"></div>
 </div>
 
 <div id="app">
@@ -4287,6 +4279,62 @@ try{ pendingCode = (new URLSearchParams(location.search).get('kod') || '').toLow
 if(token) $('join').style.display = 'none';        // giriş edilib: bilet bir anlıq da görünməsin
 try{ if(!token && localStorage.getItem('wt_guest')==='1'){ account={name:localStorage.getItem('wt_guest_name')||'Qonaq',username:'',guest:true}; $('join').style.display='none'; /* wt_guest_boot */ } }catch(e){}
 
+
+/* ---- Toast / reconnect / qonaq rejimi ---- */
+window.wtToast = function(msg, ms){
+  var el = document.getElementById('wtToast'); if(!el) return;
+  el.textContent = String(msg || '');
+  el.hidden = false;
+  clearTimeout(window._wtToastT);
+  window._wtToastT = setTimeout(function(){ el.hidden = true; }, ms || 3200);
+};
+window.wtReconnectBanner = function(txt, ok){
+  var el = document.getElementById('wtReconnect'); if(!el) return;
+  if(!txt){ el.hidden = true; return; }
+  el.textContent = txt;
+  el.classList.toggle('ok', !!ok);
+  el.hidden = false;
+};
+window.wtIsGuest = function(){
+  try{ return !token && localStorage.getItem('wt_guest') === '1'; }catch(e){ return false; }
+};
+window.wtSetGuest = function(on, name){
+  try{
+    if(on){
+      localStorage.setItem('wt_guest', '1');
+      if(name) localStorage.setItem('wt_guest_name', String(name).slice(0, 20));
+    }else{
+      localStorage.removeItem('wt_guest');
+    }
+  }catch(e){}
+};
+function wtGuestEnter(){
+  var inp = document.getElementById('guestName');
+  var nm = ((inp && inp.value) || '').trim().slice(0, 20) || 'Qonaq';
+  if(nm.length < 1) nm = 'Qonaq';
+  window.wtSetGuest(true, nm);
+  token = '';
+  account = {name: nm, username: '', guest: true};
+  try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+  try{ document.body.classList.add('guest-mode'); }catch(e){}
+  var j = document.getElementById('join');
+  if(j) j.style.display = 'none';
+  myName = nm;
+  showMenu();
+  try{ window.wtToast('Qonaq rejimindəsən — otaq aça bilərsən', 3500); }catch(e){}
+}
+(function(){
+  try{
+    var gn = localStorage.getItem('wt_guest_name');
+    var inp = document.getElementById('guestName');
+    if(gn && inp && !inp.value) inp.value = gn;
+  }catch(e){}
+  var btn = document.getElementById('guestGo');
+  if(btn) btn.addEventListener('click', function(e){ e.preventDefault(); wtGuestEnter(); });
+  var gin = document.getElementById('guestName');
+  if(gin) gin.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); wtGuestEnter(); } });
+})();
+
 function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
 async function api(path, o){
@@ -5035,7 +5083,10 @@ function applyProfile(p){
   renderName();
   if(!$('profile').hidden) fillProfile();
 }
-function pmsg(t, ok){ const e = $('pmsg'); e.textContent = t || ''; e.dataset.ok = ok ? '1' : '0'; }
+function pmsg(t, ok){
+  const e = $('pmsg'); if(e){ e.textContent = t || ''; e.dataset.ok = ok ? '1' : '0'; }
+  const s = $('smsg'); if(s){ s.textContent = t || ''; s.dataset.ok = ok ? '1' : '0'; }
+}
 function hint(id, t, cls){ const e = $(id); e.textContent = t || ''; e.className = 'hint' + (cls ? ' ' + cls : ''); }
 function fillProfile(){
   setAvatar($('pav'), account.avatar, account.name);
@@ -5059,11 +5110,12 @@ function openProfile(){
   if(!account) return;
   pmsg(''); hint('puserhint', 'Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.');
   hint('pemailhint', ''); $('pecoderow').hidden = true; $('pecode').value = '';
-  $('delbox').hidden = true; $('delopen').hidden = false;
-  $('pcur').value = ''; $('pnew').value = '';
+  try{ if($('delbox')) $('delbox').hidden = true; if($('delopen')) $('delopen').hidden = false; }catch(e){}
+  try{ if($('pcur')) $('pcur').value = ''; if($('pnew')) $('pnew').value = ''; if($('pnew2')) $('pnew2').value = ''; }catch(e){}
   fillProfile();
   $('profile').hidden = false; $('profile').scrollTop = 0;
   loadProfile();
+  try{ loadHistory(); loadFavs(); }catch(e){}
 }
 $('editname').onclick = openProfile;
 $('mav').onclick = openProfile;
@@ -5274,7 +5326,7 @@ $('pfsave').onclick = async () => {
   finally{ b.disabled = false; }
 };
 // bütün cihazlardan çıx
-$('logoutall').onclick = async () => {
+if($('logoutall')) $('logoutall').onclick = async () => {
   if(!(await wtConfirm('Bütün cihazlardan çıxılsın? Bu cihaz da daxil.', {ok: 'Çıx'}))) return;
   try{ await api('/api/logout/all', {method: 'POST'}); }catch(e){}
   forgetLogin();
@@ -5926,7 +5978,7 @@ document.addEventListener('click', function(e){
 }, true);
 /* wtGuestGameGate */
 
-document.querySelectorAll('#tabbar [data-go="games"],#tabbar [data-go="hist"]').forEach(b => b.addEventListener('click', () => { loadBoard(); loadTourneys(); loadFavs(); }));
+document.querySelectorAll('#tabbar [data-go="games"],#tabbar [data-go="rank"]').forEach(b => b.addEventListener('click', () => { loadBoard(); loadTourneys(); }));
 
 async function boot(){
   if(token){
@@ -5951,10 +6003,11 @@ boot();
 /* Instagram tipli naviqasiya: alt panel (ani keçid) + yanaşı səhifələr (barmağı izləyən sürüşdürmə) */
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
-  var ORDER = ['home','plans','friends','games','hist','settings','profile'], PAGES = ORDER.slice(0,6);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#lbCard','games'],['#trCard','games'],['#favCard','hist'],['#durCard','games'],['#chCard','games'],['#mafCard','games'],
+  var ORDER = ['home','plans','friends','games','rank','settings','profile'], PAGES = ORDER.slice(0,6);
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],['#mafCard','games'],
+    ['#lbCard','rank'],['#trCard','rank'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
-    ['#hvids','hist','.card'],['#hrooms','hist','.card'],['#mquote','hist'],['#clearhist','hist'],['#setCards','settings']];
+    ['#setCards','settings']];
   map.forEach(function(m){
     var el = menu.querySelector(m[0]); if(!el) return;
     if(m[2]) el = el.closest(m[2]) || el;
@@ -8431,7 +8484,7 @@ window.wtInviteBox = function(o){
 
   /* ayar açarı */
   (function(){
-    var a = $('setperevod'), b = $('durperevod');
+    var a = $('setperevod'), b = $('durperevod'); if(!a && !b) return;
     function paint(){ var on = perevodOn(); if(a) a.checked = on; if(b) b.checked = on; }
     function set(on){ try{ localStorage.setItem('wt_durperevod', on ? '1' : '0'); }catch(e){} paint(); }
     if(a) a.onchange = function(){ set(a.checked); };
