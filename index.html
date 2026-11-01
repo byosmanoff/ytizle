@@ -2047,6 +2047,124 @@ body.guest-mode .guest-only{display:block!important}
 #mafmain{flex:0 0 auto;overflow:visible}
 #mafmain:has(#mafwait:not([hidden])){flex:1 1 auto;overflow-y:auto}
 #mafchat{flex:1 1 auto;height:auto;min-height:150px}
+
+/* ===== MAFIA visual fix (layout + kartlar) ===== */
+#mafia{
+  min-height:0;
+  box-sizing:border-box;
+}
+#mafia .mhead{flex:none;min-width:0}
+#mafia .mt{min-width:0}
+#mafia .mt b{
+  display:flex;align-items:center;gap:8px;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:17px;
+}
+#mafia .mt b i{flex:none}
+#mafia .mt small{display:block;margin-left:0;margin-top:2px;font-size:11px;letter-spacing:.12em;opacity:.85}
+#mafbar{flex:none}
+#mafbar .mph{min-width:0}
+#mafph{display:flex;align-items:center;gap:8px;min-width:0;font-size:15px}
+#mafph i{flex:none}
+#mafphs{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mafvbar,#mafhost{flex:none}
+#mafplayers{
+  flex:none;
+  display:flex !important;
+  flex-wrap:nowrap;
+  gap:8px;
+  max-height:none;
+  overflow-x:auto;
+  overflow-y:visible;
+  padding:10px 4px 12px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+#mafplayers::-webkit-scrollbar{display:none}
+#mafia .mchip{
+  position:relative;
+  flex:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  width:76px;
+  min-width:76px;
+  gap:5px;
+  padding:16px 4px 8px;
+  border-radius:18px;
+  overflow:visible;
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+#mafia .mchip .mwho{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  line-height:1.2;
+}
+#mafia .mchip .mn{
+  max-width:100%;
+  text-align:center;
+  font-size:12px;
+}
+#mafia .mchip .ms{
+  max-width:100%;
+  justify-content:center;
+  font-size:10px;
+  line-height:1.2;
+}
+#mafia .mchip.me::after{
+  z-index:2;
+  pointer-events:none;
+}
+#mafia .mchip.tgt{cursor:pointer}
+#mafia .mav{
+  position:relative;
+  width:42px;height:42px;
+  font-size:16px;
+  flex:none;
+}
+#mafmain{
+  flex:0 1 auto;
+  min-height:0;
+  max-height:42%;
+  overflow-x:hidden;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:10px;
+  gap:8px;
+}
+#mafmain:has(#mafwait:not([hidden])){
+  flex:1 1 auto;
+  max-height:none;
+}
+#mafmain > *{min-width:0}
+#mafact,#mafres,#mafrole,#mafchecks{flex:none}
+#mafchat{
+  flex:1 1 0;
+  min-height:120px;
+  max-height:none;
+  height:auto !important;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+#mafmsgs{flex:1 1 auto;min-height:0}
+#mafchat .mcin{flex:none}
+#mafrole .rtop{min-width:0}
+#mafrole .rtop > div{min-width:0}
+#mafrole .rtop b{word-break:break-word}
+@media (max-height:640px){
+  #mafplayers{padding:6px 2px 8px}
+  #mafia .mchip{width:68px;min-width:68px;padding:14px 3px 6px}
+  #mafia .mav{width:36px;height:36px;font-size:14px}
+  #mafmain{max-height:36%}
+  #mafchat{min-height:100px}
+}
+
 #mafmsgs .mcm.sys{width:auto;max-width:100%;align-self:stretch;text-align:center;font-size:12.5px;line-height:1.35;padding:6px 10px;border-radius:12px;border-left:0;color:var(--muted);background:rgba(255,255,255,.07)}
 #mafmsgs .mcm.sys.bad{color:#ffb3b3;background:rgba(255,77,109,.14)}
 #mafia .mt b{font-size:18px;white-space:nowrap}
