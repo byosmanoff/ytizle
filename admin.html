@@ -43,6 +43,8 @@
   .mini:hover{background:rgba(255,255,255,.18)}
   .mini.danger{background:rgba(255,107,107,.18);color:var(--bad)}
   .tag{font-size:11px;color:var(--bad);margin-left:8px}
+  tr.done td{opacity:.5}
+  .rq{white-space:normal;max-width:320px;color:var(--muted)}
   .banform{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
   .banform input{margin:0;flex:1 1 160px;width:auto}
   .banform button{width:auto;flex:0 0 auto;padding:12px 18px}
@@ -66,6 +68,14 @@
   </header>
 
   <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>Şikayətlər <span id="repOpen" class="tag"></span></h2>
+    <div class="tablewrap"><table id="tReports">
+      <thead><tr><th>Vaxt</th><th>Növ</th><th>Səbəb</th><th>Şikayət olunan</th><th>Şikayət edən</th><th>Təfərrüat</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
 
   <section>
     <h2>IP blok (ban)</h2>
@@ -161,6 +171,15 @@ document.getElementById('banForm').addEventListener('submit', async (e) => {
   }
 });
 document.addEventListener('click', async (e) => {
+  const rb = e.target.closest('[data-rres],[data-rdel]');
+  if(rb){
+    try{
+      if(rb.dataset.rres !== undefined) await postJson('/api/admin/report/resolve', {id: +rb.dataset.rres, reopen: rb.dataset.reopen === '1'});
+      else if(confirm('Şikayət silinsin?')) await postJson('/api/admin/report/delete', {id: +rb.dataset.rdel});
+      await loadAll();
+    }catch(x){}
+    return;
+  }
   const b = e.target.closest('[data-ban],[data-unban]');
   if(!b) return;
   if(b.dataset.ban !== undefined){
@@ -203,12 +222,13 @@ document.getElementById('logout').addEventListener('click', async () => {
 
 async function loadAll(){
   try{
-    const [ov, us, lg, vs, bn] = await Promise.all([
+    const [ov, us, lg, vs, bn, rp] = await Promise.all([
       api('/api/admin/overview'),
       api('/api/admin/users?limit=200'),
       api('/api/admin/logins?limit=200'),
       api('/api/admin/visits?limit=200'),
       api('/api/admin/bans'),
+      api('/api/admin/reports'),
     ]);
     BANNED = new Set(bn.bans.map(b => b.ip));
 
@@ -219,7 +239,21 @@ async function loadAll(){
       <div class="card"><b>${ov.visits_24h}</b><span>ziyarət (24s)</span></div>
       <div class="card"><b>${ov.logins_24h}</b><span>uğurlu giriş (24s)</span></div>
       <div class="card"><b>${ov.fails_24h}</b><span>uğursuz cəhd (24s)</span></div>
-      <div class="card"><b>${bn.bans.length}</b><span>bloklu IP</span></div>`;
+      <div class="card"><b>${bn.bans.length}</b><span>bloklu IP</span></div>
+      <div class="card"><b>${rp.open}</b><span>açıq şikayət</span></div>`;
+
+    document.getElementById('repOpen').textContent = rp.open ? '(' + rp.open + ' açıq)' : '';
+    const RSN = {spam:'Spam', abuse:'Təhqir / təhdid', inappropriate:'Uyğunsuz məzmun', impersonation:'Başqasının adından çıxış', other:'Digər'};
+    document.querySelector('#tReports tbody').innerHTML = rp.reports.map(r => `
+      <tr class="${r.status ? 'done' : ''}">
+        <td class="muted">${fmt(r.ts)}</td>
+        <td>${r.kind === 'message' ? 'mesaj' : 'istifadəçi'}</td>
+        <td>${esc(RSN[r.reason] || r.reason)}</td>
+        <td>${esc(r.target.name)} <span class="muted">@${esc(r.target.username)}</span></td>
+        <td>${esc(r.reporter.name)} <span class="muted">@${esc(r.reporter.username)}</span></td>
+        <td class="rq">${r.msg_text ? '«' + esc(r.msg_text) + '»<br>' : ''}${esc(r.details)}${r.room ? '<br>otaq: ' + esc(r.room) : ''}</td>
+        <td><button class="mini" data-rres="${r.id}" data-reopen="${r.status ? 1 : 0}">${r.status ? 'Yenidən aç' : 'Həll olundu'}</button><button class="mini danger" data-rdel="${r.id}">Sil</button></td>
+      </tr>`).join('') || '<tr><td colspan="7" class="muted">Şikayət yoxdur</td></tr>';
 
     document.querySelector('#tBans tbody').innerHTML = bn.bans.map(b => `
       <tr>

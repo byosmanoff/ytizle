@@ -560,6 +560,14 @@ body.invoice #vmic{display:none}
   font-size:11px;font-weight:800;font-style:normal;display:grid;place-items:center}
 .m.me .mav{background-color:rgba(43,15,38,.28);color:#fff}
 .vp{background-size:cover;background-position:center}
+#repbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+  background:rgba(10,4,16,.66)}
+#repbox[hidden]{display:none}
+#repreason,#repdet{width:100%;height:48px;padding:0 14px;margin-bottom:8px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line)}
+#repmsg{min-height:18px;font-size:13px;margin-bottom:8px;color:var(--muted)}#repmsg.err{color:#e0567f}
+#repq{font-size:13px;color:var(--muted);margin-bottom:8px;padding:8px 10px;border-radius:10px;background:var(--velvet-2);word-break:break-word}#repq:empty{display:none}
+.rpt{border:0;background:none;color:inherit;opacity:.45;padding:0 2px;margin-left:4px;font-size:11px;cursor:pointer}.rpt:hover{opacity:1}
+#pbReport{background:transparent;color:var(--muted);border:0;border-radius:12px;padding:10px 14px;font-weight:700}
 #invbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;
   background:rgba(10,4,16,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 #invbox[hidden]{display:none}
@@ -638,7 +646,7 @@ body.invoice #vmic{display:none}
 .note i{margin-right:4px}
 .floaties span i{display:block}
 @media (min-width:700px){
-  #leavebox,#hostbox,#invbox{align-items:center}
+  #leavebox,#hostbox,#invbox,#repbox{align-items:center}
 }
 @media (min-width:1024px){
   /* giriş */
@@ -982,7 +990,7 @@ body.mob #profile{will-change:transform}
 #tabbar button.on .tav{box-shadow:0 0 0 2px rgba(255,255,255,.22),0 0 0 3.5px var(--text)}
 
 /* pəncərələr: fon yalnız qaralır, bulanıqlıq kartın özündədir */
-#leavebox,#hostbox,#invbox,#pbox,#rolebox,#planbox{
+#leavebox,#hostbox,#invbox,#repbox,#pbox,#rolebox,#planbox{
   background:rgba(14,6,22,.45);
   -webkit-backdrop-filter:none;backdrop-filter:none;
 }
@@ -1076,7 +1084,7 @@ body:not(.mob) *,body:not(.mob) *::before,body:not(.mob) *::after{
 }
 body:not(.mob) .lv-card{background:rgba(42,23,57,.97)}
 body:not(.mob) #codebar{background:rgba(72,44,96,.9)}
-body:not(.mob) #leavebox,body:not(.mob) #hostbox,body:not(.mob) #invbox,body:not(.mob) #pbox,
+body:not(.mob) #leavebox,body:not(.mob) #hostbox,body:not(.mob) #invbox,body:not(.mob) #repbox,body:not(.mob) #pbox,
 body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{background:rgba(14,6,22,.7)}
 
 /* Kompüterdə sekmələr: yuxarıda üfüqi naviqasiya, yalnız seçilən sekmənin kartları görünür */
@@ -2338,6 +2346,7 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
       <button id="pbClose">Bağla</button>
       <button id="pbAct" hidden></button>
       <button id="pbBlock" class="danger" hidden>Blok et</button>
+      <button id="pbReport" hidden>Şikayət et</button>
     </div>
   </div>
 </div>
@@ -2354,6 +2363,27 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
     <div class="lv-btns">
       <button id="qclose" class="alt">Bağla</button>
       <button id="qskip">Növbətiyə keç</button>
+    </div>
+  </div>
+</div>
+
+<div id="repbox" hidden role="dialog" aria-modal="true" aria-labelledby="repTitle">
+  <div class="lv-card">
+    <h2 id="repTitle">Şikayət et</h2>
+    <p id="repwho"></p>
+    <div id="repq"></div>
+    <select id="repreason" aria-label="Səbəb">
+      <option value="spam">Spam</option>
+      <option value="abuse">Təhqir / təhdid</option>
+      <option value="inappropriate">Uyğunsuz məzmun</option>
+      <option value="impersonation">Başqasının adından çıxış</option>
+      <option value="other">Digər</option>
+    </select>
+    <input id="repdet" placeholder="Əlavə qeyd (ixtiyari)" maxlength="300" autocomplete="off" aria-label="Əlavə qeyd">
+    <div id="repmsg" role="status"></div>
+    <div class="lv-btns">
+      <button id="repNo">Ləğv et</button>
+      <button id="repYes">Göndər</button>
     </div>
   </div>
 </div>
@@ -3543,6 +3573,12 @@ function addMsg(name, text, mine, o){
     const tk = document.createElement('span'); tk.className = 'tick'; tk.innerHTML = tickSvg(o.hist ? 3 : 1);
     meta.appendChild(lb); meta.appendChild(tk);
   }
+  if(!mine && o.u && token && !o.sys){
+    const fl = document.createElement('button'); fl.className = 'rpt'; fl.type = 'button';
+    fl.innerHTML = '<i class="fa-solid fa-flag" aria-hidden="true"></i>'; fl.setAttribute('aria-label', 'Şikayət et');
+    fl.onclick = e => { e.stopPropagation(); openReport({username: o.u, name: name, kind: 'message', msg_id: o.id || '', msg_text: d.dataset.text || ''}); };
+    meta.appendChild(fl);
+  }
   d.appendChild(meta);
   if(o.id){
     const rp = document.createElement('button'); rp.className = 'rp'; rp.innerHTML = REPLY_ICON;
@@ -4642,6 +4678,7 @@ async function loadPeerRel(u){
     if(!p) return;
     fillPeerHead(p); setPeerRel(p.rel);
     $('pbBlock').hidden = !!p.blocked_me;
+    $('pbReport').hidden = false;
     $('pbBlock').textContent = p.blocked ? 'Blokdan çıxar' : 'Blok et';
     $('pbBlock').dataset.blocked = p.blocked ? '1' : '0';
     if(p.blocked_me){ $('pbrel').textContent='Səni bloklayıb'; $('pbAct').hidden=true; }
@@ -4651,7 +4688,7 @@ function openPeerCard(p){
   if(!p) return;
   pcUser = p.username || '';
   fillPeerHead(p);
-  $('pbrel').textContent = ''; $('pbAct').hidden = true; $('pbBlock').hidden = !pcUser || !token;
+  $('pbrel').textContent = ''; $('pbAct').hidden = true; $('pbBlock').hidden = !pcUser || !token; $('pbReport').hidden = !pcUser || !token;
   $('pbpresence').textContent = p.presence || '';
   $('pbox').hidden = false;
   if(pcUser && token) loadPeerRel(pcUser);
@@ -4679,6 +4716,29 @@ $('pbBlock').onclick = async () => {
   loadBlocked();
 };
 $('pbClose').onclick = () => { $('pbox').hidden = true; };
+let repCtx = null;
+function openReport(c){
+  repCtx = c; $('repwho').textContent = '@' + c.username + (c.name ? ' (' + c.name + ')' : '');
+  $('repq').textContent = c.kind === 'message' ? (c.msg_text || '') : '';
+  $('repdet').value = ''; $('repreason').value = 'spam'; $('repmsg').textContent = ''; $('repmsg').className = '';
+  $('repYes').disabled = false; $('repbox').hidden = false;
+}
+$('pbReport').onclick = () => { if(pcUser) openReport({username: pcUser, name: $('pbname').textContent, kind: 'user'}); };
+$('repNo').onclick = () => { $('repbox').hidden = true; };
+$('repbox').addEventListener('click', e => { if(e.target === $('repbox')) $('repbox').hidden = true; });
+$('repYes').onclick = async () => {
+  if(!repCtx) return;
+  $('repYes').disabled = true; $('repmsg').className = ''; $('repmsg').textContent = '';
+  try{
+    const r = await api('/api/report', {method: 'POST', body: JSON.stringify({username: repCtx.username, kind: repCtx.kind,
+      reason: $('repreason').value, details: $('repdet').value.trim(), room: room || '', msg_id: repCtx.msg_id || '', msg_text: repCtx.msg_text || ''})});
+    if(r.ok){ $('repmsg').textContent = 'Şikayət göndərildi. Təşəkkür edirik!'; setTimeout(() => { $('repbox').hidden = true; }, 1200); return; }
+    $('repmsg').className = 'err';
+    $('repmsg').textContent = r.status === 429 ? 'Çox şikayət göndərdin, bir az sonra yenidən cəhd et' :
+      r.status === 400 ? 'Özünü şikayət edə bilməzsən' : r.status === 404 ? 'İstifadəçi tapılmadı' : 'Göndərilmədi, yenidən cəhd et';
+  }catch(e){ $('repmsg').className = 'err'; $('repmsg').textContent = 'Göndərilmədi, yenidən cəhd et'; }
+  $('repYes').disabled = false;
+};
 $('pbox').addEventListener('click', e => { if(e.target === $('pbox')) $('pbox').hidden = true; });
 $('status').addEventListener('click', () => { if(connected && peerList.length) openPeerCard(peerList[0]); });
 $('status').style.cursor = 'pointer';
@@ -5773,6 +5833,19 @@ boot();
   Object.keys(X).forEach(function(k){ D[k] = X[k]; });
   /* Sonradan əlavə edilən gizlilik və bloklama ekranları üçün lüğət. */
   var EXTRA = {
+    "Şikayət et": ["Şikayet et", "Report"],
+    "Səbəb": ["Neden", "Reason"],
+    "Təhqir / təhdid": ["Hakaret / tehdit", "Abuse / threats"],
+    "Uyğunsuz məzmun": ["Uygunsuz içerik", "Inappropriate content"],
+    "Başqasının adından çıxış": ["Başkası gibi davranma", "Impersonation"],
+    "Digər": ["Diğer", "Other"],
+    "Əlavə qeyd (ixtiyari)": ["Ek not (isteğe bağlı)", "Extra note (optional)"],
+    "Ləğv et": ["İptal", "Cancel"],
+    "Şikayət göndərildi. Təşəkkür edirik!": ["Şikayet gönderildi. Teşekkürler!", "Report sent. Thank you!"],
+    "Çox şikayət göndərdin, bir az sonra yenidən cəhd et": ["Çok fazla şikayet gönderdin, biraz sonra tekrar dene", "Too many reports, try again later"],
+    "Özünü şikayət edə bilməzsən": ["Kendini şikayet edemezsin", "You can't report yourself"],
+    "İstifadəçi tapılmadı": ["Kullanıcı bulunamadı", "User not found"],
+    "Göndərilmədi, yenidən cəhd et": ["Gönderilemedi, tekrar dene", "Not sent, try again"],
     "Musiqi": ["Müzik", "Music"],
     "Necə oynanır?": ["Nasıl oynanır?", "How to play"],
     "Anladım": ["Anladım", "Got it"],

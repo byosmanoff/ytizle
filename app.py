@@ -555,6 +555,10 @@ CREATE INDEX IF NOT EXISTS plans_owner ON plans(owner);
 CREATE TABLE IF NOT EXISTS plan_inv(plan_id INTEGER NOT NULL, sub TEXT NOT NULL, status INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY(plan_id, sub));
 CREATE INDEX IF NOT EXISTS plan_inv_sub ON plan_inv(sub);
+CREATE TABLE IF NOT EXISTS reports(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, reporter TEXT NOT NULL,
+  target TEXT, tname TEXT, tuser TEXT, kind TEXT NOT NULL, room TEXT, msg_id TEXT, msg_text TEXT,
+  reason TEXT NOT NULL, details TEXT, status INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS reports_ts ON reports(status, ts);
 """)
             ucols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
             if "username" not in ucols:   # köhnə baza: istifadəçi adı sonradan avtomatik verilir
@@ -1805,6 +1809,27 @@ def api_block_user():
     return jsonify(ok=True)
 
 
+@app.route("/api/report", methods=["POST"])
+def api_report():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    if not rate_hit("report", sub, 10, 3600):
+        return jsonify(error="rate"), 429
+    other = _user_by_name(d.get("username"))
+    if other == sub:
+        return jsonify(error="self"), 400
+    kind = "message" if d.get("kind") == "message" else "user"
+    reason = str(d.get("reason") or "other")
+    if reason not in ("spam", "abuse", "inappropriate", "impersonation", "other"):
+        reason = "other"
+    row = dbq("SELECT name,username FROM users WHERE sub=?", (other,), one=True)
+    msg_text = clean_text(d.get("msg_text"), 500) if kind == "message" else ""
+    dbq("INSERT INTO reports(ts,reporter,target,tname,tuser,kind,room,msg_id,msg_text,reason,details) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (time.time(), sub, other, row["name"] if row else "", row["username"] if row else "", kind,
+         clean_text(d.get("room"), 40), clean_text(d.get("msg_id"), 60), msg_text, reason, clean_text(d.get("details"), 300)))
+    return jsonify(ok=True)
+
+
 @app.route("/api/unblock", methods=["POST"])
 def api_unblock_user():
     sub, _ = auth_sub()
@@ -2828,6 +2853,38 @@ def ip_ban_gate():
     resp.headers["Cache-Control"] = "no-store"
     resp.headers["X-Robots-Tag"] = "noindex, nofollow"
     return resp
+
+
+@app.route("/api/admin/reports")
+def admin_reports():
+    admin_guard()
+    show = request.args.get("status")
+    q = "SELECT r.*, u.name AS rname, u.username AS ruser FROM reports r LEFT JOIN users u ON u.sub=r.reporter"
+    args = ()
+    if show in ("0", "1"):
+        q += " WHERE r.status=?"; args = (int(show),)
+    rows = dbq(q + " ORDER BY r.status ASC, r.ts DESC LIMIT 500", args, many=True)
+    return _nostore(jsonify(reports=[dict(
+        id=r["id"], ts=r["ts"], kind=r["kind"], reason=r["reason"], details=r["details"] or "",
+        room=r["room"] or "", msg_text=r["msg_text"] or "", status=r["status"],
+        target=dict(name=r["tname"] or "", username=r["tuser"] or ""),
+        reporter=dict(name=r["rname"] or "", username=r["ruser"] or "")) for r in rows],
+        open=(dbq("SELECT COUNT(*) c FROM reports WHERE status=0", one=True) or {"c": 0})["c"]))
+
+
+@app.route("/api/admin/report/resolve", methods=["POST"])
+def admin_report_resolve():
+    admin_guard()
+    d = request.get_json(silent=True) or {}
+    dbq("UPDATE reports SET status=? WHERE id=?", (0 if d.get("reopen") else 1, int(d.get("id") or 0)))
+    return _nostore(jsonify(ok=True))
+
+
+@app.route("/api/admin/report/delete", methods=["POST"])
+def admin_report_delete():
+    admin_guard()
+    dbq("DELETE FROM reports WHERE id=?", (int((request.get_json(silent=True) or {}).get("id") or 0),))
+    return _nostore(jsonify(ok=True))
 
 
 @app.route("/api/admin/bans")
