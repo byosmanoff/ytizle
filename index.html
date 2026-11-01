@@ -1042,6 +1042,56 @@ body.mob #profile{
 #profile #favCard,#profile #hvids,#profile #hrooms{margin-top:4px}
 #profile #clearhist{margin:8px 0 16px}
 
+/* ---- tipografiya ---- */
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{line-height:1.45;letter-spacing:.01em}
+h1,h2,h3{letter-spacing:-.01em;line-height:1.25}
+.card h2{margin-bottom:10px}
+.hint,.gh,.lbnote{line-height:1.45}
+#menu .tagline{line-height:1.5}
+
+/* ---- mini bələdçi ---- */
+#wtGuide{position:fixed;inset:0;z-index:99980;display:flex;align-items:flex-end;justify-content:center;background:rgba(12,4,18,.72);padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+#wtGuide[hidden]{display:none!important}
+#wtGuide .gcard{width:min(100%,400px);background:var(--velvet);border-radius:22px;padding:22px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 0 1px var(--line)}
+#wtGuide .gstep{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+#wtGuide .gn{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--rose-deep);color:#fff}
+#wtGuide .gt{font-weight:700;font-size:15px}
+#wtGuide .gs{color:var(--muted);font-size:13px;margin-top:2px;line-height:1.4}
+#wtGuide h2{margin:0 0 6px;font-size:20px}
+#wtGuide .gacts{display:flex;gap:10px;margin-top:16px}
+#wtGuide .gacts .pbtn{flex:1;padding:12px}
+#wtGuide .gskip{width:100%;margin-top:8px;background:none;border:0;color:var(--muted);font-size:13px;font-weight:600;padding:8px}
+
+/* ---- bildiriş təklifi ---- */
+#wtNotifAsk{position:fixed;left:50%;bottom:max(72px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99970;width:min(94vw,380px);background:var(--seat);border-radius:16px;padding:14px 14px 12px;box-shadow:0 14px 40px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+#wtNotifAsk[hidden]{display:none!important}
+#wtNotifAsk b{display:block;font-size:15px;margin-bottom:4px}
+#wtNotifAsk small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-bottom:10px}
+#wtNotifAsk .gacts{display:flex;gap:8px}
+#wtNotifAsk .gacts .pbtn{flex:1;padding:11px;font-size:14px}
+
+/* chess result like domino */
+#cres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#cres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#cres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#cres .res-ic{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 8px;border-radius:50%;font-size:24px;background:rgba(255,255,255,.12)}
+#cres.win .res-ic{color:#ffd166;background:rgba(255,209,102,.16)}
+#cres.lose .res-ic{color:#ffb3c1;background:rgba(255,122,156,.14)}
+#cres.draw .res-ic{color:var(--amber);background:rgba(255,196,107,.14)}
+#cres .res-score{display:flex;justify-content:center;gap:18px;margin:8px 0 4px;font-weight:800}
+#cres .res-score span{font-size:26px;color:var(--amber)}
+#cres .res-score small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+#cres{position:relative;overflow:hidden}
+
+#durres.win,#durres.lose,#durres.draw{position:relative}
+#durres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#durres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#durres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#durres .res-ic{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 8px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.12)}
+#durres.win .res-ic{color:#ffd166}#durres.lose .res-ic{color:#ffb3c1}#durres.draw .res-ic{color:var(--amber)}
+
+
 #profile .phead h1{flex:1;min-width:0}
 #profile .profile-settings{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 #setCards .settings-head{display:flex;align-items:center;gap:12px}
@@ -1476,8 +1526,22 @@ body.guest-mode #friendsCard,
 body.guest-mode #plansCard,
 body.guest-mode #statsCard,
 body.guest-mode #tabbar [data-go="friends"],
-body.guest-mode #tabbar [data-go="plans"]{opacity:.45;pointer-events:none}
+body.guest-mode #tabbar [data-go="plans"],
+body.guest-mode #tabbar [data-go="rank"]{opacity:.45;pointer-events:none}
 body.guest-mode #logout{display:none}
+body.guest-mode .guest-hide{display:none!important}
+body.guest-mode .guest-only{display:block!important}
+.guest-only{display:none}
+#guestUpgrade{text-align:center}
+#guestUpgrade h2{margin-bottom:6px}
+#guestUpgrade .gh{color:var(--muted);font-size:13.5px;line-height:1.4;margin:0 0 14px}
+#guestUpgrade .gbtns{display:flex;flex-direction:column;gap:10px}
+#guestUpgrade .gbtns .pbtn{width:100%;padding:13px}
+#guestUpgrade .gbtns .pbtn.alt{background:var(--seat);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+#setGuestUpgrade{text-align:center}
+#setGuestUpgrade .gh{color:var(--muted);font-size:13.5px;line-height:1.4;margin:0 0 14px}
+#setGuestUpgrade .gbtns{display:flex;flex-direction:column;gap:10px}
+#setGuestUpgrade .gbtns .pbtn{width:100%;padding:13px}
 
 
 
@@ -2237,12 +2301,21 @@ body.guest-mode #logout{display:none}
       <input type="checkbox" id="setclean" class="sw" checked>
     </label>
   </div>
-  <div class="card">
+  <div class="card guest-hide">
     <h2><i class="fa-solid fa-user" aria-hidden="true"></i>Hesab</h2>
     <button class="pbtn alt" id="setlogout" style="width:100%;padding:13px">Hesabdan çıx</button>
   </div>
+  <div class="card guest-only" id="setGuestUpgrade">
+    <h2>Hesab yarat</h2>
+    <p class="gh">Dostlar və oyunlar üçün Google və ya e-poçt ilə hesab aç.</p>
+    <div class="gbtns">
+      <button type="button" class="pbtn" id="setGuestGoogle">Google ilə davam et</button>
+      <button type="button" class="pbtn alt" id="setGuestReg">Qeydiyyatdan keç</button>
+      <button type="button" class="plink" id="setGuestLogin">Daxil ol</button>
+    </div>
+  </div>
 <div class="card">
-    <h2 id="pwtitle">Şifrəni dəyiş</h2>
+    <h2 id="pwtitle" class="guest-hide-title">Şifrəni dəyiş</h2>
     <div class="fld" id="pcurrow"><input id="pcur" class="pin" type="password" placeholder="Mövcud şifrə" autocomplete="current-password" aria-label="Mövcud şifrə"></div>
     <div class="fld"><input id="pnew" class="pin" type="password" placeholder="Yeni şifrə (ən azı 6 simvol)" autocomplete="new-password" aria-label="Yeni şifrə"></div>
     <div class="fld"><input id="pnew2" class="pin" type="password" placeholder="Yeni şifrənin təkrarı" autocomplete="new-password" aria-label="Yeni şifrənin təkrarı"></div>
@@ -2257,7 +2330,7 @@ body.guest-mode #logout{display:none}
       <div style="text-align:center;margin-top:6px"><button type="button" class="plink" id="pfresend">Kodu yenidən göndər</button></div>
     </div>
   </div>
-  <div class="card dz">
+  <div class="card dz guest-hide">
     <h2>Təhlükəli zona</h2>
     <button class="pbtn danger" id="delopen" style="width:100%;padding:13px">Hesabı sil</button>
     <div id="delbox" hidden>
@@ -2298,7 +2371,16 @@ body.guest-mode #logout{display:none}
     <h1>Profil</h1>
     <button type="button" class="ib profile-settings" id="profilesettings" aria-label="Ayarlar" title="Ayarlar"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
   </div>
-  <div id="profile-account-row">
+  <div class="card guest-only" id="guestUpgrade">
+    <h2>Hesab yarat</h2>
+    <p class="gh">Qonaq rejimindəsən. Dostlar, oyunlar və şəxsi tarixçə üçün hesabla davam et.</p>
+    <div class="gbtns">
+      <button type="button" class="pbtn" id="guestToGoogle">Google ilə davam et</button>
+      <button type="button" class="pbtn alt" id="guestToReg">Qeydiyyatdan keç</button>
+      <button type="button" class="plink" id="guestToLogin">Artıq hesabım var — daxil ol</button>
+    </div>
+  </div>
+  <div id="profile-account-row" class="guest-hide">
     <div class="pavbox">
       <div class="pav-edit-wrap" id="pavEditWrap">
         <button type="button" class="av big" id="pav" aria-label="Profil şəklini redaktə et" title="Profil şəklini redaktə et" aria-expanded="false">?</button>
@@ -2328,7 +2410,7 @@ body.guest-mode #logout{display:none}
     <button class="pbtn" id="psaveall" style="width:100%;padding:13px;margin-top:6px" disabled>Saxla</button>
     </div>
   </div>
-  <div class="card">
+  <div class="card guest-hide">
     <h2>Gizlilik</h2>
     <div class="fld">
       <label for="pavprivacy">Profil şəklini kim görə bilər?</label>
@@ -2357,7 +2439,7 @@ body.guest-mode #logout{display:none}
       <input type="checkbox" id="pinv" class="sw" checked>
     </label>
   </div>
-  <div class="card">
+  <div class="card guest-hide">
     <h2>E-poçt</h2>
     <div class="fld">
       <div class="frow"><input id="pemail" type="email" autocomplete="email" autocapitalize="none" aria-label="E-poçt"><button class="pbtn alt" id="pemailsend">Dəyiş</button></div>
@@ -4295,6 +4377,55 @@ window.wtReconnectBanner = function(txt, ok){
   el.classList.toggle('ok', !!ok);
   el.hidden = false;
 };
+
+window.wtErr = function(r, fallback){
+  var f = fallback || 'Alınmadı, yenidən cəhd et';
+  if(!r) return 'Əlaqə problemi, internetini yoxla';
+  var s = r.status;
+  if(s === 0 || s === undefined) return 'Əlaqə problemi, internetini yoxla';
+  if(s === 400) return 'Məlumatlar düzgün deyil';
+  if(s === 401) return 'Sessiya bitib, yenidən daxil ol';
+  if(s === 403) return 'İcazə yoxdur və ya məhdudiyyət var';
+  if(s === 404) return 'Tapılmadı';
+  if(s === 409) return 'Artıq mövcuddur və ya ziddiyyət var';
+  if(s === 429) return 'Çox sorğu. Bir az gözlə, sonra yenidən yoxla';
+  if(s === 503) return 'Xidmət müvəqqəti əlçatmazdır';
+  if(s >= 500) return 'Server xətası, bir az sonra yenidən cəhd et';
+  return f;
+};
+window.wtShowGuide = function(force){
+  try{ if(!force && localStorage.getItem('wt_guide_v1') === '1') return; }catch(e){}
+  var el = document.getElementById('wtGuide'); if(!el) return;
+  el.hidden = false;
+};
+window.wtHideGuide = function(save){
+  var el = document.getElementById('wtGuide'); if(el) el.hidden = true;
+  if(save){ try{ localStorage.setItem('wt_guide_v1', '1'); }catch(e){} }
+};
+(function(){
+  function hide(){ window.wtHideGuide(true); }
+  var ok = document.getElementById('wtGuideOk'), sk = document.getElementById('wtGuideSkip');
+  if(ok) ok.addEventListener('click', hide);
+  if(sk) sk.addEventListener('click', hide);
+})();
+window.wtAskNotif = function(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission !== 'default') return;
+  try{ if(localStorage.getItem('wt_notif_ask') === '1') return; }catch(e){}
+  var el = document.getElementById('wtNotifAsk'); if(!el) return;
+  el.hidden = false;
+};
+(function(){
+  var yes = document.getElementById('wtNotifYes'), no = document.getElementById('wtNotifNo');
+  function done(){ var el = document.getElementById('wtNotifAsk'); if(el) el.hidden = true; try{ localStorage.setItem('wt_notif_ask','1'); }catch(e){} }
+  if(no) no.addEventListener('click', done);
+  if(yes) yes.addEventListener('click', async function(){
+    done();
+    try{ await Notification.requestPermission(); }catch(e){}
+    try{ if(typeof pushSync === 'function') pushSync(true); }catch(e){}
+  });
+})();
+
 window.wtIsGuest = function(){
   try{ return !token && localStorage.getItem('wt_guest') === '1'; }catch(e){ return false; }
 };
@@ -4334,6 +4465,42 @@ function wtGuestEnter(){
   var gin = document.getElementById('guestName');
   if(gin) gin.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); wtGuestEnter(); } });
 })();
+
+
+function wtGuestGoAuth(mode){
+  try{ window.wtSetGuest(false); }catch(e){}
+  try{ localStorage.removeItem('wt_guest'); }catch(e){}
+  try{ document.body.classList.remove('guest-mode'); }catch(e){}
+  account = null; token = '';
+  try{ if($('profile')) $('profile').hidden = true; }catch(e){}
+  showLogin();
+  try{
+    if(mode === 'reg') setEmode('reg');
+    else if(mode === 'login') setEmode('login');
+    else setEmode('login');
+  }catch(e){}
+  try{ initGoogle(); }catch(e){}
+  if(mode === 'google'){
+    try{ window.wtToast && window.wtToast('Aşağıda Google düyməsindən davam et'); }catch(e){}
+    setTimeout(function(){
+      var g = document.getElementById('gbtn');
+      if(g) try{ g.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+    }, 300);
+  }
+}
+function wtBindGuestAuth(){
+  function bind(id, mode){
+    var el = document.getElementById(id);
+    if(el && !el._guestBound){ el._guestBound = 1; el.addEventListener('click', function(e){ e.preventDefault(); wtGuestGoAuth(mode); }); }
+  }
+  bind('guestToGoogle', 'google');
+  bind('guestToReg', 'reg');
+  bind('guestToLogin', 'login');
+  bind('setGuestGoogle', 'google');
+  bind('setGuestReg', 'reg');
+  bind('setGuestLogin', 'login');
+}
+wtBindGuestAuth();
 
 function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
@@ -4577,6 +4744,8 @@ function showMenu(){
   try{ if(window.wtVerifyDomino) window.wtVerifyDomino(); if(window.wtVerifyChess) window.wtVerifyChess(); }catch(e){}
   $('mquote').textContent = '“' + DAILY[Math.floor(Date.now() / 864e5) % DAILY.length] + '”';
   fetch('/api/stats', {cache: 'no-store'}).then(r => r.json()).then(d => { $('stl').textContent = d.people; }).catch(() => {});
+  setTimeout(function(){ try{ window.wtShowGuide(false); }catch(e){} }, 600);
+  if(token) setTimeout(function(){ try{ window.wtAskNotif(); }catch(e){} }, 2500);
 }
 function setAvatar(el, url, name){
   if(url){ el.style.backgroundImage = 'url("' + url + '")'; el.textContent = ''; }
@@ -4692,8 +4861,8 @@ async function frAct(path, body){
   try{
     const r = await api(path, {method: 'POST', body: JSON.stringify(body)});
     if(r.status === 429) frNote('Çox sorğu göndərdin, bir az gözlə');
-    else if(!r.ok) frNote('Alınmadı, yenidən cəhd et');
-  }catch(e){ frNote('Əlaqə problemi, yenidən cəhd et'); }
+    else if(!r.ok) frNote((window.wtErr && window.wtErr(r)) || 'Alınmadı');
+  }catch(e){ frNote('Əlaqə problemi, internetini yoxla'); }
   loadFriends(); if($('fq').value.trim().replace(/^@/, '').length >= 2) doSearch();
 }
 function searchBtns(p){
@@ -5108,8 +5277,14 @@ function fillProfile(){
 }
 function openProfile(){
   if(!account) return;
-  pmsg(''); hint('puserhint', 'Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.');
-  hint('pemailhint', ''); $('pecoderow').hidden = true; $('pecode').value = '';
+  pmsg('');
+  try{ document.body.classList.toggle('guest-mode', !!(account.guest && !token)); }catch(e){}
+  if(account.guest && !token){
+    $('profile').hidden = false; $('profile').scrollTop = 0;
+    return;
+  }
+  try{ hint('puserhint', 'Hərf, rəqəm, nöqtə və _ (3-20 simvol). Hər kəsin adı fərqlidir.'); }catch(e){}
+  try{ hint('pemailhint', ''); $('pecoderow').hidden = true; $('pecode').value = ''; }catch(e){}
   try{ if($('delbox')) $('delbox').hidden = true; if($('delopen')) $('delopen').hidden = false; }catch(e){}
   try{ if($('pcur')) $('pcur').value = ''; if($('pnew')) $('pnew').value = ''; if($('pnew2')) $('pnew2').value = ''; }catch(e){}
   fillProfile();
@@ -7168,9 +7343,14 @@ window.wtInviteBox = function(o){
     var box = $('cres'), over = s.status === 'over';
     box.hidden = !over;
     $('cresign').hidden = s.status !== 'play';
-    if(!over){ box.innerHTML = ''; return; }
-    var title = s.result === 'me' ? 'Qazandın!' : (s.result === 'opp' ? 'Rəqib qazandı' : 'Bərabərlik');
-    box.innerHTML = '<h3>' + title + '</h3><p>' + esc(REASON[s.reason] || '') + '</p><button class="pbtn" id="cagain">Yenidən oyna (rənglər dəyişir)</button>';
+    if(!over){ box.innerHTML = ''; box.className = ''; return; }
+    var win = s.result === 'me', lose = s.result === 'opp';
+    var title = win ? 'Qazandın!' : (lose ? 'Rəqib qazandı' : 'Bərabərlik');
+    var ic = win ? 'fa-trophy' : (lose ? 'fa-heart-crack' : 'fa-handshake');
+    var meSc = (s.score && s.score.me) || 0, oppSc = (s.score && s.score.opp) || 0;
+    var scoreHtml = '<div class="res-score"><div><span>' + meSc + '</span><small>Sən</small></div><div><span>' + oppSc + '</span><small>' + (s.bot ? 'Kompüter' : 'Rəqib') + '</small></div></div>';
+    box.className = 'res-show ' + (win ? 'win' : (lose ? 'lose' : 'draw'));
+    box.innerHTML = '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + title + '</h3>' + scoreHtml + '<p>' + esc(REASON[s.reason] || '') + '</p><button class="pbtn" id="cagain">Yenidən oyna (rənglər dəyişir)</button>';
     $('cagain').onclick = function(){ again(); };
   }
 
@@ -7246,8 +7426,8 @@ window.wtInviteBox = function(o){
     busy = true;
     try{
       var r = await api('/api/chess/' + path, {method: 'POST', body: JSON.stringify(Object.assign({room: ch.code}, body || {}))});
-      if(r.ok) apply(await r.json()); else { ch.skip = null; flash('Alınmadı, yenidən cəhd et'); }
-    }catch(e){ ch.skip = null; flash('Əlaqə problemi, yenidən cəhd et'); }
+      if(r.ok) apply(await r.json()); else { ch.skip = null; flash((window.wtErr && window.wtErr(r)) || 'Alınmadı'); }
+    }catch(e){ ch.skip = null; flash('Əlaqə problemi, internetini yoxla'); }
     busy = false;
   }
   function send(f, t, promo){ ch.sel = null; ch.to = null; $('cpro').hidden = true; try{ optSfx(f, t, promo); }catch(e){} post('move', {action: 'move', f: f, t: t, promo: promo}); }
@@ -7287,11 +7467,14 @@ window.wtInviteBox = function(o){
         if(ch.gen !== gen) return;
         if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
         if(!r.ok) throw new Error(String(r.status));
+        if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
         apply(await r.json()); fails = 0;
       }catch(e){
         if(ch.gen !== gen) return;
-        if(!token){ close(false); return; }
-        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * (++fails))); });
+        fails++;
+        try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){}
+        if(!token && !(window.wtIsGuest && window.wtIsGuest())){ close(false); return; }
+        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * fails)); });
       }
     }
   }
@@ -7804,8 +7987,8 @@ window.wtInviteBox = function(o){
     var ok = false;
     try{
       var r = await api('/api/domino/move', {method: 'POST', body: JSON.stringify(Object.assign({room: dom.code, action: kind}, extra || {}))});
-      if(r.ok){ ok = true; apply(await r.json(), true); } else flash('Alınmadı, yenidən cəhd et');
-    }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+      if(r.ok){ ok = true; apply(await r.json(), true); } else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
+    }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
     if(!ok && dom.s){ if(pred) dom.s = snap; dom.sfxDraw = false; render(); }
     dom.sfxDraw = false;
     busy = false;
@@ -8131,16 +8314,17 @@ window.wtInviteBox = function(o){
 
   /* ---- uzun sorğu ---- */
   function startPoll(){
-    var g = ++gen;
+    var g = ++gen, fails = 0;
     (async function(){
       while(g === gen && du.code){
         try{
           var r = await api('/api/durak/poll?room=' + enc(du.code) + '&v=' + du.v + '&vk=' + du.vk);
           if(g !== gen) return;
           if(r.status === 404){ gone(); return; }
-          if(!r.ok){ await sleep(2000); continue; }
-          sync(await r.json());
-        }catch(e){ if(g !== gen) return; await sleep(2000); }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
+          fails = 0; sync(await r.json());
+        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
       }
     })();
   }
@@ -8393,21 +8577,25 @@ window.wtInviteBox = function(o){
   function renderRes(s){
     var box = $('durres'), over = s.status === 'over';
     box.hidden = !over;
-    if(!over){ box.innerHTML = ''; return; }
-    var title, why;
-    if(s.loser === -1){ title = 'Bərabərlik'; why = T('Hamının kartı bitdi'); }
-    else if(s.loser === s.me){ title = 'Durak sənsən'; why = T('Kartlar sənin əlində qaldı'); }
-    else { title = 'Qazandın!'; why = 'Durak: ' + ((s.players[s.loser] || {}).name || ''); }
+    if(!over){ box.innerHTML = ''; box.className = ''; return; }
+    var title, why, win = false, lose = false, draw = false;
+    if(s.loser === -1){ title = 'Bərabərlik'; why = T('Hamının kartı bitdi'); draw = true; }
+    else if(s.loser === s.me){ title = 'Durak sənsən'; why = T('Kartlar sənin əlində qaldı'); lose = true; }
+    else { title = 'Qazandın!'; why = 'Durak: ' + ((s.players[s.loser] || {}).name || ''); win = true; }
     if(s.quit != null){
       why = s.quit === s.me ? T('Oyundan çıxdın') : ((s.players[s.quit] || {}).name || '') + ' ' + T('oyundan çıxdı');
+      if(s.quit === s.me){ lose = true; win = false; }
+      else { win = true; lose = false; }
     }
-    box.innerHTML = '<h3>' + esc(T(title)) + '</h3><p>' + esc(why) + '</p><button class="pbtn" id="durAgain" type="button">' + esc(T('Növbəti raund')) + '</button>';
+    var ic = win ? 'fa-trophy' : (lose ? 'fa-heart-crack' : 'fa-handshake');
+    box.className = 'res-show ' + (win ? 'win' : (lose ? 'lose' : 'draw'));
+    box.innerHTML = '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + esc(T(title)) + '</h3><p>' + esc(why) + '</p><button class="pbtn" id="durAgain" type="button">' + esc(T('Növbəti raund')) + '</button>';
     $('durAgain').onclick = async function(){
       if(!du.code) return;
       try{
         var r = await api('/api/durak/again', {method: 'POST', body: JSON.stringify({room: du.code, round: s.round})});
-        if(r.ok) sync(await r.json()); else flash('Əlaqə problemi, yenidən cəhd et');
-      }catch(e){ flash('Əlaqə problemi, yenidən cəhd et'); }
+        if(r.ok) sync(await r.json()); else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
+      }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
     };
   }
 
@@ -8589,16 +8777,17 @@ window.wtInviteBox = function(o){
     render();
   }
   function startPoll(){
-    var g = ++gen;
+    var g = ++gen, fails = 0;
     (async function(){
       while(g === gen && ma.code){
         try{
           var r = await api('/api/mafia/poll?room=' + enc(ma.code) + '&v=' + ma.v + '&vk=' + voice.vk());
           if(g !== gen) return;
           if(r.status === 404){ gone(); return; }
-          if(!r.ok){ await sleep(2000); continue; }
-          sync(await r.json());
-        }catch(e){ if(g !== gen) return; await sleep(2000); }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
+          fails = 0; sync(await r.json());
+        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
       }
     })();
   }
@@ -9088,6 +9277,24 @@ window.wtInviteBox = function(o){
 })();
 </script>
 
+<div id="wtGuide" hidden role="dialog" aria-modal="true" aria-labelledby="wtGuideTitle">
+  <div class="gcard">
+    <h2 id="wtGuideTitle">Necə işləyir?</h2>
+    <div class="gstep"><span class="gn">1</span><div><div class="gt">Otaq aç</div><div class="gs">Ana səhifədə «Otaq aç» düyməsinə bas.</div></div></div>
+    <div class="gstep"><span class="gn">2</span><div><div class="gt">Kodu paylaş</div><div class="gs">Dostuna otaq kodunu və ya dəvət linkini göndər.</div></div></div>
+    <div class="gstep"><span class="gn">3</span><div><div class="gt">Birlikdə izlə</div><div class="gs">Eyni videoda, eyni söhbətdə olun.</div></div></div>
+    <div class="gacts"><button type="button" class="pbtn" id="wtGuideOk">Başlıyaq</button></div>
+    <button type="button" class="gskip" id="wtGuideSkip">Daha sonra</button>
+  </div>
+</div>
+<div id="wtNotifAsk" hidden role="dialog" aria-live="polite">
+  <b>Bildirişləri aç?</b>
+  <small>Dəvət və seans xatırlatmalarını vaxtında alarsan. İstədiyin vaxt ayarlardan söndürə bilərsən.</small>
+  <div class="gacts">
+    <button type="button" class="pbtn alt" id="wtNotifNo">Xeyr</button>
+    <button type="button" class="pbtn" id="wtNotifYes">İcazə ver</button>
+  </div>
+</div>
 <div id="wtToast" hidden role="status" aria-live="polite"></div>
 <div id="wtReconnect" hidden role="status" aria-live="polite"></div>
 </body>
