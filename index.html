@@ -2427,6 +2427,36 @@ body.guest-mode .guest-only{display:block!important}
 #hvids .hs{position:relative}
 #hvids .hs .favbtn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.45);color:#fff;border-radius:50%;width:32px;height:32px;padding:0}
 #hvids .hs .favbtn.on{color:#ff5c8a}
+
+/* ---- Telegram-style səs otağı paneli ---- */
+#gvSheet{position:fixed;inset:0;z-index:99960;display:flex;align-items:flex-end;justify-content:center;background:rgba(4,6,14,.55)}
+#gvSheet[hidden]{display:none!important}
+#gvSheet .gvs-card{width:min(100%,440px);max-height:min(78vh,640px);background:#121826;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0)}
+#gvSheet .gvs-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+#gvSheet .gvs-head b{flex:1;font-size:16px;font-weight:800;color:#eef2ff}
+#gvSheet .gvs-head small{display:block;color:#8b97b8;font-size:12px;font-weight:600;margin-top:2px}
+#gvSheet .gvs-x{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.06);color:#cfd6ef;border:0}
+#gvSheet .gvs-list{flex:1;overflow-y:auto;padding:8px 10px 12px;-webkit-overflow-scrolling:touch}
+#gvSheet .gvs-row{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:14px;margin:3px 0}
+#gvSheet .gvs-row:hover{background:rgba(255,255,255,.04)}
+#gvSheet .gvs-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#5a6ea8,#2a3558);color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none;position:relative}
+#gvSheet .gvs-av.muted::after{content:"";position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;background:#1a2030 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a9c' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14'/%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3C/svg%3E") center/10px no-repeat}
+#gvSheet .gvs-meta{flex:1;min-width:0}
+#gvSheet .gvs-nm{font-weight:700;font-size:14px;color:#eef2ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gvSheet .gvs-st{font-size:12px;color:#8b97b8;margin-top:2px}
+#gvSheet .gvs-st.on{color:#5be08a}
+#gvSheet .gvs-acts{display:flex;gap:6px;flex:none}
+#gvSheet .gvs-acts button{width:36px;height:36px;border-radius:11px;border:0;background:rgba(255,255,255,.07);color:#cfd6ef;display:grid;place-items:center}
+#gvSheet .gvs-acts button.danger{background:rgba(184,50,90,.25);color:#ff8eab}
+#gvSheet .gvs-foot{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.08);background:#0e1422}
+#gvSheet .gvs-foot button{width:52px;height:52px;border-radius:50%;border:0;display:grid;place-items:center;font-size:18px;color:#fff}
+#gvSheet .gvs-foot #gvsMic{background:#2b7de9}
+#gvSheet .gvs-foot #gvsMic.off{background:#3a455c}
+#gvSheet .gvs-foot #gvsLeave{background:#b8325a}
+#gvSheet .gvs-foot #gvsPeople{background:#243049}
+.gvbar.live{box-shadow:inset 0 0 0 1px rgba(43,125,233,.35)}
+.gvbar .gvb.on{background:rgba(43,125,233,.2)!important}
+
 </style>
 </head>
 <body>
@@ -7379,12 +7409,51 @@ window.wtInviteBox = function(o){
       return r.json();
     }
 
+    var isHost = false, sheetOpen = false;
+    function letter(n){ n = (n || '?').trim(); return (n.charAt(0) || '?').toUpperCase(); }
+    function openSheet(){ var sh = document.getElementById('gvSheet'); if(!sh) return; sheetOpen = true; sh.hidden = false; paintSheet(); }
+    function closeSheet(){ var sh = document.getElementById('gvSheet'); if(sh) sh.hidden = true; sheetOpen = false; }
+    function paintSheet(){
+      var list = document.getElementById('gvsList'), title = document.getElementById('gvsTitle'), sub = document.getElementById('gvsSub');
+      var micB = document.getElementById('gvsMic');
+      if(!list) return;
+      var all = vc.slice();
+      if(on && myId && !all.some(function(x){ return x.id === myId; })) all.unshift({id: myId, name: (window.myName || 'Sən'), muted: muted, me: true});
+      if(title) title.textContent = T('Səsli otaq');
+      if(sub) sub.textContent = all.length + ' ' + T('iştirakçı');
+      if(micB){ micB.classList.toggle('off', muted); micB.innerHTML = '<i class="fa-solid ' + (muted ? 'fa-microphone-slash' : 'fa-microphone') + '"></i>'; }
+      list.innerHTML = all.map(function(x){
+        var p = peers[x.id] || {};
+        var mu = x.id === myId ? muted : !!(x.muted || p.muted);
+        var st = x.id === myId ? (muted ? T('Mikrofon bağlı') : T('Danışırsan')) : (mu ? T('Səssiz') : T('Səsdə'));
+        var acts = '';
+        if(isHost && x.id !== myId && on){
+          acts = '<div class="gvs-acts">' +
+            '<button type="button" data-act="mute" data-id="' + x.id + '" title="' + T('Səssiz et') + '"><i class="fa-solid fa-microphone-slash"></i></button>' +
+            '<button type="button" class="danger" data-act="kick" data-id="' + x.id + '" title="' + T('Səsdən çıxar') + '"><i class="fa-solid fa-user-slash"></i></button>' +
+            '</div>';
+        }
+        return '<div class="gvs-row">' +
+          '<div class="gvs-av' + (mu ? ' muted' : '') + '">' + letter(x.name) + '</div>' +
+          '<div class="gvs-meta"><div class="gvs-nm">' + (x.name || '?') + (x.id === myId || x.me ? ' · ' + T('Sən') : '') + (isHost && x.id === myId ? ' · ' + T('Host') : '') + '</div>' +
+          '<div class="gvs-st' + (mu ? '' : ' on') + '">' + st + '</div></div>' + acts + '</div>';
+      }).join('') || ('<div class="gvs-st" style="padding:16px;text-align:center">' + T('Hələ heç kim yoxdur') + '</div>');
+    }
+    async function hostAct(kind, id){
+      try{
+        var r = await sig(kind, id, kind === 'force_mute' ? true : null);
+        if(r.members) vc = r.members;
+        if(typeof r.host === 'boolean') isHost = r.host;
+        render();
+      }catch(e){ say(T('Əməliyyat alınmadı')); }
+    }
     function render(){
       var bar = $(o.p + 'vbar'), btn = $(o.p + 'mic'), mb = $(o.p + 'mute'), tx = $(o.p + 'vt');
       if(!bar) return;
+      bar.classList.toggle('live', on);
       var oth = vc.filter(function(x){ return x.id !== myId; });
       btn.classList.toggle('on', on);
-      btn.querySelector('span').textContent = T(on ? 'Səsli otaqdan çıx' : 'Səsli otağa gir');
+      btn.querySelector('span').textContent = T(on ? 'Səsli otaq' : 'Səsli otağa gir');
       mb.hidden = !on;
       mb.classList.toggle('off', muted);
       mb.innerHTML = '<i class="fa-solid ' + (muted ? 'fa-microphone-slash' : 'fa-microphone') + '" aria-hidden="true"></i>';
@@ -7392,14 +7461,15 @@ window.wtInviteBox = function(o){
       var nm = oth.map(function(x){ var p = peers[x.id]; return x.name + (p && p.muted ? ' 🔇' : ''); }).join(', ');
       var t = '';
       if(!on) t = oth.length ? T(nm + ' səsli otaqdadır') : '';
-      else if(!oth.length) t = T('Səsli otaqdasan, gözləyirəm...');
+      else if(!oth.length) t = T('Səsli otaqdasan · toxun: siyahı');
       else {
         var all = oth.every(function(x){ var p = peers[x.id]; return p && p.live; });
-        t = T('Səsli: ' + nm) + (all ? '' : ' · ' + T('Qoşulur...'));
+        t = T('Səsli: ' + nm) + (all ? '' : ' · ' + T('Qoşulur...')) + ' · ' + T('toxun');
       }
       if(on && needTap) t += ' · ' + T('Səs üçün toxun');
       if(on && o.allow && !o.allow()) t += (t ? ' · ' : '') + T('Mikrofonun bağlıdır');
       tx.textContent = t;
+      if(sheetOpen) paintSheet();
     }
 
     function closePeer(id){
@@ -7466,7 +7536,9 @@ window.wtInviteBox = function(o){
     function onMsg(m){
       if(m.k === 'hello'){ closePeer(m.f); render(); }     // qayıdıb: köhnə bağlantı atılır, o təklif göndərəcək
       else if(m.k === 'bye'){ closePeer(m.f); render(); }
-      else if(m.k === 'mute'){ var p = peers[m.f]; if(p){ p.muted = !!m.d; render(); } }
+      else if(m.k === 'mute'){ var p = peers[m.f]; if(p){ p.muted = !!m.d; } vc.forEach(function(x){ if(x.id === m.f) x.muted = !!m.d; }); if(m.f === myId && m.d){ muted = true; applyTrack(); } render(); }
+      else if(m.k === 'force_mute'){ var p2 = peers[m.to]; if(p2) p2.muted = true; vc.forEach(function(x){ if(x.id === m.to) x.muted = true; }); if(m.to === myId){ muted = true; applyTrack(); say(T('Host mikrofonunu bağladı')); } render(); }
+      else if(m.k === 'kick'){ if(m.to === myId){ say(T('Host səni səsli otaqdan çıxardı')); leave(true); return; } closePeer(m.to); vc = vc.filter(function(x){ return x.id !== m.to; }); render(); }
       else onSig(m);
     }
     async function loop(g){
@@ -7506,7 +7578,7 @@ window.wtInviteBox = function(o){
         st.getTracks().forEach(function(t){ t.stop(); }); stream = null; rc = '';
         say('Əlaqə problemi, yenidən cəhd et'); render(); return;
       }
-      on = true; myId = res.id; since = res.seq; applyTrack();
+      on = true; myId = res.id; since = res.seq; if(typeof res.host === 'boolean') isHost = res.host; applyTrack();
       (res.members || []).forEach(function(m){
         var p = mkPeer(m.id, m.name, true); p.muted = !!m.muted; offer(m.id, false);   // təklifi daxil olan göndərir
       });
@@ -7519,8 +7591,9 @@ window.wtInviteBox = function(o){
       on = false; gen++;
       Object.keys(peers).forEach(closePeer);
       if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
-      var c = rc; rc = ''; myId = ''; muted = false; needTap = false;
+      var c = rc; rc = ''; myId = ''; muted = false; needTap = false; isHost = false;
       if(c) api('/api/gvoice/send', {method: 'POST', body: JSON.stringify({game: o.game, room: c, k: 'bye', to: '', d: null})}).catch(function(){});
+      try{ closeSheet(); }catch(e){}
       render();
     }
     function applyTrack(){
@@ -7541,9 +7614,47 @@ window.wtInviteBox = function(o){
       if(!ok) needTap = false;
     }
 
-    $(o.p + 'mic').onclick = function(){ if(on) leave(); else join(); };
+    $(o.p + 'mic').onclick = function(){ if(on) openSheet(); else join(); };
     $(o.p + 'mute').onclick = toggleMute;
-    $(o.p + 'vbar').addEventListener('click', function(e){ if(needTap && !e.target.closest('button')) playAll(); });
+    $(o.p + 'vbar').addEventListener('click', function(e){
+      if(e.target.closest('button')) return;
+      if(needTap){ playAll(); return; }
+      if(on) openSheet();
+    });
+    /* qlobal panel düymələri — aktiv oyun səsi üçün */
+    window._wtGvActive = window._wtGvActive || null;
+    var api = {
+      openSheet: openSheet, closeSheet: closeSheet, toggleMute: toggleMute, leave: leave,
+      isOn: function(){ return on; }, game: o.game
+    };
+    var prev = window._wtGvActive;
+    // sheet binds once
+    if(!window._wtGvSheetBound){
+      window._wtGvSheetBound = true;
+      document.addEventListener('click', function(e){
+        var t = e.target.closest && e.target.closest('#gvsClose, #gvsLeave, #gvsMic, #gvsPeople, #gvSheet .gvs-acts button, #gvSheet');
+        if(!t) return;
+        var cur = window._wtGvActive; if(!cur) return;
+        if(t.id === 'gvsClose' || t.id === 'gvsPeople'){ cur.closeSheet(); return; }
+        if(t.id === 'gvsLeave'){ cur.leave(); cur.closeSheet(); return; }
+        if(t.id === 'gvsMic'){ cur.toggleMute(); return; }
+        if(t.getAttribute && t.getAttribute('data-act')){
+          var act = t.getAttribute('data-act'), id = t.getAttribute('data-id');
+          if(act === 'mute' && cur.hostAct) cur.hostAct('force_mute', id);
+          if(act === 'kick' && cur.hostAct) cur.hostAct('kick', id);
+          return;
+        }
+        if(t.id === 'gvSheet'){ cur.closeSheet(); }
+      });
+    }
+    // track active instance when joining
+    var _join = join, _leave = leave;
+    join = async function(){ await _join(); if(on){ window._wtGvActive = {
+      openSheet: openSheet, closeSheet: closeSheet, toggleMute: toggleMute, leave: function(){ _leave(); closeSheet(); },
+      hostAct: hostAct, isOn: function(){ return on; }
+    }; openSheet(); } };
+    leave = function(quiet){ _leave(quiet); closeSheet(); if(window._wtGvActive && !on) window._wtGvActive = null; };
+
     render();
     return {
       leave: leave,
@@ -9652,6 +9763,21 @@ window.wtInviteBox = function(o){
   <div class="gacts">
     <button type="button" class="pbtn alt" id="wtNotifNo" onclick="window.wtNotifDone&&window.wtNotifDone(false)">Xeyr</button>
     <button type="button" class="pbtn" id="wtNotifYes" onclick="window.wtNotifDone&&window.wtNotifDone(true)">İcazə ver</button>
+  </div>
+</div>
+
+<div id="gvSheet" hidden role="dialog" aria-modal="true" aria-label="Səsli otaq">
+  <div class="gvs-card">
+    <div class="gvs-head">
+      <div><b id="gvsTitle">Səsli otaq</b><small id="gvsSub">0 iştirakçı</small></div>
+      <button type="button" class="gvs-x" id="gvsClose" aria-label="Bağla"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="gvs-list" id="gvsList"></div>
+    <div class="gvs-foot">
+      <button type="button" id="gvsPeople" aria-label="İştirakçılar"><i class="fa-solid fa-users"></i></button>
+      <button type="button" id="gvsMic" aria-label="Mikrofon"><i class="fa-solid fa-microphone"></i></button>
+      <button type="button" id="gvsLeave" aria-label="Çıx"><i class="fa-solid fa-phone-slash"></i></button>
+    </div>
   </div>
 </div>
 <div id="wtToast" hidden role="status" aria-live="polite"></div>
