@@ -92,6 +92,18 @@
   </section>
 
   <section>
+    <h2>Ehtiyat nüsxə (baza)</h2>
+    <div class="banform">
+      <button type="button" id="bkMake">Yeni nüsxə yarat</button>
+      <button type="button" id="bkDl">Hazırkı bazanı endir</button>
+      <button type="button" id="bkRestoreBtn">Fayldan bərpa et</button>
+      <input type="file" id="bkFile" accept=".db,.sqlite" hidden>
+    </div>
+    <div class="muted" id="bkMsg" style="margin-bottom:8px"></div>
+    <div class="tablewrap"><table id="tBackups"><thead><tr><th>Fayl</th><th>Ölçü</th><th>Tarix</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="muted" style="margin-top:8px">Render-də disk müvəqqətidirsə, nüsxəni vaxtaşırı kompüterinə endir. Bərpa mövcud bazanı əvəz edir (əvvəlcə avtomatik nüsxə alınır).</div>
+  </section>
+  <section>
     <h2>İstifadəçilər</h2>
     <div class="tablewrap"><table id="tUsers">
       <thead><tr><th>Ad</th><th>İstifadəçi adı</th><th>E-poçt</th><th>Təsdiqli</th><th>Qeydiyyat</th><th>Son giriş</th><th>Son IP</th></tr></thead>
@@ -221,6 +233,7 @@ document.getElementById('logout').addEventListener('click', async () => {
 });
 
 async function loadAll(){
+  loadBackups();
   try{
     const [ov, us, lg, vs, bn, rp] = await Promise.all([
       api('/api/admin/overview'),
@@ -291,6 +304,34 @@ async function loadAll(){
       </tr>`).join('') || '<tr><td colspan="3" class="muted">Məlumat yoxdur</td></tr>';
   }catch(x){ /* 401 artıq login ekranını göstərir */ }
 }
+
+
+async function loadBackups(){
+  try{
+    const d = await api('/api/admin/backup');
+    document.querySelector('#tBackups tbody').innerHTML = d.items.map(b => `
+      <tr><td>${esc(b.name)}</td><td class="muted">${(b.size/1048576).toFixed(2)} MB</td><td class="muted">${fmt(b.ts)}</td>
+      <td><a href="/api/admin/backup/download?name=${encodeURIComponent(b.name)}">endir</a></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Nüsxə yoxdur</td></tr>';
+  }catch(x){}
+}
+document.getElementById('bkMake').onclick = async () => {
+  const m = document.getElementById('bkMsg'); m.textContent = '...';
+  try{ await api('/api/admin/backup', {method:'POST'}); m.textContent = 'Nüsxə yaradıldı'; loadBackups(); }catch(x){ m.textContent = 'Alınmadı'; }
+};
+document.getElementById('bkDl').onclick = () => { location.href = '/api/admin/backup/download'; };
+document.getElementById('bkRestoreBtn').onclick = () => document.getElementById('bkFile').click();
+document.getElementById('bkFile').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  if(!confirm('Baza "' + f.name + '" faylından bərpa olunsun? Hazırkı məlumat əvəz olunacaq.')){ e.target.value = ''; return; }
+  const m = document.getElementById('bkMsg'); m.textContent = 'Yüklənir...';
+  const fd = new FormData(); fd.append('file', f);
+  try{
+    const r = await fetch('/api/admin/backup/restore', {method:'POST', body: fd, credentials:'same-origin'});
+    const d = await r.json().catch(() => ({}));
+    m.textContent = r.ok ? 'Bərpa olundu' : (d.error || 'Alınmadı'); loadBackups();
+  }catch(x){ m.textContent = 'Alınmadı'; }
+  e.target.value = '';
+};
 
 (async () => {
   try{
