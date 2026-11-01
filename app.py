@@ -559,6 +559,9 @@ CREATE TABLE IF NOT EXISTS reports(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL
   target TEXT, tname TEXT, tuser TEXT, kind TEXT NOT NULL, room TEXT, msg_id TEXT, msg_text TEXT,
   reason TEXT NOT NULL, details TEXT, status INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS reports_ts ON reports(status, ts);
+CREATE TABLE IF NOT EXISTS push_subs(endpoint TEXT PRIMARY KEY, sub TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL, ts REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS push_subs_sub ON push_subs(sub);
+CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
 """)
             ucols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
             if "username" not in ucols:   # köhnə baza: istifadəçi adı sonradan avtomatik verilir
@@ -1540,9 +1543,205 @@ def api_account_delete():
     return jsonify(ok=True)
 
 
+# ---------------------------------------------------------------
+#  İstifadəçi hadisələri: SSE axını + Web Push (brauzer bağlı olsa da bildiriş)
+#  SSE: /api/stream (X-Token başlığı ilə, fetch axını). Hər bağlantı ~50 san açıq qalır, sonra müştəri yenidən qoşulur.
+#  Web Push: VAPID + RFC 8291 (aes128gcm), yalnız "cryptography" paketi lazımdır.
+#  İstəyə görə mühit dəyişənləri: VAPID_PRIVATE_KEY (base64url, 32 bayt), VAPID_SUBJECT (mailto:...), SSE_MAX
+# ---------------------------------------------------------------
+USER_EV = {}          # sub -> [(seq, kind, payload)]
+EV_SEQ = [0]
+SSE_OPEN = [0]
+SSE_MAX = int(os.environ.get("SSE_MAX", "60"))
+PUSH_HOSTS = ("googleapis.com", "mozilla.com", "mozaws.net", "push.apple.com", "windows.com", "microsoft.com")
+_VAPID = []
+
+
+def notify_user(sub, kind, payload=None, push=None):
+    """Hadisəni istifadəçinin açıq SSE axınlarına verir; push verilibsə qeydiyyatlı cihazlara da göndərir."""
+    if not sub:
+        return
+    with CV:
+        EV_SEQ[0] += 1
+        if len(USER_EV) > 5000:
+            USER_EV.clear()
+        q = USER_EV.setdefault(sub, [])
+        q.append((EV_SEQ[0], kind, payload or {}))
+        del q[:-30]
+        CV.notify_all()
+    if push:
+        threading.Thread(target=push_to_user, args=(sub, push), daemon=True).start()
+
+
+def _b64u(b):
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def _b64d(x):
+    x = str(x)
+    return base64.urlsafe_b64decode(x + "=" * (-len(x) % 4))
+
+
+def vapid_keys():
+    """(şəxsi açar, açıq açar base64url) və ya None (cryptography yoxdursa)."""
+    if _VAPID:
+        return _VAPID[0]
+    try:
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives import serialization
+    except Exception:
+        return None
+    env = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+    if env:
+        key = ec.derive_private_key(int.from_bytes(_b64d(env), "big"), ec.SECP256R1())
+    else:
+        row = dbq("SELECT v FROM push_cfg WHERE k='vapid'", one=True)
+        if row:
+            key = ec.derive_private_key(int(row["v"]), ec.SECP256R1())
+        else:
+            key = ec.generate_private_key(ec.SECP256R1())
+            dbq("INSERT OR IGNORE INTO push_cfg(k,v) VALUES('vapid',?)", (str(key.private_numbers().private_value),))
+            row = dbq("SELECT v FROM push_cfg WHERE k='vapid'", one=True)
+            key = ec.derive_private_key(int(row["v"]), ec.SECP256R1())
+    pub = key.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    _VAPID.append((key, _b64u(pub)))
+    return _VAPID[0]
+
+
+def push_endpoint_ok(url):
+    p = urlparse(str(url or ""))
+    h = (p.hostname or "").lower()
+    return p.scheme == "https" and len(str(url)) < 600 and any(h == d or h.endswith("." + d) for d in PUSH_HOSTS)
+
+
+def _push_encrypt(sub_info, data):
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    ua_pub, auth = _b64d(sub_info["p256dh"]), _b64d(sub_info["auth"])
+    eph = ec.generate_private_key(ec.SECP256R1())
+    as_pub = eph.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    shared = eph.exchange(ec.ECDH(), ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), ua_pub))
+    salt = os.urandom(16)
+    ikm = HKDF(hashes.SHA256(), 32, auth, b"WebPush: info\x00" + ua_pub + as_pub).derive(shared)
+    cek = HKDF(hashes.SHA256(), 16, salt, b"Content-Encoding: aes128gcm\x00").derive(ikm)
+    nonce = HKDF(hashes.SHA256(), 12, salt, b"Content-Encoding: nonce\x00").derive(ikm)
+    ct = AESGCM(cek).encrypt(nonce, data + b"\x02", None)
+    return salt + struct.pack(">I", 4096) + bytes([len(as_pub)]) + as_pub + ct
+
+
+def _vapid_auth(endpoint):
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+    key, pub = vapid_keys()
+    p = urlparse(endpoint)
+    head = _b64u(json.dumps({"typ": "JWT", "alg": "ES256"}, separators=(",", ":")).encode())
+    claims = _b64u(json.dumps({"aud": "%s://%s" % (p.scheme, p.netloc), "exp": int(time.time()) + 12 * 3600,
+                               "sub": os.environ.get("VAPID_SUBJECT", "mailto:admin@birlikde-izle.app")},
+                              separators=(",", ":")).encode())
+    r, s_ = decode_dss_signature(key.sign((head + "." + claims).encode(), ec.ECDSA(hashes.SHA256())))
+    sig = r.to_bytes(32, "big") + s_.to_bytes(32, "big")
+    return "vapid t=%s.%s.%s, k=%s" % (head, claims, _b64u(sig), pub)
+
+
+def push_to_user(sub, payload):
+    """Bütün cihazlara göndərir. Ölü abunəliklər (404/410) silinir. Heç vaxt istisna atmır."""
+    try:
+        if not vapid_keys():
+            return
+        rows = dbq("SELECT endpoint,p256dh,auth FROM push_subs WHERE sub=?", (sub,), many=True)
+        data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()[:3000]
+        for r in rows:
+            try:
+                resp = requests.post(r["endpoint"], data=_push_encrypt(r, data), timeout=8, headers={
+                    "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream",
+                    "TTL": "3600", "Urgency": "high", "Authorization": _vapid_auth(r["endpoint"])})
+                if resp.status_code in (404, 410):
+                    dbq("DELETE FROM push_subs WHERE endpoint=?", (r["endpoint"],))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+@app.route("/api/push/key")
+def api_push_key():
+    k = vapid_keys()
+    return _nostore(jsonify(enabled=bool(k), key=k[1] if k else ""))
+
+
+@app.route("/api/push/subscribe", methods=["POST"])
+def api_push_subscribe():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    k = d.get("keys") or {}
+    ep, p256, au = str(d.get("endpoint") or ""), str(k.get("p256dh") or ""), str(k.get("auth") or "")
+    if not push_endpoint_ok(ep) or not (60 < len(p256) < 140) or not (10 < len(au) < 40):
+        abort(400)
+    if not rate_hit("pushsub", sub, 20, 3600):
+        abort(429)
+    dbq("INSERT OR REPLACE INTO push_subs(endpoint,sub,p256dh,auth,ts) VALUES(?,?,?,?,?)", (ep, sub, p256, au, time.time()))
+    dbq("DELETE FROM push_subs WHERE sub=? AND endpoint NOT IN "
+        "(SELECT endpoint FROM push_subs WHERE sub=? ORDER BY ts DESC LIMIT 8)", (sub, sub))
+    return jsonify(ok=True)
+
+
+@app.route("/api/push/unsubscribe", methods=["POST"])
+def api_push_unsubscribe():
+    sub, _ = auth_sub()
+    dbq("DELETE FROM push_subs WHERE sub=? AND endpoint=?", (sub, str((request.get_json(silent=True) or {}).get("endpoint") or "")))
+    return jsonify(ok=True)
+
+
+@app.route("/api/stream")
+def api_stream():
+    sub, _ = auth_sub()
+    try:
+        last = int(request.args.get("since", "-1"))
+    except ValueError:
+        last = -1
+    with CV:
+        if SSE_OPEN[0] >= SSE_MAX:
+            return jsonify(error="busy"), 503
+        SSE_OPEN[0] += 1
+        if last < 0 or last > EV_SEQ[0]:   # ilk qoşulma və ya server yenidən başlayıb: yalnız yeni hadisələr
+            last = EV_SEQ[0]
+
+    def gen(last=last):
+        deadline = time.time() + 50
+        try:
+            yield "retry: 3000\nid: %d\nevent: hello\ndata: {}\n\n" % last
+            while True:
+                with CV:
+                    new = [e for e in USER_EV.get(sub, []) if e[0] > last]
+                    left = deadline - time.time()
+                    if not new and left > 0:
+                        CV.wait(timeout=min(left, 15))
+                        new = [e for e in USER_EV.get(sub, []) if e[0] > last]
+                        left = deadline - time.time()
+                if new:
+                    for seq, kind, payload in new:
+                        last = seq
+                        yield "id: %d\nevent: %s\ndata: %s\n\n" % (seq, kind, json.dumps(payload, ensure_ascii=False))
+                else:
+                    yield ": ping\n\n"
+                if left <= 0:
+                    return
+        finally:
+            with CV:
+                SSE_OPEN[0] = max(0, SSE_OPEN[0] - 1)
+
+    resp = Response(gen(), mimetype="text/event-stream")
+    resp.headers["Cache-Control"] = "no-cache, no-transform"
+    resp.headers["X-Accel-Buffering"] = "no"
+    return resp
+
+
 @app.route("/api/invite", methods=["POST"])
 def api_invite():
-    sub, _ = auth_sub()
+    sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     u = norm_username(d.get("username"))
     code = clean_room(d.get("room"))
@@ -1566,6 +1765,8 @@ def api_invite():
     dbq("INSERT OR REPLACE INTO invites(to_sub,from_sub,room,ts) VALUES(?,?,?,?)", (row["sub"], sub, code, time.time()))
     dbq("DELETE FROM invites WHERE to_sub=? AND id NOT IN "
         "(SELECT id FROM invites WHERE to_sub=? ORDER BY ts DESC LIMIT 20)", (row["sub"], row["sub"]))
+    nm = ident_for(tok)["name"]
+    notify_user(row["sub"], "invite", push=dict(title="Otaq dəvəti", body=nm + " səni birlikdə izləməyə çağırır", tag="invite", url="/"))
     return jsonify(ok=True)
 
 
@@ -1689,6 +1890,7 @@ def api_game_invite():
     GAME_INV.setdefault(row["sub"], {})[(kind, code, sub)] = dict(
         id=secrets.token_hex(6), game=kind, room=code, ts=time.time(), name=idn["name"],
         username=idn["username"], avatar=idn["avatar"])
+    notify_user(row["sub"], "game", push=dict(title="Oyun dəvəti", body=idn["name"] + " səni oyuna çağırır", tag="game", url="/"))
     return jsonify(ok=True)
 
 
@@ -1890,7 +2092,7 @@ def api_friends():
 
 @app.route("/api/friend/request", methods=["POST"])
 def api_friend_request():
-    sub, _ = auth_sub()
+    sub, tok = auth_sub()
     other = _user_by_name((request.get_json(silent=True) or {}).get("username"))
     if other == sub:
         abort(400)
@@ -1903,22 +2105,25 @@ def api_friend_request():
         return jsonify(ok=True, rel=rel)
     if rel == "in":   # o artıq sənə sorğu göndərib: dərhal dost olursunuz
         dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=?", (time.time(), other, sub))
+        notify_user(other, "friend", push=dict(title="Yeni dost", body=ident_for(tok)["name"] + " dostluq sorğunu qəbul etdi", tag="friend", url="/"))
         return jsonify(ok=True, rel="friend")
     if dbq("SELECT COUNT(*) FROM friends WHERE a=? AND status=0", (sub,), one=True)[0] >= 50:
         abort(429)
     dbq("INSERT OR IGNORE INTO friends(a,b,status,ts) VALUES(?,?,0,?)", (sub, other, time.time()))
+    notify_user(other, "friend", push=dict(title="Dostluq sorğusu", body=ident_for(tok)["name"] + " səni dost əlavə etmək istəyir", tag="friend", url="/"))
     return jsonify(ok=True, rel="out")
 
 
 @app.route("/api/friend/respond", methods=["POST"])
 def api_friend_respond():
-    sub, _ = auth_sub()
+    sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     other = _user_by_name(d.get("username"))
     if _is_blocked_either(sub, other):
         abort(403)
     if d.get("accept"):
         dbq("UPDATE friends SET status=1, ts=? WHERE a=? AND b=? AND status=0", (time.time(), other, sub))
+        notify_user(other, "friend", push=dict(title="Yeni dost", body=ident_for(tok)["name"] + " dostluq sorğunu qəbul etdi", tag="friend", url="/"))
     else:
         dbq("DELETE FROM friends WHERE a=? AND b=? AND status=0", (other, sub))
     return jsonify(ok=True)
@@ -2398,9 +2603,17 @@ self.addEventListener('fetch',e=>{
   e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(C).then(c=>c.put('/',cp)).catch(()=>{});return res;})
     .catch(()=>caches.match('/').then(m=>m||new Response('Əlaqə yoxdur. İnternetə qoşulub yenidən yoxla.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}))));
 });
+self.addEventListener('push',e=>{
+  let d={};try{d=e.data.json();}catch(x){}
+  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{
+    if(l.some(c=>c.visibilityState==='visible'))return;
+    return self.registration.showNotification(d.title||'Birlikdə İzlə',{body:d.body||'',icon:'/icon-192.png',badge:'/icon-192.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/'}});
+  }));
+});
 self.addEventListener('notificationclick',e=>{
   e.notification.close();
-  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>l.length?l[0].focus():clients.openWindow('/')));
+  const u=(e.notification.data&&e.notification.data.url)||'/';
+  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>l.length?l[0].focus():clients.openWindow(u)));
 });
 """
 
