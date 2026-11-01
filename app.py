@@ -5598,14 +5598,14 @@ def api_gvoice_send():
     kind = d.get("game")
     code = clean_room(d.get("room"))
     k = str(d.get("k") or "")
-    if kind not in GV_KINDS or not code or k not in ("hello", "bye", "mute", "force_mute", "kick", "list") + GV_SIG:
+    if kind not in GV_KINDS or not code or k not in ("hello", "bye", "mute") + GV_SIG:
         abort(400)
     payload = d.get("d")
     if len(json.dumps(payload)) > 12000:
         abort(400)
     if not rate_hit("gvs", sub, 600, 60):
         abort(429)
-    to = str(d.get("to") or "")[:12] if k in GV_SIG or k in ("force_mute", "kick") else ""
+    to = str(d.get("to") or "")[:12] if k in GV_SIG else ""
     me = _gv_id(code, sub)
     now = time.time()
     members = []
@@ -5613,50 +5613,23 @@ def api_gvoice_send():
     with _ensure_cv(g):
         v = _gv_data(kind, code)
         nm = (g["names"].get(sub) or {}).get("name") or "Qonaq"
-        is_host = (g.get("host") == sub) or (g.get("players") and g["players"][0] == sub)
-        def mem_list():
-            out = []
-            for i, m in list(v["mem"].items()):
-                if now - m["ts"] >= GV_TTL:
-                    continue
-                out.append(dict(id=i, name=m["name"], muted=bool(m.get("muted")), me=(i == me)))
-            return out
         if k == "hello":
             members = [dict(id=i, name=m["name"], muted=m["muted"]) for i, m in v["mem"].items()
                        if i != me and now - m["ts"] < GV_TTL]
-            v["mem"][me] = dict(name=nm, muted=bool(d.get("muted")), ts=now, sub=sub)
+            v["mem"][me] = dict(name=nm, muted=bool(d.get("muted")), ts=now)
             g["vk"] = g.get("vk", 0) + 1
         elif k == "bye":
             if v["mem"].pop(me, None) is not None:
                 g["vk"] = g.get("vk", 0) + 1
-        elif k == "list":
-            members = mem_list()
-            return jsonify(seq=v["s"], id=me, members=members, host=bool(is_host))
-        elif me not in v["mem"] and k not in ("force_mute", "kick"):
+        elif me not in v["mem"]:
             abort(403)   # offer/answer/ice/mute yalnız səs otağındakı oyunçudan
         elif k == "mute":
             v["mem"][me]["muted"] = bool(payload)
-            v["mem"][me]["ts"] = now
-        elif k in ("force_mute", "kick"):
-            if not is_host:
-                abort(403)
-            tid = to
-            if not tid or tid not in v["mem"]:
-                abort(404)
-            if k == "force_mute":
-                v["mem"][tid]["muted"] = True
-                payload = True
-            else:
-                v["mem"].pop(tid, None)
-                g["vk"] = g.get("vk", 0) + 1
-        if me in v["mem"]:
-            v["mem"][me]["ts"] = now
         v["s"] += 1
         v["q"].append(dict(s=v["s"], f=me, to=to, k=k, d=payload, n=nm))
         del v["q"][:-300]
-        members = mem_list() if k in ("hello", "mute", "force_mute", "kick") else members
         _notify(v)
-        return jsonify(seq=v["s"], id=me, members=members, host=bool(is_host))
+        return jsonify(seq=v["s"], id=me, members=members)
 
 
 @app.route("/api/gvoice/poll")
