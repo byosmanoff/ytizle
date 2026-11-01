@@ -50,13 +50,10 @@ def _ensure_cv(obj):
 
 
 def _notify(obj):
-    """Obyektin öz CV-sini oyadır. Oyun long-poll-ları hələ qlobal CV-də gözlədiyi üçün
-    geriyə uyğunluq olaraq CV-ni də oyadır (otaq long-poll-ları artıq per-room _cv-dədir)."""
+    """Yalnız bu obyektin long-poll gözləyənlərini oyadır (thundering herd yoxdur)."""
     cv = _ensure_cv(obj)
     with cv:
         cv.notify_all()
-    with CV:
-        CV.notify_all()
 
 # Otağa yüklənən videolar (otaq silinəndə və ya server yenidən başlayanda təmizlənir).
 # MAX_UPLOAD_MB: bir videonun yuxarı həddi. UPLOAD_DIR: fayl qovluğu.
@@ -2311,7 +2308,7 @@ def api_invite():
         return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403   # istifadəçi otaq dəvətlərini bağlayıb
-    with CV:
+    with META_LOCK:
         exists = code in ROOMS
     if not exists:
         return jsonify(error="room"), 404
@@ -2330,7 +2327,7 @@ def api_invites():
     rows = dbq("SELECT i.id, i.room, i.ts, u.name, u.username, (SELECT ts FROM avatars a WHERE a.sub=u.sub) AS av "
                "FROM invites i JOIN users u ON u.sub=i.from_sub WHERE i.to_sub=? ORDER BY i.ts DESC",
                (sub,), many=True)
-    with CV:
+    with META_LOCK:
         live = [r for r in rows if r["room"] in ROOMS]
     out = [dict(id=r["id"], room=r["room"], ts=r["ts"], name=r["name"], username=r["username"] or "",
                 avatar=("/api/avatar/%s?v=%d" % (r["username"], int(r["av"]))) if r["av"] and r["username"] else "")
@@ -2394,7 +2391,7 @@ def _game_invites_for(sub):
     if not lst:
         return []
     out = []
-    with CV:
+    with META_LOCK:
         for k, i in list(lst.items()):
             g = _game_store(i["game"]).get(i["room"])
             if (now - i["ts"] > GAME_INV_TTL or not g or g["status"] != "wait" or sub in g["players"]
@@ -2429,7 +2426,7 @@ def api_game_invite():
         return jsonify(error="blocked"), 403
     if row["invites_open"] == 0:
         return jsonify(error="closed"), 403
-    with CV:
+    with META_LOCK:
         g = _game_store(kind).get(code)
         if not g or sub not in g["players"] or g["status"] != "wait":
             return jsonify(error="room"), 404
@@ -3924,7 +3921,7 @@ def proxy():
 
 # ---------------------------------------------------------------
 #  Domino otağı: 2 nəfərlik onlayn oyun (standart 28 daş, 0-6).
-#  Yaddaşda saxlanır, long-poll ilə yenilənir (otaq sistemi ilə eyni CV).
+#  Yaddaşda saxlanır, long-poll ilə yenilənir (hər oyunun öz _cv-si).
 # ---------------------------------------------------------------
 DOMINO = {}
 DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
@@ -4333,7 +4330,7 @@ def api_domino_create():
         size = 2
     nm = _dom_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
         _dom_cleanup(now)
         if len(DOMINO) >= DOM_MAX:
             abort(503)
@@ -4352,7 +4349,7 @@ def api_domino_create():
             g["seen"]["bot"] = now
             g["bot"] = True
             _dom_deal(g)
-        DOMINO[c] = g
+        _ensure_cv(g); DOMINO[c] = g
         return jsonify(_dom_view(g, sub))
 
 
@@ -4364,7 +4361,9 @@ def api_domino_join():
         abort(400)
     nm = _dom_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
+        g = DOMINO.get(code)
+    with META_LOCK:
         g = DOMINO.get(code)
         if not g:
             abort(404)
@@ -4396,8 +4395,8 @@ def api_domino_poll():
     except ValueError:
         abort(400)
     deadline = time.time() + 20
-    with CV:
-        g = _dom_get(code, sub)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         if now - g["seen"].get(sub, 0) > 30:     # qayıdıb: rəqib "onlayn" görsün
             g["seen"][sub] = now
@@ -4407,9 +4406,8 @@ def api_domino_poll():
             left = deadline - time.time()
             if left <= 0:
                 break
-            CV.wait(timeout=left)
-            g = DOMINO.get(code)
-            if not g:
+            g["_cv"].wait(timeout=left)
+            if DOMINO.get(code) is not g:
                 abort(404)
             g["seen"][sub] = time.time()
         resp = jsonify(_dom_view(g, sub))
@@ -4422,7 +4420,9 @@ def api_domino_check():
     """Saxlanmış oyun hələ varmı? Heç nəyi dəyişmir; server yenilənəndə oyunlar silinir."""
     sub, tok = auth_sub()
     code = clean_room(request.args.get("room"))
-    with CV:
+    with META_LOCK:
+        g = DOMINO.get(code)
+    with META_LOCK:
         g = DOMINO.get(code)
         if not g or sub not in g["players"]:
             abort(404)
@@ -4435,8 +4435,8 @@ def api_domino_move():
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
     act = str(d.get("action", ""))
-    with CV:
-        g = _dom_get(code, sub)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         if g["status"] != "play" or g["turn"] != sub:
             return jsonify(_dom_view(g, sub))      # köhnə klik: cari vəziyyəti qaytar
@@ -4466,8 +4466,8 @@ def api_domino_again():
     sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
-    with CV:
-        g = _dom_get(code, sub)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         try:
             rd = int(d.get("round", 0))
@@ -4488,7 +4488,9 @@ def api_domino_again():
 def api_domino_leave():
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = DOMINO.get(code)
+    with META_LOCK:
         g = DOMINO.get(code)
         if g and sub in g["players"] and g["status"] == "wait":
             if g["players"][0] == sub:
@@ -4512,7 +4514,9 @@ def api_domino_quit():
     3-4 nəfərdə oyunçu çıxarılır, daşları bazara qayıdır. Kompüterlə oyun silinir."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = DOMINO.get(code)
+    with META_LOCK:
         g = DOMINO.get(code)
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
@@ -5176,6 +5180,7 @@ def _du_load():
             g["upd"] = now
             g.setdefault("vk", 0)
             g.setdefault("quit", None)
+            _ensure_cv(g)
             DURAK[g["code"]] = g
         except Exception:
             continue
@@ -5270,7 +5275,7 @@ def api_durak_create():
     vs_bot = bool(d0.get("bot"))
     nm = _du_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
         _du_cleanup(now)
         if len(DURAK) >= DUR_MAX:
             abort(503)
@@ -5292,7 +5297,7 @@ def api_durak_create():
             g["bot"] = True
             g["bots"] = bots
             _du_start(g)
-        DURAK[c] = g
+        _ensure_cv(g); DURAK[c] = g
         _du_save(g)                                 # yaradılan kimi bazaya yaz: deploy/restartdan sonra "Oyuna qayıt" işləsin
         return jsonify(_du_view(g, sub))
 
@@ -5305,7 +5310,9 @@ def api_durak_join():
         abort(400)
     nm = _du_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
+        g = DURAK.get(code)
+    with META_LOCK:
         g = DURAK.get(code)
         if not g:
             abort(404)
@@ -5337,8 +5344,8 @@ def api_durak_poll():
     except ValueError:
         abort(400)
     deadline = time.time() + 20
-    with CV:
-        g = _du_get(code, sub)
+    g = _du_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         if now - g["seen"].get(sub, 0) > 30:
             g["seen"][sub] = now
@@ -5348,9 +5355,8 @@ def api_durak_poll():
             left = deadline - time.time()
             if left <= 0:
                 break
-            CV.wait(timeout=left)
-            g = DURAK.get(code)
-            if not g:
+            g["_cv"].wait(timeout=left)
+            if DURAK.get(code) is not g:
                 abort(404)
             g["seen"][sub] = time.time()
         resp = jsonify(_du_view(g, sub))
@@ -5362,7 +5368,9 @@ def api_durak_poll():
 def api_durak_check():
     sub, tok = auth_sub()
     code = clean_room(request.args.get("room"))
-    with CV:
+    with META_LOCK:
+        g = DURAK.get(code)
+    with META_LOCK:
         g = DURAK.get(code)
         if not g or sub not in g["players"]:
             abort(404)
@@ -5375,8 +5383,8 @@ def api_durak_move():
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
     act = str(d.get("action", ""))
-    with CV:
-        g = _du_get(code, sub)
+    g = _du_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         eng = g["eng"]
         if g["status"] != "play" or eng is None:
@@ -5409,8 +5417,8 @@ def api_durak_again():
     sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
-    with CV:
-        g = _du_get(code, sub)
+    g = _du_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         try:
             rd = int(d.get("round", 0))
@@ -5442,7 +5450,9 @@ def api_durak_leave():
     oyunda isə oyunçu qısa müddət 'əlaqədə deyil' görünür."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = DURAK.get(code)
+    with META_LOCK:
         g = DURAK.get(code)
         if g and sub in g["players"] and g["status"] == "wait":
             if g["players"][0] == sub:
@@ -5464,7 +5474,9 @@ def api_durak_quit():
     Gedən oyunda: oyun çıxana görə bitir, çıxan durak sayılır."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = DURAK.get(code)
+    with META_LOCK:
         g = DURAK.get(code)
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
@@ -5497,8 +5509,8 @@ def api_durak_bot():
     if not rate_hit("durb", sub, 300, 60):
         abort(429)
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = _du_get(code, sub)
+    g = _du_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         eng = g["eng"]
         if not g.get("bot") or g["status"] != "play" or eng is None:
@@ -5545,7 +5557,13 @@ def _gv_data(kind, code):
     if len(GV) > 400:   # bitmiş oyunların səs məlumatını at
         for k in [k for k in GV if k[1] not in _game_store(k[0])]:
             GV.pop(k, None)
-    return GV.setdefault((kind, code), {"mem": {}, "q": [], "s": 0})
+    v = GV.get((kind, code))
+    if v is None:
+        v = {"mem": {}, "q": [], "s": 0, "_cv": threading.Condition()}
+        GV[(kind, code)] = v
+    else:
+        _ensure_cv(v)
+    return v
 
 
 def _gv_view(kind, g):
@@ -5581,8 +5599,8 @@ def api_gvoice_send():
     me = _gv_id(code, sub)
     now = time.time()
     members = []
-    with CV:
-        g = _gv_game(kind, code, sub)
+    g = _gv_game(kind, code, sub)
+    with _ensure_cv(g):
         v = _gv_data(kind, code)
         nm = (g["names"].get(sub) or {}).get("name") or "Qonaq"
         if k == "hello":
@@ -5615,9 +5633,9 @@ def api_gvoice_poll():
         abort(400)
     me = _gv_id(code or "", sub)
     deadline = time.time() + 20
-    with CV:
-        _gv_game(kind, code, sub)
-        v = _gv_data(kind, code)
+    _gv_game(kind, code, sub)
+    v = _gv_data(kind, code)
+    with _ensure_cv(v):
         if since > v["s"]:   # server yenidən başlayıb
             since = 0
         while True:
@@ -5629,7 +5647,7 @@ def api_gvoice_poll():
             left = deadline - now
             if new or left <= 0:
                 break
-            CV.wait(timeout=left)
+            v["_cv"].wait(timeout=left)
             if code not in _game_store(kind):
                 abort(404)
         resp = jsonify(seq=v["s"], msgs=new)
@@ -5840,6 +5858,13 @@ def _ch_cleanup(now):
         CHESS.pop(c, None)
 
 
+def _ch_touch(g):
+    g["v"] += 1
+    g["upd"] = time.time()
+    rec_game("chess", g)
+    _notify(g)
+
+
 def _ch_get(code, sub):
     g = CHESS.get(code)
     if not g or sub not in g["players"]:
@@ -5877,7 +5902,7 @@ def api_chess_create():
     vs_bot = bool((request.get_json(silent=True) or {}).get("bot"))
     nm = _dom_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
         _ch_cleanup(now)
         if len(CHESS) >= CH_MAX:
             abort(503)
@@ -5896,7 +5921,7 @@ def api_chess_create():
             g["seen"]["bot"] = now
             g["bot"] = True
             _ch_reset(g)
-        CHESS[c] = g
+        _ensure_cv(g); CHESS[c] = g
         return jsonify(_ch_view(g, sub))
 
 
@@ -5908,7 +5933,9 @@ def api_chess_join():
         abort(400)
     nm = _dom_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
+        g = CHESS.get(code)
+    with META_LOCK:
         g = CHESS.get(code)
         if not g:
             abort(404)
@@ -5918,7 +5945,7 @@ def api_chess_join():
             g["players"].append(sub)
             g["names"][sub] = nm
             _ch_reset(g)
-            _dom_touch(g)
+            _ch_touch(g)
         else:
             g["names"][sub] = nm
         g["seen"][sub] = now
@@ -5938,20 +5965,19 @@ def api_chess_poll():
     except ValueError:
         abort(400)
     deadline = time.time() + 20
-    with CV:
-        g = _ch_get(code, sub)
+    g = _ch_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         if now - g["seen"].get(sub, 0) > 30:
             g["seen"][sub] = now
-            _dom_touch(g)
+            _ch_touch(g)
         g["seen"][sub] = now
         while g["v"] == v and (vk is None or g.get("vk", 0) == vk):
             left = deadline - time.time()
             if left <= 0:
                 break
-            CV.wait(timeout=left)
-            g = CHESS.get(code)
-            if not g:
+            g["_cv"].wait(timeout=left)
+            if CHESS.get(code) is not g:
                 abort(404)
             g["seen"][sub] = time.time()
         resp = jsonify(_ch_view(g, sub))
@@ -5964,7 +5990,9 @@ def api_chess_check():
     """Saxlanmış şahmat oyunu hələ varmı? Heç nəyi dəyişmir."""
     sub, tok = auth_sub()
     code = clean_room(request.args.get("room"))
-    with CV:
+    with META_LOCK:
+        g = CHESS.get(code)
+    with META_LOCK:
         g = CHESS.get(code)
         if not g or sub not in g["players"]:
             abort(404)
@@ -5977,8 +6005,8 @@ def api_chess_move():
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
     act = str(d.get("action", "move"))
-    with CV:
-        g = _ch_get(code, sub)
+    g = _ch_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         if g["status"] != "play":
             return jsonify(_ch_view(g, sub))
@@ -5997,7 +6025,7 @@ def api_chess_move():
             _ch_play(g, f, t, str(d.get("promo") or "Q")[:1].upper())
         else:
             abort(400)
-        _dom_touch(g)
+        _ch_touch(g)
         return jsonify(_ch_view(g, sub))
 
 
@@ -6006,8 +6034,8 @@ def api_chess_again():
     sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
-    with CV:
-        g = _ch_get(code, sub)
+    g = _ch_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         try:
             rd = int(d.get("round", 0))
@@ -6016,7 +6044,7 @@ def api_chess_again():
         if g["status"] == "over" and rd == g["round"] and len(g["players"]) == 2:
             g["round"] += 1
             _ch_reset(g, swap=True)
-            _dom_touch(g)
+            _ch_touch(g)
         return jsonify(_ch_view(g, sub))
 
 
@@ -6213,8 +6241,8 @@ def api_chess_bot():
     if not rate_hit("chb", sub, 240, 60):
         abort(429)
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = _ch_get(code, sub)
+    g = _ch_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         bc = g["col"].get("bot")
         if not (g.get("bot") and g["status"] == "play" and g["turn"] == bc):
@@ -6226,7 +6254,9 @@ def api_chess_bot():
         mv = _ch_bot_move(snap)
     except Exception:
         mv = None
-    with CV:
+    with META_LOCK:
+        g = CHESS.get(code)
+    with META_LOCK:
         g = CHESS.get(code)
         if not g or sub not in g["players"]:
             abort(404)
@@ -6236,7 +6266,7 @@ def api_chess_bot():
                 if mv is None or tuple(mv) not in legal:
                     mv = random.choice(legal)
                 _ch_play(g, mv[0], mv[1], "Q")
-                _dom_touch(g)
+                _ch_touch(g)
         return jsonify(_ch_view(g, sub))
 
 
@@ -6244,14 +6274,16 @@ def api_chess_bot():
 def api_chess_leave():
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = CHESS.get(code)
+    with META_LOCK:
         g = CHESS.get(code)
         if g and sub in g["players"] and (g["status"] == "wait" or g.get("bot")):
             CHESS.pop(code, None)
         elif g and sub in g["players"]:
             g["seen"][sub] = 0
             g.setdefault("gone", {})[sub] = time.time()
-            _dom_touch(g)
+            _ch_touch(g)
     return jsonify(ok=True)
 
 
@@ -6262,8 +6294,8 @@ def api_domino_bot():
     if not rate_hit("domb", sub, 240, 60):
         abort(429)
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = _dom_get(code, sub)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         if not (g.get("bot") and g["status"] == "play" and g["turn"] == "bot"):
             return jsonify(_dom_view(g, sub))
@@ -6282,7 +6314,9 @@ def api_domino_bot():
             res = ("draw",)
     except Exception:
         res = None
-    with CV:
+    with META_LOCK:
+        g = DOMINO.get(code)
+    with META_LOCK:
         g = DOMINO.get(code)
         if not g or sub not in g["players"]:
             abort(404)
@@ -6292,7 +6326,7 @@ def api_domino_bot():
                 _dom_do_play(g, "bot", res[1], res[2])
             else:
                 _dom_do_draw(g, "bot")   # bir daş; daş çıxmasa klient yenidən çağırır
-            _dom_touch(g)
+            _ch_touch(g)
         return jsonify(_dom_view(g, sub))
 
 
@@ -6301,8 +6335,8 @@ def api_domino_claim():
     """Növbədəki oyunçu DOM_CLAIM saniyədən çox yoxdursa: 2 nəfərdə oyun bitir, 3-4 nəfərdə o, oyundan çıxarılır."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = _dom_get(code, sub)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         t = g["turn"]
         if g["status"] == "play" and t and t != sub and t != "bot":
@@ -6312,7 +6346,7 @@ def api_domino_claim():
                     _dom_finish(g, sub, "left")
                 else:
                     _dom_kick(g, t)
-                _dom_touch(g)
+                _ch_touch(g)
         g["seen"][sub] = now
         return jsonify(_dom_view(g, sub))
 
@@ -6322,7 +6356,7 @@ def api_domino_claim():
 #  rolu yalnız sahibi (və qaydalara görə komanda yoldaşları / ölülər) görür.
 #  Mərhələlər: gecə (mafiya öldürür, həkim qoruyur, komissar yoxlayır) -> gündüz (müzakirə)
 #  -> səsvermə -> gecə ... Mafia sayı sakinlərə çatanda mafiya, mafiya qalmayanda sakinlər qalib gəlir.
-#  Yaddaşda saxlanır (domino kimi), long-poll ilə yenilənir (eyni CV).
+#  Yaddaşda saxlanır (domino kimi), long-poll ilə yenilənir (hər oyunun öz _cv-si).
 # ---------------------------------------------------------------
 MAFIA = {}
 MAF_IDLE = 3 * 3600
@@ -6722,7 +6756,7 @@ def api_mafia_create():
         abort(429)
     nm = _ma_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
         _ma_cleanup(now)
         if len(MAFIA) >= MAF_MAX:
             abort(503)
@@ -6735,7 +6769,7 @@ def api_mafia_create():
         g = dict(code=c, players=[sub], names={sub: nm}, seen={sub: now}, size=MAF_MAXP, host=sub,
                  v=1, upd=now, round=1, cid=0)
         _ma_reset_game(g)
-        MAFIA[c] = g
+        _ensure_cv(g); MAFIA[c] = g
         return jsonify(_ma_view(g, sub))
 
 
@@ -6747,7 +6781,9 @@ def api_mafia_join():
         abort(400)
     nm = _ma_names(tok)
     now = time.time()
-    with CV:
+    with META_LOCK:
+        g = MAFIA.get(code)
+    with META_LOCK:
         g = MAFIA.get(code)
         if not g:
             abort(404)
@@ -6780,8 +6816,8 @@ def api_mafia_poll():
     except ValueError:
         abort(400)
     deadline = time.time() + 20
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         _ma_tick(g, now)
         if now - g["seen"].get(sub, 0) > 30:
@@ -6798,9 +6834,8 @@ def api_mafia_poll():
                 wt = min(left, max(0.05, g["deadline"] - now + 0.05))   # mərhələ vaxtı bitəndə oyan
                 if g.get("bots"):
                     wt = min(wt, 1.0)               # botlar üçün tez-tez yoxla
-            CV.wait(timeout=wt)
-            g = MAFIA.get(code)
-            if not g:
+            g["_cv"].wait(timeout=wt)
+            if MAFIA.get(code) is not g:
                 abort(404)
             now = time.time()
             g["seen"][sub] = now
@@ -6814,7 +6849,9 @@ def api_mafia_poll():
 def api_mafia_check():
     sub, tok = auth_sub()
     code = clean_room(request.args.get("room"))
-    with CV:
+    with META_LOCK:
+        g = MAFIA.get(code)
+    with META_LOCK:
         g = MAFIA.get(code)
         if not g or sub not in g["players"] or g["gone"].get(sub):
             abort(404)
@@ -6825,8 +6862,8 @@ def api_mafia_check():
 def api_mafia_start():
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         g["seen"][sub] = now
         if g["status"] == "wait" and g.get("host") == sub:
@@ -6845,8 +6882,8 @@ def api_mafia_bots():
         abort(429)
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         g["seen"][sub] = now
         if g["status"] == "wait" and g.get("host") == sub:
@@ -6886,8 +6923,8 @@ def api_mafia_act():
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
     kind = str(d.get("kind", ""))
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         g["seen"][sub] = now
         _ma_tick(g, now)
@@ -6945,8 +6982,8 @@ def api_mafia_chat():
     text = re.sub(r"\s+", " ", str(d.get("text") or "")).strip()[:MAF_MSG_LEN]
     if not text:
         abort(400)
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         now = time.time()
         g["seen"][sub] = now
         _ma_tick(g, now)
@@ -6972,8 +7009,8 @@ def api_mafia_again():
     sub, tok = auth_sub()
     d = request.get_json(silent=True) or {}
     code = clean_room(d.get("room"))
-    with CV:
-        g = _ma_get(code, sub)
+    g = _ma_get(code, sub)
+    with _ensure_cv(g):
         g["seen"][sub] = time.time()
         if g["status"] == "over" and g.get("host") == sub:
             for p in [p for p in g["players"] if g["gone"].get(p)]:
@@ -6992,7 +7029,9 @@ def api_mafia_leave():
     """Geri düyməsi: oyunda qalır (qayıtmaq olur). Gözləmə otağında yer boşalır."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = MAFIA.get(code)
+    with META_LOCK:
         g = MAFIA.get(code)
         if g and sub in g["players"]:
             if g["status"] == "wait":
@@ -7021,7 +7060,9 @@ def api_mafia_quit():
     """Oyundan həqiqətən çıx: gedən oyunda ölü sayılırsan və rolun açılır."""
     sub, tok = auth_sub()
     code = clean_room((request.get_json(silent=True) or {}).get("room"))
-    with CV:
+    with META_LOCK:
+        g = MAFIA.get(code)
+    with META_LOCK:
         g = MAFIA.get(code)
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
