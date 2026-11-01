@@ -22,16 +22,41 @@ UA_DESKTOP = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 
 # ---------------------------------------------------------------
 #  Otaq sistemi (iki telefon arasında mesaj/sinxron ötürücü)
-#  Yaddaşda saxlanır, ona görə:  gunicorn --workers 1 --threads 16 app:app
-#  (long-poll hər sorğunu 20 san tutur; --threads olmadan server donur)
+#  Yaddaşda saxlanır, ona görə:  gunicorn --workers 1 --threads 64 app:app
+#  (long-poll hər sorğunu 20 san tutur; --threads az olanda növbə/lag yaranır.
+#   Tövsiyə: threads=32–128, workers=1 — state yaddaşdadır, multi-worker olmaz)
 # ---------------------------------------------------------------
 ROOMS = {}
-CV = threading.Condition()
+# Köhnə tək CV thundering-herd yaradırdı (bir otaq bütün long-poll-ları oyadırdı).
+# İndi: otaq/oyun/SSE ayrı Condition; hər obyektin öz _cv-si var.
+META_LOCK = threading.RLock()          # ROOMS/DOMINO/... dict üzvlüyü
+USER_CV = threading.Condition()        # SSE / şəxsi bildirişlər
+ROOM_CV = threading.Condition()        # köhnə otaq yolu (get_room _cv ilə əvəz olunur)
+CV = ROOM_CV  # geriyə uyğunluq: oyunlar mərhələli köçürülür
 PEER_TTL = 45
 CODE_CHARS = "abcdefghjkmnpqrstuvwxyz23456789"
 MAX_ROOMS = 300
 MAX_MEMBERS = 30
 MAX_HTML = 5 * 1024 * 1024  # proxy ilə yüklənən HTML üçün yuxarı limit
+
+
+def _ensure_cv(obj):
+    """Obyektə şəxsi Condition bağla (yoxdursa yarat)."""
+    cv = obj.get("_cv")
+    if cv is None:
+        cv = threading.Condition()
+        obj["_cv"] = cv
+    return cv
+
+
+def _notify(obj):
+    """Obyektin öz CV-sini oyadır. Oyun long-poll-ları hələ qlobal CV-də gözlədiyi üçün
+    geriyə uyğunluq olaraq CV-ni də oyadır (otaq long-poll-ları artıq per-room _cv-dədir)."""
+    cv = _ensure_cv(obj)
+    with cv:
+        cv.notify_all()
+    with CV:
+        CV.notify_all()
 
 # Otağa yüklənən videolar (otaq silinəndə və ya server yenidən başlayanda təmizlənir).
 # MAX_UPLOAD_MB: bir videonun yuxarı həddi. UPLOAD_DIR: fayl qovluğu.
@@ -52,18 +77,22 @@ def clean_room(c):
 
 
 def get_room(code):
-    r = ROOMS.get(code)
-    if r is None:
-        cleanup(time.time())
-        if len(ROOMS) >= MAX_ROOMS:  # send/poll ilə sonsuz otaq yaradılmasın
-            abort(503)
-        if not rate_hit("newroom", client_ip(), 20, 600):   # bir IP bütün otaqları tuta bilməsin
-            abort(429)
-        r = {"seq": 0, "msgs": [], "peers": {}, "created": time.time(),
-             "locked": False, "members": set(),
-             "host": None, "roles": {}, "hostonly": False, "rv": 0, "hist": []}
-        ROOMS[code] = r
-    return r
+    with META_LOCK:
+        r = ROOMS.get(code)
+        if r is None:
+            cleanup(time.time())
+            if len(ROOMS) >= MAX_ROOMS:  # send/poll ilə sonsuz otaq yaradılmasın
+                abort(503)
+            if not rate_hit("newroom", client_ip(), 20, 600):   # bir IP bütün otaqları tuta bilməsin
+                abort(429)
+            r = {"seq": 0, "msgs": [], "peers": {}, "created": time.time(),
+                 "locked": False, "members": set(),
+                 "host": None, "roles": {}, "hostonly": False, "rv": 0, "hist": [],
+                 "_cv": threading.Condition()}
+            ROOMS[code] = r
+        else:
+            _ensure_cv(r)
+        return r
 
 
 def _req_sk():
@@ -183,15 +212,22 @@ def prune_peers(r, now):
 
 def cleanup(now):
     dead = []
-    for k, r in ROOMS.items():
-        last = max([r["created"]] + list(r["peers"].values()))
-        if now - last > 3600:
-            dead.append(k)
-        else:
-            prune_peers(r, now)
-    for k in dead:
-        del ROOMS[k]
-        shutil.rmtree(room_dir(k), ignore_errors=True)
+    # çağıran artıq META_LOCK tutmuş ola bilər; tutmayıbsa tut
+    held = META_LOCK.acquire(blocking=False)
+    try:
+        if not held:
+            META_LOCK.acquire()
+        for k, r in list(ROOMS.items()):
+            last = max([r["created"]] + list(r["peers"].values()) or [r["created"]])
+            if now - last > 3600:
+                dead.append(k)
+            else:
+                prune_peers(r, now)
+        for k in dead:
+            ROOMS.pop(k, None)
+            shutil.rmtree(room_dir(k), ignore_errors=True)
+    finally:
+        META_LOCK.release()
 
 
 def _new_room(host):
@@ -208,11 +244,13 @@ def _new_room(host):
 @app.route("/api/create", methods=["POST"])
 def api_create():
     pid = str((request.get_json(silent=True) or {}).get("id", ""))[:20]
-    with CV:
+    with META_LOCK:
         code = _new_room(pid)
-        if pid:
-            verify_pid(ROOMS[code], pid)   # yaradanın gizli açarını dərhal bağla
-        return jsonify(room=code)
+        r = ROOMS[code]
+    if pid:
+        with _ensure_cv(r):
+            verify_pid(r, pid)   # yaradanın gizli açarını dərhal bağla
+    return jsonify(room=code)
 
 
 @app.route("/api/join", methods=["POST"])
@@ -223,17 +261,19 @@ def api_join():
     if not code or not pid:
         abort(400)
     now = time.time()
-    with CV:
+    with META_LOCK:
         cleanup(now)
         if code not in ROOMS:
             abort(404)
         r = ROOMS[code]
+        _ensure_cv(r)
+    with r["_cv"]:
         admit(r, pid)
         r.get("left", {}).pop(pid, None)
         r["peers"][pid] = now
         if not r["host"]:
             r["host"] = pid
-        CV.notify_all()
+        r["_cv"].notify_all()
         return jsonify(seq=r["seq"], locked=r["locked"], epoch=r["created"], video=r.get("video"), vpos=vpos_now(r, now),
                        role=role_of(r, pid), hostonly=r["hostonly"], rv=r["rv"])
 
@@ -268,8 +308,8 @@ def api_send():
                 msg["u"] = idn["username"]
                 msg["av"] = idn["avts"]
     now = time.time()
-    with CV:
-        r = get_room(code)
+    r = get_room(code)
+    with _ensure_cv(r):
         admit(r, pid)
         if msg.get("t") in CTRL_TYPES and not can_ctl(r, pid):
             return jsonify(ok=True, dropped=True)   # "yalnız host idarə edir" rejimi
@@ -319,7 +359,7 @@ def api_send():
             r["hist"].append(h)
             del r["hist"][:-HIST_KEEP]
         alive_mark(r, pid, now)
-        CV.notify_all()
+        r["_cv"].notify_all()
     return jsonify(ok=True)
 
 
@@ -330,15 +370,16 @@ def api_leave():
     pid = str(d.get("id", ""))[:20]
     if not code or not pid:
         abort(400)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is not None:
+    if r is not None:
+        with _ensure_cv(r):
             verify_pid(r, pid, bind=False)
             r["peers"].pop(pid, None)
             r.setdefault("left", {})[pid] = time.time()
             if r.get("host") == pid:
                 pass_host(r, time.time())   # host çıxdı: host ilk moderatora keçir
-            CV.notify_all()  # qarşı tərəfin long-poll-u dərhal yenilənsin
+            r["_cv"].notify_all()  # qarşı tərəfin long-poll-u dərhal yenilənsin
     return jsonify(ok=True)
 
 
@@ -355,10 +396,11 @@ def api_upload():
         abort(411)
     if size > MAX_UPLOAD:
         abort(413)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         admit(r, pid)
         if not can_ctl(r, pid):
             abort(403)
@@ -402,11 +444,13 @@ def api_upload():
             except OSError:
                 pass
     url = "/vf/%s/%s" % (code, name)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is not None:
+    if r is not None:
+        with _ensure_cv(r):
             r["vpos"] = None
             r["video"] = url   # otağa sonradan girən (və ya yenidən girən) hər kəs bunu avtomatik açır
+            r["_cv"].notify_all()
     return jsonify(url=url)
 
 
@@ -436,10 +480,11 @@ def api_img():
         abort(411)
     if size > IMG_MAX:
         abort(413)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         admit(r, pid)
     if not rate_hit("img", client_ip(), 40, 600):
         abort(429)
@@ -480,17 +525,18 @@ def api_lock():
     pid = str(d.get("id", ""))[:20]
     if not code or not pid:
         abort(400)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         if pid not in r["members"]:
             abort(403)
         verify_pid(r, pid)
         if r["host"] and role_of(r, pid) == "viewer":
             abort(403)   # kilidi yalnız host və moderator dəyişir
         r["locked"] = bool(d.get("locked"))
-        CV.notify_all()
+        r["_cv"].notify_all()
         return jsonify(locked=r["locked"])
 
 
@@ -1148,12 +1194,29 @@ def client_ip():
     return (ip or request.remote_addr or "?")[:64]
 
 
+_RATE_LAST_PURGE = [0.0]
+
 def rate_hit(bucket, key, limit, window):
-    """True: icazə var (və sayılır). False: limit aşılıb. Yaddaşda saxlanır."""
+    """True: icazə var (və sayılır). False: limit aşılıb. Yaddaşda saxlanır.
+    Köhnə bütün RATE.clear() əvəzinə vaxtı keçmiş qeydləri təmizləyir — limit bypass olmur."""
     now = time.time()
     k = bucket + "|" + str(key)
-    if len(RATE) > 20000:
-        RATE.clear()
+    # dövri təmizlik: 60 saniyədə bir, və ya 25k-dan çox olanda
+    if len(RATE) > 25000 or (now - _RATE_LAST_PURGE[0] > 60 and len(RATE) > 2000):
+        _RATE_LAST_PURGE[0] = now
+        dead = []
+        for rk, times in list(RATE.items()):
+            alive = [t for t in times if now - t < 3600]
+            if alive:
+                RATE[rk] = alive
+            else:
+                dead.append(rk)
+        for rk in dead:
+            RATE.pop(rk, None)
+        # hələ də çoxdursa ən köhnə açarları at (FIFO-ya yaxın)
+        if len(RATE) > 20000:
+            for rk in list(RATE.keys())[: len(RATE) - 15000]:
+                RATE.pop(rk, None)
     L = [t for t in RATE.get(k, []) if now - t < window]
     if len(L) >= limit:
         RATE[k] = L
@@ -1602,7 +1665,16 @@ def merge_users(old, new):
 def too_many_fails(email):
     now = time.time()
     if len(LOGIN_FAILS) > 5000:
-        LOGIN_FAILS.clear()
+        # tam clear əvəzinə vaxtı keçmişləri sil
+        for k in list(LOGIN_FAILS.keys()):
+            L = [t for t in LOGIN_FAILS[k] if now - t < 600]
+            if L:
+                LOGIN_FAILS[k] = L
+            else:
+                LOGIN_FAILS.pop(k, None)
+        if len(LOGIN_FAILS) > 4000:
+            for k in list(LOGIN_FAILS.keys())[: len(LOGIN_FAILS) - 3000]:
+                LOGIN_FAILS.pop(k, None)
     L = [t for t in LOGIN_FAILS.get(email, []) if now - t < 600]
     LOGIN_FAILS[email] = L
     return len(L) >= 8
@@ -1742,7 +1814,7 @@ def api_stats():
     """Giriş ekranında canlı say: yalnız ümumi say, heç bir otaq kodu və ya ad verilmir."""
     now = time.time()
     rooms = people = 0
-    with CV:
+    with META_LOCK:
         for r in ROOMS.values():
             n = sum(1 for ts in r["peers"].values() if now - ts < PEER_TTL)
             if n:
@@ -2040,14 +2112,16 @@ def notify_user(sub, kind, payload=None, push=None):
     """Hadisəni istifadəçinin açıq SSE axınlarına verir; push verilibsə qeydiyyatlı cihazlara da göndərir."""
     if not sub:
         return
-    with CV:
+    with USER_CV:
         EV_SEQ[0] += 1
         if len(USER_EV) > 5000:
-            USER_EV.clear()
+            # köhnəni tam silmək əvəzinə ən az aktiv olanları at
+            for k in list(USER_EV.keys())[:2000]:
+                USER_EV.pop(k, None)
         q = USER_EV.setdefault(sub, [])
         q.append((EV_SEQ[0], kind, payload or {}))
         del q[:-30]
-        CV.notify_all()
+        USER_CV.notify_all()
     if push:
         threading.Thread(target=push_to_user, args=(sub, push), daemon=True).start()
 
@@ -2181,7 +2255,7 @@ def api_stream():
         last = int(request.args.get("since", "-1"))
     except ValueError:
         last = -1
-    with CV:
+    with USER_CV:
         if SSE_OPEN[0] >= SSE_MAX:
             return jsonify(error="busy"), 503
         SSE_OPEN[0] += 1
@@ -2193,11 +2267,11 @@ def api_stream():
         try:
             yield "retry: 3000\nid: %d\nevent: hello\ndata: {}\n\n" % last
             while True:
-                with CV:
+                with USER_CV:
                     new = [e for e in USER_EV.get(sub, []) if e[0] > last]
                     left = deadline - time.time()
                     if not new and left > 0:
-                        CV.wait(timeout=min(left, 15))
+                        USER_CV.wait(timeout=min(left, 15))
                         new = [e for e in USER_EV.get(sub, []) if e[0] > last]
                         left = deadline - time.time()
                 if new:
@@ -2209,7 +2283,7 @@ def api_stream():
                 if left <= 0:
                     return
         finally:
-            with CV:
+            with USER_CV:
                 SSE_OPEN[0] = max(0, SSE_OPEN[0] - 1)
 
     resp = Response(gen(), mimetype="text/event-stream")
@@ -2750,8 +2824,8 @@ def api_poll():
     lk = request.args.get("lk") == "1"
     idn = ident_for(request.headers.get("X-Token", "")[:100], request.args.get("nm", ""))
     deadline = time.time() + 20
-    with CV:
-        r = get_room(code)
+    r = get_room(code)
+    with _ensure_cv(r):
         admit(r, pid)
         r.setdefault("who", {})[pid] = dict(name=idn["name"], username=idn["username"],
                                             avatar=idn["avatar"], badge=idn["badge"], bio=idn.get("bio", ""))
@@ -2769,7 +2843,7 @@ def api_poll():
             left = deadline - now
             if new or n != pc or r["locked"] != lk or rv != r["rv"] or left <= 0:
                 break
-            CV.wait(timeout=left)
+            r["_cv"].wait(timeout=left)
         blank = dict(name="", username="", avatar="", badge=False, bio="")
         who = [dict(id=p, **r["who"].get(p, blank)) for p, ts in r["peers"].items()
                if p != pid and now - ts < PEER_TTL]
@@ -2801,10 +2875,11 @@ def api_role():
     role = d.get("role")
     if role not in ("mod", "viewer"):
         abort(400)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
@@ -2815,7 +2890,7 @@ def api_role():
         else:
             r["roles"].pop(target, None)
         r["rv"] += 1
-        CV.notify_all()
+        r["_cv"].notify_all()
         return jsonify(ok=True)
 
 
@@ -2824,16 +2899,17 @@ def api_hostonly():
     """\"Yalnız host idarə edir\" rejimi (host + moderatorlar idarə edir, izləyicilər yalnız baxır)."""
     d = request.get_json(silent=True) or {}
     code, pid = _room_ctx(d)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
         r["hostonly"] = bool(d.get("on"))
         r["rv"] += 1
-        CV.notify_all()
+        r["_cv"].notify_all()
         return jsonify(ok=True, hostonly=r["hostonly"])
 
 
@@ -2844,10 +2920,11 @@ def api_host():
     code, pid = _room_ctx(d)
     target = str(d.get("target", ""))[:20]
     now = time.time()
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         verify_pid(r, pid)
         if r["host"] != pid:
             abort(403)
@@ -2860,7 +2937,7 @@ def api_host():
         r["roles"].pop(target, None)
         r["roles"].pop(pid, None)
         r["rv"] += 1
-        CV.notify_all()
+        r["_cv"].notify_all()
         return jsonify(ok=True)
 
 
@@ -2870,10 +2947,11 @@ def api_chat_history():
     pid = str(request.args.get("id", ""))[:20]
     if not code or not pid:
         abort(400)
-    with CV:
+    with META_LOCK:
         r = ROOMS.get(code)
-        if r is None:
-            abort(404)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
         if pid not in r["members"]:
             abort(403)
         verify_pid(r, pid)
@@ -2996,7 +3074,7 @@ def api_plans():
                   "WHERE i.plan_id=?", (p["id"],), many=True)
         room = p["room"] or ""
         if room:
-            with CV:
+            with META_LOCK:
                 if room not in ROOMS:
                     room = ""
         mine = p["owner"] == sub
@@ -3047,13 +3125,16 @@ def api_plan_start():
     p = dbq("SELECT id, room FROM plans WHERE id=? AND owner=?", (plan_id, sub), one=True)
     if not p:
         abort(404)
-    with CV:
+    with META_LOCK:
         code = p["room"] if p["room"] in ROOMS else None
         if code:
-            ROOMS[code]["host"] = pid
+            r = ROOMS[code]
         else:
             code = _new_room(pid)
-        verify_pid(ROOMS[code], pid)
+            r = ROOMS[code]
+    with _ensure_cv(r):
+        r["host"] = pid
+        verify_pid(r, pid)
     dbq("UPDATE plans SET room=? WHERE id=?", (code, plan_id))
     now = time.time()
     for i in dbq("SELECT sub FROM plan_inv WHERE plan_id=? AND status<>2", (plan_id,), many=True):
@@ -3665,7 +3746,7 @@ def admin_overview():
     admin_guard()
     now = time.time()
     rooms = people = 0
-    with CV:
+    with META_LOCK:
         for r in ROOMS.values():
             n = sum(1 for ts in r["peers"].values() if now - ts < PEER_TTL)
             if n:
@@ -4175,7 +4256,7 @@ def _dom_touch(g):
     g["v"] += 1
     g["upd"] = time.time()
     rec_game("domino", g)
-    CV.notify_all()
+    _notify(g)
 
 
 def _dom_view(g, sub):
@@ -5047,7 +5128,7 @@ def _du_touch(g):
     g["v"] += 1
     g["upd"] = time.time()
     rec_game("durak", g)
-    CV.notify_all()
+    _notify(g)
     _du_save(g)
 
 
@@ -5519,7 +5600,7 @@ def api_gvoice_send():
         v["s"] += 1
         v["q"].append(dict(s=v["s"], f=me, to=to, k=k, d=payload, n=nm))
         del v["q"][:-300]
-        CV.notify_all()
+        _notify(v)
         return jsonify(seq=v["s"], id=me, members=members)
 
 
@@ -6262,7 +6343,7 @@ def _ma_touch(g):
     g["v"] += 1
     g["upd"] = time.time()
     rec_game("mafia", g)
-    CV.notify_all()
+    _notify(g)
 
 
 def _ma_names(tok):

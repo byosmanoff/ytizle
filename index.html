@@ -2922,7 +2922,8 @@ async function pollLoop(){
       // connected/pc sıfırlanmır: əks halda hər qısa kəsilmədə səhifə qarşı tərəfdə yenidən yüklənir
       offline = true;
       setStatus('Əlaqə problemi, yenidən cəhd edilir...');
-      await new Promise(res => setTimeout(res, 2000));
+      // kiçik jitter: bütün klientlər eyni anda vurmasın (thundering herd azalır)
+      await new Promise(res => setTimeout(res, 1500 + Math.floor(Math.random() * 1500)));
     }finally{
       clearTimeout(to);
     }
