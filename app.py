@@ -6300,7 +6300,8 @@ def api_domino_bot():
         if not (g.get("bot") and g["status"] == "play" and g["turn"] == "bot"):
             return jsonify(_dom_view(g, sub))
         v0 = g["v"]
-        snap = copy.deepcopy(g)
+        # _cv (Condition) deepcopy olunmur — yalnız oyun vəziyyətini kopyala
+        snap = copy.deepcopy({k: v for k, v in g.items() if k != "_cv"})
     res = None
     try:
         mv = _dom_moves(snap, snap["hands"]["bot"])
@@ -6316,17 +6317,16 @@ def api_domino_bot():
         res = None
     with META_LOCK:
         g = DOMINO.get(code)
-    with META_LOCK:
-        g = DOMINO.get(code)
-        if not g or sub not in g["players"]:
-            abort(404)
+    if not g or sub not in g["players"]:
+        abort(404)
+    with _ensure_cv(g):
         if res and g["v"] == v0 and g["status"] == "play" and g["turn"] == "bot":
             g["note"] = None
             if res[0] == "play":
                 _dom_do_play(g, "bot", res[1], res[2])
             else:
                 _dom_do_draw(g, "bot")   # bir daş; daş çıxmasa klient yenidən çağırır
-            _ch_touch(g)
+            _dom_touch(g)
         return jsonify(_dom_view(g, sub))
 
 
@@ -6346,7 +6346,7 @@ def api_domino_claim():
                     _dom_finish(g, sub, "left")
                 else:
                     _dom_kick(g, t)
-                _ch_touch(g)
+                _dom_touch(g)
         g["seen"][sub] = now
         return jsonify(_dom_view(g, sub))
 
