@@ -1,3 +1,5 @@
 flask
 requests
 gunicorn
+dnspython
+disposable-email-domains
