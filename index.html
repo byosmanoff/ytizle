@@ -1310,6 +1310,108 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #durhand .dkh{background:none;border:0;padding:0;cursor:pointer;border-radius:10px}
 #durhand .dkh.ok .dkc{box-shadow:0 0 0 2px var(--rose),0 6px 14px rgba(0,0,0,.4)}
 #durhand .dkh.dim .dkc{opacity:.42}
+#unres.win,#unres.lose,#unres.draw{position:relative}
+#unres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#unres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#unres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#unres .res-ic{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 8px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.12)}
+#unres.win .res-ic{color:#ffd166}#unres.lose .res-ic{color:#ffb3c1}#unres.draw .res-ic{color:var(--amber)}
+#uno{position:fixed;left:0;top:0;width:100%;height:var(--H,100dvh);transform:translateY(var(--VT,0px));overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;z-index:75;display:flex;flex-direction:column;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(120% 70% at 50% 0%,#40224f 0%,var(--velvet) 62%);overflow:hidden}
+#uno [hidden]{display:none!important}
+#uno[hidden]{display:none!important}
+#uno input{-webkit-user-select:text;user-select:text}
+#uno .dhead{display:flex;align-items:center;gap:10px;flex:none}
+#uno .dt{flex:1;min-width:0;line-height:1.15}
+#uno .dt b{display:block;font-size:20px}
+#uno .dt small{color:var(--muted);font-size:13px;letter-spacing:.08em}
+#uno .dpl{display:flex;align-items:center;gap:10px;flex:none;padding:8px 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
+#uno .dpl.turn{box-shadow:inset 0 0 0 2px var(--amber)}
+#uno .dav{width:38px;height:38px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
+#uno .dav img{width:100%;height:100%;object-fit:cover}
+#uno .dwho{flex:1;min-width:0}
+#uno .dwho b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#uno .dwho small{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+#uno .donl{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b5a7d;margin-right:2px}
+#uno .donl.on{background:#5be08a}
+#uno .dsc{text-align:center;font-weight:800;font-size:22px;line-height:1;letter-spacing:.04em}
+#uno .dsc small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+#uno .dsc .rd{color:var(--rose)}
+#uno .dpl.multi{gap:6px;padding:6px}
+#uno .dchip{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
+#uno .dchip.turn{box-shadow:inset 0 0 0 2px var(--amber)}
+#uno .dchip.out{opacity:.5}
+#uno .dchip .dav{width:28px;height:28px;font-size:13px}
+#uno .dchip .dwho b{font-size:13px}
+#uno .dchip .dwho small{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#uno .dpl.m4 .dchip{padding:5px 6px;gap:5px}
+#uno .dpl.m4 .dav{width:24px;height:24px;font-size:12px}
+#uno .dpl.m4 .dwho b{font-size:12px}
+#unwait{margin:auto;text-align:center;padding:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px;max-height:100%;width:100%;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+#unwait>i{font-size:28px;color:var(--amber)}
+#unwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
+#uninfo{flex:none;text-align:center;font-size:13px;color:var(--muted);min-height:16px}
+#uninfo b{color:var(--text)}
+#unmsg{flex:none;min-height:22px;text-align:center;font-weight:600;color:var(--amber)}
+#unact{display:flex;gap:10px;flex:none}
+#unact .pbtn{flex:1;padding:13px}
+#unres{flex:none;text-align:center;padding:14px;border-radius:20px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line);max-height:42vh;overflow-y:auto}
+#unres h3{font-size:22px;margin-bottom:4px}
+#unres p{color:var(--muted);font-size:14px;margin-bottom:10px}
+#unres .pbtn{width:100%;padding:13px}
+#unboard{position:relative;flex:1;min-height:110px;display:flex;overflow:hidden;border-radius:22px;background:radial-gradient(90% 80% at 50% 45%,rgba(60,140,90,.35),rgba(0,0,0,.28));box-shadow:inset 0 0 0 1px var(--line)}
+#untable{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:clamp(14px,5vw,30px);padding:12px}
+#unhand{flex:none;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;padding:26px 8px 8px;min-height:130px}
+#unhand .uhin{display:flex;align-items:flex-end;width:max-content;min-width:100%;justify-content:center;padding:0 10px}
+.ukc{--w:60px;position:relative;display:inline-block;flex:none;width:var(--w);height:calc(var(--w)*1.5);border-radius:calc(var(--w)*.14);background:#fff;box-shadow:0 2px 7px rgba(0,0,0,.5);overflow:hidden;color:#fff;font-weight:800;line-height:1;font-family:var(--font)}
+.ukc::before{content:"";position:absolute;inset:calc(var(--w)*.05);border-radius:calc(var(--w)*.1);background:var(--cc)}
+.ukc.cR{--cc:#e53935;--cd:#c62828}.ukc.cY{--cc:#f9c10d;--cd:#d49a00}.ukc.cG{--cc:#2fa44f;--cd:#1f7a3a}.ukc.cB{--cc:#1f78d1;--cd:#1558a8}.ukc.cK{--cc:#17171f;--cd:#17171f}
+.ukc .ov{position:absolute;left:50%;top:50%;width:78%;height:58%;background:#fff;border-radius:50%;transform:translate(-50%,-50%) rotate(-30deg);z-index:1}
+.ukc .mid{position:absolute;left:0;right:0;top:0;bottom:0;display:grid;place-items:center;z-index:2;font-size:calc(var(--w)*.52);color:var(--cd);letter-spacing:-.04em;text-shadow:0 1px 0 rgba(0,0,0,.12)}
+.ukc .mid.u{text-decoration:underline;text-decoration-thickness:calc(var(--w)*.04);text-underline-offset:calc(var(--w)*.06)}
+.ukc .mid svg{width:calc(var(--w)*.46);height:calc(var(--w)*.46)}
+.ukc .cn{position:absolute;z-index:2;font-style:normal;font-size:calc(var(--w)*.19);text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.ukc .cn.tl{left:calc(var(--w)*.12);top:calc(var(--w)*.1)}
+.ukc .cn.br{right:calc(var(--w)*.12);bottom:calc(var(--w)*.1);transform:rotate(180deg)}
+.ukc.wild .ov{background:conic-gradient(#e53935 0 25%,#f9c10d 0 50%,#2fa44f 0 75%,#1f78d1 0);box-shadow:inset 0 0 0 calc(var(--w)*.02) #fff}
+.ukc.wild .mid{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.6);font-size:calc(var(--w)*.4)}
+.ukc.back::before{background:#17171f}
+.ukc.back .ov{background:#e53935}
+.ukc.back .mid{color:#ffd23f;font-size:calc(var(--w)*.27);transform:rotate(-30deg);letter-spacing:.02em;text-shadow:0 1px 0 #7a1010,0 2px 0 #7a1010}
+.ukc.land{animation:ukland .34s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes ukland{from{transform:translateY(-80px) scale(1.3) rotate(-16deg);opacity:.15}to{transform:none;opacity:1}}
+.ukh{background:none;border:0;padding:0;cursor:pointer;border-radius:10px;flex:none;margin-left:calc(var(--ov,.3)*-62px);transition:transform .16s ease}
+.ukh:first-child{margin-left:0}
+.ukh .ukc{--w:62px}
+.ukh.ok{transform:translateY(-16px)}
+.ukh.ok .ukc{box-shadow:0 0 0 2px var(--amber),0 8px 16px rgba(0,0,0,.5)}
+.ukh.dim .ukc{filter:brightness(.55) saturate(.8)}
+.upile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+.upile .ukc{--w:68px}
+.upile small{font-size:11px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.udraw{cursor:pointer}
+.udraw .ucnt{position:absolute;left:50%;top:calc(68px*.75);transform:translate(-50%,-50%);z-index:3;min-width:28px;padding:3px 7px;border-radius:12px;background:rgba(0,0,0,.72);color:#fff;font-size:13px;text-align:center}
+.udraw.can .ukc{animation:ukpulse 1.2s ease-in-out infinite}
+@keyframes ukpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,196,107,.0),0 2px 7px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 5px rgba(255,196,107,.7),0 2px 7px rgba(0,0,0,.5)}}
+.udisc .ukc{box-shadow:0 0 0 4px var(--rc),0 0 28px 6px var(--rc);transition:box-shadow .3s}
+.udot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.udir{font-size:22px;color:rgba(255,255,255,.55)}
+.udir i{display:block}
+.udir.cw i{animation:ukspin 5s linear infinite}
+.udir.ccw i{animation:ukspin 5s linear infinite reverse}
+@keyframes ukspin{to{transform:rotate(360deg)}}
+.uuno{display:inline-block;padding:1px 6px;border-radius:8px;background:#e53935;color:#fff;font-size:10px;letter-spacing:.06em;animation:ukblink .8s ease-in-out infinite}
+@keyframes ukblink{50%{opacity:.45}}
+#uncolor{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:rgba(10,4,16,.66);animation:gvsFade .18s ease both}
+#uncolor[hidden]{display:none!important}
+#uncolor .ucp{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text);font-weight:700}
+#uncolor .ucg{display:grid;grid-template-columns:repeat(2,86px);gap:12px}
+#uncolor .ucg button{width:86px;height:86px;border-radius:24px;border:3px solid rgba(255,255,255,.85);box-shadow:0 8px 18px rgba(0,0,0,.45);animation:gvsRow .28s ease both}
+#uncolor .ucg button:active{transform:scale(.93)}
+#uncolor [data-x]{background:rgba(255,255,255,.12);color:var(--text);border-radius:14px;padding:8px 18px;font-size:14px}
+@media (max-height:700px){.upile .ukc{--w:56px}.udraw .ucnt{top:calc(56px*.75)}.ukh .ukc{--w:54px}.ukh{margin-left:calc(var(--ov,.3)*-54px)}#unhand{min-height:110px;padding-top:20px}}
+@media (prefers-reduced-motion:reduce){.ukc.land,.udir i,.udraw.can .ukc,.uuno{animation:none!important}}
 #durhand .dkh.sel .dkc{transform:translateY(-9px);box-shadow:0 0 0 3px var(--amber),0 10px 18px rgba(0,0,0,.45)}
 
 /* ================= DOMINO ================= */
@@ -1433,8 +1535,8 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #dres .pbtn{width:100%;padding:13px}
 #dends{flex:none;text-align:center;font-size:13px;color:var(--muted);min-height:16px}
 #dends b{color:var(--text)}
-#domMsg,#chMsg{min-height:0;margin-top:8px;font-size:14px;color:var(--amber)}
-#domMsg:empty,#chMsg:empty{display:none}
+#domMsg,#chMsg,#unoMsg{min-height:0;margin-top:8px;font-size:14px;color:var(--amber)}
+#domMsg:empty,#chMsg:empty,#unoMsg:empty{display:none}
 #domino input,#chess input{-webkit-user-select:text;user-select:text}
 #dwait,#cwait{max-height:100%;width:100%;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
 .gvbar{flex:none;display:flex;align-items:center;gap:8px;min-height:34px}
@@ -2542,6 +2644,20 @@ body.guest-mode .guest-only{display:block!important}
     </div>
     <div id="durMsg" role="status"></div>
   </div>
+  <div class="card" id="unoCard">
+    <h2><i class="fa-solid fa-clone" aria-hidden="true"></i>Uno</h2>
+    <div class="hint">Dostunla onlayn Uno oyna. Rəngə və ya rəqəmə uyğun kart at, bütün kartlarını ilk bitirən qalib olur.</div>
+    <div class="glab">Oyunçu sayı</div>
+    <div class="gseg" id="unoSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <button class="pbtn" id="unoNew" style="width:100%;padding:13px;margin-top:14px">Uno otağı aç</button>
+    <button class="pbtn alt" id="unoBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="unoResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="unoCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Uno kodu">
+      <button class="pbtn alt" id="unoEnter">Gir</button>
+    </div>
+    <div id="unoMsg" role="status"></div>
+  </div>
   <div class="card" id="chCard">
     <h2><i class="fa-solid fa-chess-knight" aria-hidden="true"></i>Şahmat</h2>
     <div class="hint">Dostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.</div>
@@ -2568,7 +2684,7 @@ body.guest-mode .guest-only{display:block!important}
   </div>
   <div class="card" id="lbCard">
     <h2><i class="fa-solid fa-trophy" aria-hidden="true"></i>Reytinq</h2>
-    <div class="seg" id="lbGame" role="group" aria-label="Oyun"><button type="button" data-g="all" class="on">Hamısı</button><button type="button" data-g="domino">Domino</button><button type="button" data-g="chess">Şahmat</button><button type="button" data-g="durak">Durak</button><button type="button" data-g="mafia">Mafia</button></div>
+    <div class="seg" id="lbGame" role="group" aria-label="Oyun"><button type="button" data-g="all" class="on">Hamısı</button><button type="button" data-g="domino">Domino</button><button type="button" data-g="chess">Şahmat</button><button type="button" data-g="durak">Durak</button><button type="button" data-g="mafia">Mafia</button><button type="button" data-g="uno">Uno</button></div>
     <div class="seg" id="lbPer" role="group" aria-label="Dövr"><button type="button" data-p="week" class="on">Bu həftə</button><button type="button" data-p="all">Hər zaman</button></div>
     <div class="lbnote" id="lbNote"></div>
     <div id="lbList"></div>
@@ -2581,7 +2697,7 @@ body.guest-mode .guest-only{display:block!important}
     <button class="pbtn alt" id="trNew" style="width:100%;padding:12px;margin-top:10px"><i class="fa-solid fa-plus" aria-hidden="true"></i> Yeni turnir</button>
     <div class="trform" id="trForm" hidden>
       <input id="trTitle" maxlength="40" placeholder="Turnirin adı" autocomplete="off" aria-label="Turnirin adı">
-      <select id="trGame" aria-label="Oyun"><option value="domino">Domino</option><option value="chess">Şahmat</option><option value="durak">Durak</option><option value="mafia">Mafia</option></select>
+      <select id="trGame" aria-label="Oyun"><option value="domino">Domino</option><option value="chess">Şahmat</option><option value="durak">Durak</option><option value="mafia">Mafia</option><option value="uno">Uno</option></select>
       <select id="trDays" aria-label="Müddət"><option value="1">1 gün</option><option value="3" selected>3 gün</option><option value="7">7 gün</option><option value="14">14 gün</option></select>
       <button class="pbtn" id="trMake" style="width:100%;padding:12px">Yarat</button>
     </div>
@@ -3113,6 +3229,50 @@ body.guest-mode .guest-only{display:block!important}
   <div id="duract"><button class="pbtn alt" id="dutake" hidden>Götür</button><button class="pbtn alt" id="dutrans" hidden>Ötür</button><button class="pbtn" id="dupass" hidden>Pas</button></div>
   <div id="durres" hidden></div>
   <div id="durhand"></div>
+</div>
+<div id="uno" hidden role="dialog" aria-modal="true" aria-label="Uno">
+  <div class="dhead">
+    <button class="ib" id="unback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Uno</b><small id="uncode"></small></div>
+    <button class="ib sfxb" id="unsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="unshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="unquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div class="dpl" id="unpl"></div>
+  <div class="gvbar" id="unvbar">
+    <button type="button" class="gvb" id="unmic"><i class="fa-solid fa-headphones" aria-hidden="true"></i><span>Səsli otağa gir</span></button>
+    <span class="gvt" id="unvt" role="status"></span>
+    <button type="button" class="gvb gvm" id="unmute" hidden></button>
+  </div>
+  <div id="unboard">
+    <div id="unwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Oyunçular gözlənilir...</span>
+      <small>Kodu dostuna göndər:</small>
+      <b id="unwcode"></b>
+      <small id="unwcnt"></small>
+      <button class="pbtn" id="unwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="uninvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="uninvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="uninvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="uninvFr"></div>
+        <div class="gmsg" id="uninvMsg" role="status"></div>
+      </div>
+    </div>
+    <div id="untable" hidden></div>
+    <div id="uncolor" hidden>
+      <div class="ucp"><span>Rəng seç</span>
+        <div class="ucg"><button type="button" data-c="R" style="background:#e53935" aria-label="Qırmızı"></button><button type="button" data-c="Y" style="background:#f9c10d" aria-label="Sarı"></button><button type="button" data-c="G" style="background:#2fa44f" aria-label="Yaşıl"></button><button type="button" data-c="B" style="background:#1f78d1" aria-label="Mavi"></button></div>
+        <button type="button" data-x>Ləğv et</button>
+      </div>
+    </div>
+  </div>
+  <div id="uninfo"></div>
+  <div id="unmsg" role="status"></div>
+  <div id="unact"><button class="pbtn alt" id="undraw" hidden>Kart çək</button><button class="pbtn" id="unpass" hidden>Pas keç</button></div>
+  <div id="unres" hidden></div>
+  <div id="unhand"></div>
 </div>
 <div id="mafia" hidden role="dialog" aria-modal="true" aria-label="Mafia">
   <div id="mafsky" aria-hidden="true"><div class="sk sk-d"></div><div class="sk sk-n"></div><div class="stars"></div><div class="glow" id="mafglow"></div><div class="orbit"><div class="sun"></div><div class="moon"></div></div></div>
@@ -5864,12 +6024,12 @@ function renderInvites(list, games){
     if(i.avatar && /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/.test(i.avatar)){ av.style.backgroundImage = 'url("' + i.avatar + '")'; av.textContent = ''; }
     const tx = document.createElement('div'); tx.className = 'tx';
     const b = document.createElement('b'); b.textContent = i.name + (i.username ? ' (@' + i.username + ')' : '');
-    const sp = document.createElement('span'); sp.textContent = i.voice ? 'səni səsli söhbətə dəvət edir' : i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
+    const sp = document.createElement('span'); sp.textContent = i.voice ? 'səni səsli söhbətə dəvət edir' : i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : i.game === 'uno' ? 'səni Uno oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
     tx.appendChild(b); tx.appendChild(sp);
     const go = document.createElement('button'); go.className = 'go'; go.textContent = 'Qoşul';
     const no = document.createElement('button'); no.className = 'no'; no.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'; no.setAttribute('aria-label', 'Rədd et');
     const drop = () => { api('/api/game/invite/dismiss', {method: 'POST', body: JSON.stringify({id: i.id})}).catch(() => {}); c.remove(); };
-    go.onclick = () => { drop(); const f = i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : i.game === 'mafia' ? window.wtJoinMafia : window.wtJoinDomino; if(f) f(i.room); };
+    go.onclick = () => { drop(); const f = i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : i.game === 'mafia' ? window.wtJoinMafia : i.game === 'uno' ? window.wtJoinUno : window.wtJoinDomino; if(f) f(i.room); };
     no.onclick = drop;
     c.appendChild(av); c.appendChild(tx); c.appendChild(go); c.appendChild(no);
     box.appendChild(c);
@@ -6672,10 +6832,10 @@ async function loadFavs(){
 }
 
 /* ---------- Reytinq ---------- */
-const GAME_AZ = {domino: 'Domino', chess: 'Şahmat', durak: 'Durak', mafia: 'Mafia', all: 'Hamısı'};
+const GAME_AZ = {domino: 'Domino', chess: 'Şahmat', durak: 'Durak', mafia: 'Mafia', uno: 'Uno', all: 'Hamısı'};
 let lbGame = 'all', lbPer = 'week';
 function Lx(az, tr, en){ const l = window.wtLang ? window.wtLang() : 'az'; return l === 'tr' ? tr : l === 'en' ? en : az; }
-const GN = {domino: ['Domino', 'Domino', 'Domino'], chess: ['Şahmat', 'Satranç', 'Chess'], durak: ['Durak', 'Durak', 'Durak'], mafia: ['Mafia', 'Mafya', 'Mafia']};
+const GN = {domino: ['Domino', 'Domino', 'Domino'], chess: ['Şahmat', 'Satranç', 'Chess'], durak: ['Durak', 'Durak', 'Durak'], mafia: ['Mafia', 'Mafya', 'Mafia'], uno: ['Uno', 'Uno', 'Uno']};
 function gname(g){ const a = GN[g]; return a ? Lx(a[0], a[1], a[2]) : g; }
 function segBind(id, key, fn){
   $(id).addEventListener('click', e => {
@@ -6816,7 +6976,7 @@ boot();
 (function(){
   var menu = document.getElementById('menu'), prof = document.getElementById('profile');
   var ORDER = ['home','plans','friends','games','rank','settings','profile'], PAGES = ORDER.slice(0,6);
-  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#chCard','games'],['#mafCard','games'],
+  var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#domCard','games'],['#durCard','games'],['#unoCard','games'],['#chCard','games'],['#mafCard','games'],
     ['#lbCard','rank'],['#trCard','rank'],
     ['#plansCard','plans'],['#statsCard','plans'],['#friendsCard','friends'],
     ['#setCards','settings']];
@@ -7559,7 +7719,12 @@ window.wtSfx = (function(){
     invite: function(t){ tone(784, t, .14, 'sine', .25); tone(1047, t + .14, .2, 'sine', .25); tone(1319, t + .3, .3, 'sine', .2); },
     win: function(t){ arp([523, 659, 784, 1047], t, .11, 'triangle', .24, .3); tone(1319, t + .5, .5, 'triangle', .22); },
     lose: function(t){ arp([392, 349, 311, 262], t, .17, 'sine', .3, .32); },
-    tie: function(t){ tone(440, t, .2, 'sine', .25); tone(440, t + .24, .3, 'sine', .25); }
+    tie: function(t){ tone(440, t, .2, 'sine', .25); tone(440, t + .24, .3, 'sine', .25); },
+    skip: function(t){ tone(320, t, .12, 'square', .1, 190); tone(190, t + .11, .2, 'square', .1, 110); },
+    reverse: function(t){ tone(480, t, .16, 'sine', .25, 960); tone(960, t + .15, .18, 'sine', .22, 480); },
+    wild: function(t){ arp([523, 659, 784, 988, 1319], t, .055, 'triangle', .18, .2); },
+    plus4: function(t){ SND.take(t); SND.take(t + .13); tone(150, t, .45, 'sawtooth', .1, 70); },
+    uno: function(t){ tone(659, t, .1, 'square', .12); tone(659, t + .12, .1, 'square', .12); tone(988, t + .26, .3, 'square', .13); }
   };
   function icon(){
     [].forEach.call(document.querySelectorAll('.sfxb'), function(b){
@@ -9362,6 +9527,372 @@ window.wtInviteBox = function(o){
     if(b) b.onchange = function(){ set(b.checked); };
     paint();
   })();
+})();
+</script>
+<script>
+/* ---------- UNO otağı (2-4 nəfər, onlayn və ya kompüterə qarşı) ---------- */
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var LS = 'wt_uno';
+  var un = {code: '', v: 0, vk: 0, s: null, hs: [], pend: null, flashT: null, flashTx: '', sizeN: 2, botT: 0, landK: 0};
+  var busy = false, gen = 0, pendingUno = '';
+  try{ un.sizeN = Math.max(2, Math.min(4, parseInt(localStorage.getItem('wt_unosz') || '2', 10) || 2)); }catch(e){}
+  var voice = window.wtGameVoice({game: 'uno', p: 'un', code: function(){ return un.code; }, say: function(t){ flash(t); }});
+  var inv = window.wtInviteBox({game: 'uno', user: 'uninvU', go: 'uninvGo', fr: 'uninvFr', ft: 'uninvFrT', msg: 'uninvMsg', code: function(){ return un.code; }});
+  var CN = {R: 'cR', Y: 'cY', G: 'cG', B: 'cB', K: 'cK'};
+  var CNAME = {R: 'Qırmızı', Y: 'Sarı', G: 'Yaşıl', B: 'Mavi'};
+  var RC = {R: '#e53935', Y: '#f9c10d', G: '#2fa44f', B: '#1f78d1'};
+  var CORD = 'RYGBK', VORD = '0123456789SVDWF';
+  var SK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="3.2"/><path d="M6.2 17.8L17.8 6.2" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
+  var RV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5h14M13.5 4l4.5 4.5-4.5 4.5"/><path d="M20.5 15.5h-14M10.5 11l-4.5 4.5 4.5 4.5"/></svg>';
+  var COR = {S: '\u2298', V: '\u21C4', D: '+2', F: '+4', W: '\u2605'};
+
+  function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
+  function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
+  function enc(x){ return encodeURIComponent(x); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function key(c){ return c[0] + c[1]; }
+  function cardHtml(c, cls){
+    var v = c[1], mid = v === 'S' ? SK : v === 'V' ? RV : v === 'D' ? '+2' : v === 'F' ? '+4' : v === 'W' ? '' : v;
+    var cor = COR[v] || v;
+    return '<span class="ukc ' + (CN[c[0]] || 'cK') + (v === 'F' || v === 'W' ? ' wild' : '') + (cls ? ' ' + cls : '') + '"><span class="ov"></span><span class="mid' +
+      ((v === '6' || v === '9') ? ' u' : '') + '">' + mid + '</span><i class="cn tl">' + cor + '</i><i class="cn br">' + cor + '</i></span>';
+  }
+  function backHtml(){ return '<span class="ukc back"><span class="ov"></span><span class="mid">UNO</span></span>'; }
+  function av(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
+  function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
+  function refreshResume(){ var b = $('unoResume'); if(b) b.hidden = !saved(); }
+  function lobbyMsg(t){ var e = $('unoMsg'); if(e) e.textContent = T(t || ''); }
+  function flash(t){
+    un.flashTx = t; clearTimeout(un.flashT);
+    un.flashT = setTimeout(function(){ un.flashTx = ''; if(un.s) renderMsg(); }, 2600);
+    renderMsg();
+  }
+  function errOf(r, j){
+    if(r.status === 404) return 'Belə oyun tapılmadı. Kodu yoxla.';
+    if(r.status === 403) return 'Bu otaq doludur';
+    if(r.status === 429) return 'Çox sorğu göndərdin, bir az gözlə';
+    if(j && j.error) return j.error;
+    return 'Əlaqə problemi, yenidən cəhd et';
+  }
+  function show(on){ $('uno').hidden = !on; }
+  function close(leave){
+    var c = un.code, st = un.s && un.s.status;
+    try{ voice.leave(); }catch(e){}
+    gen++; clearTimeout(un.botT); un.botT = 0;
+    un.code = ''; un.s = null; un.pend = null; clearTimeout(un.flashT); un.flashTx = '';
+    $('uncolor').hidden = true;
+    show(false);
+    if(leave && c) api('/api/uno/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    if(st === 'wait' || st === 'over') remember('');
+  }
+  function gone(){ gen++; clearTimeout(un.botT); un.botT = 0; un.code = ''; un.s = null; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+
+  /* ---- lobbi ---- */
+  function paintSize(){ [].forEach.call(document.querySelectorAll('#unoSize button'), function(b){ b.classList.toggle('on', +b.getAttribute('data-n') === un.sizeN); }); }
+  [].forEach.call(document.querySelectorAll('#unoSize button'), function(b){
+    b.onclick = function(){ un.sizeN = +b.getAttribute('data-n'); try{ localStorage.setItem('wt_unosz', String(un.sizeN)); }catch(e){} paintSize(); };
+  });
+  paintSize();
+
+  /* ---- sinxronizasiya və səslər ---- */
+  function myTurn(s){ return !!s && s.status === 'play' && s.turn === s.me; }
+  function notify(p, s){
+    var S = window.wtSfx; if(!S) return;
+    if(!p){ if(s.status === 'play') S.play('shuffle'); return; }
+    if(s.over && !p.over){
+      if(s.quit != null){ S.play(s.quit === s.me ? 'lose' : 'win'); }
+      else S.play(s.winner === s.me ? 'win' : 'lose');
+      return;
+    }
+    if(p.status === 'wait' && s.status === 'play') S.play('shuffle');
+    var L = s.last, PL = p.last;
+    if(L && (!PL || L.k > PL.k)){
+      if(L.t === 'play'){
+        S.play('place');
+        if(L.card[0] === 'K') setTimeout(function(){ S.play(L.card[1] === 'F' ? 'plus4' : 'wild'); }, 110);
+        else if(L.fx === 'skip') setTimeout(function(){ S.play('skip'); }, 110);
+        else if(L.fx === 'rev') setTimeout(function(){ S.play('reverse'); }, 110);
+        else if(L.fx === 'd2'){ setTimeout(function(){ S.play('take'); }, 130); setTimeout(function(){ S.play('take'); }, 300); }
+        if(L.uno){
+          setTimeout(function(){ S.play('uno'); }, 420);
+          var who = s.players[L.p] || {};
+          flash((L.p === s.me ? T('Sən') : (who.name || '')) + ': UNO!');
+        }
+      } else if(L.t === 'draw') S.play('take');
+      else if(L.t === 'pass') S.play('pass');
+    }
+    if(myTurn(s) && !myTurn(p)) S.play('turn');
+    if(s.joined > p.joined) S.play('join');
+  }
+  function sync(s){
+    if(!s || s.code !== un.code) return;
+    if(s.v < un.v) return;
+    var prev = un.s;
+    un.v = s.v; un.vk = s.vk || 0; un.s = s;
+    if(!prev && s.last) un.landK = s.last.k;
+    notify(prev, s);
+    render();
+  }
+
+  /* ---- uzun sorğu ---- */
+  function startPoll(){
+    var g = ++gen, fails = 0;
+    (async function(){
+      while(g === gen && un.code){
+        try{
+          var r = await api('/api/uno/poll?room=' + enc(un.code) + '&v=' + un.v + '&vk=' + un.vk);
+          if(g !== gen) return;
+          if(r.status === 404){ gone(); return; }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
+          fails = 0; sync(await r.json());
+        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
+      }
+    })();
+  }
+
+  async function enter(code, isCreate, vsBot){
+    if(busy) return; busy = true;
+    try{
+      var r = isCreate
+        ? await api('/api/uno/create', {method: 'POST', body: JSON.stringify({size: un.sizeN, bot: !!vsBot})})
+        : await api('/api/uno/join', {method: 'POST', body: JSON.stringify({room: code})});
+      var j = {}; try{ j = await r.json(); }catch(e){}
+      if(r.ok){
+        gen++; clearTimeout(un.botT); un.botT = 0;
+        un.code = j.code; un.v = 0; un.vk = 0; un.s = null; un.pend = null; un.flashTx = '';
+        remember(j.code); show(true);
+        startPoll(); sync(j); lobbyMsg('');
+      } else if(!isCreate && r.status === 404 && code === saved()){
+        remember(''); lobbyMsg('Oyun bitib və ya tapılmadı');
+      } else lobbyMsg(errOf(r, j));
+    }catch(e){ lobbyMsg('Əlaqə problemi, yenidən cəhd et'); }
+    busy = false;
+  }
+
+  /* ---- hərəkət göndərmək ---- */
+  function send(body){
+    if(!un.code) return;
+    un.pend = null; $('uncolor').hidden = true;
+    api('/api/uno/move', {method: 'POST', body: JSON.stringify(Object.assign({room: un.code}, body))}).then(async function(r){
+      var j = {}; try{ j = await r.json(); }catch(e){}
+      if(!r.ok){ flash(j.error || 'Bu hərəkət mümkün deyil'); render(); return; }
+      sync(j);
+    }).catch(function(){ flash('Əlaqə problemi, yenidən cəhd et'); });
+  }
+  function onHand(c){
+    var s = un.s; if(!s || s.status !== 'play') return;
+    if(!myTurn(s)){ flash('Növbə sənin deyil'); return; }
+    var ok = (s.playable || []).some(function(x){ return key(x) === key(c); });
+    if(!ok){ flash(s.drawn ? 'Yalnız çəkdiyin kartı ata bilərsən' : 'Bu kart uyğun deyil: rəng və ya rəqəm eyni olmalıdır'); return; }
+    if(c[0] === 'K'){ un.pend = c; $('uncolor').hidden = false; return; }
+    send({action: 'play', card: c});
+  }
+  function doDraw(){
+    var s = un.s; if(!s || s.status !== 'play') return;
+    if(!myTurn(s)){ flash('Növbə sənin deyil'); return; }
+    if(!s.can_draw){ flash('Artıq kart çəkmisən'); return; }
+    send({action: 'draw'});
+  }
+
+  /* ---- kompüter ---- */
+  function botDrive(){
+    var s = un.s;
+    if(!s || !s.bot || s.status !== 'play' || !s.botturn || !un.code || un.botT) return;
+    var c = un.code, g = gen, v0 = un.v;
+    function again(ms){ un.botT = setTimeout(function(){ un.botT = 0; botDrive(); }, ms); }
+    un.botT = setTimeout(function(){
+      un.botT = 0;
+      if(un.code !== c) return;
+      if(g !== gen){ botDrive(); return; }
+      api('/api/uno/bot', {method: 'POST', body: JSON.stringify({room: c})}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+        if(g !== gen) return;
+        if(!j){ again(2500); return; }
+        var same = j.v === v0;
+        sync(j);
+        if(same && !un.botT) again(1200);
+      }).catch(function(){ if(g === gen && !un.botT) again(2500); });
+    }, 700 + Math.floor(Math.random() * 500));
+  }
+
+  /* ---- göstərmə ---- */
+  function render(){
+    var s = un.s; if(!s) return;
+    $('uncode').textContent = 'KOD ' + s.code.toUpperCase();
+    renderStrip(s); renderTable(s); renderHand(s); renderAct(s); renderExtra(s); renderMsg(); renderWait(s); renderRes(s);
+    $('unshare').hidden = !!s.bot;
+    try{ voice.presence(s.vc, s.vk); }catch(e){}
+    botDrive();
+  }
+  function chip(s, i){
+    var p = s.players[i], play = s.status !== 'wait', turn = s.status === 'play' && s.turn === i;
+    var small = (p.me ? '' : '<span class="donl' + (p.online ? ' on' : '') + '"></span>') +
+      (!play ? '' : p.n + ' ' + esc(T('kart')) + (p.n === 1 ? ' <b class="uuno">UNO!</b>' : ''));
+    return '<div class="dchip' + (turn ? ' turn' : '') + '"><div class="dav">' + av(p) + '</div><div class="dwho">' +
+      (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(p.name) + '</b>') + '<small>' + small + '</small></div></div>';
+  }
+  function renderStrip(s){
+    var box = $('unpl'), n = s.players.length, me = s.me;
+    box.className = 'dpl multi' + (s.size > 3 ? ' m4' : '');
+    var h = '';
+    for(var k = 1; k < n; k++) h += chip(s, (me + k) % n);
+    for(var q = n; q < s.size; q++) h += '<div class="dchip"><div class="dav">?</div><div class="dwho"><b>' + esc(T('Gözlənilir')) + '</b></div></div>';
+    h += chip(s, me);
+    box.innerHTML = h;
+  }
+  function renderTable(s){
+    var t = $('untable');
+    t.hidden = s.status === 'wait';
+    if(s.status === 'wait'){ t.innerHTML = ''; return; }
+    var L = s.last, land = !!(L && L.t === 'play' && L.k !== un.landK);
+    if(L) un.landK = L.k;
+    var rc = RC[s.color] || '#888';
+    t.innerHTML =
+      '<div class="upile udraw' + (myTurn(s) && s.can_draw ? ' can' : '') + '" id="undeck">' + backHtml() + '<b class="ucnt">' + (s.deck || 0) + '</b><small>' + esc(T('Kart bazarı')) + '</small></div>' +
+      '<div class="udir ' + (s.dir > 0 ? 'cw' : 'ccw') + '"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></div>' +
+      '<div class="upile udisc" style="--rc:' + rc + '">' + (s.top ? cardHtml(s.top, land ? 'land' : '') : '') +
+      '<small><span class="udot" style="background:' + rc + '"></span>' + esc(T(CNAME[s.color] || '')) + '</small></div>';
+  }
+  function renderHand(s){
+    var box = $('unhand'), mine = myTurn(s), ok = {};
+    (s.playable || []).forEach(function(c){ ok[key(c)] = 1; });
+    un.hs = (s.hand || []).slice().sort(function(a, b){
+      var d = CORD.indexOf(a[0]) - CORD.indexOf(b[0]);
+      return d || VORD.indexOf(a[1]) - VORD.indexOf(b[1]);
+    });
+    box.style.display = s.status === 'over' ? 'none' : '';
+    var n = un.hs.length, ov = n <= 6 ? .06 : (n <= 9 ? .3 : (n <= 13 ? .44 : .54));
+    box.innerHTML = '<div class="uhin" style="--ov:' + ov + '">' + un.hs.map(function(c, i){
+      var cls = mine ? (ok[key(c)] ? ' ok' : ' dim') : '';
+      return '<button type="button" class="ukh' + cls + '" data-i="' + i + '" aria-label="' + esc((CNAME[c[0]] || '') + ' ' + c[1]) + '">' + cardHtml(c) + '</button>';
+    }).join('') + '</div>';
+  }
+  function renderAct(s){
+    var mine = myTurn(s);
+    $('undraw').hidden = !(mine && s.can_draw);
+    $('unpass').hidden = !(mine && s.can_pass);
+    $('unact').hidden = $('undraw').hidden && $('unpass').hidden;
+  }
+  function renderExtra(s){ $('uninfo').textContent = s.status === 'play' ? T('Rəngə və ya rəqəmə uyğun kart at') : ''; }
+  function msgText(s){
+    if(s.status !== 'play') return '';
+    if(myTurn(s)){
+      if(s.drawn) return T('Çəkdiyin kart uyğundur: at və ya pas keç');
+      return T('Sənin növbən: kart at və ya bazardan çək');
+    }
+    if(s.bot && s.botturn) return T('Kompüter düşünür...');
+    var p = s.players[s.turn] || {};
+    return (p.name || T('Rəqib')) + ' ' + (p.online ? T('oynayır...') : T('əlaqədə deyil'));
+  }
+  function renderMsg(){
+    var s = un.s, e = $('unmsg');
+    if(!s){ e.textContent = ''; return; }
+    e.textContent = un.flashTx ? T(un.flashTx) : msgText(s);
+  }
+  function renderWait(s){
+    var w = $('unwait'), wait = s.status === 'wait';
+    w.hidden = !wait;
+    if(!wait) return;
+    $('unwcode').textContent = s.code.toUpperCase();
+    $('unwcnt').textContent = T('Oyunçu') + ': ' + s.joined + ' / ' + s.size;
+    try{ inv.refresh(); }catch(e){}
+  }
+  function renderRes(s){
+    var box = $('unres'), over = s.status === 'over';
+    box.hidden = !over;
+    if(!over){ box.innerHTML = ''; box.className = ''; return; }
+    var title, why, win = false, lose = false;
+    if(s.winner === s.me){ title = 'Qazandın!'; why = T('Bütün kartlarını bitirdin'); win = true; }
+    else { title = 'Uduzdun'; why = ((s.players[s.winner] || {}).name || '') + ' ' + T('kartlarını bitirdi'); lose = true; }
+    if(s.quit != null){
+      why = s.quit === s.me ? T('Oyundan çıxdın') : ((s.players[s.quit] || {}).name || '') + ' ' + T('oyundan çıxdı');
+      if(s.quit === s.me){ lose = true; win = false; title = 'Uduzdun'; } else { win = true; lose = false; title = 'Qazandın!'; }
+    }
+    box.className = 'res-show ' + (win ? 'win' : 'lose');
+    box.innerHTML = '<div class="res-ic"><i class="fa-solid ' + (win ? 'fa-trophy' : 'fa-heart-crack') + '" aria-hidden="true"></i></div><h3>' + esc(T(title)) + '</h3><p>' + esc(why) + '</p><button class="pbtn" id="unAgain" type="button">' + esc(T('Növbəti raund')) + '</button>';
+    $('unAgain').onclick = async function(){
+      if(!un.code) return;
+      try{
+        var r = await api('/api/uno/again', {method: 'POST', body: JSON.stringify({room: un.code, round: s.round})});
+        if(r.ok) sync(await r.json()); else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
+      }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
+    };
+  }
+
+  /* ---- paylaş, çıx ---- */
+  async function share(){
+    var s = un.s; if(!s) return;
+    var url = location.origin + '/?uno=' + encodeURIComponent(s.code.toUpperCase());
+    var text = T('Uno oynayaq! Kod: ' + s.code.toUpperCase());
+    try{ if(navigator.share){ await navigator.share({title: 'Uno', text: text, url: url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(url); flash('Link kopyalandı'); }
+    catch(e){ flash('Kod: ' + s.code.toUpperCase()); }
+  }
+
+  /* ---- düymələr ---- */
+  $('unoNew').onclick = function(){ enter('', true); };
+  $('unoEnter').onclick = function(){
+    var c = clean($('unoCodeIn').value);
+    if(!c){ lobbyMsg('Uno kodunu yaz'); return; }
+    enter(c, false);
+  };
+  $('unoCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('unoEnter').click(); } });
+  $('unoResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
+  (function(){
+    var c = saved(); if(!c) return;
+    api('/api/uno/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+  })();
+  $('unoBot').onclick = function(){ enter('', true, true); };
+  $('unback').onclick = function(){ close(true); };
+  $('unshare').onclick = share;
+  $('unwshare').onclick = share;
+  $('unquit').onclick = function(){
+    var s = un.s, c = un.code;
+    if(!s || !c) return;
+    var m = s.status === 'play' ? 'Oyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.' : 'Oyundan çıxmaq istəyirsən?';
+    wtConfirm(m, {ok: 'Oyundan çıx', danger: true}).then(function(y){
+      if(!y || un.code !== c) return;
+      close(false); remember('');
+      api('/api/uno/quit', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    });
+  };
+  $('undraw').onclick = doDraw;
+  $('unpass').onclick = function(){ send({action: 'pass'}); };
+  $('unboard').addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('#undeck')) doDraw();
+  });
+  $('uncolor').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-c]');
+    if(b && un.pend){ send({action: 'play', card: un.pend, color: b.getAttribute('data-c')}); return; }
+    if(e.target === $('uncolor') || (e.target.closest && e.target.closest('[data-x]'))){ un.pend = null; $('uncolor').hidden = true; }
+  });
+  $('unhand').onclick = function(e){
+    var b = e.target.closest && e.target.closest('[data-i]'); if(!b) return;
+    var c = un.hs[+b.getAttribute('data-i')]; if(c) onHand(c);
+  };
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && un.code && !$('uno').hidden){ un.v = 0; startPoll(); }
+  });
+
+  /* ---- ?uno=KOD linki ---- */
+  try{
+    var q = new URLSearchParams(location.search).get('uno');
+    if(q){ pendingUno = clean(q); history.replaceState(null, '', location.pathname); }
+  }catch(e){}
+  if(pendingUno){
+    var tries = 0, iv = setInterval(function(){
+      tries++;
+      var menuOn = false;
+      try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
+      if(token && account && menuOn){ clearInterval(iv); var c = pendingUno; pendingUno = ''; enter(c, false); }
+      else if(tries > 120) clearInterval(iv);
+    }, 500);
+  }
+  window.wtJoinUno = function(c){ enter(clean(c), false); };
+  refreshResume();
 })();
 </script>
 
