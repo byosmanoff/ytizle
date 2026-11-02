@@ -3238,6 +3238,21 @@ body.guest-mode .guest-only{display:block!important}
       '.gvs-c.lv .gvs-b{background:#b8325a;box-shadow:none}',
       '.gvs-c.lock .gvs-b{opacity:.45}',
       '.gvs-c span.l{white-space:nowrap;color:var(--muted)}',
+      '.gvs-ip{display:flex;flex-direction:column;gap:8px;min-height:0;animation:gvsRow .24s ease both}',
+      '.gvs-ip[hidden]{display:none}',
+      '.gvs-ir{display:flex;gap:8px;align-items:center}',
+      '.gvsheet .gvs-bk{width:38px;height:42px;border-radius:14px;background:rgba(255,255,255,.09);display:grid;place-items:center;font-size:14px;flex:none}',
+      '.gvsheet .gvs-in{flex:1;min-width:0;height:42px;border-radius:14px;padding:0 12px;background:rgba(0,0,0,.28);color:var(--text);box-shadow:inset 0 0 0 1px var(--line);font-size:16px;border:0;outline:none}',
+      '.gvsheet .gvs-in:focus{box-shadow:inset 0 0 0 1.5px var(--amber)}',
+      '.gvsheet .gvs-go{height:42px;padding:0 14px;border-radius:14px;background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;font-weight:700;font-size:14px;flex:none;white-space:nowrap}',
+      '.gvsheet .gvs-go.done{background:#1f6b3b}',
+      '.gvsheet .gvs-go:disabled{opacity:.55}',
+      '.gvs-msg{font-size:12.5px;color:var(--amber);min-height:16px;padding:0 4px}',
+      '.gvs-fl{display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:230px;overscroll-behavior:contain}',
+      '.gvs-fl .gvs-row{padding:7px 8px 7px 10px}',
+      '.gvs-av.img{background-size:cover;background-position:center;font-size:0}',
+      '.gvs-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#5be08a;border:2px solid var(--seat-2)}',
+      '.gvs-empty{font-size:13px;color:var(--muted);text-align:center;padding:10px 4px}',
       '@keyframes gvsFade{from{opacity:0}to{opacity:1}}',
       '@keyframes gvsPop{from{opacity:0;transform:translateY(-10px) scale(.92)}to{opacity:1;transform:none}}',
       '@keyframes gvsRow{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
@@ -3250,7 +3265,7 @@ body.guest-mode .guest-only{display:block!important}
   function T(s){ try{ return window.wtT ? window.wtT(s) : s; }catch(e){ return s; } }
 
   /* cfg: title, sub(), members() -> [{id,name,muted,me,st}], isMuted(), isSpeaker(), muteLocked(),
-          onMute(), onSpeaker(), onLeave(), onInvite() (ixtiyari), onClose() (ixtiyari) */
+          onMute(), onSpeaker(), onLeave(), sendInvite(username) -> Promise<{ok,msg}> (ixtiyari), onClose() (ixtiyari) */
   window.wtVoiceSheet = function(cfg){
     var root = document.createElement('div');
     root.className = 'gvsheet'; root.hidden = true;
@@ -3259,6 +3274,10 @@ body.guest-mode .guest-only{display:block!important}
       '<div class="gvs-head"><div class="gvs-tt"><b></b><small></small></div>' +
       '<button type="button" class="gvs-x" data-a="x" aria-label="Kiçilt"><i class="fa-solid fa-chevron-up" aria-hidden="true"></i></button></div>' +
       '<div class="gvs-list"></div>' +
+      '<div class="gvs-ip" hidden><div class="gvs-ir"><button type="button" class="gvs-bk" data-a="back" aria-label="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>' +
+      '<input class="gvs-in" type="text" maxlength="21" placeholder="@istifadəçi adı" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı">' +
+      '<button type="button" class="gvs-go" data-a="send">Dəvət et</button></div>' +
+      '<div class="gvs-msg"></div><div class="gvs-fl"></div></div>' +
       '<div class="gvs-ctl">' +
         '<button type="button" class="gvs-c big" data-a="mic"><span class="gvs-b"><i class="fa-solid fa-microphone" aria-hidden="true"></i></span><span class="l">Səssiz et</span></button>' +
         '<button type="button" class="gvs-c spk" data-a="spk"><span class="gvs-b"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></span><span class="l">Dinamik</span></button>' +
@@ -3268,14 +3287,65 @@ body.guest-mode .guest-only{display:block!important}
     var list = root.querySelector('.gvs-list'), ttl = root.querySelector('.gvs-tt b'), sub = root.querySelector('.gvs-tt small');
     var bSpk = root.querySelector('[data-a="spk"]'), bMic = root.querySelector('[data-a="mic"]');
     var speak = {}, an = {}, actx = null, tm = 0;
+    var view = 'main', fr = null, frAt = 0, frBusy = false, sent = {};
+    var ip = root.querySelector('.gvs-ip'), inp = root.querySelector('.gvs-in'), msgEl = root.querySelector('.gvs-msg'), fl = root.querySelector('.gvs-fl');
+    function say(t){ msgEl.textContent = t || ''; }
+    function paintFriends(){
+      fl.textContent = '';
+      if(!fr || !fr.length){ var e = document.createElement('div'); e.className = 'gvs-empty'; e.textContent = fr ? T('Dost siyahın boşdur. İstifadəçi adını yaz.') : T('Yüklənir...'); fl.appendChild(e); return; }
+      fr.forEach(function(p){
+        var r = document.createElement('div'); r.className = 'gvs-row';
+        var av = document.createElement('span'); av.className = 'gvs-av';
+        if(p.avatar && /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/.test(p.avatar)){ av.className += ' img'; av.style.backgroundImage = 'url("' + p.avatar + '")'; }
+        else { av.style.background = 'hsl(' + hue(p.name) + ',42%,40%)'; av.textContent = (String(p.name || p.username || '?').trim()[0] || '?').toLocaleUpperCase('az'); }
+        if(p.online){ var d = document.createElement('i'); d.className = 'gvs-dot'; av.appendChild(d); }
+        var nm = document.createElement('span'); nm.className = 'gvs-nm';
+        var b = document.createElement('b'); b.textContent = p.name || p.username;
+        var sm = document.createElement('small'); sm.textContent = '@' + p.username + (p.online ? ' · ' + T('onlayn') : '');
+        nm.appendChild(b); nm.appendChild(sm);
+        var go = document.createElement('button'); go.type = 'button'; go.className = 'gvs-go' + (sent[p.username] ? ' done' : '');
+        go.textContent = sent[p.username] ? '✓' : T('Dəvət et');
+        go.onclick = function(){ doSend(p.username, go); };
+        r.appendChild(av); r.appendChild(nm); r.appendChild(go); fl.appendChild(r);
+      });
+    }
+    async function loadFriends(){
+      if(frBusy || (fr && Date.now() - frAt < 15000)){ paintFriends(); return; }
+      frBusy = true; paintFriends();
+      try{
+        if(typeof token !== 'undefined' && token){ var r = await api('/api/friends'); if(r.ok){ fr = (await r.json()).friends || []; frAt = Date.now(); } }
+        else fr = [];
+      }catch(e){ if(!fr) fr = []; }
+      frBusy = false; if(view === 'invite') paintFriends();
+    }
+    async function doSend(u, btn){
+      u = String(u || '').trim().replace(/^@/, '').toLowerCase();
+      if(!u){ say(T('İstifadəçi adını yaz')); return; }
+      if(btn) btn.disabled = true;
+      var res;
+      try{ res = await cfg.sendInvite(u); }catch(e){ res = {ok: false, msg: 'Əlaqə problemi, yenidən cəhd et'}; }
+      if(btn) btn.disabled = false;
+      say(T(res.msg || (res.ok ? '@' + u + ' dəvət olundu' : 'Alınmadı')));
+      if(res.ok){ sent[u] = 1; inp.value = ''; paintFriends(); }
+    }
+    function setView(v){
+      view = v;
+      list.hidden = v !== 'main'; ip.hidden = v !== 'invite';
+      if(v === 'invite'){ say(''); loadFriends(); }
+      update();
+    }
 
     function paint(){
       var rows = list.querySelectorAll('.gvs-row[data-id]');
       for(var i = 0; i < rows.length; i++) rows[i].classList.toggle('speak', !!speak[rows[i].getAttribute('data-id')]);
     }
     function update(){
-      ttl.textContent = T(cfg.title || 'Səsli söhbət');
-      sub.textContent = cfg.sub ? cfg.sub() : '';
+      ttl.textContent = T(view === 'invite' ? 'Dəvət et' : (cfg.title || 'Səsli söhbət'));
+      sub.textContent = view === 'invite' ? T('Dostunu seç və ya istifadəçi adını yaz') : (cfg.sub ? cfg.sub() : '');
+      if(view === 'main') paintMain();
+      controls();
+    }
+    function paintMain(){
       var ms = cfg.members() || [];
       list.textContent = '';
       ms.forEach(function(m){
@@ -3293,12 +3363,14 @@ body.guest-mode .guest-only{display:block!important}
         r.appendChild(av); r.appendChild(nm); r.appendChild(ic);
         list.appendChild(r);
       });
-      if(cfg.onInvite){
+      if(cfg.sendInvite){
         var inv = document.createElement('button'); inv.type = 'button'; inv.className = 'gvs-row gvs-inv'; inv.setAttribute('data-a', 'inv');
         inv.innerHTML = '<span class="gvs-av"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span><span class="gvs-nm"><b></b></span>';
         inv.querySelector('b').textContent = T('Dostu dəvət et');
         list.appendChild(inv);
       }
+    }
+    function controls(){
       var muted = !!cfg.isMuted(), lock = !!(cfg.muteLocked && cfg.muteLocked());
       bMic.classList.toggle('off', muted || lock); bMic.classList.toggle('lock', lock);
       bMic.querySelector('i').className = 'fa-solid ' + (muted || lock ? 'fa-microphone-slash' : 'fa-microphone');
@@ -3316,7 +3388,9 @@ body.guest-mode .guest-only{display:block!important}
       else if(a === 'mic'){ if(!(cfg.muteLocked && cfg.muteLocked())) cfg.onMute(); update(); }
       else if(a === 'spk'){ cfg.onSpeaker(); update(); }
       else if(a === 'lv'){ cfg.onLeave(); }
-      else if(a === 'inv'){ try{ cfg.onInvite(); }catch(x){} }
+      else if(a === 'inv') setView('invite');
+      else if(a === 'back') setView('main');
+      else if(a === 'send') doSend(inp.value, t);
     });
     function tick(){
       var ch = false;
@@ -3336,9 +3410,10 @@ body.guest-mode .guest-only{display:block!important}
       update(); root.hidden = false;
       if(!tm) tm = setInterval(tick, 120);
     }
+    inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doSend(inp.value, root.querySelector('[data-a="send"]')); } });
     function close(){
       if(root.hidden) return;
-      root.hidden = true;
+      root.hidden = true; view = 'main'; list.hidden = false; ip.hidden = true;
       if(tm){ clearInterval(tm); tm = 0; }
       if(cfg.onClose) try{ cfg.onClose(); }catch(e){}
     }
@@ -3346,6 +3421,7 @@ body.guest-mode .guest-only{display:block!important}
       open: open, close: close,
       isOpen: function(){ return !root.hidden; },
       update: function(){ if(!root.hidden) update(); },
+      resetInvites: function(){ sent = {}; },
       /* konuşma göstəricisi: öz analizatoru (stream) və ya xaricdən (setSpeak) */
       watch: function(id, stream){
         this.unwatch(id);
@@ -4754,6 +4830,16 @@ vsheet = window.wtVoiceSheet({
   onMute: () => { $('vmute').click(); },
   onSpeaker: () => { raud.muted = !raud.muted; },
   onLeave: () => { leaveVoice(); },
+  sendInvite: async (u) => {
+    if(!token) return {ok: false, msg: 'Dəvət üçün hesaba daxil ol'};
+    const r = await api('/api/invite', {method: 'POST', body: JSON.stringify({username: u, room})});
+    if(r.ok) return {ok: true, msg: '@' + u + ' dəvət olundu. Ana menyuda görəcək.'};
+    if(r.status === 403) return {ok: false, msg: 'Dəvət göndərilə bilmədi: gizlilik və ya blok məhdudiyyəti'};
+    if(r.status === 404) return {ok: false, msg: 'Belə istifadəçi tapılmadı'};
+    if(r.status === 429) return {ok: false, msg: 'Çox dəvət göndərdin, bir az sonra yenidən yoxla'};
+    if(r.status === 400) return {ok: false, msg: 'Özünü dəvət edə bilməzsən'};
+    return {ok: false, msg: 'Dəvət getmədi, yenidən cəhd et'};
+  },
 });
 $('voice').addEventListener('click', e => { if(voiceOn && !e.target.closest('button')) vsheet.open(); });
 window.addEventListener('pagehide', () => {
@@ -5778,7 +5864,7 @@ function renderInvites(list, games){
     if(i.avatar && /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/.test(i.avatar)){ av.style.backgroundImage = 'url("' + i.avatar + '")'; av.textContent = ''; }
     const tx = document.createElement('div'); tx.className = 'tx';
     const b = document.createElement('b'); b.textContent = i.name + (i.username ? ' (@' + i.username + ')' : '');
-    const sp = document.createElement('span'); sp.textContent = i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
+    const sp = document.createElement('span'); sp.textContent = i.voice ? 'səni səsli söhbətə dəvət edir' : i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
     tx.appendChild(b); tx.appendChild(sp);
     const go = document.createElement('button'); go.className = 'go'; go.textContent = 'Qoşul';
     const no = document.createElement('button'); no.className = 'no'; no.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'; no.setAttribute('aria-label', 'Rədd et');
@@ -7763,7 +7849,18 @@ window.wtInviteBox = function(o){
         Object.keys(peers).forEach(function(id){ if(peers[id].aud) peers[id].aud.muted = !speakerOn; });
       },
       onLeave: function(){ leave(); },
-      onInvite: $(o.p + 'share') ? function(){ $(o.p + 'share').click(); } : null
+      sendInvite: async function(u){
+        var code = o.code(); if(!code) return {ok: false, msg: 'Otaq tapılmadı'};
+        var r = await api('/api/game/invite', {method: 'POST', body: JSON.stringify({game: o.game, room: code, username: u, voice: 1})});
+        if(r.ok) return {ok: true, msg: '@' + u + ' səsli söhbətə dəvət olundu'};
+        var j = {}; try{ j = await r.json(); }catch(e){}
+        if(r.status === 404) return {ok: false, msg: j.error === 'room' ? 'Oyun artıq başlayıb, yeni oyunçu dəvət etmək olmur' : 'Belə istifadəçi tapılmadı'};
+        if(r.status === 403) return {ok: false, msg: 'Bu istifadəçi dəvətləri bağlayıb'};
+        if(r.status === 409) return {ok: false, msg: 'Oyunçu artıq içəridədir və ya otaq doludur'};
+        if(r.status === 429) return {ok: false, msg: 'Çox sorğu göndərdin, bir az gözlə'};
+        if(r.status === 400) return {ok: false, msg: 'İstifadəçi adı düzgün deyil'};
+        return {ok: false, msg: 'Alınmadı, yenidən cəhd et'};
+      }
     });
     $(o.p + 'mic').onclick = function(){ if(on) sheet.open(); else join(); };
     $(o.p + 'mute').onclick = toggleMute;

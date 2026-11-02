@@ -2403,7 +2403,7 @@ def _game_invites_for(sub):
                 lst.pop(k, None)
                 continue
             out.append(dict(id=i["id"], game=i["game"], room=i["room"], name=i["name"],
-                            username=i["username"], avatar=i["avatar"], ts=i["ts"]))
+                            username=i["username"], avatar=i["avatar"], ts=i["ts"], voice=bool(i.get("voice"))))
     if not lst:
         GAME_INV.pop(sub, None)
     out.sort(key=lambda x: -x["ts"])
@@ -2443,8 +2443,8 @@ def api_game_invite():
         GAME_INV.clear()
     GAME_INV.setdefault(row["sub"], {})[(kind, code, sub)] = dict(
         id=secrets.token_hex(6), game=kind, room=code, ts=time.time(), name=idn["name"],
-        username=idn["username"], avatar=idn["avatar"])
-    notify_user(row["sub"], "game", push=dict(title="Oyun dəvəti", body=idn["name"] + " səni oyuna çağırır", tag="game", url="/"))
+        username=idn["username"], avatar=idn["avatar"], voice=bool(d.get("voice")))
+    notify_user(row["sub"], "game", push=dict(title="Oyun dəvəti", body=idn["name"] + (" səni səsli söhbətə çağırır" if d.get("voice") else " səni oyuna çağırır"), tag="game", url="/"))
     return jsonify(ok=True)
 
 
