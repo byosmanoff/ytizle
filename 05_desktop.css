@@ -1,0 +1,122 @@
+/* ================= Kompüter görünüşü ================= */
+.stage,.side,.mbody,.mcol{display:contents}   /* telefonda heç nə dəyişmir */
+.note i{margin-right:4px}
+.floaties span i{display:block}
+@media (min-width:700px){
+  #leavebox,#hostbox,#invbox,#repbox{align-items:center}
+}
+@media (min-width:1024px){
+  /* giriş */
+  .jwrap{width:min(100%,420px)}
+  .ticket{width:min(100%,420px)}
+  #join h1{font-size:46px}
+
+  /* ana menyu: solda bilet+say, sağda tarixçə */
+  #menu{max-width:none;width:100%;padding:32px max(36px,calc((100% - 1088px)/2)) 40px;gap:22px}
+  .mbody{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:30px;align-items:start}
+  .mcol{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .mright .card{padding:20px 22px}
+  #hvids{margin:0 -22px;padding:2px 22px 10px}
+  #hvids .hs{width:220px}
+  #hrooms .hs{cursor:pointer}
+  .mhello b{font-size:22px}
+  .av{width:52px;height:52px}
+  #profile{padding-left:calc(50% - 300px);padding-right:calc(50% - 300px)}
+
+  /* otaq: solda ekran, sağda söhbət paneli */
+  #app{flex-direction:row;gap:22px;max-width:1760px;margin:0 auto;width:100%;padding:0 22px}
+  .stage{display:flex;flex-direction:column;flex:1;min-width:0;height:var(--H);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+  .stage::-webkit-scrollbar{display:none}
+  .side{display:flex;flex-direction:column;flex:none;width:clamp(340px,27vw,430px);height:calc(var(--H) - 28px);margin:14px 0;min-height:0;
+    background:var(--velvet-2);border-radius:22px;box-shadow:inset 0 0 0 1px var(--line),0 20px 50px -20px rgba(0,0,0,.7);overflow:hidden}
+  #top{padding:16px 4px 8px}
+  #status{font-size:15px}
+  #codebar{font-size:13px}
+  #codebar b{font-size:18px}
+  #codebar button{width:34px;height:34px}
+  #codebar button i{font-size:16px}
+  #player{margin:6px 0 0;border-radius:20px}
+  #ytbox{max-height:calc(var(--H) - 215px)}
+  #vid{max-height:calc(var(--H) - 215px)}
+  #web,#ytres,#home{height:max(380px,calc(var(--H) - 215px))}
+  .big #web,.big #ytres,.big #home{height:max(420px,calc(var(--H) - 160px))}
+  .big #vid,.big #ytbox{max-height:calc(var(--H) - 160px)}
+  .big .side{display:none}                         /* "Ekranı böyüt" = kinoteatr rejimi */
+  #reacts{padding:12px 0 0;gap:8px}
+  #reacts button{max-width:64px;height:38px}
+  #reacts button i{font-size:19px}
+  .stage .bar{padding:12px 0 16px}
+  .bar button{width:44px;height:44px}
+  .bar input{height:44px}
+  .tiles{padding:10px 18px 18px;gap:14px}
+  .htile{padding:24px 12px 20px}
+  #home .hint{padding:22px 22px 8px;font-size:16px}
+  .r img{width:168px}
+  .htile:hover,.stat:hover{transform:translateY(-2px)}
+  .side #voice{margin:14px 14px 6px}
+  .side #chat{padding:6px 18px 12px}
+  .side .m{max-width:84%;font-size:15px}
+  .side #replybar{margin:0 14px}
+  .side .composer{padding:10px 14px 14px}
+  .side #voice[hidden]{display:none}
+  .fly{font-size:40px}
+}
+@media (min-width:1500px){
+  #menu{padding-left:max(36px,calc((100% - 1208px)/2));padding-right:max(36px,calc((100% - 1208px)/2))}
+  #hvids .hs{width:240px}
+}
+.vb{display:inline-block;width:1.05em;height:1.05em;margin-left:4px;color:var(--rose);vertical-align:-.17em;flex:none}
+.vb svg{display:block;width:100%;height:100%}
+.hhead{padding:20px 18px 4px;display:flex;flex-direction:column;gap:3px}
+.hhead b{font-size:19px;font-weight:800;letter-spacing:-.01em}
+.hhead span{color:var(--muted);font-size:14px}
+.tips{margin:2px 14px 16px;padding:4px;border-radius:16px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--line)}
+.tip{display:flex;align-items:center;gap:12px;padding:10px 12px}
+.tip+.tip{border-top:1px solid var(--line)}
+.tip i{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--velvet);color:var(--rose);font-size:14px}
+.tip div{min-width:0;font-size:14px;line-height:1.35;color:var(--muted)}
+.tip strong{display:block;color:var(--text);font-size:14.5px;font-weight:700}
+@media (min-width:900px){.hhead{padding:24px 22px 4px}.hhead b{font-size:21px}.tips{margin:4px 18px 20px}}
+#fq{width:100%;height:46px;padding:0 14px;margin-bottom:6px;border-radius:12px;background:var(--velvet-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line);transition:box-shadow .15s ease}
+#fq:focus{box-shadow:inset 0 0 0 2px var(--rose)}
+.fr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fr:last-child{border-bottom:0}
+.fr .av{width:40px;height:40px;font-size:17px}
+.fr .tx{flex:1;min-width:0;font-size:13px;line-height:1.3;color:var(--muted)}
+.fr .tx b{display:block;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fb{flex:none;padding:8px 13px;border-radius:12px;background:var(--rose-deep);color:#fff;font-weight:700;font-size:13px;line-height:1.2}
+.fb.block-btn{width:auto;min-width:70px;max-width:none;height:40px;padding:0 12px;border-radius:999px;white-space:nowrap;word-break:normal;overflow-wrap:normal;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;}
+.fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
+.fb.no.block-btn{width:auto;min-width:70px;height:40px;padding:0 12px;border-radius:999px;white-space:nowrap;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px var(--line)}
+.presence{display:block!important;font-size:11px;color:var(--muted);margin-top:3px}.presence.online{color:#279a62;font-weight:700}#pbpresence{font-size:12px;margin:5px 0;color:var(--muted)}#pbpresence.online{color:#279a62;font-weight:700}#blockedlist{display:grid;gap:8px}#pbBlock{background:#b02a52;color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
+.fb.no{width:34px;height:34px;padding:0;border-radius:50%;background:var(--seat-2);color:var(--text)}
+.ftag{flex:none;color:var(--muted);font-size:12px;font-weight:600}
+.fsub{margin:12px 0 2px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.fempty{padding:8px 2px}
+#fres:empty,#freqs:empty{display:none}
+#invfr{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+#invfr:empty{display:none}
+.chip{padding:7px 12px;border-radius:99px;background:var(--seat-2);color:var(--text);font-size:13px;font-weight:600}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer}
+.swrow b{display:block;font-size:15px}
+.swrow small{display:block;margin-top:3px;color:var(--muted);font-size:13px;line-height:1.35}
+.sw{-webkit-appearance:none;appearance:none;flex:none;position:relative;width:48px;height:28px;border-radius:99px;background:var(--seat-2);transition:background-color .15s;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw:checked{background:var(--rose-deep)}
+.sw:checked::after{transform:translateX(20px)}
+#pbox{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+  background:rgba(10,4,16,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#pbox[hidden]{display:none}
+.pcard{text-align:center}
+.pcard .av.big{margin:4px auto 16px}
+.pcard h2{display:flex;align-items:center;justify-content:center;margin-bottom:2px}
+#pbuser{color:var(--muted);font-size:15px;margin-bottom:10px;min-height:20px}
+#pbrel{min-height:20px;margin-bottom:14px;font-size:14px;font-weight:600;color:#7be0a5}
+#pbrel.err{color:#ff8fae}
+#pbClose{background:var(--seat-2);color:var(--text)}
+#pbAct{background:var(--rose-deep);color:#fff}
+#pbAct:disabled{opacity:.55}
+.m:not(.me) b{cursor:pointer}
+#status[data-on="1"]{cursor:pointer}
+/* yüngül rejim: zəif kompüterlərdə animasiya və kölgə yükünü azaldır */
+

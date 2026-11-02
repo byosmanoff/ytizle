@@ -1,0 +1,56 @@
+/* ================= JOIN: the ticket ================= */
+#join{
+  position:relative;margin:0;flex:1;display:flex;align-items:center;justify-content:center;
+  padding:20px 16px;overflow-y:auto;text-align:left;
+}
+#join::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(255,196,107,.20), transparent 60%),
+    radial-gradient(90% 60% at 50% 120%, rgba(232,86,125,.22), transparent 60%),
+    var(--velvet);
+  transition:opacity .55s ease .25s;
+}
+.ticket{position:relative;z-index:1;width:min(100%,360px);margin:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.55))}
+.t-main,.t-stub{background:var(--paper);color:var(--ink);padding:24px 22px;position:relative}
+.t-main{
+  border-radius:22px 22px 0 0;
+  -webkit-mask:radial-gradient(circle 12px at 0 100%,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 100%,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+          mask:radial-gradient(circle 12px at 0 100%,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 100%,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+}
+.t-stub{
+  border-radius:0 0 22px 22px;padding-top:26px;
+  -webkit-mask:radial-gradient(circle 12px at 0 0,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 0,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+          mask:radial-gradient(circle 12px at 0 0,transparent 11.5px,#000 12px) left/50.5% 100% no-repeat,
+               radial-gradient(circle 12px at 100% 0,transparent 11.5px,#000 12px) right/50.5% 100% no-repeat;
+}
+.t-stub::before{ /* perforation */
+  content:"";position:absolute;left:22px;right:22px;top:-1px;
+  border-top:2px dashed rgba(43,15,38,.28);
+}
+.pair{display:block;width:44px;height:46px;margin-bottom:12px}
+#join h1{font-size:40px;line-height:.98;font-weight:800;letter-spacing:-.02em;margin:0 0 8px;font-variation-settings:"wdth" 85}
+.tagline{color:var(--ink-soft);font-size:15px;margin-bottom:20px}
+.field{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+#join input{
+  width:100%;margin:0 0 12px;padding:13px 14px;border-radius:12px;
+  background:#fff7f4;color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(43,15,38,.16);
+  transition:box-shadow .15s ease;
+}
+#join input::placeholder{color:#b49aa9}
+#join input:focus{box-shadow:inset 0 0 0 2px var(--rose-deep)}
+#join button{width:100%;padding:14px;border-radius:12px;font-weight:700}
+#create{background:var(--rose-deep);color:#fff}
+#create:hover:not(:disabled){background:#d94870}
+#join button.alt{background:var(--ink);color:var(--paper)}
+#join button.alt:hover:not(:disabled){background:#43203a}
+.or{margin:0 0 14px;color:var(--ink);font-size:15px;font-weight:600}
+#codein{
+  text-align:center;letter-spacing:.45em;text-indent:.45em;text-transform:uppercase;
+  font-weight:800;font-size:22px;padding:12px 14px;
+}
+#joinmsg{margin-top:12px;font-size:14px;color:#b02a52;min-height:18px;font-weight:500}
+

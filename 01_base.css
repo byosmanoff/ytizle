@@ -1,0 +1,23 @@
+
+:root{
+  --velvet:#150a1d; --velvet-2:#1e1029; --seat:#2a1739; --seat-2:#37204a;
+  --rose:#ff7a9c; --rose-deep:#e8567d; --amber:#ffc46b;
+  --paper:#f8e7e1; --ink:#2b0f26; --ink-soft:#7a5469;
+  --text:#f6ecf7; --muted:#b7a2cf; --line:rgba(255,255,255,.09);
+  --font:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+:root{--H:100dvh}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--velvet);color:var(--text);font-family:var(--font);
+  font-size:16px;line-height:1.35;display:flex;flex-direction:column;height:var(--H);
+  -webkit-tap-highlight-color:transparent;overflow:hidden;
+}
+button,input{font:inherit;font-size:16px;border:0;color:inherit}
+button{cursor:pointer;transition:transform .12s ease,background-color .15s ease,opacity .15s ease}
+button:active:not(:disabled){transform:scale(.96)}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input{outline:none}
+
