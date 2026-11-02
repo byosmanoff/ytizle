@@ -1,0 +1,48 @@
+/* ================= Instagram tipli alt naviqasiya (rənglər dəyişmir) ================= */
+body.mob #profile{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+#tabbar{display:none}
+#menu.pager-on>#tabbar{
+  position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:75;
+  width:min(100%,560px);display:flex;align-items:center;justify-content:space-around;gap:2px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:var(--velvet);border-top:1px solid var(--line);
+}
+#tabbar button{
+  flex:1;min-width:0;display:grid;place-items:center;height:48px;padding:0;background:none;color:var(--text);
+}
+#tabbar button .tp{
+  display:grid;place-items:center;width:min(64px,100%);height:44px;border-radius:22px;
+  font-size:22px;opacity:.78;transition:background-color .18s ease,opacity .18s ease;
+}
+#tabbar button.on .tp{background:var(--seat);opacity:1}
+#tabbar .tav{
+  width:28px;height:28px;border-radius:50%;background:var(--rose) center/cover no-repeat;color:var(--ink);
+  display:grid;place-items:center;font-size:14px;font-weight:800;line-height:1;
+}
+#tabbar button.on .tav{box-shadow:none}
+#tabbar .tp{position:relative}
+.nav-notif-dot{position:absolute;right:calc(50% - 21px);top:2px;width:10px;height:10px;border-radius:50%;background:#ff315d;border:2px solid #32143e;box-shadow:0 0 0 2px rgba(255,49,93,.18);}
+.nav-notif-dot[hidden]{display:none!important}
+
+/* sürüşdürmə: barmağı izləyən animasiya, yüngül */
+body.mob #menu,body.mob #profile{touch-action:pan-y}
+#hvids,#hrooms{touch-action:pan-x pan-y}
+
+/* 144Hz: effektlər açıqdır, hərəkət yalnız GPU qatında (transform/opacity) */
+.mticket{will-change:transform}
+.floaties span{will-change:transform,opacity}
+
+/* yanaşı səhifələr (pager) */
+#menu.pager-on{overflow:hidden!important;padding-left:0!important;padding-right:0!important;padding-bottom:0!important}
+#menu.pager-on>.mhead,#menu.pager-on>#invites{padding-left:max(16px,calc((100% - 488px)/2));padding-right:max(16px,calc((100% - 488px)/2))}
+.pager{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:pan-y}
+.track{display:flex;width:100%;height:100%;will-change:transform}
+.pg{flex:0 0 100%;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;
+  padding:10px max(16px,calc((100% - 488px)/2)) calc(96px + env(safe-area-inset-bottom))}
+.pg>*{flex:none}
+body.mob #profile{will-change:transform}
+/* Ayarlar profilin içindədir: yanaşı səhifələrin (pager) bir hissəsi deyil, yalnız dişli düyməsi ilə açılan ayrıca təbəqədir */
+.pager>.pg-set{position:absolute;left:0;top:0;right:0;bottom:0;width:auto;height:auto;z-index:2;visibility:hidden}
+#menu[data-tab="settings"] .pager>.pg-set{visibility:visible}
+#menu[data-tab="settings"] .pager>.track{visibility:hidden}
+

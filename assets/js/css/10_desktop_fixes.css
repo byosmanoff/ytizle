@@ -1,0 +1,44 @@
+/* ================= KOMPÜTER: DONMA DÜZƏLİŞİ + SEKMƏLƏR ================= */
+/* Donmanın səbəbi: kartların, düymələrin və pəncərələrin arxasında backdrop-filter (bulanıqlıq) var.
+   Arxada üzən emojilər və ya video hərəkət etdikcə brauzer hər kadrda bulanıqlığı yenidən hesablayır. */
+body:not(.mob) *,body:not(.mob) *::before,body:not(.mob) *::after{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+body:not(.mob) .lv-card{background:rgba(42,23,57,.97)}
+body:not(.mob) #codebar{background:rgba(72,44,96,.9)}
+body:not(.mob) #leavebox,body:not(.mob) #hostbox,body:not(.mob) #invbox,body:not(.mob) #repbox,body:not(.mob) #pbox,
+body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{background:rgba(14,6,22,.7)}
+
+/* Kompüterdə sekmələr: yuxarıda üfüqi naviqasiya, yalnız seçilən sekmənin kartları görünür */
+#menu.tabs-on>#tabbar{
+  display:flex;position:relative;z-index:2;align-self:center;
+  width:min(100%,760px);padding:6px;gap:6px;border-radius:18px;
+  background:rgba(255,255,255,.07);box-shadow:var(--lg-edge);
+}
+#menu.tabs-on>#tabbar button{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:9px;height:44px;
+  padding:0 10px;border-radius:13px;background:none;color:var(--text);cursor:pointer;
+  font:inherit;font-size:14px;font-weight:700;opacity:.8;transition:background-color .15s ease,opacity .15s ease;
+}
+#menu.tabs-on>#tabbar button::after{content:attr(aria-label)}
+#menu.tabs-on>#tabbar button:hover{background:rgba(255,255,255,.08);opacity:1}
+#menu.tabs-on>#tabbar button.on{
+  opacity:1;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 14px -6px rgba(255,122,156,.55);
+}
+#menu.tabs-on>#tabbar button .tp{width:auto;height:auto;border-radius:0;background:none!important;box-shadow:none!important;font-size:18px;opacity:1}
+#menu.tabs-on>#tabbar button.on .tav{box-shadow:0 0 0 2px rgba(255,255,255,.22),0 0 0 3px var(--text)}
+#menu.tabs-on>#tabbar .tmid{flex:none;width:auto;height:44px;margin:0;padding:0 18px;border-radius:13px;background:var(--rose-deep);color:#fff;gap:8px;opacity:1;box-shadow:none;font-size:14px}
+#menu.tabs-on>#tabbar .tmid:hover{background:var(--rose-deep);filter:brightness(1.1)}
+@media (max-width:760px){#menu.tabs-on>#tabbar button::after{display:none}}
+
+#menu.tabs-on .mbody{display:flex;flex-direction:column;align-items:center;gap:18px}
+#menu.tabs-on .mcol{display:contents}
+#menu.tabs-on [data-t]{width:min(100%,760px)}
+#menu.tabs-on [data-t="home"]{width:min(100%,520px)}
+#menu.tabs-on[data-tab="home"] [data-t]:not([data-t="home"]),
+#menu.tabs-on[data-tab="friends"] [data-t]:not([data-t="friends"]),
+#menu.tabs-on[data-tab="games"] [data-t]:not([data-t="games"]),
+#menu.tabs-on[data-tab="settings"] [data-t]:not([data-t="settings"]){display:none!important}
+#pnamesave,#pusersave,#pbiosave{display:none!important}
+#psaveall:disabled{opacity:.45}

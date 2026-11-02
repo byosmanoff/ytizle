@@ -1,0 +1,193 @@
+/* ================= LIQUID GLASS (üst təbəqə — köhnə dizaynın üzərinə) ================= */
+:root{
+  --lg-fill:rgba(255,255,255,.075);
+  --lg-fill-hi:rgba(255,255,255,.14);
+  --lg-blur:blur(22px) saturate(180%);
+  --lg-edge:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1.5px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(255,255,255,.07),inset 0 0 22px rgba(255,255,255,.04);
+  --lg-drop:0 10px 30px -10px rgba(0,0,0,.55);
+}
+
+/* şüşənin əks etdirəcəyi rəngli arxa fon */
+#app,#menu,#profile{
+  background:
+    radial-gradient(60% 36% at 8% 4%,rgba(255,122,156,.34),transparent 70%),
+    radial-gradient(55% 34% at 96% 18%,rgba(255,196,107,.24),transparent 70%),
+    radial-gradient(75% 44% at 78% 100%,rgba(138,92,255,.32),transparent 70%),
+    radial-gradient(60% 38% at 0% 78%,rgba(232,86,125,.20),transparent 70%),
+    var(--velvet);
+}
+
+/* şüşə səthlər */
+.card,.htile,#imgbar,.ysb .yin,#ytres .r,#hrooms .hs,.ib,.bar button,.bar input,.yrec button{
+  background:var(--lg-fill);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:var(--lg-edge),var(--lg-drop);
+}
+.htile:hover,.ib:hover,.bar button:hover,#ytres .r:hover,#hrooms .hs:hover{background:var(--lg-fill-hi)}
+.yrec button:active{background:var(--lg-fill-hi)}
+.htile span{background:rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 0 0 1px rgba(255,255,255,.10)}
+.sys{background:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.ysb{background:linear-gradient(rgba(30,16,41,.82) 70%,rgba(30,16,41,0))}
+
+/* düymələr: parlaq maye şüşə */
+.fb,.lv-btns button{
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(0,0,0,.14),0 8px 18px -8px rgba(232,86,125,.6);
+}
+.fb.no,.fb.sec,.lv-btns button.alt{
+  background:rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.bar button.pink,.ysb button{
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -1px 0 rgba(160,30,70,.2),0 8px 18px -8px rgba(255,122,156,.7);
+}
+
+/* çat baloncukları */
+.m{
+  background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.32);
+}
+.m.me{
+  background:linear-gradient(160deg,rgba(255,152,178,.94),rgba(232,86,125,.88));
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(160,30,70,.25),0 8px 22px -8px rgba(232,86,125,.55);
+}
+.m.armed,.m.me.armed{box-shadow:0 0 0 2px var(--amber)}
+
+/* kod çipi */
+#codebar{
+  background:var(--lg-fill-hi);color:var(--text);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-edge);
+}
+#codebar b{color:var(--text)}
+#codebar button{background:rgba(255,255,255,.12);color:var(--text)}
+#codebar button:hover{background:rgba(255,255,255,.22)}
+#codebar #leave{background:rgba(255,92,138,.22);color:#ff9db8}
+#codebar #leave:hover{background:rgba(255,92,138,.36)}
+#codebar #copy.ok{background:rgba(123,224,165,.22);color:#7be0a5}
+
+/* ekran */
+#player{
+  border-radius:22px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 14px 50px -10px rgba(255,122,156,.42),0 0 90px -20px rgba(255,196,107,.32);
+}
+
+/* üzən şüşə alt naviqasiya */
+#menu.pager-on>#tabbar{
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  width:min(calc(100% - 28px),440px);
+  padding:6px;border:0;border-radius:34px;
+  background:rgba(255,255,255,.08);
+  -webkit-backdrop-filter:blur(26px) saturate(190%) brightness(1.05);
+  backdrop-filter:blur(26px) saturate(190%) brightness(1.05);
+  box-shadow:var(--lg-edge),0 18px 44px -10px rgba(0,0,0,.6);
+}
+#tabbar button.on .tp{
+  background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.09));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.14),0 4px 14px -4px rgba(255,122,156,.55);
+}
+#tabbar button.on .tav{box-shadow:0 0 0 2px rgba(255,255,255,.22),0 0 0 3.5px var(--text)}
+
+/* pəncərələr: fon yalnız qaralır, bulanıqlıq kartın özündədir */
+#leavebox,#hostbox,#invbox,#repbox,#pbox,#rolebox,#planbox{
+  background:rgba(14,6,22,.45);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.lv-card{
+  background:linear-gradient(160deg,rgba(255,255,255,.17),rgba(255,255,255,.06));
+  -webkit-backdrop-filter:blur(34px) saturate(190%);backdrop-filter:blur(34px) saturate(190%);
+  box-shadow:var(--lg-edge),0 30px 70px -10px rgba(0,0,0,.65);
+}
+#invuser,#planbox input{
+  background:rgba(255,255,255,.07);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 2px 4px rgba(0,0,0,.25);
+}
+
+/* köhnə brauzerlər və "şəffaflığı azalt" seçimi */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--lg-fill:rgba(55,32,74,.92);--lg-fill-hi:rgba(72,44,96,.96)}
+  #menu.pager-on>#tabbar{background:rgba(30,16,41,.96)}
+  .lv-card{background:rgba(42,23,57,.97)}
+}
+@media (prefers-reduced-transparency:reduce){
+  :root{--lg-fill:rgba(55,32,74,.94);--lg-fill-hi:rgba(72,44,96,.97)}
+  #menu.pager-on>#tabbar{background:rgba(30,16,41,.97)}
+  .lv-card{background:rgba(42,23,57,.98)}
+}
+
+/* ---- Profil ekranı: sürüşdürmə düzəlişi ---- */
+#profile{
+  top:0;left:0;right:0;bottom:auto;height:var(--H);
+  overflow-x:hidden;overflow-y:scroll;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+  touch-action:pan-y;
+}
+body.mob #profile{
+  will-change:auto;
+  padding-bottom:calc(120px + env(safe-area-inset-bottom))!important;
+}
+/* sürüşən siyahıda hər kartda bulanıqlıq yükü ləğv olunur (sürüşməni əngəlləyirdi) */
+#profile .card,#profile .ib,#profile .ysb .yin{
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:rgba(255,255,255,.085);
+}
+
+/* Ayarlar artıq alt naviqasiyada deyil: profil başlığındakı dişlidən açılır */
+#tabbar button[data-go="settings"]{display:none!important}
+#profile .phead{display:flex;align-items:center;gap:12px}
+#profile #favCard,#profile #hvids,#profile #hrooms{margin-top:4px}
+#profile #clearhist{margin:8px 0 16px}
+
+/* ---- tipografiya ---- */
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{line-height:1.45;letter-spacing:.01em}
+h1,h2,h3{letter-spacing:-.01em;line-height:1.25}
+.card h2{margin-bottom:10px}
+.hint,.gh,.lbnote{line-height:1.45}
+#menu .tagline{line-height:1.5}
+
+/* ---- mini bələdçi ---- */
+#wtGuide{position:fixed;inset:0;z-index:99980;display:flex;align-items:flex-end;justify-content:center;background:rgba(12,4,18,.72);padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+#wtGuide[hidden]{display:none!important}
+#wtGuide .gcard{width:min(100%,400px);background:var(--velvet);border-radius:22px;padding:22px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 0 1px var(--line)}
+#wtGuide .gstep{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+#wtGuide .gn{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--rose-deep);color:#fff}
+#wtGuide .gt{font-weight:700;font-size:15px}
+#wtGuide .gs{color:var(--muted);font-size:13px;margin-top:2px;line-height:1.4}
+#wtGuide h2{margin:0 0 6px;font-size:20px}
+#wtGuide .gacts{display:flex;gap:10px;margin-top:16px}
+#wtGuide .gacts .pbtn{flex:1;padding:12px}
+#wtGuide .gskip{width:100%;margin-top:8px;background:none;border:0;color:var(--muted);font-size:13px;font-weight:600;padding:8px}
+
+/* ---- bildiriş təklifi ---- */
+#wtNotifAsk{position:fixed;left:50%;bottom:max(72px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99970;width:min(94vw,380px);background:var(--seat);border-radius:16px;padding:14px 14px 12px;box-shadow:0 14px 40px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+#wtNotifAsk[hidden]{display:none!important}
+#wtNotifAsk b{display:block;font-size:15px;margin-bottom:4px}
+#wtNotifAsk small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-bottom:10px}
+#wtNotifAsk .gacts{display:flex;gap:8px}
+#wtNotifAsk .gacts .pbtn{flex:1;padding:11px;font-size:14px}
+
+/* chess result like domino */
+#cres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#cres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#cres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#cres .res-ic{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 8px;border-radius:50%;font-size:24px;background:rgba(255,255,255,.12)}
+#cres.win .res-ic{color:#ffd166;background:rgba(255,209,102,.16)}
+#cres.lose .res-ic{color:#ffb3c1;background:rgba(255,122,156,.14)}
+#cres.draw .res-ic{color:var(--amber);background:rgba(255,196,107,.14)}
+#cres .res-score{display:flex;justify-content:center;gap:18px;margin:8px 0 4px;font-weight:800}
+#cres .res-score span{font-size:26px;color:var(--amber)}
+#cres .res-score small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+#cres{position:relative;overflow:hidden}
+
+#durres.win,#durres.lose,#durres.draw{position:relative}
+#durres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#durres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#durres.draw{background:linear-gradient(160deg,rgba(255,196,107,.14),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,196,107,.3)}
+#durres .res-ic{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 8px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.12)}
+#durres.win .res-ic{color:#ffd166}#durres.lose .res-ic{color:#ffb3c1}#durres.draw .res-ic{color:var(--amber)}
+
+
+#profile .phead h1{flex:1;min-width:0}
+#profile .profile-settings{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+#setCards .settings-head{display:flex;align-items:center;gap:12px}
+#setCards .settings-head h2{margin:0;flex:1}
+#setCards .settings-back{flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.09);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
