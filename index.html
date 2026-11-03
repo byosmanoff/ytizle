@@ -2708,9 +2708,20 @@ body.mob #menu.pager-on>#tabbar{-webkit-backdrop-filter:none;backdrop-filter:non
 #domCard::before,#durCard::before,#unoCard::before,#chCard::before,#mafCard::before{transform:none;will-change:auto}
 body.mob #domCard::after,body.mob #durCard::after,body.mob #unoCard::after,body.mob #chCard::after,body.mob #mafCard::after{
   background:linear-gradient(170deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 38%,rgba(14,6,22,.5) 100%)}
-#domCard,#durCard,#unoCard,#chCard,#mafCard{content-visibility:auto;contain-intrinsic-size:auto 400px}
+/* content-visibility:auto silindi: səhifə açılanda və Oyunlar tabına keçəndə kartlar boş çəkilir, scroll sıçrayırdı */
 /* 3) Scroll zamanı üzən emojilər dayanır, GPU yalnız scroll-a işləyir */
 body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{animation-play-state:paused!important}
+/* 5) Otaq üst zolağı telefonda: status və kod paneli bir-birinin üstünə düşmürdü, indi iki səliqəli sətirdir */
+@media (max-width:760px){
+  #top{flex-wrap:wrap;row-gap:8px;column-gap:0;padding:12px 12px 8px}
+  #status{flex:1 1 100%;display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;font-size:14px}
+  #status::before{display:inline-block;vertical-align:middle;margin:-2px 8px 0 0}
+  #codebar{flex:1 1 100%;justify-content:space-between;gap:0;padding:4px 6px 4px 16px;background:rgba(72,44,96,.96)}
+  #codebar b{margin-right:auto;font-size:17px;letter-spacing:.18em}
+  #codebar button,#codebar button[hidden]+button{width:36px;height:36px}
+  #codebar button{width:36px;height:36px}
+  #codebar button[hidden]{display:none}
+}
 </style>
 </head>
 <body>
@@ -2814,10 +2825,6 @@ body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{ani
     <div class="hint">Dostunla onlayn durak oyna. Kartı ilk bitirən çıxır, son kart qalan axmaq olur.</div>
     <div class="glab">Oyunçu sayı</div>
     <div class="gseg" id="durSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
-    <label class="swrow" for="durperevod" style="margin-top:14px">
-      <span><b>Perevod (hücumu ötürmək)</b><small>Açıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.</small></span>
-      <input type="checkbox" id="durperevod" class="sw" checked>
-    </label>
     <button class="pbtn" id="durNew" style="width:100%;padding:13px;margin-top:10px">Durak otağı aç</button>
     <button class="pbtn alt" id="durBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="durResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -3400,6 +3407,10 @@ body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{ani
       <small>Kodu dostuna göndər:</small>
       <b id="durwcode"></b>
       <small id="durwcnt"></small>
+      <label class="swrow" id="durwrule" for="durwperevod" style="margin:10px 0 4px;width:100%;max-width:420px;box-sizing:border-box;text-align:left">
+        <span><b>Perevod (hücumu ötürmək)</b><small id="durwrulet">Açıq: müdafiəçi eyni rəqəmli kartla hücumu növbətiyə ötürə bilər. Bağlı: yalnız bağlaya və ya götürə bilər.</small></span>
+        <input type="checkbox" id="durwperevod" class="sw" checked>
+      </label>
       <button class="pbtn" id="durwshare">Dəvət linkini göndər</button>
       <div class="ginv">
         <div class="gt">İstifadəçi adı ilə dəvət et</div>
@@ -9627,12 +9638,16 @@ window.wtInviteBox = function(o){
     if(du.flashTx){ e.textContent = T(du.flashTx); return; }
     e.textContent = msgText(s);
   }
+  var pvBusy = false;
   function renderWait(s){
     var w = $('durwait'), wait = s.status === 'wait';
     w.hidden = !wait;
     if(!wait) return;
     $('durwcode').textContent = s.code.toUpperCase();
     $('durwcnt').textContent = T('Oyunçu') + ': ' + s.joined + ' / ' + s.size;
+    var pv = $('durwperevod'), host = s.host !== undefined ? !!s.host : s.me === 0;
+    if(pv && !pvBusy){ pv.checked = !!s.perevod; pv.disabled = !host; }
+    var pt = $('durwrulet'); if(pt && !host) pt.textContent = T('Perevod') + ': ' + T(s.perevod ? 'açıq' : 'bağlı') + ' \u00B7 ' + T('Oyunu otağı açan dəyişə bilər');
     try{ inv.refresh(); }catch(e){}
   }
   function renderRes(s){
@@ -9731,14 +9746,20 @@ window.wtInviteBox = function(o){
   window.wtJoinDurak = function(c){ enter(clean(c), false); };
   refreshResume();
 
-  /* ayar açarı */
+  /* perevod açarı: yalnız oyun başlamazdan əvvəl, otağın daxilində */
   (function(){
-    var a = $('setperevod'), b = $('durperevod'); if(!a && !b) return;
-    function paint(){ var on = perevodOn(); if(a) a.checked = on; if(b) b.checked = on; }
-    function set(on){ try{ localStorage.setItem('wt_durperevod', on ? '1' : '0'); }catch(e){} paint(); }
-    if(a) a.onchange = function(){ set(a.checked); };
-    if(b) b.onchange = function(){ set(b.checked); };
-    paint();
+    var pv = $('durwperevod'); if(!pv) return;
+    pv.onchange = async function(){
+      var s = du.s, want = pv.checked;
+      if(!s || s.status !== 'wait' || !du.code){ if(s) pv.checked = !!s.perevod; return; }
+      pvBusy = true;
+      try{
+        var r = await api('/api/durak/perevod', {method: 'POST', body: JSON.stringify({room: du.code, perevod: want})});
+        var j = {}; try{ j = await r.json(); }catch(e){}
+        if(r.ok){ try{ localStorage.setItem('wt_durperevod', want ? '1' : '0'); }catch(e){} pvBusy = false; sync(j); }
+        else { pvBusy = false; pv.checked = !!s.perevod; flash(j.error || 'Bu hərəkət mümkün deyil'); render(); }
+      }catch(e){ pvBusy = false; pv.checked = !!s.perevod; flash('Əlaqə problemi, yenidən cəhd et'); }
+    };
   })();
 })();
 </script>
