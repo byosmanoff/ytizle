@@ -1,5 +1,6 @@
 import os, re, json, base64, time, secrets, threading, ipaddress, socket, sqlite3, smtplib, hashlib, hmac, shutil, datetime, zlib, struct, html as htmllib
 from urllib.parse import urlparse, urljoin, parse_qs
+import gzip
 import random
 import copy
 import requests
@@ -1962,7 +1963,8 @@ def api_avatar_get(u):
     if not row:
         abort(404)
     resp = Response(bytes(row["data"]), mimetype="image/jpeg")
-    resp.headers["Cache-Control"] = "private, no-store"
+    # URL-də ?v=<vaxt> var: şəkil dəyişəndə link də dəyişir. Ona görə brauzer keşi təhlükəsizdir və şəkillər dərhal açılır.
+    resp.headers["Cache-Control"] = "private, max-age=2592000, immutable"
     resp.headers["Vary"] = "Cookie"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     return resp
@@ -4175,9 +4177,30 @@ def admin_visits():
     return _nostore(jsonify(visits=[dict(ts=r["ts"], ip=r["ip"], ua=r["ua"]) for r in rows]))
 
 
+_INDEX_GZ = {}
+
+
 @app.route("/")
 def index():
     log_visit()
+    path = os.path.join(HERE, "index.html")
+    if "gzip" in request.headers.get("Accept-Encoding", "").lower():
+        try:
+            mt = os.path.getmtime(path)
+            ent = _INDEX_GZ.get("e")
+            if not ent or ent[0] != mt:
+                with open(path, "rb") as f:
+                    ent = (mt, gzip.compress(f.read(), 6))
+                _INDEX_GZ["e"] = ent
+            resp = Response(ent[1], mimetype="text/html")
+            resp.headers["Content-Encoding"] = "gzip"
+            resp.headers["Vary"] = "Accept-Encoding"
+            resp.headers["Content-Length"] = str(len(ent[1]))
+            resp.set_etag("%s-gz" % int(mt))
+            resp.headers["Cache-Control"] = "no-cache"
+            return resp.make_conditional(request)
+        except OSError:
+            pass
     resp = send_file(os.path.join(HERE, "index.html"))
     resp.headers["Cache-Control"] = "no-cache"
     return resp

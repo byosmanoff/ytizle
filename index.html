@@ -2695,6 +2695,23 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec{backgro
 #dmcallui:not([data-s="in"]) #ccacc{display:none}
 @media (min-width:760px){#dmchat{left:50%;width:min(520px,100%);margin-left:calc(min(520px,100vw)/-2);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 30px 80px rgba(0,0,0,.6)}}
 </style>
+<style id="perf-css">
+/* ===================== PERFORMANS (telefonda scroll donmaları) ===================== */
+/* 1) Təkrarlanan şüşə səthlərdə (kartlar, düymələr, oyun kartı qatları) backdrop-filter söndürüldü:
+      brauzer scroll zamanı hər kadrda hamısının arxasını yenidən bulandırırdı. Arxa fon hamar gradient olduğu üçün görünüş demək olar ki, eynidir.
+      Yalnız açılan pəncərə kartı (.lv-card) və alt naviqasiya zolağında bulanıqlıq qalır. */
+body.mob *:not(.lv-card):not(#tabbar),body.mob *::before,body.mob *::after{-webkit-backdrop-filter:none;backdrop-filter:none}
+body.mob{--lg-drop:0 6px 16px -8px rgba(0,0,0,.5)}
+body.mob #dmchat .dmh,body.mob #dmform,body.mob #dmrec{background:rgba(52,30,70,.96)}
+body.mob #menu.pager-on>#tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(30,16,41,.95)}
+/* 2) Oyun kartları: ağır SVG şəkli böyüdülmür (transform qatı yoxdur), kənarda qalan kartlar çəkilmir */
+#domCard::before,#durCard::before,#unoCard::before,#chCard::before,#mafCard::before{transform:none;will-change:auto}
+body.mob #domCard::after,body.mob #durCard::after,body.mob #unoCard::after,body.mob #chCard::after,body.mob #mafCard::after{
+  background:linear-gradient(170deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 38%,rgba(14,6,22,.5) 100%)}
+#domCard,#durCard,#unoCard,#chCard,#mafCard{content-visibility:auto;contain-intrinsic-size:auto 400px}
+/* 3) Scroll zamanı üzən emojilər dayanır, GPU yalnız scroll-a işləyir */
+body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{animation-play-state:paused!important}
+</style>
 </head>
 <body>
 <div id="lightbox" hidden><img alt=""></div>
@@ -5665,8 +5682,9 @@ const DAILY = [
 let fxInit = false, liveTimer = null;
 function initFloaties(){
   if(fxInit) return; fxInit = true;
-  fillFloaties($('floaties'), 14);
-  fillFloaties($('mfloat'), 9);
+  const lowFx = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  fillFloaties($('floaties'), lowFx ? 7 : 14);
+  fillFloaties($('mfloat'), lowFx ? 5 : 9);
 }
 function fillFloaties(box, n){
   const em = [['fa-heart', '#ff7a9c'], ['fa-film', '#ffc46b'], ['fa-clapperboard', '#b7a2cf'], ['fa-star', '#ffc46b'], ['fa-ticket', '#ff7a9c'], ['fa-heart', '#e8567d']];
@@ -7360,7 +7378,7 @@ boot();
     return !!((a && !a.hidden) || (b && !b.hidden));
   }
   document.addEventListener('touchstart', function(e){ if(e.touches && e.touches.length) y0 = e.touches[0].clientY; }, {passive: true});
-  document.addEventListener('touchmove', function(e){
+  function noZoomMove(e){
     if(!isOpen()) return;
     var t = e.target;
     if(!t || !t.closest || !t.closest('#domino, #chess')) return;
@@ -7372,7 +7390,9 @@ boot();
       if(!((dy > 0 && atTop) || (dy < 0 && atBot))) return;
     }
     e.preventDefault();
-  }, {passive: false});
+  }
+  /* Əvvəl listener bütün sənəddə idi və passive:false olduğu üçün tətbiqin HƏR yerində scroll hər barmaq hərəkətində JS-i gözləyirdi. İndi yalnız Domino/Şahmat pəncərələrindədir. */
+  ['domino', 'chess'].forEach(function(id){ var el0 = document.getElementById(id); if(el0) el0.addEventListener('touchmove', noZoomMove, {passive: false}); });
   document.addEventListener('gesturestart', function(e){ if(isOpen()) e.preventDefault(); });
   ['domino', 'chess'].forEach(function(id){
     var el = document.getElementById(id);
@@ -8255,7 +8275,7 @@ window.wtInviteBox = function(o){
 
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
-  function avatar(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function avatar(p){ return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function fm(n){ return n % 1 ? n.toFixed(1) : String(n); }
   function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
   function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
@@ -8622,7 +8642,7 @@ window.wtInviteBox = function(o){
     return el;
   }
   function same(a, b){ return a && b && a[0] === b[0] && a[1] === b[1]; }
-  function avatar(p){ if(p && p.username === 'bot') return '\uD83E\uDD16'; return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function avatar(p){ if(p && p.username === 'bot') return '\uD83E\uDD16'; return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
   function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
   function refreshResume(){
@@ -9290,7 +9310,7 @@ window.wtInviteBox = function(o){
     }).join('') + '</span>';
     return h + ix.replace('class="ix"', 'class="ix b"') + '</span>';
   }
-  function av(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function av(p){ return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
   function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
   function refreshResume(){ var b = $('durResume'); if(b) b.hidden = !saved(); }
@@ -9753,7 +9773,7 @@ window.wtInviteBox = function(o){
       ((v === '6' || v === '9') ? ' u' : '') + '">' + mid + '</span><i class="cn tl">' + cor + '</i><i class="cn br">' + cor + '</i></span>';
   }
   function backHtml(){ return '<span class="ukc back"><span class="ov"></span><span class="mid">UNO</span></span>'; }
-  function av(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function av(p){ return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
   function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
   function refreshResume(){ var b = $('unoResume'); if(b) b.hidden = !saved(); }
@@ -10219,7 +10239,7 @@ window.wtInviteBox = function(o){
   function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
   function enc(x){ return encodeURIComponent(x); }
   function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-  function av(p){ return p && p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function av(p){ return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
   function rname(r){ return T(ROLE[r] || ''); }
   function pname(s, i){ return ((s.players[i] || {}).name) || '?'; }
 
@@ -11383,6 +11403,47 @@ async function callPending(){
   };
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) callPending(); });
   var t1 = setInterval(function(){ if(token){ clearInterval(t1); callPending(); } }, 1500);
+})();
+</script>
+<script id="perf-js">
+(function(){
+  var body = document.body;
+  /* scroll zamanı bədənə 'scrolling' sinfi: üzən animasiyaları dayandırır */
+  var st = 0;
+  document.addEventListener('scroll', function(){
+    if(!body.classList.contains('scrolling')) body.classList.add('scrolling');
+    clearTimeout(st); st = setTimeout(function(){ body.classList.remove('scrolling'); }, 140);
+  }, {capture: true, passive: true});
+  /* bütün şəkillər asinxron deşifrə olunsun (əsas thread-i bloklamasın) */
+  function tune(img){
+    if(!img.hasAttribute('decoding')) img.decoding = 'async';
+  }
+  [].forEach.call(document.images, tune);
+  new MutationObserver(function(list){
+    list.forEach(function(m){
+      [].forEach.call(m.addedNodes, function(n){
+        if(n.nodeType !== 1) return;
+        if(n.tagName === 'IMG') tune(n);
+        else if(n.querySelectorAll) [].forEach.call(n.querySelectorAll('img'), tune);
+      });
+    });
+  }).observe(document.body, {childList: true, subtree: true});
+  /* Oyun kartlarının arxa fon şəkillərini əvvəlcədən deşifrə et: Oyunlar bölməsinə keçəndə gec açılmasın */
+  function warm(){
+    ['domCard', 'durCard', 'unoCard', 'chCard', 'mafCard'].forEach(function(id, i){
+      setTimeout(function(){
+        try{
+          var el = document.getElementById(id); if(!el) return;
+          var bg = getComputedStyle(el, '::before').backgroundImage;
+          var m = /url\(["']?(.*?)["']?\)$/.exec(bg || ''); if(!m) return;
+          var im = new Image(); im.decoding = 'async'; im.src = m[1];
+          if(im.decode) im.decode().catch(function(){});
+        }catch(e){}
+      }, i * 250);
+    });
+  }
+  if('requestIdleCallback' in window) requestIdleCallback(warm, {timeout: 4000});
+  else setTimeout(warm, 2500);
 })();
 </script>
 </body>
