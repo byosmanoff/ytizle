@@ -2724,6 +2724,8 @@ body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{ani
   #codebar button{width:36px;height:36px}
   #codebar button[hidden]{display:none}
 }
+html[lang="tr"] #mafia .mchip.me::after{content:"SEN"}
+html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 </style>
 </head>
 <body>
@@ -7573,6 +7575,7 @@ boot();
   /* dəyişən hissəli mətnlər: [regex, türkcə, ingiliscə], $1.. tutulan hissələrdir */
   var PATS = [
     [/^KOD: (.+)$/, 'KOD: $1', 'CODE: $1'],
+  [/^KOD ([A-Z0-9]+)$/, 'KOD $1', 'CODE $1'],
     [/^Kod: (.+)$/, 'Kod: $1', 'Code: $1'],
     [/^Şahmat oynayaq! Kod: (.+)$/, 'Satranç oynayalım! Kod: $1', 'Let\'s play chess! Code: $1'],
     [/^Domino oynayaq! Kod: (.+)$/, 'Domino oynayalım! Kod: $1', 'Let\'s play dominoes! Code: $1'],
@@ -7609,7 +7612,7 @@ boot();
   }
   D['Kodu dostuna göndər:'] = ['Kodu arkadaşına gönder:', 'Send this code to your friend:'];
   /* Tərcüməsi çatışmayan statik mətnlər */
-  (function(){ var A = {"və ya": ["veya", "or"], "Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.": ["Hesap olmadan odaya girebilirsin. Oyunlar ve arkadaşlar için giriş gerekir.", "You can join a room without an account. Games and friends need you to sign in."], "Oyunlar, reytinq, turnirlər": ["Oyunlar, sıralama, turnuvalar", "Games, leaderboard, tournaments"], "Dostunla onlayn Uno oyna. Rəngə və ya rəqəmə uyğun kart at, bütün kartlarını ilk bitirən qalib olur.": ["Arkadaşınla online Uno oyna. Renge veya rakama uyan kart at, tüm kartlarını ilk bitiren kazanır.", "Play Uno online with a friend. Play a card that matches the color or number; the first to empty their hand wins."], "Dostlar və mesajlar": ["Arkadaşlar ve mesajlar", "Friends and messages"], "Dostlar tabında dostunun yanındakı mesaj düyməsinə bas.": ["Arkadaşlar sekmesinde arkadaşının yanındaki mesaj düğmesine bas.", "In the Friends tab, tap the message button next to your friend."], "Dostlar və oyunlar üçün Google və ya e-poçt ilə hesab aç.": ["Arkadaşlar ve oyunlar için Google veya e-posta ile hesap aç.", "Create an account with Google or email for friends and games."], "Google ilə davam et": ["Google ile devam et", "Continue with Google"], "Qonaq rejimindəsən. Dostlar, oyunlar və şəxsi tarixçə üçün hesabla davam et.": ["Misafir modundasın. Arkadaşlar, oyunlar ve kişisel geçmiş için hesapla devam et.", "You are in guest mode. Sign in for friends, games and personal history."], "Əlavə qeyd": ["Ek not", "Extra note"], "@istifadəçi adı": ["@kullanıcı adı", "@username"], "Rəng seç": ["Renk seç", "Pick a color"], "Kart çək": ["Kart çek", "Draw a card"], "Bot əlavə et": ["Bot ekle", "Add a bot"], "Səssiz et": ["Sessize al", "Mute"], "Necə işləyir?": ["Nasıl çalışır?", "How does it work?"], "Ana səhifədə «Otaq aç» düyməsinə bas.": ["Ana sayfada «Oda aç» düğmesine bas.", "On the home page, tap “Open room”."], "Dostuna otaq kodunu və ya dəvət linkini göndər.": ["Arkadaşına oda kodunu veya davet bağlantısını gönder.", "Send your friend the room code or invite link."], "Birlikdə izlə": ["Birlikte izle", "Watch together"], "Eyni videoda, eyni söhbətdə olun.": ["Aynı videoda, aynı sohbette olun.", "Be in the same video and the same chat."], "Bildirişləri aç?": ["Bildirimler açılsın mı?", "Turn on notifications?"], "Dəvət və seans xatırlatmalarını vaxtında alarsan. İstədiyin vaxt ayarlardan söndürə bilərsən.": ["Davet ve seans hatırlatmalarını zamanında alırsın. İstediğin zaman ayarlardan kapatabilirsin.", "You will get invites and session reminders on time. You can turn them off in settings anytime."], "İcazə ver": ["İzin ver", "Allow"], "Şəxsi mesajlar": ["Özel mesajlar", "Direct messages"], "Şəkil, video əlavə et": ["Fotoğraf, video ekle", "Add a photo or video"], "Səs yaz": ["Ses kaydet", "Record audio"], "Səs yazılır...": ["Ses kaydediliyor...", "Recording..."], "Zəng": ["Arama", "Call"], "Zəngi bitir": ["Aramayı bitir", "End call"], "Bunu yalnız otağı açan dəyişə bilər": ["Bunu yalnızca odayı açan değiştirebilir", "Only the room creator can change this"], "Oyun artıq başlayıb": ["Oyun zaten başladı", "The game has already started"]};
+  (function(){ var A = {"və ya": ["veya", "or"], "Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.": ["Hesap olmadan odaya girebilirsin. Oyunlar ve arkadaşlar için giriş gerekir.", "You can join a room without an account. Games and friends need you to sign in."], "Oyunlar, reytinq, turnirlər": ["Oyunlar, sıralama, turnuvalar", "Games, leaderboard, tournaments"], "Dostunla onlayn Uno oyna. Rəngə və ya rəqəmə uyğun kart at, bütün kartlarını ilk bitirən qalib olur.": ["Arkadaşınla online Uno oyna. Renge veya rakama uyan kart at, tüm kartlarını ilk bitiren kazanır.", "Play Uno online with a friend. Play a card that matches the color or number; the first to empty their hand wins."], "Dostlar və mesajlar": ["Arkadaşlar ve mesajlar", "Friends and messages"], "Dostlar tabında dostunun yanındakı mesaj düyməsinə bas.": ["Arkadaşlar sekmesinde arkadaşının yanındaki mesaj düğmesine bas.", "In the Friends tab, tap the message button next to your friend."], "Dostlar və oyunlar üçün Google və ya e-poçt ilə hesab aç.": ["Arkadaşlar ve oyunlar için Google veya e-posta ile hesap aç.", "Create an account with Google or email for friends and games."], "Google ilə davam et": ["Google ile devam et", "Continue with Google"], "Qonaq rejimindəsən. Dostlar, oyunlar və şəxsi tarixçə üçün hesabla davam et.": ["Misafir modundasın. Arkadaşlar, oyunlar ve kişisel geçmiş için hesapla devam et.", "You are in guest mode. Sign in for friends, games and personal history."], "Əlavə qeyd": ["Ek not", "Extra note"], "@istifadəçi adı": ["@kullanıcı adı", "@username"], "Rəng seç": ["Renk seç", "Pick a color"], "Kart çək": ["Kart çek", "Draw a card"], "Bot əlavə et": ["Bot ekle", "Add a bot"], "Səssiz et": ["Sessize al", "Mute"], "Necə işləyir?": ["Nasıl çalışır?", "How does it work?"], "Ana səhifədə «Otaq aç» düyməsinə bas.": ["Ana sayfada «Oda aç» düğmesine bas.", "On the home page, tap “Open room”."], "Dostuna otaq kodunu və ya dəvət linkini göndər.": ["Arkadaşına oda kodunu veya davet bağlantısını gönder.", "Send your friend the room code or invite link."], "Birlikdə izlə": ["Birlikte izle", "Watch together"], "Eyni videoda, eyni söhbətdə olun.": ["Aynı videoda, aynı sohbette olun.", "Be in the same video and the same chat."], "Bildirişləri aç?": ["Bildirimler açılsın mı?", "Turn on notifications?"], "Dəvət və seans xatırlatmalarını vaxtında alarsan. İstədiyin vaxt ayarlardan söndürə bilərsən.": ["Davet ve seans hatırlatmalarını zamanında alırsın. İstediğin zaman ayarlardan kapatabilirsin.", "You will get invites and session reminders on time. You can turn them off in settings anytime."], "İcazə ver": ["İzin ver", "Allow"], "Şəxsi mesajlar": ["Özel mesajlar", "Direct messages"], "Şəkil, video əlavə et": ["Fotoğraf, video ekle", "Add a photo or video"], "Səs yaz": ["Ses kaydet", "Record audio"], "Səs yazılır...": ["Ses kaydediliyor...", "Recording..."], "Zəng": ["Arama", "Call"], "Zəngi bitir": ["Aramayı bitir", "End call"], "Bunu yalnız otağı açan dəyişə bilər": ["Bunu yalnızca odayı açan değiştirebilir", "Only the room creator can change this"], "Oyun artıq başlayıb": ["Oyun zaten başladı", "The game has already started"], "Qırmızı": ["Kırmızı", "Red"], "Sarı": ["Sarı", "Yellow"], "Yaşıl": ["Yeşil", "Green"], "Mavi": ["Mavi", "Blue"], "Kompüter": ["Bilgisayar", "Computer"]};
     Object.keys(A).forEach(function(k){ if(!D[k]) D[k] = A[k]; });
     var B = {"Dost siyahın boşdur. İstifadəçi adını yaz.": ["Arkadaş listen boş. Kullanıcı adını yaz.", "Your friend list is empty. Type a username."], "onlayn": ["çevrimiçi", "online"], "İstifadəçi adını yaz": ["Kullanıcı adını yaz", "Type a username"], "Dostunu seç və ya istifadəçi adını yaz": ["Arkadaşını seç veya kullanıcı adını yaz", "Pick a friend or type a username"], "Səssiz": ["Sessiz", "Muted"], "Səsli otaqda": ["Sesli odada", "In voice room"], "Dostu dəvət et": ["Arkadaşı davet et", "Invite a friend"], "Mikrofon bağlıdır": ["Mikrofon kapalı", "Microphone is off"], "Mikrofonun bağlıdır": ["Mikrofonun kapalı", "Your microphone is off"], "nəfər": ["kişi", "people"], "Kart": ["Kart", "Card"], "kart": ["kart", "card"], "Koz": ["Koz", "Trump"], "Perevod": ["Perevod", "Transfer"], "Sənin növbən: kart at": ["Sıra sende: kart at", "Your turn: play a card"], "Hamısı bağlandı: bitaya getsin?": ["Hepsi kapatıldı: bitaya gitsin mi?", "All defended: send to discard?"], "oynayır...": ["oynuyor...", "playing..."], "əlaqədə deyil": ["bağlantıda değil", "not connected"], "Rəngə və ya rəqəmə uyğun kart at": ["Renge veya rakama uyan kart at", "Play a card that matches the color or number"], "Çəkdiyin kart uyğundur: at və ya pas keç": ["Çektiğin kart uyuyor: at veya pas geç", "The card you drew fits: play it or pass"], "Sənin növbən: kart at və ya bazardan çək": ["Sıra sende: kart at veya desteden çek", "Your turn: play a card or draw from the deck"], "Bütün kartlarını bitirdin": ["Tüm kartlarını bitirdin", "You played all your cards"], "kartlarını bitirdi": ["kartlarını bitirdi", "played all their cards"], "Gündüz": ["Gündüz", "Day"], "Pas": ["Pas", "Pass"], "öldürüldü": ["öldürüldü", "was killed"], "Gün": ["Gün", "Day"]};
     Object.keys(B).forEach(function(k){ if(!D[k]) D[k] = B[k]; }); })();
@@ -7717,6 +7720,10 @@ boot();
     }
     return s;
   };
+  /* bot adı ("Kompüter") serverdən Azərbaycanca gəlir; digər adlara toxunmur */
+  window.wtBot = function(n){ return n === 'Kompüter' ? window.wtT(n) : n; };
+  /* kart sayından sonrakı söz: ingiliscədə cəm */
+  window.wtCardW = function(n){ return lang === 'en' ? (n === 1 ? 'card' : 'cards') : 'kart'; };
   document.getElementById('setlang').addEventListener('click', function(e){
     var b = e.target.closest('button[data-l]'); if(b) setLang(b.getAttribute('data-l'), true);
   });
@@ -8373,7 +8380,7 @@ window.wtInviteBox = function(o){
     if(!o){
       $('copp').innerHTML = '<div class="cav">?</div><div class="cwho"><b>Rəqib</b><small>Rəqib gözlənilir...</small></div>';
     }else{
-      $('copp').innerHTML = '<div class="cav">' + avatar(o) + '</div><div class="cwho"><b data-nt>' + esc(o.name) + '</b><small><span class="cdot' + (s.opp_online ? ' on' : '') + '"></span>' + colName(oc) + oppCap + '</small></div><div class="csc">' + fm(s.score.opp) + '</div>';
+      $('copp').innerHTML = '<div class="cav">' + avatar(o) + '</div><div class="cwho"><b data-nt>' + esc(window.wtBot(o.name)) + '</b><small><span class="cdot' + (s.opp_online ? ' on' : '') + '"></span>' + colName(oc) + oppCap + '</small></div><div class="csc">' + fm(s.score.opp) + '</div>';
     }
     var m = s.me || {};
     $('cme').innerHTML = '<div class="cav">' + avatar(m) + '</div><div class="cwho"><b data-nt>' + esc(m.name || 'Sən') + '</b><small>' + (s.color ? colName(s.color) : '') + meCap + '</small></div><div class="csc">' + fm(s.score.me) + '</div>';
@@ -8732,7 +8739,7 @@ window.wtInviteBox = function(o){
       return;
     }
     box.innerHTML = '<div class="dav">' + avatar(o) + '</div>' +
-      '<div class="dwho"><b data-nt>' + esc(o.name) + '</b><small><span class="donl' + (o.online ? ' on' : '') + '"></span>' +
+      '<div class="dwho"><b data-nt>' + esc(window.wtBot(o.name)) + '</b><small><span class="donl' + (o.online ? ' on' : '') + '"></span>' +
       '<span>' + o.n + '</span> <span>daş</span> · <span>Bazar</span> <span>' + s.stock + '</span></small></div>' +
       '<div class="dsc"><small><span>Xal</span> · ' + s.target + '</small>' + s.my_score + ' : ' + o.score + '</div>';
   }
@@ -9532,9 +9539,9 @@ window.wtInviteBox = function(o){
     var play = s.status !== 'wait';
     var icon = role === 'att' ? ' \u2694\uFE0F' : (role === 'def' ? ' \uD83D\uDEE1\uFE0F' : '');
     var small = (p.me ? '' : '<span class="donl' + (p.online ? ' on' : '') + '"></span>') +
-      (!play ? '' : (p.out ? esc(T('Çıxıb')) : icon.trim() + ' ' + p.n + (s.size > 3 ? '' : ' ' + esc(T('Kart').toLowerCase()))));
+      (!play ? '' : (p.out ? esc(T('Çıxıb')) : icon.trim() + ' ' + p.n + (s.size > 3 ? '' : ' ' + esc(window.wtCardW(p.n)))));
     return '<div class="dchip' + (ts.indexOf(i) >= 0 ? ' turn' : '') + (p.out ? ' out' : '') + '"><div class="dav">' + av(p) + '</div><div class="dwho">' +
-      (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(p.name) + '</b>') + '<small>' + small + '</small></div></div>';
+      (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(window.wtBot(p.name)) + '</b>') + '<small>' + small + '</small></div></div>';
   }
   function renderStrip(s){
     var box = $('durpl'), n = s.players.length, me = s.me, multi = s.size > 2, ts = turnSet(s);
@@ -9557,8 +9564,8 @@ window.wtInviteBox = function(o){
     }
     var role = roleOf(s, oi);
     var rt = role === 'att' ? ' \u00B7 ' + T('Hücum') : (role === 'def' ? ' \u00B7 ' + T('Müdafiə') : '');
-    box.innerHTML = '<div class="dav">' + av(o) + '</div><div class="dwho"><b data-nt>' + esc(o.name) + '</b><small><span class="donl' + (o.online ? ' on' : '') + '"></span>' +
-      '<span>' + (o.out ? esc(T('Çıxıb')) : o.n + ' ' + esc(T('Kart').toLowerCase()) + esc(rt)) + '</span></small></div>' +
+    box.innerHTML = '<div class="dav">' + av(o) + '</div><div class="dwho"><b data-nt>' + esc(window.wtBot(o.name)) + '</b><small><span class="donl' + (o.online ? ' on' : '') + '"></span>' +
+      '<span>' + (o.out ? esc(T('Çıxıb')) : o.n + ' ' + esc(window.wtCardW(p.n)) + esc(rt)) + '</span></small></div>' +
       (s.trump ? '<div class="dsc"><small>' + esc(T('Koz')) + '</small><span class="' + (isRed(s.trump) ? 'rd' : '') + '">' + SUIT[s.trump] + '</span></div>' : '');
   }
   function pickable(s, i){
@@ -10045,9 +10052,9 @@ window.wtInviteBox = function(o){
     var mini = '';
     if(play && !p.me){ for(var q = 0, m = Math.min(p.n, 9); q < m; q++) mini += '<span class="umb"></span>'; }
     var small = (p.me ? '' : '<span class="donl' + (p.online ? ' on' : '') + '"></span>') +
-      (!play ? '' : p.n + ' ' + esc(T('kart')) + (p.n === 1 ? ' <b class="uuno">UNO!</b>' : ''));
+      (!play ? '' : p.n + ' ' + esc(window.wtCardW(p.n)) + (p.n === 1 ? ' <b class="uuno">UNO!</b>' : ''));
     return '<div class="dchip' + (turn ? ' turn' : '') + '"><div class="dav">' + av(p) + '</div><div class="dwho">' +
-      (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(p.name) + '</b>') + '<small>' + small + '</small>' + (mini ? '<span class="umini">' + mini + '</span>' : '') + '</div></div>';
+      (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(window.wtBot(p.name)) + '</b>') + '<small>' + small + '</small>' + (mini ? '<span class="umini">' + mini + '</span>' : '') + '</div></div>';
   }
   function renderStrip(s){
     var box = $('unpl'), n = s.players.length, me = s.me;
@@ -10098,7 +10105,7 @@ window.wtInviteBox = function(o){
       if(prev && cnt[k] > (prev[k] || 0)) isNew = true;
       var d = i - (n - 1) / 2, r = (d * step).toFixed(1), y = Math.min(14, d * d * .32).toFixed(1);
       var cls = mine ? (ok[k] ? ' ok' : ' dim') : '';
-      return '<button type="button" class="ukh' + cls + (isNew ? ' new' : '') + '" style="--r:' + r + 'deg;--y:' + y + 'px" data-i="' + i + '" aria-label="' + esc((CNAME[c[0]] || '') + ' ' + c[1]) + '">' + cardHtml(c) + '</button>';
+      return '<button type="button" class="ukh' + cls + (isNew ? ' new' : '') + '" style="--r:' + r + 'deg;--y:' + y + 'px" data-i="' + i + '" aria-label="' + esc(T(CNAME[c[0]] || '') + ' ' + c[1]) + '">' + cardHtml(c) + '</button>';
     }).join('') + '</div>';
     un.prevCnt = cnt;
     unFitHand();
