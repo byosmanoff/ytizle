@@ -5736,27 +5736,6 @@ def api_durak_join():
         return jsonify(_du_view(g, sub))
 
 
-@app.route("/api/durak/perevod", methods=["POST"])
-def api_durak_perevod():
-    """Perevod qaydası: yalnız otağı açan, oyun başlamazdan əvvəl dəyişə bilər."""
-    sub, tok = auth_sub()
-    d = request.get_json(silent=True) or {}
-    code = clean_room(d.get("room"))
-    if not isinstance(d.get("perevod"), bool):
-        abort(400)
-    g = _du_get(code, sub)
-    with _ensure_cv(g):
-        g["seen"][sub] = time.time()
-        if g["players"][0] != sub:
-            return jsonify(error="Bunu yalnız otağı açan dəyişə bilər"), 403
-        if g["status"] != "wait" or g.get("eng") is not None:
-            return jsonify(error="Oyun artıq başlayıb"), 409
-        if g["perevod"] != d["perevod"]:
-            g["perevod"] = d["perevod"]
-            _du_touch(g)
-        return jsonify(_du_view(g, sub))
-
-
 @app.route("/api/durak/poll")
 def api_durak_poll():
     sub, tok = auth_sub()
