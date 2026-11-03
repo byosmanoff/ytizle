@@ -5366,6 +5366,13 @@ window.wtReconnectBanner = function(txt, ok){
   el.hidden = false;
 };
 
+
+window.wtPollFetch = async function(url){
+  var ac = new AbortController(), t = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 30000);
+  try{ return await api(url, {signal: ac.signal}); } finally{ clearTimeout(t); }
+};
+window.wtClearBanner = function(){ try{ window.wtReconnectBanner(''); }catch(e){} };
+
 window.wtErr = function(r, fallback){
   var f = fallback || 'Alınmadı, yenidən cəhd et';
   if(!r) return 'Əlaqə problemi, internetini yoxla';
@@ -9367,7 +9374,7 @@ window.wtInviteBox = function(o){
     if(j && j.error) return j.error;
     return 'Əlaqə problemi, yenidən cəhd et';
   }
-  function show(on){ $('durak').hidden = !on; }
+  function show(on){ $('durak').hidden = !on; if(!on) wtClearBanner(); }
   function close(leave){
     var c = du.code, st = du.s && du.s.status;
     try{ voice.leave(); }catch(e){}
@@ -9377,7 +9384,7 @@ window.wtInviteBox = function(o){
     if(leave && c) api('/api/durak/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
     if(st === 'wait' || st === 'over') remember('');
   }
-  function gone(){ gen++; clearTimeout(du.botT); du.botT = 0; du.code = ''; du.s = null; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+  function gone(){ gen++; clearTimeout(du.botT); du.botT = 0; du.code = ''; du.s = null; remember(''); show(false); wtClearBanner(); lobbyMsg('Oyun bitib və ya tapılmadı'); }
 
   /* ---- lobbi ---- */
   function paintSize(){ [].forEach.call(document.querySelectorAll('#durSize button'), function(b){ b.classList.toggle('on', +b.getAttribute('data-n') === du.sizeN); }); }
@@ -9419,13 +9426,13 @@ window.wtInviteBox = function(o){
     (async function(){
       while(g === gen && du.code){
         try{
-          var r = await api('/api/durak/poll?room=' + enc(du.code) + '&v=' + du.v + '&vk=' + du.vk);
-          if(g !== gen) return;
+          var r = await wtPollFetch('/api/durak/poll?room=' + enc(du.code) + '&v=' + du.v + '&vk=' + du.vk);
+          if(g !== gen){ wtClearBanner(); return; }
           if(r.status === 404){ gone(); return; }
-          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(Math.min(2000*fails,8000)); continue; }
           if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
           fails = 0; sync(await r.json());
-        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
+        }catch(e){ if(g !== gen) return; fails++; if(fails > 1){ try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} } await sleep(Math.min(1000*fails,8000)); }
       }
     })();
   }
@@ -9840,7 +9847,7 @@ window.wtInviteBox = function(o){
     if(j && j.error) return j.error;
     return 'Əlaqə problemi, yenidən cəhd et';
   }
-  function show(on){ $('uno').hidden = !on; }
+  function show(on){ $('uno').hidden = !on; if(!on) wtClearBanner(); }
   function close(leave){
     var c = un.code, st = un.s && un.s.status;
     try{ voice.leave(); }catch(e){}
@@ -9851,7 +9858,7 @@ window.wtInviteBox = function(o){
     if(leave && c) api('/api/uno/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
     if(st === 'wait' || st === 'over') remember('');
   }
-  function gone(){ gen++; clearTimeout(un.botT); un.botT = 0; un.code = ''; un.s = null; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+  function gone(){ gen++; clearTimeout(un.botT); un.botT = 0; un.code = ''; un.s = null; remember(''); show(false); wtClearBanner(); lobbyMsg('Oyun bitib və ya tapılmadı'); }
 
   /* ---- lobbi ---- */
   function paintSize(){ [].forEach.call(document.querySelectorAll('#unoSize button'), function(b){ b.classList.toggle('on', +b.getAttribute('data-n') === un.sizeN); }); }
@@ -9963,13 +9970,13 @@ window.wtInviteBox = function(o){
     (async function(){
       while(g === gen && un.code){
         try{
-          var r = await api('/api/uno/poll?room=' + enc(un.code) + '&v=' + un.v + '&vk=' + un.vk);
-          if(g !== gen) return;
+          var r = await wtPollFetch('/api/uno/poll?room=' + enc(un.code) + '&v=' + un.v + '&vk=' + un.vk);
+          if(g !== gen){ wtClearBanner(); return; }
           if(r.status === 404){ gone(); return; }
-          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(Math.min(2000*fails,8000)); continue; }
           if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
           fails = 0; sync(await r.json());
-        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
+        }catch(e){ if(g !== gen) return; fails++; if(fails > 1){ try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} } await sleep(Math.min(1000*fails,8000)); }
       }
     })();
   }
@@ -10324,7 +10331,7 @@ window.wtInviteBox = function(o){
     if(leave && c) api('/api/mafia/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
     remember('');
   }
-  function gone(){ try{ voice.leave(); }catch(e){} gen++; stopTimer(); ma.code = ''; ma.s = null; ma.csig = ''; remember(''); show(false); lobbyMsg('Oyun bitib və ya tapılmadı'); }
+  function gone(){ try{ voice.leave(); }catch(e){} gen++; stopTimer(); ma.code = ''; ma.s = null; ma.csig = ''; remember(''); show(false); wtClearBanner(); lobbyMsg('Oyun bitib və ya tapılmadı'); }
 
   /* ---- səslər ---- */
   function notify(p, s){
@@ -10357,12 +10364,12 @@ window.wtInviteBox = function(o){
       while(g === gen && ma.code){
         try{
           var r = await api('/api/mafia/poll?room=' + enc(ma.code) + '&v=' + ma.v + '&vk=' + voice.vk());
-          if(g !== gen) return;
+          if(g !== gen){ wtClearBanner(); return; }
           if(r.status === 404){ gone(); return; }
-          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); continue; }
+          if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(Math.min(2000*fails,8000)); continue; }
           if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
           fails = 0; sync(await r.json());
-        }catch(e){ if(g !== gen) return; fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(2000); }
+        }catch(e){ if(g !== gen) return; fails++; if(fails > 1){ try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} } await sleep(Math.min(1000*fails,8000)); }
       }
     })();
   }
