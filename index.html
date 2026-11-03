@@ -9731,8 +9731,23 @@ window.wtInviteBox = function(o){
   $('durCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('durEnter').click(); } });
   $('durResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
   (function(){                                          // saxlanan oyun serverdə qalmayıbsa düyməni gizlət
-    var c = saved(); if(!c) return;
-    api('/api/durak/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+    var busy = false, tries = 0;
+    function verify(){
+      var c = saved();
+      if(!c || busy || du.code === c) return;
+      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      busy = true;
+      api('/api/durak/check?room=' + enc(c)).then(function(r){
+        busy = false;
+        if(r.status === 404){ if(saved() === c && du.code !== c) remember(''); tries = 0; }
+        else if(!r.ok && tries++ < 6) setTimeout(verify, 4000);   // server hələ oyanır
+        else tries = 0;
+      }).catch(function(){ busy = false; if(tries++ < 6) setTimeout(verify, 4000); });
+    }
+    verify();
+    window.wtVerify_durak = verify;
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible'){ tries = 0; verify(); } });
+    window.addEventListener('online', function(){ tries = 0; verify(); });
   })();
   $('durBot').onclick = function(){ enter('', true, true); };
   $('durback').onclick = function(){ close(true); };
@@ -10209,9 +10224,23 @@ window.wtInviteBox = function(o){
   };
   $('unoCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('unoEnter').click(); } });
   $('unoResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
-  (function(){
-    var c = saved(); if(!c) return;
-    api('/api/uno/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+  (function(){                                          // saxlanan oyun serverdə qalmayıbsa düyməni gizlət
+    var busy = false, tries = 0;
+    function verify(){
+      var c = saved();
+      if(!c || busy || un.code === c) return;
+      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      busy = true;
+      api('/api/uno/check?room=' + enc(c)).then(function(r){
+        busy = false;
+        if(r.status === 404){ if(saved() === c && un.code !== c) remember(''); tries = 0; }
+        else if(!r.ok && tries++ < 6) setTimeout(verify, 4000);
+        else tries = 0;
+      }).catch(function(){ busy = false; if(tries++ < 6) setTimeout(verify, 4000); });
+    }
+    verify();
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible'){ tries = 0; verify(); } });
+    window.addEventListener('online', function(){ tries = 0; verify(); });
   })();
   $('unoBot').onclick = function(){ enter('', true, true); };
   $('unback').onclick = function(){ close(true); };
@@ -10741,9 +10770,23 @@ window.wtInviteBox = function(o){
   };
   $('mafCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('mafEnter').click(); } });
   $('mafResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
-  (function(){
-    var c = saved(); if(!c) return;
-    api('/api/mafia/check?room=' + enc(c)).then(function(r){ if(r.status === 404 && saved() === c) remember(''); }).catch(function(){});
+  (function(){                                          // saxlanan oyun serverdə qalmayıbsa düyməni gizlət
+    var busy = false, tries = 0;
+    function verify(){
+      var c = saved();
+      if(!c || busy || ma.code === c) return;
+      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      busy = true;
+      api('/api/mafia/check?room=' + enc(c)).then(function(r){
+        busy = false;
+        if(r.status === 404){ if(saved() === c && ma.code !== c) remember(''); tries = 0; }
+        else if(!r.ok && tries++ < 6) setTimeout(verify, 4000);
+        else tries = 0;
+      }).catch(function(){ busy = false; if(tries++ < 6) setTimeout(verify, 4000); });
+    }
+    verify();
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible'){ tries = 0; verify(); } });
+    window.addEventListener('online', function(){ tries = 0; verify(); });
   })();
   $('mafback').onclick = function(){ close(true); };
   $('mafquit').onclick = function(){
