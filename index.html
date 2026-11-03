@@ -9572,7 +9572,7 @@ window.wtInviteBox = function(o){
     var role = roleOf(s, oi);
     var rt = role === 'att' ? ' \u00B7 ' + T('Hücum') : (role === 'def' ? ' \u00B7 ' + T('Müdafiə') : '');
     box.innerHTML = '<div class="dav">' + av(o) + '</div><div class="dwho"><b data-nt>' + esc(window.wtBot(o.name)) + '</b><small><span class="donl' + (o.online ? ' on' : '') + '"></span>' +
-      '<span>' + (o.out ? esc(T('Çıxıb')) : o.n + ' ' + esc(window.wtCardW(p.n)) + esc(rt)) + '</span></small></div>' +
+      '<span>' + (o.out ? esc(T('Çıxıb')) : o.n + ' ' + esc(window.wtCardW(o.n)) + esc(rt)) + '</span></small></div>' +
       (s.trump ? '<div class="dsc"><small>' + esc(T('Koz')) + '</small><span class="' + (isRed(s.trump) ? 'rd' : '') + '">' + SUIT[s.trump] + '</span></div>' : '');
   }
   function pickable(s, i){
