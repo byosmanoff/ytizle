@@ -2638,8 +2638,28 @@ body:not(.mob) #domCard::after,body:not(.mob) #durCard::after,body:not(.mob) #un
 #dmchat .dmh .tx small.on{color:#2dcc7a;font-weight:700}
 #dmchat .dmh .tx small.typ{color:var(--rose);font-weight:700}
 #dmchat .dmh .tx,#dmchat .dmh .av{cursor:pointer}
-#pbox.fromdm{z-index:300}
-#pbox.fromdm .lv-card{max-height:88dvh;overflow-y:auto}
+/* DM-dən açılan profil: kart yox, tam ekran ayrı səhifə */
+#pbox .pbbar{display:none}
+html body #pbox.fromdm{z-index:300;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:radial-gradient(60% 36% at 8% 4%,rgba(255,122,156,.28),transparent 70%),radial-gradient(70% 40% at 92% 96%,rgba(138,92,255,.30),transparent 70%),var(--velvet)}
+html body #pbox.fromdm[hidden]{display:none}
+#pbox.fromdm .pbbar{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:rgba(52,30,70,.96);box-shadow:0 1px 0 rgba(255,255,255,.08)}
+#pbox.fromdm .pbbar b{font-size:17px}
+#pbBack{flex:none;width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);color:var(--text);font-size:16px}
+html body #pbox.fromdm .lv-card{width:100%;max-width:520px;margin:0 auto;flex:1 0 auto;max-height:none;overflow:visible;border-radius:0;background:transparent;box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;animation:none;padding:28px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+#pbox.fromdm .pcard .av.big{width:132px;height:132px;font-size:56px;margin:0 auto 18px}
+#pbox.fromdm .pcard h2{font-size:26px}
+#pbox.fromdm #pbuser{font-size:16px}
+#pbox.fromdm .pbmedia{margin-top:24px}
+#pbox.fromdm .pbgrid{max-height:none;overflow:visible}
+#pbox.fromdm .lv-btns{flex-direction:column;margin-top:24px}
+#pbox.fromdm #pbClose{display:none}
+@media (prefers-reduced-motion:no-preference){
+  html body #pbox.fromdm:not([hidden]){animation:pfIn .26s cubic-bezier(.2,.9,.3,1) both}
+  @keyframes pfIn{from{transform:translateX(100%)}to{transform:none}}
+}
 #pbox .pbmedia{margin-top:16px;text-align:left}
 #pbox .pbmedia h3{font-size:13px;font-weight:700;color:var(--muted);margin:0 0 8px}
 #pbox .pbmedia .pbnone{font-size:13px;color:var(--muted);padding:6px 0}
@@ -3226,6 +3246,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 
 
 <div id="pbox" hidden role="dialog" aria-modal="true" aria-label="Profil">
+  <div class="pbbar"><button type="button" id="pbBack" aria-label="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><b>Profil</b></div>
   <div class="lv-card pcard">
     <div class="av big" id="pbav">?</div>
     <h2 id="pbname" data-nt></h2>
@@ -6128,6 +6149,8 @@ $('pbBlock').onclick = async () => {
   loadBlocked();
 };
 $('pbClose').onclick = () => { $('pbox').hidden = true; };
+$('pbBack').onclick = () => { $('pbox').hidden = true; };
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('pbox').hidden && $('pbox').classList.contains('fromdm')){ $('pbox').hidden = true; e.stopImmediatePropagation(); } });
 let repCtx = null;
 function openReport(c){
   repCtx = c; $('repwho').textContent = '@' + c.username + (c.name ? ' (' + c.name + ')' : '');
@@ -6151,7 +6174,7 @@ $('repYes').onclick = async () => {
   }catch(e){ $('repmsg').className = 'err'; $('repmsg').textContent = 'Göndərilmədi, yenidən cəhd et'; }
   $('repYes').disabled = false;
 };
-$('pbox').addEventListener('click', e => { if(e.target === $('pbox')) $('pbox').hidden = true; });
+$('pbox').addEventListener('click', e => { if(e.target === $('pbox') && !$('pbox').classList.contains('fromdm')) $('pbox').hidden = true; });
 $('status').addEventListener('click', () => { if(connected && peerList.length) openPeerCard(peerList[0]); });
 $('status').style.cursor = 'pointer';
 /* mesaj balonunun ixtiyari yerinə toxunanda da qarşı tərəfin profili açılsın (cavab/uzun basma ilə toqquşmasın deyə yalnız ad/avatar sahəsi + status) */

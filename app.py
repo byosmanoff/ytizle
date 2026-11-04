@@ -4474,11 +4474,28 @@ def _dom_moves(g, hand):
 DOM_START_ORDER = [1, 2, 3, 4, 5, 6, 0]   # başlayan: əvvəl 1-1, sonra 2-2, 3-3 ... (ən az qoşa)
 
 
+DOM_SAME_MAX = 3   # bir əldə eyni rəqəmli daş bu qədərdən çox olmaz (məs. 5-1, 5-2, 5-3, 5-4 eyni vaxtda olmaz)
+
+
+def _dom_hand_ok(hand):
+    """Əldə eyni rəqəmi daşıyan daşların sayı DOM_SAME_MAX-dan çox deyilsə düzgündür (qoşa daş bir dəfə sayılır)."""
+    cnt = [0] * 7
+    for a, b in hand:
+        cnt[a] += 1
+        if b != a:
+            cnt[b] += 1
+    return max(cnt) <= DOM_SAME_MAX
+
+
 def _dom_deal(g):
     prev = g.get("winner")      # əvvəlki raundun qalibi (ilk raundda və yeni oyunda None)
     tiles = [[a, b] for a in range(7) for b in range(a, 7)]
-    secrets.SystemRandom().shuffle(tiles)
     ps = g["players"]
+    rng = secrets.SystemRandom()
+    for _ in range(1000):       # uyğun olmayan əl düşsə, daşlar yenidən qarışdırılır
+        rng.shuffle(tiles)
+        if all(_dom_hand_ok(tiles[i * 7:(i + 1) * 7]) for i in range(len(ps))):
+            break
     g["hands"] = {p: sorted(tiles[i * 7:(i + 1) * 7]) for i, p in enumerate(ps)}
     g["stock"] = tiles[7 * len(ps):]
     g["board"] = []
