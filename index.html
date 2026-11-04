@@ -2666,7 +2666,7 @@ body:not(.mob) #domCard::after,body:not(.mob) #durCard::after,body:not(.mob) #un
 #dmin::placeholder{color:var(--muted)}
 #dmsend{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:17px;background:linear-gradient(160deg,#ff8aa8,#e8567d);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),0 8px 18px -8px rgba(232,86,125,.7)}
 #dmsend:disabled{opacity:.45}
-body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec{background:rgba(72,44,96,.95)}
+body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:not(.mob) #dmrbar{background:rgba(72,44,96,.95)}
 /* DM: çatdı/görüldü, media, səs yazma, zəng */
 #dmcall{flex:none;width:42px;height:42px;font-size:18px;color:#7be0a5}
 #dmmsgs .dmb time .tk{margin-left:5px;font-size:10px;opacity:.85}
@@ -2682,6 +2682,25 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec{backgro
 #dmmsgs .dmcallrow i{color:#7be0a5}
 #dmmsgs .dmcallrow.miss i{color:#ff7a9c}
 #dmmsgs .dmcallrow time{opacity:.7}
+/* DM: yanıt (reply) + sağa sürüşdür */
+#dmmsgs{overflow-x:hidden}
+#dmmsgs .dmb{touch-action:pan-y;transition:transform .18s ease}
+#dmmsgs .dmb.drag{transition:none;-webkit-user-select:none;user-select:none}
+#dmmsgs .dmb .dmrpi{position:absolute;left:-40px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);color:var(--text);font-size:13px;opacity:0;pointer-events:none}
+#dmmsgs .dmb.armed .dmrpi{background:var(--amber);color:#2b0f26}
+#dmmsgs .dmq{display:block;margin:0 0 6px;padding:5px 9px;border-left:3px solid var(--amber);border-radius:8px;background:rgba(0,0,0,.2);cursor:pointer;font-size:13px;line-height:1.3;white-space:normal;text-align:left}
+#dmmsgs .dmq strong{display:block;font-size:12px;font-weight:700;color:var(--amber)}
+#dmmsgs .dmq span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:.85;word-break:break-word}
+#dmmsgs .dmb.me .dmq{border-left-color:#fff;background:rgba(0,0,0,.16)}
+#dmmsgs .dmb.me .dmq strong{color:#fff}
+#dmrbar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 10px 0;background:var(--lg-fill-hi);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:0 -1px 0 rgba(255,255,255,.1)}
+#dmrbar[hidden]{display:none}
+#dmrbar .dmrbb{flex:1;min-width:0;padding:6px 10px;border-left:3px solid var(--amber);border-radius:10px;background:rgba(255,255,255,.09);font-size:13px;line-height:1.3}
+#dmrbName{display:block;font-size:12px;font-weight:700;color:var(--amber);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dmrbText{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+#dmrbX{flex:none;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center;color:var(--muted);background:transparent}
+#dmrbar:not([hidden])+#dmform{box-shadow:none}
+#dmchat.recording #dmrbar{display:none}
 #dmform .dmib,#dmrec .dmib{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:var(--text);background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 #dmform:not(.has-text) #dmsend{display:none}
 #dmform.has-text #dmmic{display:none}
@@ -2718,7 +2737,7 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec{backgro
       Yalnız açılan pəncərə kartı (.lv-card) və alt naviqasiya zolağında bulanıqlıq qalır. */
 body.mob *:not(.lv-card):not(#tabbar),body.mob *::before,body.mob *::after{-webkit-backdrop-filter:none;backdrop-filter:none}
 body.mob{--lg-drop:0 6px 16px -8px rgba(0,0,0,.5)}
-body.mob #dmchat .dmh,body.mob #dmform,body.mob #dmrec{background:rgba(52,30,70,.96)}
+body.mob #dmchat .dmh,body.mob #dmform,body.mob #dmrec,body.mob #dmrbar{background:rgba(52,30,70,.96)}
 body.mob #menu.pager-on>#tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(30,16,41,.95)}
 /* 2) Oyun kartları: ağır SVG şəkli böyüdülmür (transform qatı yoxdur), kənarda qalan kartlar çəkilmir */
 #domCard::before,#durCard::before,#unoCard::before,#chCard::before,#mafCard::before{transform:none;will-change:auto}
@@ -10946,6 +10965,10 @@ window.wtInviteBox = function(o){
   </div>
   <div id="dmmsgs" aria-live="polite"></div>
   <div id="dmerr" role="status"></div>
+  <div id="dmrbar" hidden>
+    <div class="dmrbb"><strong id="dmrbName"></strong><span id="dmrbText"></span></div>
+    <button type="button" id="dmrbX" aria-label="Yanıtı ləğv et" title="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+  </div>
   <div id="dmform">
     <button type="button" class="dmib" id="dmattach" aria-label="Şəkil, video əlavə et" title="Şəkil, video əlavə et"><i class="fa-solid fa-paperclip" aria-hidden="true"></i></button>
     <input type="file" id="dmfile" accept="image/*,video/*,audio/*" hidden>
@@ -11048,6 +11071,73 @@ function dmFillTime(t, m){
   t.textContent = m.failed ? 'Göndərilmədi · toxun, yenidən cəhd et' : dmTime(m.ts);
   if(m.mine && !m.failed) t.appendChild(dmTick(m));
 }
+/* ---- yanıt (reply): serverdə reply_to kimi saxlanır, mesajla birlikdə {id, mine, text} qayıdır ---- */
+function dmSnippet(m){
+  var k = m.kind || 'text';
+  if(k === 'image') return '\uD83D\uDCF7 Şəkil';
+  if(k === 'video') return '\uD83C\uDFAC Video';
+  if(k === 'audio') return '\uD83C\uDFA4 Səs mesajı';
+  return String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+}
+function dmSetReply(m){
+  if(!m || typeof m.id !== 'number' || m.pending || m.failed || (m.kind || 'text') === 'call' || !DM.peer) return;
+  DM.reply = {id: m.id, mine: !!m.mine, text: dmSnippet(m), name: m.mine ? 'Sən' : (DM.peer.name || DM.peer.username)};
+  document.getElementById('dmrbName').textContent = DM.reply.name;
+  document.getElementById('dmrbText').textContent = DM.reply.text;
+  document.getElementById('dmrbar').hidden = false;
+  try{ document.getElementById('dmin').focus({preventScroll: true}); }catch(e){}
+}
+function dmClearReply(){
+  DM.reply = null;
+  var b = document.getElementById('dmrbar'); if(b) b.hidden = true;
+}
+function dmJump(id){
+  var el = document.querySelector('#dmmsgs [data-id="' + id + '"]'); if(!el) return;
+  el.scrollIntoView({block: 'center', behavior: 'smooth'});
+  el.classList.add('dmflash'); setTimeout(function(){ el.classList.remove('dmflash'); }, 1600);
+}
+function dmQuote(r){
+  var q = document.createElement('div'); q.className = 'dmq';
+  var n = document.createElement('strong'); n.textContent = r.mine ? 'Sən' : ((DM.peer && (DM.peer.name || DM.peer.username)) || '');
+  var t = document.createElement('span'); t.textContent = r.text || '';
+  q.appendChild(n); q.appendChild(t);
+  q.onclick = function(e){ e.stopPropagation(); dmJump(r.id); };
+  return q;
+}
+/* sağa sürüşdür: yanıt ver (WhatsApp kimi) */
+function dmBindSwipe(d){
+  var sx = 0, sy = 0, act = false, drag = false, pid = null, ic = d.querySelector('.dmrpi');
+  d.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    if(e.target.closest('audio,video,.dmq')) return;
+    act = true; drag = false; sx = e.clientX; sy = e.clientY; pid = e.pointerId;
+  });
+  d.addEventListener('pointermove', function(e){
+    if(!act || e.pointerId !== pid) return;
+    var mx = e.clientX - sx, my = e.clientY - sy;
+    if(!drag){
+      if(mx > 10 && mx > Math.abs(my) * 1.5){ drag = true; d.classList.add('drag'); try{ d.setPointerCapture(pid); }catch(_){} }
+      else { if(Math.abs(my) > 12 || mx < -10) act = false; return; }
+    }
+    var dx = Math.max(0, Math.min(mx, 60)), was = d.classList.contains('armed'), on = dx >= 44;
+    d.style.transform = 'translateX(' + dx + 'px)';
+    d.classList.toggle('armed', on);
+    if(ic){ ic.style.opacity = Math.min(1, dx / 44); ic.style.transform = 'scale(' + (on ? 1.15 : .85 + .3 * Math.min(1, dx / 44)) + ')'; }
+    if(on && !was){ try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){} }
+  });
+  var end = function(){
+    if(!act) return;
+    act = false; d.classList.remove('drag'); d.style.transform = '';
+    var fire = drag && d.classList.contains('armed');
+    d.classList.remove('armed'); drag = false;
+    if(ic){ ic.style.opacity = ''; ic.style.transform = ''; }
+    if(fire){
+      var id = d.dataset.id, m = DM.msgs.find(function(x){ return String(x.id) === id; });
+      dmSetReply(m);
+    }
+  };
+  d.addEventListener('pointerup', end); d.addEventListener('pointercancel', end);
+}
 function dmBubble(m){
   var kind = m.kind || 'text', d = document.createElement('div');
   d.dataset.id = m.id;
@@ -11070,10 +11160,16 @@ function dmBubble(m){
     var v = document.createElement('video'); v.className = 'dmvid'; v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.src = src; d.appendChild(v);
   } else if(kind === 'audio'){
     var a = document.createElement('audio'); a.className = 'dmaud'; a.controls = true; a.preload = 'metadata'; a.src = src; d.appendChild(a);
-  } else d.appendChild(document.createTextNode(m.text));
+  } else {
+    if(m.reply && m.reply.id) d.appendChild(dmQuote(m.reply));
+    d.appendChild(document.createTextNode(m.text));
+  }
   if(m.pending && kind !== 'text'){ var pg = document.createElement('div'); pg.className = 'dmprog'; pg.textContent = (m.prog || 0) + '%'; d.appendChild(pg); }
   var t = document.createElement('time'); dmFillTime(t, m); d.appendChild(t);
   if(m.failed) d.onclick = function(){ dmRetry(m); };
+  var ri = document.createElement('span'); ri.className = 'dmrpi'; ri.setAttribute('aria-hidden', 'true');
+  ri.innerHTML = '<i class="fa-solid fa-reply"></i>'; d.appendChild(ri);
+  dmBindSwipe(d);
   return d;
 }
 /* mövcud qabarcığı yerində yenilə (oynayan video/səs kəsilməsin) */
@@ -11200,7 +11296,7 @@ async function openDm(p){
   if(!token) return;
   if(account && account.guest){ frNote('Mesaj yazmaq üçün hesabla daxil ol.'); return; }
   DM.peer = {username: p.username, name: p.name, avatar: p.avatar, badge: p.badge};
-  DM.msgs = []; DM.lastId = 0;
+  DM.msgs = []; DM.lastId = 0; dmClearReply();
   var av = document.getElementById('dmav'); av.style.backgroundImage = ''; av.textContent = initial(p.name);
   if(p.avatar && AV_RE.test(p.avatar)){ av.style.backgroundImage = 'url("' + p.avatar + '")'; av.textContent = ''; }
   document.getElementById('dmname').textContent = p.name;
@@ -11215,7 +11311,7 @@ async function openDm(p){
   setTimeout(function(){ try{ document.getElementById('dmin').focus({preventScroll: true}); }catch(e){} }, 150);
 }
 function closeDm(){
-  dmRecStop(false);
+  dmRecStop(false); dmClearReply();
   document.getElementById('dmchat').hidden = true;
   clearInterval(DM.tT); DM.tT = 0; clearInterval(DM.tP); DM.tP = 0; clearTimeout(DM.tTy); DM.typUntil = 0; DM.peer = null;
   loadDmList();
@@ -11253,12 +11349,14 @@ function dmGrow(){ var t = document.getElementById('dmin'); t.style.height = 'au
 async function dmSend(text, retryMsg){
   var peer = DM.peer; if(!peer) return;
   text = String(text || '').trim(); if(!text) return;
+  var rid = retryMsg ? (retryMsg.reply && retryMsg.reply.id) : (DM.reply && DM.reply.id);
   var m = retryMsg || {id: 'tmp' + (++DM.tmp), text: text, ts: Date.now(), mine: true, kind: 'text', status: 'sent'};
   m.pending = true; m.failed = false;
+  if(!retryMsg && DM.reply){ m.reply = {id: DM.reply.id, mine: DM.reply.mine, text: DM.reply.text}; dmClearReply(); }
   if(!retryMsg) DM.msgs.push(m);
   dmRender(); document.getElementById('dmerr').textContent = '';
   try{
-    var d = await dmCall('/api/dm/send', {method: 'POST', body: JSON.stringify({to: peer.username, text: text})});
+    var d = await dmCall('/api/dm/send', {method: 'POST', body: JSON.stringify({to: peer.username, text: text, reply_to: rid || undefined})});
     var k = DM.msgs.indexOf(m);
     if(d.msg){
       if(k >= 0) DM.msgs.splice(k, 1);
@@ -11368,6 +11466,7 @@ function dmSubmit(){
 (function(){
   var inp = document.getElementById('dmin');
   document.getElementById('dmback').onclick = closeDm;
+  document.getElementById('dmrbX').onclick = dmClearReply;
   document.getElementById('dmsend').onclick = dmSubmit;
   document.getElementById('dmsend').addEventListener('mousedown', function(e){ e.preventDefault(); });
   inp.addEventListener('input', dmGrow);

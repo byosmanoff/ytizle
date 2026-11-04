@@ -635,6 +635,8 @@ CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
                 c.execute("ALTER TABLE dm ADD COLUMN dur INTEGER NOT NULL DEFAULT 0")
             if "delivered" not in dcols:   # alıcının cihazına çatıb
                 c.execute("ALTER TABLE dm ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0")
+            if "reply_to" not in dcols:   # yanıt verilən mesajın id-si (WhatsApp tipli reply)
+                c.execute("ALTER TABLE dm ADD COLUMN reply_to INTEGER")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -2741,7 +2743,7 @@ os.makedirs(DM_MEDIA_DIR, exist_ok=True)
 DM_MIME = {".jpg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp",
            ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
            ".weba": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav"}
-DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur"
+DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to"
 
 
 def _dm_clean(raw):
@@ -2775,6 +2777,11 @@ def _dm_msg(r, me):
         m["url"] = "/dmf/" + r["media"]
     if kind in ("audio", "video", "call"):
         m["dur"] = int(r["dur"] or 0)
+    if r["reply_to"]:
+        q = dbq("SELECT from_sub, text, kind FROM dm WHERE id=?", (r["reply_to"],), one=True)
+        if q:
+            m["reply"] = dict(id=r["reply_to"], mine=(q["from_sub"] == me),
+                              text=_dm_preview(q["kind"] or "text", q["text"])[:80])
     return m
 
 
@@ -2850,10 +2857,22 @@ def _dm_push(to_sub, frm_sub, idn, body):
     return dict(title=idn["name"], body=body, tag="dm-" + u, url="/?dm=" + u, u=u, rt=_reply_token(to_sub, frm_sub))
 
 
-def _dm_insert(frm, to, text, kind="text", media=None, dur=0):
+def _dm_reply_id(sub, other, raw):
+    """Yanıt verilən mesaj yalnız bu iki nəfərin yazışmasından olmalıdır (zəng qeydinə yanıt verilmir)."""
+    try:
+        rid = int(raw)
+    except (TypeError, ValueError):
+        return None
+    q = dbq("SELECT from_sub, to_sub, kind FROM dm WHERE id=?", (rid,), one=True)
+    if not q or {q["from_sub"], q["to_sub"]} != {sub, other} or (q["kind"] or "text") == "call":
+        return None
+    return rid
+
+
+def _dm_insert(frm, to, text, kind="text", media=None, dur=0, reply_to=None):
     DM_TYPING.pop((frm, to), None)
-    dbq("INSERT INTO dm(from_sub,to_sub,text,ts,read,delivered,kind,media,dur) VALUES(?,?,?,?,0,0,?,?,?)",
-        (frm, to, text, time.time(), kind, media, int(dur or 0)))
+    dbq("INSERT INTO dm(from_sub,to_sub,text,ts,read,delivered,kind,media,dur,reply_to) VALUES(?,?,?,?,0,0,?,?,?,?)",
+        (frm, to, text, time.time(), kind, media, int(dur or 0), reply_to))
     return dbq("SELECT " + DM_COLS + " FROM dm WHERE from_sub=? AND to_sub=? ORDER BY id DESC LIMIT 1", (frm, to), one=True)
 
 
@@ -2938,7 +2957,7 @@ def api_dm_send():
         return bad
     if not rate_hit("dm", sub, 40, 60):
         return jsonify(error="Çox tez göndərirsən, bir az gözlə"), 429
-    row = _dm_insert(sub, other, text)
+    row = _dm_insert(sub, other, text, reply_to=_dm_reply_id(sub, other, d.get("reply_to")))
     idn = ident_for(tok)
     notify_user(other, "dm", payload=dict(u=idn["username"]), push=_dm_push(other, sub, idn, text[:100]))
     return jsonify(msg=_dm_msg(row, sub))
