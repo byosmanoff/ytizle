@@ -11157,7 +11157,7 @@ function dmTick(m){
   return i;
 }
 function dmFillTime(t, m){
-  t.textContent = m.failed ? 'Göndərilmədi · toxun, yenidən cəhd et' : ((m.edited ? tr('düzənləndi') + ' · ' : '') + dmTime(m.ts));
+  t.textContent = m.failed ? 'Göndərilmədi · toxun, yenidən cəhd et' : ((m.edited ? (window.wtT ? window.wtT('düzənləndi') : 'düzənləndi') + ' · ' : '') + dmTime(m.ts));
   if(m.mine && !m.failed) t.appendChild(dmTick(m));
 }
 /* ---- yanıt (reply): serverdə reply_to kimi saxlanır, mesajla birlikdə {id, mine, text} qayıdır ---- */
