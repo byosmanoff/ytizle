@@ -643,6 +643,8 @@ CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
                 c.execute("ALTER TABLE dm ADD COLUMN del_to INTEGER NOT NULL DEFAULT 0")
             if "deleted" not in dcols:    # göndərən mesajı hamı üçün silib
                 c.execute("ALTER TABLE dm ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0")
+            if "edited" not in dcols:     # göndərən mətni düzənləyib
+                c.execute("ALTER TABLE dm ADD COLUMN edited INTEGER NOT NULL DEFAULT 0")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -2749,7 +2751,7 @@ os.makedirs(DM_MEDIA_DIR, exist_ok=True)
 DM_MIME = {".jpg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp",
            ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
            ".weba": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav"}
-DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to, deleted"
+DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to, deleted, edited"
 DM_DEL_TXT = "Bu mesaj silindi"
 
 
@@ -2783,6 +2785,8 @@ def _dm_msg(r, me):
                     status=_dm_status(r), deleted=True)
     m = dict(id=r["id"], text=r["text"], ts=int(r["ts"] * 1000), mine=(r["from_sub"] == me), kind=kind,
              status=_dm_status(r))
+    if r["edited"]:
+        m["edited"] = True
     if kind in ("image", "video", "audio") and r["media"]:
         m["url"] = "/dmf/" + r["media"]
     if kind in ("audio", "video", "call"):
@@ -2943,8 +2947,13 @@ def api_dm_thread():
              "MAX(CASE WHEN delivered=1 OR read=1 THEN id END) AS dlv FROM dm WHERE from_sub=? AND to_sub=?",
              (sub, other), one=True)
     msgs = [_dm_msg(r, sub) for r in rows]
+    # düzənlənmiş mesajlar: köhnə id-lər üçün də yeni mətn qayıdır (müştəri fərqli olanı yeniləyir)
+    edits = [dict(id=x["id"], text=x["text"]) for x in dbq(
+        "SELECT id, text FROM dm WHERE edited=1 AND deleted=0 AND kind='text' AND id<=? AND ((from_sub=? AND to_sub=?) OR (from_sub=? AND to_sub=?)) "
+        "AND NOT ((from_sub=? AND del_from=1) OR (to_sub=? AND del_to=1)) ORDER BY id DESC LIMIT 100",
+        (after, sub, other, other, sub, sub, sub), many=True)] if after else []
     typing = (time.time() - DM_TYPING.get((other, sub), 0)) < 5
-    resp = jsonify(msgs=msgs, dels=dels, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing)
+    resp = jsonify(msgs=msgs, dels=dels, edits=edits, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing)
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
@@ -3016,6 +3025,32 @@ def api_dm_delete():
             _dm_rm_media(row["media"])
             dbq("DELETE FROM dm WHERE id=?", (mid,))
     return jsonify(ok=True)
+
+
+@app.route("/api/dm/edit", methods=["POST"])
+def api_dm_edit():
+    """Göndərən öz mətn mesajının mətnini dəyişir. Alıcıya 'dm' siqnalı gedir, thread cavabında edits qayıdır."""
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    try:
+        mid = int(d.get("id"))
+    except (TypeError, ValueError):
+        abort(400)
+    text = _dm_clean(d.get("text"))
+    if not text:
+        return jsonify(error="Mesaj boş ola bilməz"), 400
+    if not rate_hit("dmedit", sub, 30, 60):
+        return jsonify(error="Çox tez düzənləyirsən, bir az gözlə"), 429
+    r = dbq("SELECT from_sub, to_sub, kind, deleted, del_from, text FROM dm WHERE id=?", (mid,), one=True)
+    if not r or r["from_sub"] != sub or r["deleted"] or r["del_from"] or (r["kind"] or "text") != "text":
+        abort(403)
+    bad = _dm_check_pair(sub, r["to_sub"])
+    if bad:
+        return bad
+    if text != r["text"]:
+        dbq("UPDATE dm SET text=?, edited=1 WHERE id=?", (text, mid))
+        notify_user(r["to_sub"], "dm", payload=dict(u=ident_for(tok)["username"]))
+    return jsonify(ok=True, text=text)
 
 
 @app.route("/api/dm/typing", methods=["POST"])
