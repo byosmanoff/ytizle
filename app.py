@@ -637,6 +637,12 @@ CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
                 c.execute("ALTER TABLE dm ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0")
             if "reply_to" not in dcols:   # yanıt verilən mesajın id-si (WhatsApp tipli reply)
                 c.execute("ALTER TABLE dm ADD COLUMN reply_to INTEGER")
+            if "del_from" not in dcols:   # göndərən mesajı özü üçün silib
+                c.execute("ALTER TABLE dm ADD COLUMN del_from INTEGER NOT NULL DEFAULT 0")
+            if "del_to" not in dcols:     # alan mesajı özü üçün silib
+                c.execute("ALTER TABLE dm ADD COLUMN del_to INTEGER NOT NULL DEFAULT 0")
+            if "deleted" not in dcols:    # göndərən mesajı hamı üçün silib
+                c.execute("ALTER TABLE dm ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -2743,7 +2749,8 @@ os.makedirs(DM_MEDIA_DIR, exist_ok=True)
 DM_MIME = {".jpg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp",
            ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
            ".weba": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav"}
-DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to"
+DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to, deleted"
+DM_DEL_TXT = "Bu mesaj silindi"
 
 
 def _dm_clean(raw):
@@ -2771,6 +2778,9 @@ def _dm_preview(kind, text):
 
 def _dm_msg(r, me):
     kind = r["kind"] or "text"
+    if r["deleted"]:   # hamı üçün silinib: məzmun göndərilmir
+        return dict(id=r["id"], text="", ts=int(r["ts"] * 1000), mine=(r["from_sub"] == me), kind=kind,
+                    status=_dm_status(r), deleted=True)
     m = dict(id=r["id"], text=r["text"], ts=int(r["ts"] * 1000), mine=(r["from_sub"] == me), kind=kind,
              status=_dm_status(r))
     if kind in ("image", "video", "audio") and r["media"]:
@@ -2778,10 +2788,11 @@ def _dm_msg(r, me):
     if kind in ("audio", "video", "call"):
         m["dur"] = int(r["dur"] or 0)
     if r["reply_to"]:
-        q = dbq("SELECT from_sub, text, kind FROM dm WHERE id=?", (r["reply_to"],), one=True)
+        q = dbq("SELECT from_sub, to_sub, text, kind, deleted, del_from, del_to FROM dm WHERE id=?", (r["reply_to"],), one=True)
         if q:
+            gone = q["deleted"] or (q["from_sub"] == me and q["del_from"]) or (q["to_sub"] == me and q["del_to"])
             m["reply"] = dict(id=r["reply_to"], mine=(q["from_sub"] == me),
-                              text=_dm_preview(q["kind"] or "text", q["text"])[:80])
+                              text=DM_DEL_TXT if gone else _dm_preview(q["kind"] or "text", q["text"])[:80])
     return m
 
 
@@ -2882,8 +2893,8 @@ def api_dm_list():
     dbq("UPDATE dm SET delivered=1 WHERE to_sub=? AND delivered=0", (sub,))   # cihaza çatdı
     rows = dbq("SELECT peer, MAX(id) AS last_id, SUM(un) AS unread FROM ("
                "SELECT CASE WHEN from_sub=? THEN to_sub ELSE from_sub END AS peer, id, "
-               "CASE WHEN to_sub=? AND read=0 THEN 1 ELSE 0 END AS un "
-               "FROM dm WHERE from_sub=? OR to_sub=?) GROUP BY peer ORDER BY last_id DESC LIMIT 60",
+               "CASE WHEN to_sub=? AND read=0 AND deleted=0 THEN 1 ELSE 0 END AS un "
+               "FROM dm WHERE (from_sub=? AND del_from=0) OR (to_sub=? AND del_to=0)) GROUP BY peer ORDER BY last_id DESC LIMIT 60",
                (sub, sub, sub, sub), many=True)
     convs = []
     for r in rows:
@@ -2898,8 +2909,8 @@ def api_dm_list():
         mine = (last["from_sub"] == sub)
         convs.append(dict(username=u["username"], name=u["name"], avatar=_av_url(u["username"], u["av"]),
                           badge=is_owner(peer), online=bool(pres.get("online")),
-                          last=dict(text=_dm_preview(last["kind"] or "text", last["text"])[:120], ts=int(last["ts"] * 1000),
-                                    mine=mine, kind=last["kind"] or "text", status=(_dm_status(last) if mine else "")),
+                          last=dict(text=(DM_DEL_TXT if last["deleted"] else _dm_preview(last["kind"] or "text", last["text"])[:120]), ts=int(last["ts"] * 1000),
+                                    mine=mine, kind=("text" if last["deleted"] else (last["kind"] or "text")), status=(_dm_status(last) if mine else "")),
                           unread=int(r["unread"] or 0)))
     resp = jsonify(convs=convs)
     resp.headers["Cache-Control"] = "no-store"
@@ -2919,8 +2930,12 @@ def api_dm_thread():
     except ValueError:
         after = 0
     rows = dbq("SELECT * FROM (SELECT " + DM_COLS + " FROM dm WHERE id>? AND "
-               "((from_sub=? AND to_sub=?) OR (from_sub=? AND to_sub=?)) ORDER BY id DESC LIMIT 200) ORDER BY id",
-               (after, sub, other, other, sub), many=True)
+               "((from_sub=? AND to_sub=?) OR (from_sub=? AND to_sub=?)) "
+               "AND NOT ((from_sub=? AND del_from=1) OR (to_sub=? AND del_to=1)) ORDER BY id DESC LIMIT 200) ORDER BY id",
+               (after, sub, other, other, sub, sub, sub), many=True)
+    dels = [x["id"] for x in dbq("SELECT id FROM dm WHERE deleted=1 AND ((from_sub=? AND to_sub=?) OR (from_sub=? AND to_sub=?)) "
+                                 "AND NOT ((from_sub=? AND del_from=1) OR (to_sub=? AND del_to=1)) ORDER BY id DESC LIMIT 200",
+                                 (sub, other, other, sub, sub, sub), many=True)]
     if any(r["from_sub"] == other for r in rows) or after == 0:
         dbq("UPDATE dm SET read=1, delivered=1 WHERE to_sub=? AND from_sub=? AND read=0", (sub, other))
     # göndərdiyim mesajların vəziyyəti: bu id-yə qədər hamısı çatıb / görülüb
@@ -2929,7 +2944,7 @@ def api_dm_thread():
              (sub, other), one=True)
     msgs = [_dm_msg(r, sub) for r in rows]
     typing = (time.time() - DM_TYPING.get((other, sub), 0)) < 5
-    resp = jsonify(msgs=msgs, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing)
+    resp = jsonify(msgs=msgs, dels=dels, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing)
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
@@ -2961,6 +2976,46 @@ def api_dm_send():
     idn = ident_for(tok)
     notify_user(other, "dm", payload=dict(u=idn["username"]), push=_dm_push(other, sub, idn, text[:100]))
     return jsonify(msg=_dm_msg(row, sub))
+
+
+def _dm_rm_media(name):
+    if name and re.fullmatch(r"[0-9a-f]{32}\.[a-z0-9]{3,4}", name):
+        try:
+            os.remove(os.path.join(DM_MEDIA_DIR, name))
+        except OSError:
+            pass
+
+
+@app.route("/api/dm/delete", methods=["POST"])
+def api_dm_delete():
+    """scope='me': mesaj yalnız səndən silinir (1 tərəfli). scope='all': göndərən mesajı hər iki tərəfdən silir."""
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    try:
+        mid = int(d.get("id"))
+    except (TypeError, ValueError):
+        abort(400)
+    scope = "all" if d.get("scope") == "all" else "me"
+    if not rate_hit("dmdel", sub, 60, 60):
+        return jsonify(error="Çox tez silirsən, bir az gözlə"), 429
+    r = dbq("SELECT from_sub, to_sub, kind, media FROM dm WHERE id=?", (mid,), one=True)
+    if not r or sub not in (r["from_sub"], r["to_sub"]):
+        return jsonify(ok=True)   # artıq silinib: təkrar sorğu xəta verməsin (404 DM-i söndürərdi)
+    mine = r["from_sub"] == sub
+    other = r["to_sub"] if mine else r["from_sub"]
+    if scope == "all":
+        if not mine or (r["kind"] or "text") == "call":
+            abort(403)
+        _dm_rm_media(r["media"])
+        dbq("UPDATE dm SET deleted=1, text='', media=NULL WHERE id=?", (mid,))
+        notify_user(other, "dmdel", payload=dict(u=ident_for(tok)["username"]))
+    else:
+        dbq("UPDATE dm SET %s=1 WHERE id=?" % ("del_from" if mine else "del_to"), (mid,))
+        row = dbq("SELECT media, del_from, del_to FROM dm WHERE id=?", (mid,), one=True)
+        if row and row["del_from"] and row["del_to"]:   # ikisi də silib: tamam təmizlə
+            _dm_rm_media(row["media"])
+            dbq("DELETE FROM dm WHERE id=?", (mid,))
+    return jsonify(ok=True)
 
 
 @app.route("/api/dm/typing", methods=["POST"])

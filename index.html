@@ -2718,6 +2718,24 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 #dmrbar .dmrbb{flex:1;min-width:0;padding:6px 10px;border-left:3px solid var(--amber);border-radius:10px;background:rgba(255,255,255,.09);font-size:13px;line-height:1.3}
 #dmrbName{display:block;font-size:12px;font-weight:700;color:var(--amber);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #dmrbText{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+/* DM: mesaj menyusu (uzun basma / sağ klik) və silinmiş mesaj. Brauzerin öz şəkil/qalereya menyusu söndürülüb */
+#dmmsgs .dmb,#dmmsgs .dmcallrow{-webkit-touch-callout:none}
+#dmmsgs .dmb img,#dmmsgs .dmb video{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+#dmmsgs .dmb.media{-webkit-user-select:none;user-select:none}
+#dmmsgs .dmb.dmsel{outline:2px solid var(--amber);outline-offset:3px}
+#dmmsgs .dmb.del{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);color:var(--muted)}
+#dmmsgs .dmb.del .dmdel{font-style:italic;font-size:14px}
+#dmmsgs .dmb.del .dmdel i{margin-right:6px;font-size:12px}
+#dmact{position:fixed;inset:0;z-index:330;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,3,14,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#dmact[hidden]{display:none}
+#dmact .dmas{width:min(520px,100%);padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;background:var(--seat);box-shadow:0 -1px 0 rgba(255,255,255,.12),0 -20px 50px rgba(0,0,0,.5)}
+#dmact .dmasp{margin:2px 4px 8px;padding:8px 12px;border-left:3px solid var(--amber);border-radius:10px;background:rgba(255,255,255,.07);font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dmact .dmas button{display:flex;align-items:center;gap:14px;width:100%;padding:14px 12px;border-radius:14px;font-size:16px;font-weight:600;color:var(--text);text-align:left}
+#dmact .dmas button:active{background:rgba(255,255,255,.1)}
+#dmact .dmas button i{width:22px;text-align:center;font-size:16px}
+#dmact .dmas button.dng{color:var(--rose)}
+#dmact .dmas button.dmasx{margin-top:6px;justify-content:center;background:rgba(255,255,255,.07)}
+@media (prefers-reduced-motion:no-preference){#dmact:not([hidden]) .dmas{animation:dmasIn .2s cubic-bezier(.2,.9,.3,1) both}@keyframes dmasIn{from{transform:translateY(100%)}to{transform:none}}}
 #dmrbX{flex:none;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center;color:var(--muted);background:transparent}
 #dmrbar:not([hidden])+#dmform{box-shadow:none}
 #dmchat.recording #dmrbar{display:none}
@@ -6225,6 +6243,11 @@ function sseEvent(blk){
     if(typeof loadDmList === 'function') loadDmList();
     if(typeof DM !== 'undefined' && DM.peer && DM.peer.username === du){ dmPull(false); }
     else if(window.wtToast && (!document.getElementById('dmchat') || document.getElementById('dmchat').hidden)) window.wtToast('Yeni mesaj' + (du ? ': @' + du : ''));
+  }
+  if(ev === 'dmdel'){
+    var dd = ''; try{ dd = (JSON.parse(data || '{}').u) || ''; }catch(e){}
+    if(typeof loadDmList === 'function') loadDmList();
+    if(typeof DM !== 'undefined' && DM.peer && DM.peer.username === dd && typeof dmPull === 'function') dmPull(false);
   }
   if(ev === 'call'){ try{ if(typeof dmCallEvent === 'function') dmCallEvent(JSON.parse(data || '{}')); }catch(e){} }
   if(ev === 'invite') window.wtToast && window.wtToast('Yeni otaq dəvəti');
@@ -11103,7 +11126,7 @@ function dmSnippet(m){
   return String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 function dmSetReply(m){
-  if(!m || typeof m.id !== 'number' || m.pending || m.failed || (m.kind || 'text') === 'call' || !DM.peer) return;
+  if(!m || m.deleted || typeof m.id !== 'number' || m.pending || m.failed || (m.kind || 'text') === 'call' || !DM.peer) return;
   DM.reply = {id: m.id, mine: !!m.mine, text: dmSnippet(m), name: m.mine ? 'Sən' : (DM.peer.name || DM.peer.username)};
   document.getElementById('dmrbName').textContent = DM.reply.name;
   document.getElementById('dmrbText').textContent = DM.reply.text;
@@ -11161,6 +11184,96 @@ function dmBindSwipe(d){
   };
   d.addEventListener('pointerup', end); d.addEventListener('pointercancel', end);
 }
+/* ---- mesaj menyusu: uzun bas (telefon) / sağ klik (kompüter). Tətbiqin öz menyusu, brauzerinki yox ---- */
+function dmBindMenu(d){
+  var t = null, fired = false, sx = 0, sy = 0;
+  function stop(){ if(t){ clearTimeout(t); t = null; } }
+  function msg(){ var id = d.dataset.id; return DM.msgs.find(function(x){ return String(x.id) === id; }); }
+  d.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    if(e.target.closest('audio,video')) return;
+    stop(); fired = false; sx = e.clientX; sy = e.clientY;
+    t = setTimeout(function(){
+      t = null; fired = true;
+      try{ window.getSelection().removeAllRanges(); }catch(_){}
+      try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){}
+      dmMenuOpen(msg(), d);
+    }, 450);
+  });
+  d.addEventListener('pointermove', function(e){ if(t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) stop(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(n){ d.addEventListener(n, stop); });
+  d.addEventListener('contextmenu', function(e){ e.preventDefault(); if(!fired) dmMenuOpen(msg(), d); });
+  d.addEventListener('click', function(e){ if(fired){ fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  d.addEventListener('dragstart', function(e){ e.preventDefault(); });
+}
+var DMACT = null;
+function dmMenuClose(){
+  if(!DMACT) return;
+  DMACT.hidden = true;
+  document.querySelectorAll('#dmmsgs .dmsel').forEach(function(x){ x.classList.remove('dmsel'); });
+}
+function dmMenuOpen(m, el){
+  if(!m || m.pending || !DM.peer) return;
+  if(!DMACT){
+    DMACT = document.createElement('div'); DMACT.id = 'dmact'; DMACT.hidden = true;
+    DMACT.setAttribute('role', 'dialog'); DMACT.setAttribute('aria-modal', 'true'); DMACT.setAttribute('aria-label', 'Mesaj əməliyyatları');
+    DMACT.addEventListener('click', function(e){ if(e.target === DMACT) dmMenuClose(); });
+    DMACT.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    document.body.appendChild(DMACT);
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && DMACT && !DMACT.hidden){ e.stopPropagation(); dmMenuClose(); } }, true);
+  }
+  if(!DMACT.hidden) return;
+  var kind = m.kind || 'text', box = document.createElement('div'); box.className = 'dmas';
+  if(!m.deleted){
+    var pv = document.createElement('div'); pv.className = 'dmasp'; pv.textContent = kind === 'call' ? m.text : dmSnippet(m); box.appendChild(pv);
+  }
+  function add(icon, label, cls, fn){
+    var b = document.createElement('button'); b.type = 'button'; if(cls) b.className = cls;
+    var i = document.createElement('i'); i.className = 'fa-solid ' + icon; i.setAttribute('aria-hidden', 'true'); b.appendChild(i);
+    b.appendChild(document.createTextNode(label));
+    b.onclick = function(){ dmMenuClose(); if(fn) fn(); };
+    box.appendChild(b);
+  }
+  if(kind === 'text' && !m.deleted && m.text){
+    add('fa-copy', 'Kopyala', '', function(){
+      try{ navigator.clipboard.writeText(m.text).then(function(){ if(window.wtToast) window.wtToast('Kopyalandı'); }); }catch(e){}
+    });
+  }
+  add('fa-trash', 'Mənim üçün sil', 'dng', function(){ dmDelete(m, 'me'); });
+  if(m.mine && typeof m.id === 'number' && kind !== 'call' && !m.deleted){
+    add('fa-trash-can', 'Hamı üçün sil', 'dng', function(){ dmDelete(m, 'all'); });
+  }
+  add('fa-xmark', 'Ləğv et', 'dmasx', null);
+  DMACT.textContent = ''; DMACT.appendChild(box); DMACT.hidden = false;
+  if(el && el.classList) el.classList.add('dmsel');
+}
+function dmForce(){ var box = document.getElementById('dmmsgs'); if(box){ box._ids = null; dmRender(true); } }
+function dmMarkDeleted(id){
+  DM.msgs.forEach(function(x){
+    if(x.id === id){ x.deleted = true; x.text = ''; x.url = ''; x.local = ''; }
+    if(x.reply && x.reply.id === id) x.reply.text = 'Bu mesaj silindi';
+  });
+  if(DM.reply && DM.reply.id === id) dmClearReply();
+}
+async function dmDelete(m, scope){
+  var peer = DM.peer; if(!peer) return;
+  if(typeof m.id !== 'number'){   // göndərilməyib (yerli): yalnız siyahıdan çıxar
+    DM.msgs = DM.msgs.filter(function(x){ return x !== m; }); dmForce(); return;
+  }
+  try{
+    await dmCall('/api/dm/delete', {method: 'POST', body: JSON.stringify({id: m.id, scope: scope})});
+  }catch(e){
+    dmErr(e.message === 'xəta' ? 'Silinmədi. Bağlantını yoxla.' : e.message); return;
+  }
+  if(!DM.peer || DM.peer.username !== peer.username) return;
+  if(scope === 'all') dmMarkDeleted(m.id);
+  else {
+    DM.msgs = DM.msgs.filter(function(x){ return x.id !== m.id; });
+    DM.msgs.forEach(function(x){ if(x.reply && x.reply.id === m.id) x.reply.text = 'Bu mesaj silindi'; });
+    if(DM.reply && DM.reply.id === m.id) dmClearReply();
+  }
+  dmErr(''); dmForce(); loadDmList();
+}
 function dmBubble(m){
   var kind = m.kind || 'text', d = document.createElement('div');
   d.dataset.id = m.id;
@@ -11171,12 +11284,22 @@ function dmBubble(m){
     var ct = document.createElement('time'); ct.textContent = dmTime(m.ts); d.appendChild(ct);
     d.setAttribute('role', 'button'); d.tabIndex = 0;
     d.onclick = function(){ if(DM.peer && typeof startCall === 'function') startCall(DM.peer); };
+    dmBindMenu(d);
     return d;
   }
   d.className = 'dmb ' + (m.mine ? 'me' : 'th') + (kind !== 'text' ? ' media k-' + kind : '') + (m.pending ? ' pend' : '') + (m.failed ? ' fail' : '');
+  if(m.deleted){
+    d.className = 'dmb ' + (m.mine ? 'me' : 'th') + ' del';
+    var dx = document.createElement('span'); dx.className = 'dmdel';
+    dx.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i>';
+    dx.appendChild(document.createTextNode('Bu mesaj silindi')); d.appendChild(dx);
+    var dt = document.createElement('time'); dt.textContent = dmTime(m.ts); d.appendChild(dt);
+    dmBindMenu(d);
+    return d;
+  }
   var src = m.url || m.local || '';
   if(kind === 'image'){
-    var im = document.createElement('img'); im.className = 'dmimg'; im.alt = 'Şəkil'; im.loading = 'lazy'; im.src = src;
+    var im = document.createElement('img'); im.className = 'dmimg'; im.alt = 'Şəkil'; im.loading = 'lazy'; im.draggable = false; im.src = src;
     im.onclick = function(e){ if(m.failed) return; e.stopPropagation(); if(typeof openLightbox === 'function') openLightbox(im.src); };
     d.appendChild(im);
   } else if(kind === 'video'){
@@ -11193,6 +11316,7 @@ function dmBubble(m){
   var ri = document.createElement('span'); ri.className = 'dmrpi'; ri.setAttribute('aria-hidden', 'true');
   ri.innerHTML = '<i class="fa-solid fa-reply"></i>'; d.appendChild(ri);
   dmBindSwipe(d);
+  dmBindMenu(d);
   return d;
 }
 /* mövcud qabarcığı yerində yenilə (oynayan video/səs kəsilməsin) */
@@ -11360,7 +11484,13 @@ async function dmPull(first){
       }
     });
     if(d.typing !== undefined){ DM.typUntil = d.typing ? Date.now() + 4500 : 0; clearTimeout(DM.tTy); if(d.typing) DM.tTy = setTimeout(dmHead, 4700); }
+    var force = false;
+    (d.dels || []).forEach(function(id){
+      var x = DM.msgs.find(function(m){ return m.id === id; });
+      if(x && !x.deleted){ dmMarkDeleted(id); ch = true; force = true; }
+    });
     dmHead();
+    if(force){ var bx = document.getElementById('dmmsgs'); if(bx) bx._ids = null; }
     if(ch || first) dmRender(!first);
     document.getElementById('dmerr').textContent = '';
   }catch(e){
