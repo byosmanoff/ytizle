@@ -4477,7 +4477,7 @@ def proxy():
 
 
 # ---------------------------------------------------------------
-#  Domino otağı: 2 nəfərlik onlayn oyun (standart 28 daş, 0-6).
+#  Domino otağı: 2-4 nəfərlik onlayn oyun (kompüterlə də 2-4) (standart 28 daş, 0-6).
 #  Yaddaşda saxlanır, long-poll ilə yenilənir (hər oyunun öz _cv-si).
 # ---------------------------------------------------------------
 DOMINO = {}
@@ -4485,6 +4485,10 @@ DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
 DOM_MAX = 200
 DOM_TARGET = 101             # ilk bu xala çatan oyunu qazanır
 DOM_CLAIM = 60               # rəqib bu qədər saniyə yoxdursa, oyunu bitirmək olar
+
+
+def _dom_isbot(p):
+    return isinstance(p, str) and p.startswith("bot")
 
 
 def _dom_other(g, sub):
@@ -4740,7 +4744,7 @@ def _dom_do_draw(g, who):
 def _dom_lack(g, who):
     """Oyunçu bazardan daş çəkəndə/keçəndə açıq uclardakı rəqəmlər onda yox idi: kompüter bunu yadda saxlayır."""
     bd = g.get("board")
-    if who == "bot" or not bd:
+    if _dom_isbot(who) or not bd:
         return
     g.setdefault("lack", {}).setdefault(who, set()).update((bd[0][0], bd[-1][1]))
 
@@ -4824,13 +4828,13 @@ def _dom_bot_pick_simple(g, hand, mv):
     return best[1], best[2]
 
 
-def _dom_bot_choose(g, mv):
+def _dom_bot_choose(g, mv, me="bot"):
     """Kompüterin gedişi: görünməyən daşların mümkün bölgüsünü təsadüfi seçib (rəqibin əlini DEYİL, yalnız
     saydığımız daşları və rəqibin çəkdiyi anları bilirik), hər variantı bu ssenarilərdə sona qədər oynayır
     və orta nəticəsi ən yaxşı olanı seçir."""
-    hand = [tuple(t) for t in g["hands"]["bot"]]
+    hand = [tuple(t) for t in g["hands"][me]]
     bd = g["board"]
-    opp = _dom_other(g, "bot")
+    opp = _dom_other(g, me)
     opp_n = len(g["hands"][opp])
     cands = []
     for m in mv:
@@ -4872,18 +4876,27 @@ def _dom_bot_choose(g, mv):
     return list(cands[bi][0]), cands[bi][1]
 
 
+def _dom_bot_decide(g, me, mv):
+    """2 nəfərdə simulyasiyalı güclü seçim, 3-4 nəfərdə sadə qayda."""
+    hand = g["hands"][me]
+    if len(g["players"]) == 2:
+        try:
+            return _dom_bot_choose(g, mv, me)
+        except Exception:
+            pass
+    return _dom_bot_pick_simple(g, hand, mv)
+
+
 def _dom_bot_step(g):
     """Kompüterin bir hərəkəti: ən yaxşı daşı qoyur, yoxdursa bazardan çəkir."""
-    hand = g["hands"]["bot"]
+    me = g["turn"]
+    hand = g["hands"][me]
     mv = _dom_moves(g, hand)
     if not mv:
-        _dom_do_draw(g, "bot")
+        _dom_do_draw(g, me)
         return
-    try:
-        t, e = _dom_bot_choose(g, mv)
-    except Exception:
-        t, e = _dom_bot_pick_simple(g, hand, mv)
-    _dom_do_play(g, "bot", t, e)
+    t, e = _dom_bot_decide(g, me, mv)
+    _dom_do_play(g, me, t, e)
 
 
 def _dom_touch(g):
@@ -4905,7 +4918,7 @@ def _dom_view(g, sub):
     tm = _dom_team_mode(g)
     for p in order:
         opps.append(dict(g["names"].get(p) or {}, n=len(g["hands"].get(p, [])),
-                         online=bool(p == "bot" or now - g["seen"].get(p, 0) < 35),
+                         online=bool(_dom_isbot(p) or now - g["seen"].get(p, 0) < 35),
                          score=(_dom_tscore(g, _dom_team(g, p)) if tm else g["score"].get(p, 0)),
                          mate=bool(tm and _dom_team(g, p) == _dom_team(g, sub)),
                          turn=bool(st == "play" and g["turn"] == p)))
@@ -4916,7 +4929,7 @@ def _dom_view(g, sub):
         can_draw=bool(st == "play" and g["turn"] == sub and _dom_draw_n(g)),
         turn=(("me" if g["turn"] == sub else "opp") if st == "play" else None),
         turn_name=(tn or {}).get("name") if tn else None,
-        turn_online=bool(tn and (g["turn"] == "bot" or now - g["seen"].get(g["turn"], 0) < 35)),
+        turn_online=bool(tn and (_dom_isbot(g["turn"]) or now - g["seen"].get(g["turn"], 0) < 35)),
         me=g["names"].get(sub), opps=opps, size=g.get("size", 2), joined=len(ps), host=bool(ps and ps[0] == sub),
         my_score=(_dom_tscore(g, _dom_team(g, sub)) if tm else g["score"].get(sub, 0)), teams=tm,
         last=({"t": g["last"]["t"]} if g["last"] else None), reason=g["reason"], target=DOM_TARGET, bot=bool(g.get("bot")),
@@ -4972,8 +4985,6 @@ def api_domino_create():
         size = max(2, min(4, int(d0.get("size") or 2)))
     except (TypeError, ValueError):
         size = 2
-    if vs_bot:
-        size = 2
     nm = _dom_names(tok)
     now = time.time()
     with META_LOCK:
@@ -4990,9 +5001,12 @@ def api_domino_create():
                  status="wait", winner=None, reason="", passes=0, v=1, round=1, score={},
                  seen={sub: now}, upd=now, last=None, note=None, pts=0, match=None, size=size)
         if vs_bot:
-            g["players"].append("bot")
-            g["names"]["bot"] = dict(name="Kompüter", username="bot", avatar="", badge=None)
-            g["seen"]["bot"] = now
+            for i in range(size - 1):          # seçilən say qədər oyunçu: 1 insan + (size-1) kompüter
+                bid = "bot" if i == 0 else "bot%d" % (i + 1)
+                g["players"].append(bid)
+                g["names"][bid] = dict(name="Kompüter" if size == 2 else "Kompüter %d" % (i + 1),
+                                       username=bid, avatar="", badge=None)
+                g["seen"][bid] = now
             g["bot"] = True
             _dom_deal(g)
         _ensure_cv(g); DOMINO[c] = g
@@ -5168,7 +5182,7 @@ def api_domino_quit():
         if not g or sub not in g["players"]:
             return jsonify(ok=True)
         st = g["status"]
-        if g.get("bot") or len([p for p in g["players"] if p != "bot"]) <= 1:
+        if g.get("bot") or len([p for p in g["players"] if not _dom_isbot(p)]) <= 1:
             DOMINO.pop(code, None)
             return jsonify(ok=True)
         if st == "play":
@@ -7539,19 +7553,17 @@ def api_domino_bot():
     g = _dom_get(code, sub)
     with _ensure_cv(g):
         g["seen"][sub] = time.time()
-        if not (g.get("bot") and g["status"] == "play" and g["turn"] == "bot"):
+        if not (g.get("bot") and g["status"] == "play" and _dom_isbot(g["turn"])):
             return jsonify(_dom_view(g, sub))
+        me = g["turn"]
         v0 = g["v"]
         # _cv (Condition) deepcopy olunmur — yalnız oyun vəziyyətini kopyala
         snap = copy.deepcopy({k: v for k, v in g.items() if k != "_cv"})
     res = None
     try:
-        mv = _dom_moves(snap, snap["hands"]["bot"])
+        mv = _dom_moves(snap, snap["hands"][me])
         if mv:
-            try:
-                t, e = _dom_bot_choose(snap, mv)
-            except Exception:
-                t, e = _dom_bot_pick_simple(snap, snap["hands"]["bot"], mv)
+            t, e = _dom_bot_decide(snap, me, mv)
             res = ("play", t, e)
         else:
             res = ("draw",)
@@ -7562,12 +7574,12 @@ def api_domino_bot():
     if not g or sub not in g["players"]:
         abort(404)
     with _ensure_cv(g):
-        if res and g["v"] == v0 and g["status"] == "play" and g["turn"] == "bot":
+        if res and g["v"] == v0 and g["status"] == "play" and g["turn"] == me:
             g["note"] = None
             if res[0] == "play":
-                _dom_do_play(g, "bot", res[1], res[2])
+                _dom_do_play(g, me, res[1], res[2])
             else:
-                _dom_do_draw(g, "bot")   # bir daş; daş çıxmasa klient yenidən çağırır
+                _dom_do_draw(g, me)   # bir daş; daş çıxmasa klient yenidən çağırır
             _dom_touch(g)
         return jsonify(_dom_view(g, sub))
 
@@ -7581,7 +7593,7 @@ def api_domino_claim():
     with _ensure_cv(g):
         now = time.time()
         t = g["turn"]
-        if g["status"] == "play" and t and t != sub and t != "bot":
+        if g["status"] == "play" and t and t != sub and not _dom_isbot(t):
             last = g["seen"].get(t, 0) or g.get("gone", {}).get(t, 0)
             if now - last > DOM_CLAIM:
                 if len(g["players"]) <= 2:
