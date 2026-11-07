@@ -2913,7 +2913,6 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <div class="av" id="mav" role="button" tabindex="0" aria-label="Profil" title="Profil">?</div>
     <div class="mhello"><small id="mgreet">Salam</small><b id="mname"></b><span id="muser"></span></div>
     <button type="button" class="langbtn" aria-label="Dil" title="Dil"><i class="fa-solid fa-language" aria-hidden="true"></i><span class="lc">AZ</span></button>
-    <button class="ib" id="editname" aria-label="Profil" title="Profil"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
     <button class="ib" id="logout" aria-label="Hesabdan çıx" title="Hesabdan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
   </div>
   <div id="invites"></div>
@@ -5488,15 +5487,19 @@ window.wtToast = function(msg, ms){
 window.wtReconnectBanner = function(txt, ok){
   var el = document.getElementById('wtReconnect'); if(!el) return;
   if(!txt){ el.hidden = true; return; }
-  el.textContent = txt;
+  /* internet təzə qayıdıb: dayandırılan sorğuların xətası "Əlaqə kəsildi" göstərməsin */
+  if(!ok && Date.now() - (window._wtKickAt || 0) < 3000){ el.hidden = true; return; }
+  el.textContent = window.wtT ? window.wtT(txt) : txt;
   el.classList.toggle('ok', !!ok);
   el.hidden = false;
 };
 
 
+window._wtPolls = new Set();
 window.wtPollFetch = async function(url){
   var ac = new AbortController(), t = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 30000);
-  try{ return await api(url, {signal: ac.signal}); } finally{ clearTimeout(t); }
+  window._wtPolls.add(ac);
+  try{ return await api(url, {signal: ac.signal}); } finally{ clearTimeout(t); window._wtPolls.delete(ac); }
 };
 window.wtClearBanner = function(){ try{ window.wtReconnectBanner(''); }catch(e){} };
 
@@ -6099,6 +6102,8 @@ setInterval(() => { if(token && !document.hidden) sendPresence(); }, 12000);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) sendPresence(); });
 window.addEventListener('offline', function(){ try{ window.wtReconnectBanner('İnternet yoxdur...'); }catch(e){} });
 window.addEventListener('online', function(){
+  window._wtKickAt = Date.now();
+  try{ window._wtPolls.forEach(function(ac){ try{ ac.abort(); }catch(e){} }); window._wtPolls.clear(); }catch(e){}
   try{ window.wtReconnectBanner('İnternet qayıtdı', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 2000); }catch(e){}
   try{ sendPresence(); }catch(e){}
 });
@@ -6438,7 +6443,6 @@ function openProfile(){
   loadProfile();
   try{ loadHistory(); loadFavs(); }catch(e){}
 }
-$('editname').onclick = openProfile;
 $('mav').onclick = openProfile;
 $('mav').addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openProfile(); } });
 $('pback').onclick = () => { $('profile').hidden = true; };
@@ -7747,6 +7751,10 @@ boot();
     return k.replace(/dəq/g, t ? 'dk' : 'min').replace(/saat/g, t ? 'sa' : 'h').replace(/gün/g, t ? 'gün' : 'd').replace(/sonra/g, t ? 'sonra' : 'later');
   }
   D['Kodu dostuna göndər:'] = ['Kodu arkadaşına gönder:', 'Send this code to your friend:'];
+  D['Əlaqə kəsildi, yenidən cəhd...'] = ['Bağlantı koptu, yeniden deneniyor...', 'Connection lost, retrying...'];
+  D['Yenidən qoşuldu'] = ['Yeniden bağlandı', 'Reconnected'];
+  D['İnternet yoxdur...'] = ['İnternet yok...', 'No internet...'];
+  D['İnternet qayıtdı'] = ['İnternet geri geldi', 'Back online'];
   /* Tərcüməsi çatışmayan statik mətnlər */
   (function(){ var A = {"və ya": ["veya", "or"], "Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.": ["Hesap olmadan odaya girebilirsin. Oyunlar ve arkadaşlar için giriş gerekir.", "You can join a room without an account. Games and friends need you to sign in."], "Oyunlar, reytinq, turnirlər": ["Oyunlar, sıralama, turnuvalar", "Games, leaderboard, tournaments"], "Dostunla onlayn Uno oyna. Rəngə və ya rəqəmə uyğun kart at, bütün kartlarını ilk bitirən qalib olur.": ["Arkadaşınla online Uno oyna. Renge veya rakama uyan kart at, tüm kartlarını ilk bitiren kazanır.", "Play Uno online with a friend. Play a card that matches the color or number; the first to empty their hand wins."], "Dostlar və mesajlar": ["Arkadaşlar ve mesajlar", "Friends and messages"], "Dostlar tabında dostunun yanındakı mesaj düyməsinə bas.": ["Arkadaşlar sekmesinde arkadaşının yanındaki mesaj düğmesine bas.", "In the Friends tab, tap the message button next to your friend."], "Dostlar və oyunlar üçün Google və ya e-poçt ilə hesab aç.": ["Arkadaşlar ve oyunlar için Google veya e-posta ile hesap aç.", "Create an account with Google or email for friends and games."], "Google ilə davam et": ["Google ile devam et", "Continue with Google"], "Qonaq rejimindəsən. Dostlar, oyunlar və şəxsi tarixçə üçün hesabla davam et.": ["Misafir modundasın. Arkadaşlar, oyunlar ve kişisel geçmiş için hesapla devam et.", "You are in guest mode. Sign in for friends, games and personal history."], "Əlavə qeyd": ["Ek not", "Extra note"], "@istifadəçi adı": ["@kullanıcı adı", "@username"], "Rəng seç": ["Renk seç", "Pick a color"], "Kart çək": ["Kart çek", "Draw a card"], "Bot əlavə et": ["Bot ekle", "Add a bot"], "Səssiz et": ["Sessize al", "Mute"], "Necə işləyir?": ["Nasıl çalışır?", "How does it work?"], "Ana səhifədə «Otaq aç» düyməsinə bas.": ["Ana sayfada «Oda aç» düğmesine bas.", "On the home page, tap “Open room”."], "Dostuna otaq kodunu və ya dəvət linkini göndər.": ["Arkadaşına oda kodunu veya davet bağlantısını gönder.", "Send your friend the room code or invite link."], "Birlikdə izlə": ["Birlikte izle", "Watch together"], "Eyni videoda, eyni söhbətdə olun.": ["Aynı videoda, aynı sohbette olun.", "Be in the same video and the same chat."], "Bildirişləri aç?": ["Bildirimler açılsın mı?", "Turn on notifications?"], "Dəvət və seans xatırlatmalarını vaxtında alarsan. İstədiyin vaxt ayarlardan söndürə bilərsən.": ["Davet ve seans hatırlatmalarını zamanında alırsın. İstediğin zaman ayarlardan kapatabilirsin.", "You will get invites and session reminders on time. You can turn them off in settings anytime."], "İcazə ver": ["İzin ver", "Allow"], "Şəxsi mesajlar": ["Özel mesajlar", "Direct messages"], "Şəkil, video əlavə et": ["Fotoğraf, video ekle", "Add a photo or video"], "Səs yaz": ["Ses kaydet", "Record audio"], "Səs yazılır...": ["Ses kaydediliyor...", "Recording..."], "Zəng": ["Arama", "Call"], "Zəngi bitir": ["Aramayı bitir", "End call"], "Bunu yalnız otağı açan dəyişə bilər": ["Bunu yalnızca odayı açan değiştirebilir", "Only the room creator can change this"], "Oyun artıq başlayıb": ["Oyun zaten başladı", "The game has already started"], "Qırmızı": ["Kırmızı", "Red"], "Sarı": ["Sarı", "Yellow"], "Yaşıl": ["Yeşil", "Green"], "Mavi": ["Mavi", "Blue"], "Kompüter": ["Bilgisayar", "Computer"]};
     Object.keys(A).forEach(function(k){ if(!D[k]) D[k] = A[k]; });
@@ -8703,7 +8711,7 @@ window.wtInviteBox = function(o){
     var fails = 0;
     while(ch.gen === gen){
       try{
-        var r = await api('/api/chess/poll?room=' + encodeURIComponent(ch.code) + '&v=' + ch.v + '&vk=' + voice.vk());
+        var r = await wtPollFetch('/api/chess/poll?room=' + encodeURIComponent(ch.code) + '&v=' + ch.v + '&vk=' + voice.vk());
         if(ch.gen !== gen) return;
         if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
         if(!r.ok) throw new Error(String(r.status));
@@ -9286,7 +9294,7 @@ window.wtInviteBox = function(o){
     var fails = 0;
     while(dom.gen === gen){
       try{
-        var r = await api('/api/domino/poll?room=' + encodeURIComponent(dom.code) + '&v=' + dom.v + '&vk=' + voice.vk());
+        var r = await wtPollFetch('/api/domino/poll?room=' + encodeURIComponent(dom.code) + '&v=' + dom.v + '&vk=' + voice.vk());
         if(dom.gen !== gen) return;
         if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
         if(!r.ok) throw new Error(String(r.status));
@@ -10538,7 +10546,7 @@ window.wtInviteBox = function(o){
     (async function(){
       while(g === gen && ma.code){
         try{
-          var r = await api('/api/mafia/poll?room=' + enc(ma.code) + '&v=' + ma.v + '&vk=' + voice.vk());
+          var r = await wtPollFetch('/api/mafia/poll?room=' + enc(ma.code) + '&v=' + ma.v + '&vk=' + voice.vk());
           if(g !== gen){ wtClearBanner(); return; }
           if(r.status === 404){ gone(); return; }
           if(!r.ok){ fails++; try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){} await sleep(Math.min(2000*fails,8000)); continue; }
