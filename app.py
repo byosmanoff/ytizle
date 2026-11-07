@@ -4567,7 +4567,7 @@ def _dom_settle(g):
         if g["status"] != "play":
             return
         cur = g["turn"]
-        if _dom_moves(g, g["hands"][cur]) or g["stock"]:
+        if _dom_moves(g, g["hands"][cur]) or _dom_draw_n(g):
             return
         _dom_lack(g, cur)
         g["passes"] += 1
@@ -4625,12 +4625,27 @@ def _dom_do_play(g, who, t, end):
     return True
 
 
+DOM_KEEP2 = 2    # 2 nəfərlik oyunda bazarda həmişə bu qədər daş qalır (çəkilmir)
+
+
+def _dom_draw_n(g):
+    """Bir dəfəyə çəkiləcək daş sayı. 2 nəfərdə: 2-2 çəkilir, bazarda 2 daş qalır. 3-4 nəfərdə: tək-tək, bazar tam boşalana qədər."""
+    n = len(g["stock"])
+    if g.get("size", 2) == 2:
+        return max(0, min(2, n - DOM_KEEP2))
+    return 1 if n else 0
+
+
 def _dom_do_draw(g, who):
     hand = g["hands"][who]
-    if _dom_moves(g, hand) or not g["stock"]:
+    k = _dom_draw_n(g)
+    has_mv = bool(_dom_moves(g, hand))
+    if not k:                           # gedişin olsa belə bazara getmək olar (2, 3 nəfər; 4 nəfərdə bazar yoxdur)
         return False
-    _dom_lack(g, who)
-    hand.append(g["stock"].pop())
+    if not has_mv:
+        _dom_lack(g, who)               # yalnız məcburən çəkəndə "bu rəqəmlər yoxdur" yadda saxlanır
+    for _ in range(k):
+        hand.append(g["stock"].pop())
     hand.sort()
     g["note"] = {"who": who, "k": "draw"}
     _dom_settle(g)
@@ -4679,8 +4694,9 @@ def _dsim_rollout(hands, stock, l, r, turn, passes):
     while True:
         h = hands[turn]
         opts = _dsim_opts(h, l, r)
-        while not opts and stock:
-            h.append(stock.pop())
+        while not opts and len(stock) > DOM_KEEP2:      # 2-2 çəkir, bazarda 2 daş qalır
+            for _ in range(min(2, len(stock) - DOM_KEEP2)):
+                h.append(stock.pop())
             opts = _dsim_opts(h, l, r)
         if not opts:
             passes += 1
@@ -4809,7 +4825,7 @@ def _dom_view(g, sub):
     out = dict(
         v=g["v"], code=g["code"], status=st, round=g["round"], board=g["board"], cx=g.get("cx"), hand=hand,
         moves=mv, stock=len(g["stock"]),
-        can_draw=bool(st == "play" and g["turn"] == sub and not mv and g["stock"]),
+        can_draw=bool(st == "play" and g["turn"] == sub and _dom_draw_n(g)),
         turn=(("me" if g["turn"] == sub else "opp") if st == "play" else None),
         turn_name=(tn or {}).get("name") if tn else None,
         turn_online=bool(tn and (g["turn"] == "bot" or now - g["seen"].get(g["turn"], 0) < 35)),

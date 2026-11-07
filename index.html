@@ -9014,6 +9014,7 @@ window.wtInviteBox = function(o){
     }
     p.innerHTML = h;
   }
+  function p_all(){ return Array.prototype.slice.call($('dpile').querySelectorAll('.pt')); }
   $('dpile').addEventListener('click', function(e){
     var el = e.target.closest ? e.target.closest('.pt') : null;
     if(!el) return;
@@ -9021,6 +9022,9 @@ window.wtInviteBox = function(o){
     if(!s || s.status !== 'play') return;
     if(!s.can_draw || busy){ if($('ddraw').onclick) $('ddraw').onclick({target: el}); return; }
     el.classList.add('taken');
+    if((s.size || 2) === 2 && s.stock > 2){      /* 2 nəfərdə iki daş çəkilir: ikinci daş da yığından düşür */
+      var ts = p_all(); for(var q = ts.length - 1; q >= 0; q--){ if(ts[q] !== el && !ts[q].classList.contains('taken')){ ts[q].classList.add('taken'); break; } }
+    }
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
     $('ddraw').onclick({target: el});
   });
@@ -9292,7 +9296,7 @@ window.wtInviteBox = function(o){
     if(!ev.target.closest('.tile') && !ev.target.closest('.pt')) return;
     var s = dom.s;
     if(!s || s.status !== 'play') return;
-    if(!s.can_draw){ flash(s.turn !== 'me' ? 'Hələ sənin növbən deyil' : (s.moves && s.moves.length ? 'Qoyacaq daşın var, bazardan çəkmək olmaz' : 'Bazar boşdur')); return; }
+    if(!s.can_draw){ flash(s.turn !== 'me' ? 'Hələ sənin növbən deyil' : (s.moves && s.moves.length ? 'Qoyacaq daşın var, bazardan çəkmək olmaz' : ((s.size || 2) === 2 && s.stock > 0 ? 'Bazarda 2 daş qalmalıdır, keçirsən' : 'Bazar boşdur'))); return; }
     var tp = ev.target.closest('.tile'); if(tp){ dom.tapIdx = Array.prototype.indexOf.call(tp.parentNode.children, tp); tp.classList.add('taken'); }
     act('draw');
   };
