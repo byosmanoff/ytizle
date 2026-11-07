@@ -1579,15 +1579,12 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #ddraw{display:none!important}
 #dact:not(:has(#dclaim:not([hidden]))){display:none}
 #dpile{position:relative;z-index:5;flex:none;height:64px;border-radius:20px;background:radial-gradient(90% 140% at 30% 0%,rgba(255,255,255,.10),rgba(0,0,0,.28));box-shadow:inset 0 0 0 1px var(--line),inset 0 -8px 16px rgba(0,0,0,.25);transition:box-shadow .25s}
-#dpile.can{box-shadow:inset 0 0 0 2px var(--amber),0 0 20px rgba(255,196,107,.25)}
 #dpile .pl{position:absolute;left:14px;top:50%;transform:translateY(-50%);z-index:60;pointer-events:none;display:flex;flex-direction:column;gap:2px;max-width:70px;font-size:11px;line-height:1.15;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-#dpile.can .pl{color:var(--amber)}
 #dpile .pl b{font-size:20px;color:var(--text);letter-spacing:0}
 #dpile .pt{position:absolute;width:24px;height:40px;border-radius:6px;cursor:pointer;background:linear-gradient(145deg,#9a4d7d,#4b2468);box-shadow:0 1px 0 #2b1340,0 3px 6px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.22);transition:filter .15s;-webkit-tap-highlight-color:transparent}
 #dpile .pt::before{content:"";position:absolute;left:18%;right:18%;top:50%;height:1.5px;background:rgba(255,255,255,.3)}
 #dpile .pt::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.32)}
 #dpile:not(.can) .pt{cursor:default;filter:saturate(.7) brightness(.85)}
-#dpile.can .pt{animation:ptglow 1.7s ease-in-out infinite;animation-delay:calc(var(--k)*60ms)}
 #dpile.can .pt:active{filter:brightness(1.35)}
 @keyframes ptglow{50%{box-shadow:0 1px 0 #2b1340,0 3px 6px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.22),0 0 0 2px rgba(255,196,107,.9),0 0 14px rgba(255,196,107,.55)}}
 #dpile .pt.taken{animation:none;pointer-events:none;transform:translate(0,130px) rotate(0deg) scale(1.7)!important;opacity:0;transition:transform .42s cubic-bezier(.35,0,.7,.5),opacity .42s .06s}
@@ -2749,6 +2746,47 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 #dmcallui[data-s="in"] #ccmute,#dmcallui[data-s="out"] #ccmute,#dmcallui[data-s="ended"] .cb{display:none}
 #dmcallui:not([data-s="in"]) #ccacc{display:none}
 @media (min-width:760px){#dmchat{left:50%;width:min(520px,100%);margin-left:calc(min(520px,100vw)/-2);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 30px 80px rgba(0,0,0,.6)}}
+
+/* ===== Oyunların öz temaları: hər oyun öz rəngində (Uno və Mafia öz dizaynında qalır) ===== */
+
+/* Domino: yaşıl çuxa + taxta haşiyə + fil sümüyü daşlar */
+#domino{--velvet:#06261a;--seat:#0f4030;--seat-2:#155240;--rose:#f3c969;--rose-deep:#c8962e;--amber:#ffe9a8;--muted:#9fc7b2;--line:rgba(255,255,255,.12);
+  background:radial-gradient(120% 80% at 50% 0%,#1c7a52 0%,#0c3b28 55%,#06261a 100%)}
+#domino .pbtn{color:#1b1405}
+#domino .pbtn:hover:not(:disabled){background:#dba93d}
+#domino .pbtn.alt{background:#f4ead2;color:#2a2110}
+#domino .dpl{background:rgba(0,0,0,.22)}
+#domino .donl{background:#4f7564}
+#domino #dboard{background:radial-gradient(120% 120% at 50% 40%,#1e8a5d 0%,#0f5037 70%,#0a3a28 100%);box-shadow:inset 0 0 0 3px #5a3a1c,inset 0 0 0 5px #8a5c2e,inset 0 8px 24px rgba(0,0,0,.4)}
+#domino .tile.back{background:linear-gradient(135deg,#3a332d,#14110f);box-shadow:0 1px 0 #000}
+#domino #dpile{background:radial-gradient(90% 140% at 30% 0%,rgba(255,255,255,.08),rgba(0,0,0,.32));box-shadow:inset 0 0 0 3px #5a3a1c,inset 0 0 0 4px #8a5c2e}
+#domino #dpile .pt{background:linear-gradient(145deg,#3f3730,#15110e);box-shadow:0 1px 0 #000,0 3px 6px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.2)}
+#domino #dhand .tile.ok{box-shadow:0 0 0 2px #f3c969,0 6px 14px rgba(0,0,0,.4)}
+
+/* Şahmat: qara-qəhvəyi taxta, isti bej və qəhvəyi xanalar */
+#chess{--velvet:#17120d;--seat:#2b2118;--seat-2:#3a2c1f;--rose:#d9a45b;--rose-deep:#a8742f;--amber:#f2cf86;--muted:#bcad98;--line:rgba(255,240,215,.1);
+  background:radial-gradient(120% 70% at 50% 0%,#3a2c1f 0%,#1a130d 62%,#100b07 100%)}
+#chess::before{background:radial-gradient(40% 30% at 20% 25%,rgba(217,164,91,.2),transparent 70%),radial-gradient(35% 28% at 80% 70%,rgba(120,150,110,.14),transparent 70%),radial-gradient(30% 25% at 70% 15%,rgba(242,207,134,.12),transparent 70%)}
+#chess .pbtn{color:#1d1409}
+#chess .pbtn:hover:not(:disabled){background:#bd8640}
+#chess .cdot{background:#6d5f4d}
+#chess .csq.lt{background:#ecd9b5}
+#chess .csq.dk{background:#a9784a}
+#chess .csq.lt i{color:#a9784a}
+#chess .csq.dk i{color:#ecd9b5}
+#chess #cpro button{background:#ecd9b5}
+#chess #cbd{box-shadow:0 18px 40px rgba(0,0,0,.55),0 0 0 3px rgba(255,240,215,.08),0 0 0 6px rgba(94,60,28,.85),0 0 38px rgba(217,164,91,.18)}
+#chess .cp.b,#chess .pc.b{color:#1d150d}
+
+/* Durak: qış mavisi masa, mavi kart kürəyi */
+#durak{--velvet:#091523;--seat:#112640;--seat-2:#18365a;--rose:#6cc3ff;--rose-deep:#2f86d1;--amber:#ffd27a;--muted:#9db6d3;--line:rgba(255,255,255,.1);
+  background:radial-gradient(120% 70% at 50% 0%,#1f4a7a 0%,#0e2540 55%,#08121f 100%)}
+#durak .pbtn:hover:not(:disabled){background:#2574b8}
+#durak .pbtn.alt{background:#e6f1ff;color:#0c2340}
+#durak .donl{background:#4d6a8c}
+#durak #durboard{background:radial-gradient(120% 120% at 50% 35%,rgba(108,195,255,.16),rgba(0,0,0,.3));box-shadow:inset 0 0 0 1px rgba(160,210,255,.22)}
+#durpiles .dkb{border-color:#eaf3ff;background:repeating-linear-gradient(45deg,rgba(255,255,255,.18) 0 3px,transparent 3px 6px),linear-gradient(135deg,#2f86d1,#12335c)}
+#durak #durhand .dkh.ok .dkc{box-shadow:0 0 0 2px #6cc3ff,0 6px 14px rgba(0,0,0,.4)}
 </style>
 <style id="perf-css">
 /* ===================== PERFORMANS (telefonda scroll donmaları) ===================== */
