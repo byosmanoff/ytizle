@@ -9400,7 +9400,7 @@ window.wtInviteBox = function(o){
     cardMsg('');
     try{
       var r = isCreate
-        ? await api('/api/domino/create', {method: 'POST', body: bot ? '{"bot":true}' : JSON.stringify({size: domSize})})
+        ? await api('/api/domino/create', {method: 'POST', body: JSON.stringify(bot ? {bot: true, size: domSize} : {size: domSize})})
         : await api('/api/domino/join', {method: 'POST', body: JSON.stringify({room: code})});
       if(r.ok){ open(await r.json()); return true; }
       if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
