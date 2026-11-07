@@ -3429,6 +3429,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <div class="dt"><b>Şahmat</b><small id="ccode"></small></div>
     <button class="ib sfxb" id="csfx" aria-label="Səs" title="Səs"></button>
     <button class="ib" id="cshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="cquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
   </div>
   <div class="cpl" id="copp"></div>
   <div class="gvbar" id="cvbar">
@@ -3457,7 +3458,6 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   <div class="cpl" id="cme"></div>
   <div id="cmsg" role="status"></div>
   <div id="cres" hidden></div>
-  <div id="cact"><button class="pbtn alt" id="cresign" hidden>Təslim ol</button></div>
 </div>
 <div id="domino" hidden role="dialog" aria-modal="true" aria-label="Domino">
   <div class="dhead">
@@ -8560,7 +8560,6 @@ window.wtInviteBox = function(o){
   function renderRes(s){
     var box = $('cres'), over = s.status === 'over';
     box.hidden = !over;
-    $('cresign').hidden = s.status !== 'play';
     if(!over){ box.innerHTML = ''; box.className = ''; return; }
     var win = s.result === 'me', lose = s.result === 'opp';
     var title = win ? 'Qazandın!' : (lose ? 'Rəqib qazandı' : 'Bərabərlik');
@@ -8751,7 +8750,17 @@ window.wtInviteBox = function(o){
   $('cback').onclick = function(){ close(ch.s && (ch.s.status === 'wait' || ch.s.bot)); };
   $('cshare').onclick = share;
   $('cwshare').onclick = share;
-  $('cresign').onclick = function(){ wtConfirm('Təslim olmaq istəyirsən?', {ok: 'Təslim ol', danger: true}).then(function(y){ if(y) post('move', {action: 'resign'}); }); };
+  $('cquit').onclick = function(){
+    var s = ch.s, c = ch.code;
+    if(!s || !c) return;
+    var playing = s.status === 'play';
+    var msg = playing ? 'Oyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.' : 'Oyundan çıxmaq istəyirsən?';
+    wtConfirm(msg, {ok: 'Oyundan çıx', danger: true}).then(async function(y){
+      if(!y || ch.code !== c) return;
+      if(playing){ try{ await api('/api/chess/move', {method: 'POST', body: JSON.stringify({room: c, action: 'resign'})}); }catch(e){} }
+      close(true); remember('');
+    });
+  };
   $('cpro').addEventListener('click', function(e){ if(e.target === this){ ch.to = null; this.hidden = true; } });
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible' && ch.code && !$('chess').hidden){ ch.gen++; var g = ch.gen; ch.v = 0; poll(g); }
