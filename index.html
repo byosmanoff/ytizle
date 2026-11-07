@@ -2767,7 +2767,7 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 #domino .pbtn.alt{background:#f4ead2;color:#2a2110}
 #domino .dpl{background:rgba(0,0,0,.22)}
 #domino .donl{background:#4f7564}
-#domino{overflow-x:hidden;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#domino{padding-left:6px;padding-right:6px;overflow-x:hidden;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #domino #dboard{min-height:clamp(170px,32vh,260px);flex-shrink:0;touch-action:pan-y;background:radial-gradient(120% 120% at 50% 40%,#1e8a5d 0%,#0f5037 70%,#0a3a28 100%);box-shadow:inset 0 0 0 3px #5a3a1c,inset 0 0 0 5px #8a5c2e,inset 0 8px 24px rgba(0,0,0,.4)}
 #domino .tile.back{background:linear-gradient(135deg,#3a332d,#14110f);box-shadow:0 1px 0 #000}
 #domino #dpile{background:radial-gradient(90% 140% at 30% 0%,rgba(255,255,255,.08),rgba(0,0,0,.32));box-shadow:inset 0 0 0 3px #5a3a1c,inset 0 0 0 4px #8a5c2e}
@@ -9088,7 +9088,7 @@ window.wtInviteBox = function(o){
     var arms = dom.arms, bd = $('dboard'), ch = $('dchain');
     if(!arms || !bd || !ch) return;
     var CW = bd.clientWidth, CH = bd.clientHeight;
-    var W = CW - 24, H = CH - 24;
+    var W = CW - 16, H = CH - 18;
     if(W <= 0 || H <= 0) return;
     var best = 8, recs = null;
     for(var sz = 38; sz >= 8; sz--){
@@ -9189,7 +9189,7 @@ window.wtInviteBox = function(o){
   function rnd(i){ var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
   function renderPile(s){
     var p = $('dpile'); if(!p) return;
-    if(s.status !== 'play'){ p.hidden = true; p.innerHTML = ''; return; }
+    if(s.status !== 'play' || !(s.stock > 0)){ p.hidden = true; p.innerHTML = ''; return; }
     p.hidden = false;
     var n = s.stock || 0, can = !!s.can_draw;
     p.classList.toggle('can', can);
@@ -9249,7 +9249,7 @@ window.wtInviteBox = function(o){
     var e = $('dends'), t = '';
     if(s.status === 'play' || s.status === 'over'){
       if(s.board.length) t += 'Açıq uclar: <b>' + s.board[0][0] + '</b> · <b>' + s.board[s.board.length - 1][1] + '</b>';
-      if((s.opps || []).length > 1) t += (t ? ' &nbsp;|&nbsp; ' : '') + 'Bazar: <b>' + s.stock + '</b>';
+      if((s.opps || []).length > 1 && s.stock > 0) t += (t ? ' &nbsp;|&nbsp; ' : '') + 'Bazar: <b>' + s.stock + '</b>';
       if(s.status === 'play' && s.hand.length){
         var sum = s.hand.reduce(function(a, x){ return a + x[0] + x[1]; }, 0);
         t += (t ? ' &nbsp;|&nbsp; ' : '') + 'Əlindəki xal: <b>' + sum + '</b>';
