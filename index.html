@@ -9047,7 +9047,7 @@ window.wtInviteBox = function(o){
     if(dom.flashTx){ e.textContent = dom.flashTx; return; }
     var t = '', multi = (s.opps || []).length > 1;
     if(s.status === 'play'){
-      if(s.turn === 'me') t = s.moves.length ? 'Sənin növbən: daş seç' : (s.can_draw ? 'Gedişin yoxdur, bazardan daş çək' : '');
+      if(s.turn === 'me') t = s.moves.length ? 'Sənin növbən: daş seç' : (s.can_draw ? ((s.opps || []).length === 1 && s.stock > 1 ? 'Gedişin yoxdur, bazardan 2 daş çək' : 'Gedişin yoxdur, bazardan daş çək') : '');
       else if(s.bot) t = 'Kompüter düşünür...';
       else if(multi) t = (s.turn_name || 'Rəqib') + (s.turn_online ? ' oynayır...' : ' əlaqədə deyil');
       else t = s.turn_online ? 'Rəqibin növbəsi...' : 'Rəqib əlaqədə deyil';
@@ -9203,7 +9203,10 @@ window.wtInviteBox = function(o){
       if(s.note){
         var mp = (s.opps || []).length > 1;
         if(s.note.k === 'pass') flash(s.note.mine ? 'Gedişin olmadığı üçün keçdin' : (mp ? s.note.name + ' keçdi' : 'Rəqib keçdi'));
-        else if(s.note.k === 'draw' && !s.note.mine) flash(mp ? s.note.name + ' bazardan daş çəkdi' : 'Rəqib bazardan daş çəkdi');
+        else if(s.note.k === 'draw' && !s.note.mine){
+          var dn = s.note.n > 1 ? s.note.n + ' daş' : 'daş';
+          flash(mp ? s.note.name + ' bazardan ' + dn + ' çəkdi' : 'Rəqib bazardan ' + dn + ' çəkdi');
+        }
       }
     }
     if(s.bot && s.status === 'play' && s.turn === 'opp') scheduleBot();

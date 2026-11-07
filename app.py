@@ -4638,14 +4638,24 @@ def _dom_do_play(g, who, t, end):
     return True
 
 
+DOM_DRAW_2P = 2    # yalnız 2 nəfər oynayanda bazardan bir dəfəyə bu qədər daş çəkilir (3-4 nəfərdə 1)
+
+
+def _dom_draw_count(g):
+    """Bir çəkilişdə bazardan neçə daş götürülür: 2 nəfərdə 2, çox nəfərdə 1."""
+    return DOM_DRAW_2P if len(g["players"]) == 2 else 1
+
+
 def _dom_do_draw(g, who):
     hand = g["hands"][who]
     if _dom_moves(g, hand) or not g["stock"]:
         return False
     _dom_lack(g, who)
-    hand.append(g["stock"].pop())
+    n = min(_dom_draw_count(g), len(g["stock"]))     # bazarda 1 daş qalıbsa, 1 daş çəkilir
+    for _ in range(n):
+        hand.append(g["stock"].pop())
     hand.sort()
-    g["note"] = {"who": who, "k": "draw"}
+    g["note"] = {"who": who, "k": "draw", "n": n}
     _dom_settle(g)
     return True
 
@@ -4833,7 +4843,8 @@ def _dom_view(g, sub):
     out["vc"], out["vk"] = _gv_view("domino", g)
     if g["note"]:
         nn = g["names"].get(g["note"]["who"]) or {}
-        out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"], "name": nn.get("name", "")}
+        out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"], "name": nn.get("name", ""),
+                       "n": g["note"].get("n", 1)}
     if st == "over":
         w = g["winner"]
         out["result"] = "draw" if not w else ("me" if w == sub else "opp")
@@ -5002,7 +5013,7 @@ def api_domino_move():
             if not _dom_do_play(g, sub, t, end):
                 abort(400)
         elif act == "draw":
-            if not _dom_do_draw(g, sub):   # hər sorğuda yalnız bir daş çəkilir
+            if not _dom_do_draw(g, sub):   # hər sorğuda bir çəkiliş: 2 nəfərdə 2 daş, çox nəfərdə 1 daş
                 abort(400)
         else:
             abort(400)
