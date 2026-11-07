@@ -697,7 +697,7 @@ init_extra()
 
 # ---- Oyun nəticələri: qalibiyyət 3 xal, bərabərlik 1, məğlubiyyət 0. Botlu oyunlar və tək insanlı oyunlar sayılmır ----
 def _human(p):
-    return isinstance(p, str) and p and not p.startswith("bot")
+    return isinstance(p, str) and p and not p.startswith("bot") and not p.startswith("guest:")
 
 
 def record_game(game, winners=(), losers=(), draws=()):
@@ -731,7 +731,11 @@ def rec_game(kind, g):
             if not m:
                 return
             g["_rr"] = g.get("round")
-            record_game("domino", [m], [p for p in pl if p != m])
+            if g.get("team") and m in g["team"]:
+                wt = g["team"][m]
+                record_game("domino", [p for p in pl if g["team"].get(p) == wt], [p for p in pl if g["team"].get(p) != wt])
+            else:
+                record_game("domino", [m], [p for p in pl if p != m])
         elif kind == "chess":
             if g.get("status") != "over":
                 return
@@ -1539,6 +1543,40 @@ def issue_token(sub):
     dbq("INSERT INTO sessions(token,sub,created) VALUES(?,?,?)", (token, sub, now))
     dbq("DELETE FROM sessions WHERE created<?", (now - SESSION_DAYS * 86400,))
     return token
+
+
+# ---- Qonaq rejimi: hesabsız, müvəqqəti sessiya. Yalnız oyunlara icazə verilir ----
+GUEST_PREFIX = "guest:"          # sub prefiksi (reytinqə düşmür)
+GUEST_TOK = "gst."               # token prefiksi ('.' urlsafe əlifbada yoxdur, real tokenlə toqquşmur)
+GUEST_TTL = 2 * 86400
+GUEST_OK = ("/api/guest/", "/api/domino/", "/api/chess/", "/api/durak/", "/api/uno/", "/api/mafia/", "/api/gvoice/")
+
+
+@app.route("/api/guest/start", methods=["POST"])
+def api_guest_start():
+    if not rate_hit("guest", client_ip(), 30, 600):
+        return jsonify(error="Çox sorğu. Bir az gözlə."), 429
+    name = clean_name((request.get_json(silent=True) or {}).get("name")) or "Qonaq"
+    now = time.time()
+    sub = GUEST_PREFIX + secrets.token_hex(8)
+    tok = GUEST_TOK + secrets.token_urlsafe(24)
+    old = now - GUEST_TTL
+    dbq("DELETE FROM sessions WHERE sub LIKE 'guest:%' AND created<?", (old,))
+    dbq("DELETE FROM users WHERE sub LIKE 'guest:%' AND created<?", (old,))
+    dbq("INSERT INTO users(sub,name,created) VALUES(?,?,?)", (sub, name, now))
+    dbq("INSERT INTO sessions(token,sub,created) VALUES(?,?,?)", (tok, sub, now))
+    return jsonify(token=tok, name=name)
+
+
+@app.before_request
+def guest_fence():
+    """Qonaq tokeni oyunlardan başqa heç bir API-yə (dost, mesaj, profil, yükləmə...) girə bilməz."""
+    if not request.headers.get("X-Token", "").startswith(GUEST_TOK):
+        return None
+    p = request.path
+    if p.startswith("/api/") and not p.startswith(GUEST_OK):
+        return jsonify(error="guest"), 403
+    return None
 
 
 def user_name(sub):
@@ -4453,6 +4491,24 @@ def _dom_other(g, sub):
     return next((p for p in g["players"] if p != sub), None)
 
 
+def _dom_team_mode(g):
+    """4 nəfərlik oyun 2 komandaya bölünür: oturuş sırası 1-3 və 2-4 tərəfdaşdır (tərəfdaşlar üz-üzə oturur)."""
+    return g.get("size", 2) == 4
+
+
+def _dom_team(g, p):
+    """Oyunçunun komandası (0/1). Oyun başlayanda g["team"] dondurulur; gözləmə zamanı oturuş sırasına görə."""
+    t = g.get("team")
+    if t and p in t:
+        return t[p]
+    ps = g["players"]
+    return (ps.index(p) % 2) if p in ps else 0
+
+
+def _dom_tscore(g, team):
+    return g.setdefault("tscore", {0: 0, 1: 0}).get(team, 0)
+
+
 def _dom_moves(g, hand):
     b = g["board"]
     if not b:
@@ -4497,6 +4553,9 @@ def _dom_deal(g):
         if all(_dom_hand_ok(tiles[i * 7:(i + 1) * 7]) for i in range(len(ps))):
             break
     g["hands"] = {p: sorted(tiles[i * 7:(i + 1) * 7]) for i, p in enumerate(ps)}
+    if _dom_team_mode(g) and not g.get("team"):
+        g["team"] = {p: i % 2 for i, p in enumerate(ps)}
+        g["tscore"] = {0: 0, 1: 0}
     g["stock"] = tiles[7 * len(ps):]
     g["board"] = []
     g["cx"] = 0
@@ -4550,6 +4609,19 @@ def _dom_finish(g, winner, reason):
     g["winner"] = winner
     g["reason"] = reason
     g["pts"] = 0
+    if winner and _dom_team_mode(g) and g.get("team"):
+        # komanda oyunu: xal komandaya yazılır. Daşlar bitibsə rəqib komandanın əlindəki bütün daşların cəmi,
+        # bloklanıbsa komandaların cəmləri arasındakı fərq (ən azı 1)
+        wt = _dom_team(g, winner)
+        mine = sum(_dom_sum(g, p) for p in g["players"] if _dom_team(g, p) == wt)
+        theirs = sum(_dom_sum(g, p) for p in g["players"] if _dom_team(g, p) != wt)
+        pts = theirs if reason == "out" else max(theirs - mine, 1)
+        g["pts"] = pts
+        ts = g.setdefault("tscore", {0: 0, 1: 0})
+        ts[wt] = min(ts.get(wt, 0) + pts, DOM_TARGET)
+        if ts[wt] >= DOM_TARGET:
+            g["match"] = winner
+        return
     if winner:
         sw = _dom_sum(g, winner)
         so = [_dom_sum(g, p) for p in g["players"] if p != winner]
@@ -4574,6 +4646,17 @@ def _dom_settle(g):
         g["note"] = {"who": cur, "k": "pass"}
         if g["passes"] >= n:
             sums = {p: _dom_sum(g, p) for p in g["players"]}
+            if _dom_team_mode(g) and g.get("team"):
+                tsum = {0: 0, 1: 0}
+                for p in g["players"]:
+                    tsum[_dom_team(g, p)] += sums[p]
+                if tsum[0] == tsum[1]:
+                    _dom_finish(g, None, "blocked")
+                else:
+                    wt = 0 if tsum[0] < tsum[1] else 1
+                    mem = [p for p in g["players"] if _dom_team(g, p) == wt]
+                    _dom_finish(g, min(mem, key=lambda p: sums[p]) if mem else None, "blocked")
+                return
             m = min(sums.values())
             low = [p for p in g["players"] if sums[p] == m]
             _dom_finish(g, low[0] if len(low) == 1 else None, "blocked")
@@ -4590,6 +4673,8 @@ def _dom_kick(g, p):
     g["note"] = None
     if len(g["players"]) == 1:
         _dom_finish(g, g["players"][0], "left")
+    elif _dom_team_mode(g) and g.get("team") and len({_dom_team(g, x) for x in g["players"]}) == 1:
+        _dom_finish(g, g["players"][0], "left")      # bir komandada heç kim qalmadı
     else:
         if g["turn"] == p:
             g["turn"] = nxt
@@ -4817,10 +4902,13 @@ def _dom_view(g, sub):
     hand = [list(t) for t in g["hands"].get(sub, [])] if st != "wait" else []
     mv = _dom_moves(g, hand) if st == "play" and g["turn"] == sub else []
     opps = []
+    tm = _dom_team_mode(g)
     for p in order:
         opps.append(dict(g["names"].get(p) or {}, n=len(g["hands"].get(p, [])),
                          online=bool(p == "bot" or now - g["seen"].get(p, 0) < 35),
-                         score=g["score"].get(p, 0), turn=bool(st == "play" and g["turn"] == p)))
+                         score=(_dom_tscore(g, _dom_team(g, p)) if tm else g["score"].get(p, 0)),
+                         mate=bool(tm and _dom_team(g, p) == _dom_team(g, sub)),
+                         turn=bool(st == "play" and g["turn"] == p)))
     tn = g["names"].get(g["turn"]) if st == "play" and g["turn"] != sub else None
     out = dict(
         v=g["v"], code=g["code"], status=st, round=g["round"], board=g["board"], cx=g.get("cx"), hand=hand,
@@ -4830,7 +4918,7 @@ def _dom_view(g, sub):
         turn_name=(tn or {}).get("name") if tn else None,
         turn_online=bool(tn and (g["turn"] == "bot" or now - g["seen"].get(g["turn"], 0) < 35)),
         me=g["names"].get(sub), opps=opps, size=g.get("size", 2), joined=len(ps), host=bool(ps and ps[0] == sub),
-        my_score=g["score"].get(sub, 0),
+        my_score=(_dom_tscore(g, _dom_team(g, sub)) if tm else g["score"].get(sub, 0)), teams=tm,
         last=({"t": g["last"]["t"]} if g["last"] else None), reason=g["reason"], target=DOM_TARGET, bot=bool(g.get("bot")),
     )
     out["vc"], out["vk"] = _gv_view("domino", g)
@@ -4839,11 +4927,17 @@ def _dom_view(g, sub):
         out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"], "name": nn.get("name", "")}
     if st == "over":
         w = g["winner"]
-        out["result"] = "draw" if not w else ("me" if w == sub else "opp")
+        if tm and w:
+            out["result"] = "me" if _dom_team(g, w) == _dom_team(g, sub) else "opp"
+        else:
+            out["result"] = "draw" if not w else ("me" if w == sub else "opp")
         out["winner_name"] = (g["names"].get(w) or {}).get("name", "") if w else ""
         out["pts"] = g.get("pts", 0)
         m = g.get("match")
-        out["match"] = None if not m else ("me" if m == sub else "opp")
+        if tm and m:
+            out["match"] = "me" if _dom_team(g, m) == _dom_team(g, sub) else "opp"
+        else:
+            out["match"] = None if not m else ("me" if m == sub else "opp")
         out["match_name"] = (g["names"].get(m) or {}).get("name", "") if m else ""
         out["opp_hands"] = [dict(name=(g["names"].get(p) or {}).get("name", ""),
                                  hand=[list(t) for t in g["hands"].get(p, [])]) for p in order]
@@ -5029,6 +5123,7 @@ def api_domino_again():
             g["round"] += 1
             if g.get("match"):                 # 101-ə çatılıb: yeni oyun, xal sıfırdan
                 g["score"] = {}
+                g["tscore"] = {0: 0, 1: 0}
                 g["match"] = None
                 g["winner"] = None             # yeni oyun yenə qoşa ilə başlayır
             _dom_deal(g)

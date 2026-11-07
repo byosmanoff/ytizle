@@ -1626,6 +1626,8 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #dpl.multi{gap:6px;padding:6px}
 .dchip{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
 .dchip.turn{box-shadow:inset 0 0 0 2px var(--amber)}
+.dchip.mate:not(.turn){box-shadow:inset 0 0 0 1.5px rgba(45,204,122,.65)}
+#domino .dchip .dteam{display:block;font-style:normal;font-size:10px;font-weight:700;line-height:1.2;color:#2dcc7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #domino .dchip .dav{width:28px;height:28px;font-size:13px}
 #domino .dchip .dwho b{font-size:13px}
 #domino .dchip .dwho small{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2890,7 +2892,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
           <div class="or">və ya</div>
           <input id="guestName" placeholder="Adın (qonaq)" maxlength="20" autocomplete="nickname">
           <button type="button" id="guestGo" onclick="try{wtGuestEnter()}catch(e){console&&console.error(e)}">Qonaq kimi davam et</button>
-          <p class="ghint">Hesab olmadan otağa girə bilərsən. Oyunlar və dostlar üçün giriş lazımdır.</p>
+          <p class="ghint">Hesab olmadan otağa girə və oyun oynaya bilərsən. Dostlar və mesajlar üçün giriş lazımdır.</p>
         </div>
         <p class="note"><i class="fa-solid fa-lock" aria-hidden="true"></i> E-poçtun yalnız hesabı təsdiq etmək və şifrəni bərpa etmək üçün saxlanır. Google və e-poçt eyni ünvanla bir hesab olur. Şifrən şifrələnmiş saxlanır.</p>
       </div>
@@ -3499,6 +3501,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
       <small>Kodu rəqibinə göndər:</small>
       <b id="dwcode"></b>
       <small id="dwcnt"></small>
+      <small id="dwteam"></small>
       <button class="pbtn" id="dwshare">Dəvət linkini göndər</button>
       <div class="ginv">
         <div class="gt">İstifadəçi adı ilə dəvət et</div>
@@ -5589,8 +5592,9 @@ function wtGuestEnter(){
   var j = document.getElementById('join');
   if(j) j.style.display = 'none';
   myName = nm;
+  try{ localStorage.removeItem('wt_gtok'); wtGuestEnsure(true).catch(function(){}); }catch(e){}
   showMenu();
-  try{ window.wtToast('Qonaq rejimindəsən — otaq aça bilərsən', 3500); }catch(e){}
+  try{ window.wtToast('Qonaq rejimindəsən — otaq aça və oyun oynaya bilərsən', 3500); }catch(e){}
 }
 (function(){
   try{
@@ -5606,7 +5610,7 @@ function wtGuestEnter(){
 
 
 function wtGuestGoAuth(mode){
-  try{ window.wtSetGuest(false); }catch(e){}
+  try{ window.wtSetGuest(false); localStorage.removeItem('wt_gtok'); }catch(e){}
   try{ localStorage.removeItem('wt_guest'); }catch(e){}
   try{ document.body.classList.remove('guest-mode'); }catch(e){}
   account = null; token = '';
@@ -5642,11 +5646,35 @@ wtBindGuestAuth();
 
 function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
+/* ---- Qonaq sessiyası: yalnız oyun sorğuları üçün müvəqqəti token ---- */
+const GUEST_API = /^\/api\/(domino|chess|durak|uno|mafia|gvoice)\//;
+function wtGuestTok(){ try{ return localStorage.getItem('wt_gtok') || ''; }catch(e){ return ''; } }
+let _gPromise = null;
+function wtGuestEnsure(force){
+  if(!force && wtGuestTok()) return Promise.resolve(wtGuestTok());
+  if(_gPromise) return _gPromise;
+  let nm = 'Qonaq'; try{ nm = localStorage.getItem('wt_guest_name') || (account && account.name) || 'Qonaq'; }catch(e){}
+  _gPromise = fetch('/api/guest/start', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: nm}), cache: 'no-store'})
+    .then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
+    .then(j => { try{ localStorage.setItem('wt_gtok', j.token); }catch(e){} return j.token; })
+    .finally(() => { _gPromise = null; });
+  return _gPromise;
+}
+window.wtGuestEnsure = wtGuestEnsure;
 async function api(path, o){
   o = o || {};
-  const hd = Object.assign({'X-Token': token, 'X-Lang': (window.wtLang ? window.wtLang() : 'az')}, o.headers || {});
+  let tk = token, useG = false;
+  if(!tk && GUEST_API.test(path) && window.wtIsGuest && window.wtIsGuest()){
+    useG = true;
+    try{ tk = wtGuestTok() || await wtGuestEnsure(); }catch(e){ tk = ''; }
+  }
+  const hd = Object.assign({'X-Token': tk, 'X-Lang': (window.wtLang ? window.wtLang() : 'az')}, o.headers || {});
   if(o.body) hd['Content-Type'] = 'application/json';
   const r = await fetch(path, Object.assign({}, o, {headers: hd, cache: 'no-store'}));
+  if(r.status === 401 && useG && !o._gretry){
+    try{ await wtGuestEnsure(true); }catch(e){ return r; }
+    return api(path, Object.assign({}, o, {_gretry: true}));
+  }
   if(r.status === 401 && token && !AUTH_PATHS.includes(path)){ forgetLogin(); throw new Error('401'); }
   return r;
 }
@@ -7294,14 +7322,7 @@ async function loadTourneys(){
   }catch(e){}
 }
 window.addEventListener('wt:languagechange', () => { if(token){ loadBoard(); loadTourneys(); } });
-document.addEventListener('click', function(e){
-  if(token || !(window.wtIsGuest && window.wtIsGuest())) return;
-  var t = e.target.closest && e.target.closest('#domBot,#domEnter,#chBot,#chEnter,#mafNew,#mafBot,#mafEnter,#durEnter');
-  if(!t) return;
-  e.preventDefault(); e.stopPropagation();
-  window.wtToast && window.wtToast('Oyunlar üçün hesaba daxil ol');
-}, true);
-/* wtGuestGameGate */
+/* qonaq oyun qapısı götürüldü: qonaqlar müvəqqəti sessiya ilə oyun oynaya bilir */
 
 document.querySelectorAll('#tabbar [data-go="games"]').forEach(b => b.addEventListener('click', () => { loadBoard(); loadTourneys(); }));
 
@@ -7714,6 +7735,16 @@ boot();
   var DATE_RE = new RegExp('^(?:(Baz|B\\.e|Ç\\.a|Çər|C\\.a|Cüm|Şən), )?(\\d{1,2}) (' + MON.join('|') + ')(, \\d{1,2}:\\d{2})?$');
   /* dəyişən hissəli mətnlər: [regex, türkcə, ingiliscə], $1.. tutulan hissələrdir */
   var PATS = [
+    [/^(.+) oyunu qazandı$/, '$1 oyunu kazandı', '$1 won the game'],
+    [/^(.+) qazandı$/, '$1 kazandı', '$1 won'],
+    [/^(.+) oynayır\.\.\.$/, '$1 oynuyor...', '$1 is playing...'],
+    [/^(.+) əlaqədə deyil$/, '$1 bağlantıda değil', '$1 is offline'],
+    [/^(.+) başlayır\.\.\.$/, '$1 başlıyor...', '$1 starts...'],
+    [/^(.+) keçdi$/, '$1 pas geçti', '$1 passed'],
+    [/^(.+) bazardan daş çəkdi$/, '$1 havuzdan taş çekti', '$1 drew a tile'],
+    [/^Oyunçular: (\d+) \/ (\d+)$/, 'Oyuncular: $1 / $2', 'Players: $1 / $2'],
+    [/^(\d+) daş$/, '$1 taş', '$1 tiles'],
+    [/^(\d+) xal$/, '$1 puan', '$1 pts'],
     [/^KOD: (.+)$/, 'KOD: $1', 'CODE: $1'],
   [/^KOD ([A-Z0-9]+)$/, 'KOD $1', 'CODE $1'],
     [/^Kod: (.+)$/, 'Kod: $1', 'Code: $1'],
@@ -7751,6 +7782,31 @@ boot();
     return k.replace(/dəq/g, t ? 'dk' : 'min').replace(/saat/g, t ? 'sa' : 'h').replace(/gün/g, t ? 'gün' : 'd').replace(/sonra/g, t ? 'sonra' : 'later');
   }
   D['Kodu dostuna göndər:'] = ['Kodu arkadaşına gönder:', 'Send this code to your friend:'];
+  D['Hesab olmadan otağa girə və oyun oynaya bilərsən. Dostlar və mesajlar üçün giriş lazımdır.'] = ['Hesap olmadan odaya girebilir ve oyun oynayabilirsin. Arkadaşlar ve mesajlar için giriş gerekir.', 'You can join a room and play games without an account. Friends and messages need a login.'];
+  (function(){ var E = {
+    'Hələ sənin növbən deyil': ['Henüz sıra sende değil', "It's not your turn yet"],
+    'Qoyacaq daşın var, bazardan çəkmək olmaz': ['Koyacak taşın var, havuzdan çekemezsin', "You have a tile to play, so you can't draw"],
+    'Bazar boşdur': ['Havuz boş', 'The boneyard is empty'],
+    'Bazarda 2 daş qalmalıdır, keçirsən': ['Havuzda 2 taş kalmalı, pas geçiyorsun', '2 tiles must stay in the boneyard, you pass'],
+    'Bazar:': ['Havuz:', 'Boneyard:'],
+    'Əlaqə problemi, internetini yoxla': ['Bağlantı sorunu, internetini kontrol et', 'Connection problem, check your internet'],
+    'Yeni oyun': ['Yeni oyun', 'New game'],
+    'Sola': ['Sola', 'Left'],
+    'Sağa': ['Sağa', 'Right'],
+    'Tərəfdaş': ['Takım arkadaşı', 'Teammate'],
+    'Komandan': ['Takımın', 'Your team'],
+    'Rəqib komanda': ['Rakip takım', 'Opposing team'],
+    'Komandan qazandı!': ['Takımın kazandı!', 'Your team won!'],
+    'Rəqib komanda qazandı': ['Rakip takım kazandı', 'The other team won'],
+    'Komandan oyunu qazandı!': ['Takımın oyunu kazandı!', 'Your team won the game!'],
+    'Rəqib komanda oyunu qazandı': ['Rakip takım oyunu kazandı', 'The other team won the game'],
+    'Rəqib komandada oyunçu qalmadı': ['Rakip takımda oyuncu kalmadı', 'The other team has no players left'],
+    'Oyun bloklandı, komandaların daş cəminə görə': ['Oyun kilitlendi, takımların taş toplamına göre', "Game blocked, decided by the teams' pip count"],
+    'Komandalar: 1-ci və 3-cü, 2-ci və 4-cü oyunçu tərəfdaşdır': ['Takımlar: 1. ile 3., 2. ile 4. oyuncu takım arkadaşıdır', 'Teams: players 1 & 3 and players 2 & 4 are partners'],
+    'Oyunçular gözlənilir...': ['Oyuncular bekleniyor...', 'Waiting for players...'],
+    'Kodu dostlarına göndər:': ['Kodu arkadaşlarına gönder:', 'Send this code to your friends:']
+  }; Object.keys(E).forEach(function(k){ D[k] = E[k]; }); })();
+  D['Qonaq rejimindəsən — otaq aça və oyun oynaya bilərsən'] = ['Misafir moddasın — oda açabilir ve oyun oynayabilirsin', "You're in guest mode — you can open rooms and play games"];
   D['Əlaqə kəsildi, yenidən cəhd...'] = ['Bağlantı koptu, yeniden deneniyor...', 'Connection lost, retrying...'];
   D['Yenidən qoşuldu'] = ['Yeniden bağlandı', 'Reconnected'];
   D['İnternet yoxdur...'] = ['İnternet yok...', 'No internet...'];
@@ -8471,7 +8527,7 @@ window.wtInviteBox = function(o){
   var vrBusy = false;
   async function verifyResume(){
     var c = saved();
-    if(!c || vrBusy || !token || ch.code === c) return;
+    if(!c || vrBusy || !(token || (window.wtIsGuest && window.wtIsGuest())) || ch.code === c) return;
     vrBusy = true;
     try{
       var r = await api('/api/chess/check?room=' + encodeURIComponent(c));
@@ -8806,7 +8862,7 @@ window.wtInviteBox = function(o){
       tries++;
       var menuOn = false;
       try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
-      if(token && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
       else if(tries > 120) clearInterval(iv);
     }, 500);
   }
@@ -8852,7 +8908,7 @@ window.wtInviteBox = function(o){
   var vrBusy = false;
   async function verifyResume(){
     var c = saved();
-    if(!c || vrBusy || !token || dom.code === c) return;
+    if(!c || vrBusy || !(token || (window.wtIsGuest && window.wtIsGuest())) || dom.code === c) return;
     vrBusy = true;
     try{
       var r = await api('/api/domino/check?room=' + encodeURIComponent(c));
@@ -8874,7 +8930,8 @@ window.wtInviteBox = function(o){
   function chip(o, me, s){
     var nm = me ? 'Sən' : (o.name || '?');
     var cnt = me ? s.hand.length : o.n;
-    return '<div class="dchip' + (o.turn ? ' turn' : '') + '"><div class="dav">' + avatar(me ? s.me : o) + '</div><div class="dwho"><b data-nt>' + esc(nm) + '</b><small>' +
+    var mate = !!(s.teams && !me && o.mate);
+    return '<div class="dchip' + (o.turn ? ' turn' : '') + (mate ? ' mate' : '') + '"><div class="dav">' + avatar(me ? s.me : o) + '</div><div class="dwho"><b' + (me ? '' : ' data-nt') + '>' + esc(nm) + '</b>' + (mate ? '<em class="dteam">Tərəfdaş</em>' : '') + '<small>' +
       (me ? '' : '<span class="donl' + (o.online ? ' on' : '') + '"></span>') + cnt + ' daş · ' + (o.score || 0) + ' xal</small></div></div>';
   }
   function renderStrip(s){
@@ -8908,6 +8965,10 @@ window.wtInviteBox = function(o){
     if(isWait){
       $('dwcode').textContent = s.code.toUpperCase();
       $('dwcnt').textContent = s.size > 2 ? ('Oyunçular: ' + s.joined + ' / ' + s.size) : '';
+      var wsp = wait.querySelector('span'), wsm = wait.querySelector('small');
+      if(wsp) wsp.textContent = s.size > 2 ? 'Oyunçular gözlənilir...' : 'Rəqib gözlənilir...';
+      if(wsm) wsm.textContent = s.size > 2 ? 'Kodu dostlarına göndər:' : 'Kodu rəqibinə göndər:';
+      var wtm = $('dwteam'); if(wtm) wtm.textContent = s.size === 4 ? 'Komandalar: 1-ci və 3-cü, 2-ci və 4-cü oyunçu tərəfdaşdır' : '';
       inv.refresh();
       return;
     }
@@ -9068,13 +9129,19 @@ window.wtInviteBox = function(o){
     var wn = multi ? esc(s.winner_name || '?') : 'Rəqib';
     var win = s.match ? s.match === 'me' : s.result === 'me';
     var lose = s.match ? s.match === 'opp' : s.result === 'opp';
-    var title = s.match ? (s.match === 'me' ? 'Oyunu qazandın!' : (multi ? esc(s.match_name || '?') + ' oyunu qazandı' : 'Rəqib oyunu qazandı'))
+    var tm = !!s.teams;
+    var title = tm
+      ? (s.match ? (s.match === 'me' ? 'Komandan oyunu qazandı!' : 'Rəqib komanda oyunu qazandı')
+        : (s.result === 'me' ? 'Komandan qazandı!' : (s.result === 'opp' ? 'Rəqib komanda qazandı' : 'Bərabərlik')))
+      : s.match ? (s.match === 'me' ? 'Oyunu qazandın!' : (multi ? esc(s.match_name || '?') + ' oyunu qazandı' : 'Rəqib oyunu qazandı'))
       : (s.result === 'me' ? 'Qazandın!' : (s.result === 'opp' ? (multi ? wn + ' qazandı' : 'Rəqib qazandı') : 'Bərabərlik'));
-    var why = s.reason === 'out' ? 'Bütün daşlar bitdi' : (s.reason === 'left' ? (s.result === 'me' ? 'Rəqib oyundan çıxdı' : 'Oyundan çıxdın') : 'Oyun bloklandı, daşların cəminə görə');
+    var why = s.reason === 'out' ? 'Bütün daşlar bitdi'
+      : (s.reason === 'left' ? (tm ? 'Rəqib komandada oyunçu qalmadı' : (s.result === 'me' ? 'Rəqib oyundan çıxdı' : 'Oyundan çıxdın'))
+      : (tm ? 'Oyun bloklandı, komandaların daş cəminə görə' : 'Oyun bloklandı, daşların cəminə görə'));
     var ic = win ? 'fa-trophy' : (lose ? 'fa-heart-crack' : 'fa-handshake');
     var oppScore = (s.opps && s.opps[0] && s.opps[0].score) || 0;
-    var scoreHtml = '<div class="res-score"><div><span>' + (s.my_score || 0) + '</span><small>Sən</small></div><div><span>' + oppScore + '</span><small>' + (multi ? 'Rəqib' : (s.bot ? 'Kompüter' : 'Rəqib')) + '</small></div></div>';
-    var pts = s.pts ? '<div class="dpts">' + (s.result === 'opp' ? '<span>' + wn + '</span> ' : '') + '+' + s.pts + ' <span>xal</span></div>' : '';
+    var scoreHtml = '<div class="res-score"><div><span>' + (s.my_score || 0) + '</span><small>' + (tm ? 'Komandan' : 'Sən') + '</small></div><div><span>' + oppScore + '</span><small>' + (tm ? 'Rəqib komanda' : (multi ? 'Rəqib' : (s.bot ? 'Kompüter' : 'Rəqib'))) + '</small></div></div>';
+    var pts = s.pts ? '<div class="dpts">' + (s.result === 'opp' && !tm ? '<span>' + wn + '</span> ' : '') + '+' + s.pts + ' <span>xal</span></div>' : '';
     var conf = win ? '<div class="confetti" aria-hidden="true">' + Array.from({length:12}, function(_,i){
       var colors = ['#ff7a9c','#ffc46b','#2dcc7a','#7ab7ff','#e8567d'];
       var ang = (i / 12) * Math.PI * 2, dist = 40 + (i % 4) * 18;
@@ -9419,7 +9486,7 @@ window.wtInviteBox = function(o){
       tries++;
       var menuOn = false;
       try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
-      if(token && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
       else if(tries > 120) clearInterval(iv);
     }, 500);
   }
@@ -9889,7 +9956,7 @@ window.wtInviteBox = function(o){
     function verify(){
       var c = saved();
       if(!c || busy || du.code === c) return;
-      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      if(typeof token === 'undefined' || !(token || (window.wtIsGuest && window.wtIsGuest()))){ if(tries++ < 20) setTimeout(verify, 1500); return; }
       busy = true;
       api('/api/durak/check?room=' + enc(c)).then(function(r){
         busy = false;
@@ -9944,7 +10011,7 @@ window.wtInviteBox = function(o){
       tries++;
       var menuOn = false;
       try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
-      if(token && account && menuOn){ clearInterval(iv); var c = pendingDur; pendingDur = ''; enter(c, false); }
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pendingDur; pendingDur = ''; enter(c, false); }
       else if(tries > 120) clearInterval(iv);
     }, 500);
   }
@@ -10383,7 +10450,7 @@ window.wtInviteBox = function(o){
     function verify(){
       var c = saved();
       if(!c || busy || un.code === c) return;
-      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      if(typeof token === 'undefined' || !(token || (window.wtIsGuest && window.wtIsGuest()))){ if(tries++ < 20) setTimeout(verify, 1500); return; }
       busy = true;
       api('/api/uno/check?room=' + enc(c)).then(function(r){
         busy = false;
@@ -10438,7 +10505,7 @@ window.wtInviteBox = function(o){
       tries++;
       var menuOn = false;
       try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
-      if(token && account && menuOn){ clearInterval(iv); var c = pendingUno; pendingUno = ''; enter(c, false); }
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pendingUno; pendingUno = ''; enter(c, false); }
       else if(tries > 120) clearInterval(iv);
     }, 500);
   }
@@ -10929,7 +10996,7 @@ window.wtInviteBox = function(o){
     function verify(){
       var c = saved();
       if(!c || busy || ma.code === c) return;
-      if(typeof token === 'undefined' || !token){ if(tries++ < 20) setTimeout(verify, 1500); return; }
+      if(typeof token === 'undefined' || !(token || (window.wtIsGuest && window.wtIsGuest()))){ if(tries++ < 20) setTimeout(verify, 1500); return; }
       busy = true;
       api('/api/mafia/check?room=' + enc(c)).then(function(r){
         busy = false;
@@ -10967,7 +11034,7 @@ window.wtInviteBox = function(o){
       tries++;
       var menuOn = false;
       try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
-      if(token && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
       else if(tries > 120) clearInterval(iv);
     }, 500);
   }
