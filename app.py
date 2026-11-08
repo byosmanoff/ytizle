@@ -385,6 +385,10 @@ import subprocess
 import shutil
 
 
+VIDEO_TRANSCODE = os.environ.get("VIDEO_TRANSCODE", "1") != "0"           # "0" yazsan çevirmə tam söndürülür
+VIDEO_TRANSCODE_TIMEOUT = int(os.environ.get("VIDEO_TRANSCODE_TIMEOUT", "75"))   # saniyə: çatmasa orijinal fayl qalır
+
+
 def _ffmpeg_bin():
     """ffmpeg yolunu tapır: sistemdə varsa onu, yoxsa imageio-ffmpeg paketindəki hazır faylı."""
     p = shutil.which("ffmpeg")
@@ -413,10 +417,10 @@ def _needs_h264(path, ff):
 def _to_h264(src, dst, ff):
     vf = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
     cmd = [ff, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
-           "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26",
-           "-pix_fmt", "yuv420p", "-vf", vf, "-c:a", "aac", "-b:a", "128k",
+           "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30",
+           "-pix_fmt", "yuv420p", "-vf", vf, "-c:a", "aac", "-b:a", "96k",
            "-movflags", "+faststart", "-f", "mp4", dst]
-    subprocess.run(cmd, check=True, capture_output=True, timeout=900)
+    subprocess.run(cmd, check=True, capture_output=True, timeout=VIDEO_TRANSCODE_TIMEOUT)
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -473,7 +477,7 @@ def api_upload():
             pass
         abort(400)
     os.replace(tmp, path)
-    ff = _ffmpeg_bin()
+    ff = _ffmpeg_bin() if VIDEO_TRANSCODE else None
     if ff and ext in (".mp4", ".mov") and _needs_h264(path, ff):
         # HEVC/10-bit video bəzi kompüterlərdə qara ekran verir: hamı üçün H.264-ə çeviririk
         base = name.rsplit(".", 1)[0]

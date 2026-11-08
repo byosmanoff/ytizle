@@ -2846,6 +2846,12 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
     padding-right:max(12px,calc((100% - 780px) / 2));
   }
 }
+/* UNO kompüterdə: bütün hissələr eyni dar sütunda (padding-ə əlavə təminat) */
+@media (min-width:900px){
+  #uno > .dhead,#uno > #unpl,#uno > #unvbar,#uno > #unboard,#uno > #uninfo,#uno > #unmsg,#uno > #unact,#uno > #unres,#uno > #unhand{
+    width:100%;max-width:780px;margin-left:auto;margin-right:auto;box-sizing:border-box
+  }
+}
 /* Domino kompüterdə: əlindəki daşlar həmişə ekranın altında görünsün, qısa ekranda masa balacalaşsın */
 @media (min-width:900px){
   #domino #dhand{position:sticky;bottom:0;z-index:7;padding-bottom:10px;background:linear-gradient(to top,var(--velvet) 72%,transparent)}
