@@ -1528,8 +1528,9 @@ def code_email_html(code, title, intro, lang="az"):
     return (
         '<!DOCTYPE html><html lang="' + lang + '" style="background:#150a1d;"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">'
-        '<style>html,body{margin:0!important;padding:0!important;width:100%!important;min-width:100%!important;background:#150a1d!important}'
+        '<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">'
+        '<style>:root{color-scheme:light dark;supported-color-schemes:light dark}'
+        'html,body{margin:0!important;padding:0!important;width:100%!important;min-width:100%!important;background:#150a1d!important}'
         '.gmail_default,u+.body{background:#150a1d!important;margin:0!important}</style>'
         '</head><body class="body" bgcolor="#150a1d" style="margin:0;padding:0;background:#150a1d;width:100%;min-width:100%;">'
         '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + L["pre"] + code + '</div>'

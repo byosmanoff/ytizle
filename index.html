@@ -2862,6 +2862,47 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
   #domino #dpile{height:52px}
   #domino #dhand{min-height:76px}
 }
+
+/* UNO kompüterdə: bütün ekranı istifadə et, kartlar və masa ekranın hündürlüyünə görə böyüsün */
+@media (min-width:900px){
+  #uno{
+    --hw:clamp(76px,13vh,150px);
+    --pw:clamp(78px,12.5vh,150px);
+    gap:8px;
+    padding:12px max(20px,calc((100% - 1500px) / 2)) 12px;
+  }
+  #uno > .dhead,#uno > #unpl,#uno > #unvbar,#uno > #unboard,#uno > #uninfo,#uno > #unmsg,#uno > #unact,#uno > #unres,#uno > #unhand{
+    max-width:none;
+  }
+  #uno .dpl{padding:8px 14px}
+  #uno .dpl.multi .dchip{flex-direction:row;justify-content:flex-start;text-align:left;gap:10px;padding:8px 14px}
+  #uno .dav,#uno .dchip .dav{width:42px;height:42px;font-size:17px}
+  #uno .dchip .dwho b{font-size:16px}
+  #uno .dchip .dwho small{font-size:13px}
+  #uno .dpl.m4 .dav{width:36px;height:36px}
+  #unboard{min-height:200px;border-radius:30px}
+  #untable{gap:clamp(40px,8vw,140px);padding:16px}
+  #untable .uring{width:min(70%,calc(var(--pw)*5.2))}
+  #uno .upile{gap:10px}
+  #uno .ustk{width:var(--pw);height:calc(var(--pw)*1.5)}
+  #uno .upile .ukc{--w:var(--pw)}
+  #uno .udraw .ucnt{top:calc(var(--pw)*.75);font-size:15px;min-width:34px}
+  #uno .upile small{font-size:14px}
+  #uno .udir{font-size:40px}
+  #uno .ufx .big{font-size:120px}
+  #uno .ufx.uno .big{font-size:90px}
+  #uninfo{font-size:15px}
+  #unmsg{font-size:18px;min-height:26px}
+  #unact{justify-content:center}
+  #unact .pbtn{flex:0 1 380px;padding:12px}
+  #unhand{min-height:calc(var(--hw)*1.5 + 40px);padding:34px 16px 12px}
+  #uno .ukh .ukc,#unhand .uhin .ukc{--w:var(--cw,var(--hw))}
+  #uno .ukh{margin-left:calc(var(--ov,.3)*var(--cw,var(--hw))*-1)}
+  #uno .ukh:first-child{margin-left:0}
+  #uno .ukh.ok{transform:translateY(calc(var(--y,0px) - 26px)) rotate(var(--r,0deg))}
+  #uno .ukh:hover{transform:translateY(calc(var(--y,0px) - 14px)) rotate(var(--r,0deg));z-index:4}
+  #uno .ukh.ok:hover{transform:translateY(calc(var(--y,0px) - 32px)) rotate(var(--r,0deg));z-index:4}
+}
 </style>
 <style id="perf-css">
 /* ===================== PERFORMANS (telefonda scroll donmaları) ===================== */
