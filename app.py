@@ -184,6 +184,7 @@ def pass_host(r, now):
         r["host"] = p
         r["roles"].pop(p, None)
         r["rv"] += 1
+        r.pop("pub", None)          # host dəyişdi: açıq siyahı yenidən host tərəfindən təsdiqlənməlidir
         return True
     return False
 
@@ -273,7 +274,7 @@ def api_join():
             r["host"] = pid
         r["_cv"].notify_all()
         return jsonify(seq=r["seq"], locked=r["locked"], epoch=r["created"], video=r.get("video"), vpos=vpos_now(r, now),
-                       role=role_of(r, pid), hostonly=r["hostonly"], rv=r["rv"])
+                       role=role_of(r, pid), hostonly=r["hostonly"], rv=r["rv"], pub=bool(r.get("pub")))
 
 
 def vpos_now(r, now):
@@ -596,6 +597,12 @@ def api_lock():
         if r["host"] and role_of(r, pid) == "viewer":
             abort(403)   # kilidi yalnız host və moderator dəyişir
         r["locked"] = bool(d.get("locked"))
+        if r["locked"]:
+            if r.get("pub"):
+                r["pub_saved"] = r.pop("pub")   # kilidli otaq siyahıda görünmür, açılanda qayıdır
+        elif r.get("pub_saved"):
+            r["pub"] = r.pop("pub_saved")
+        _OPEN_CACHE[1] = None
         r["_cv"].notify_all()
         return jsonify(locked=r["locked"])
 
@@ -1614,7 +1621,7 @@ def issue_token(sub):
 GUEST_PREFIX = "guest:"          # sub prefiksi (reytinqə düşmür)
 GUEST_TOK = "gst."               # token prefiksi ('.' urlsafe əlifbada yoxdur, real tokenlə toqquşmur)
 GUEST_TTL = 2 * 86400
-GUEST_OK = ("/api/guest/", "/api/domino/", "/api/chess/", "/api/durak/", "/api/uno/", "/api/mafia/", "/api/gvoice/")
+GUEST_OK = ("/api/guest/", "/api/domino/", "/api/chess/", "/api/durak/", "/api/uno/", "/api/mafia/", "/api/gvoice/", "/api/open/")
 
 
 @app.route("/api/guest/start", methods=["POST"])
@@ -3521,6 +3528,7 @@ def api_host():
         r["roles"].pop(target, None)
         r["roles"].pop(pid, None)
         r["rv"] += 1
+        r.pop("pub", None)
         r["_cv"].notify_all()
         return jsonify(ok=True)
 
@@ -5074,6 +5082,7 @@ def api_domino_create():
                 g["seen"][bid] = now
             g["bot"] = True
             _dom_deal(g)
+        g["public"] = _want_public(d0, vs_bot)
         _ensure_cv(g); DOMINO[c] = g
         return jsonify(_dom_view(g, sub))
 
@@ -6023,6 +6032,7 @@ def api_durak_create():
             g["bot"] = True
             g["bots"] = bots
             _du_start(g)
+        g["public"] = _want_public(d0, vs_bot)
         _ensure_cv(g); DURAK[c] = g
         _du_save(g)                                 # yaradılan kimi bazaya yaz: deploy/restartdan sonra "Oyuna qayıt" işləsin
         return jsonify(_du_view(g, sub))
@@ -6638,6 +6648,7 @@ def api_uno_create():
             g["bot"] = True
             g["bots"] = bots
             _un_start(g)
+        g["public"] = _want_public(d0, vs_bot)
         _ensure_cv(g); UNO[c] = g
         _un_save(g)
         return jsonify(_un_view(g, sub))
@@ -7220,7 +7231,8 @@ def api_chess_create():
     sub, tok = auth_sub()
     if not rate_hit("chc", sub, 12, 60):
         abort(429)
-    vs_bot = bool((request.get_json(silent=True) or {}).get("bot"))
+    d0 = request.get_json(silent=True) or {}
+    vs_bot = bool(d0.get("bot"))
     nm = _dom_names(tok)
     now = time.time()
     with META_LOCK:
@@ -7242,6 +7254,7 @@ def api_chess_create():
             g["seen"]["bot"] = now
             g["bot"] = True
             _ch_reset(g)
+        g["public"] = _want_public(d0, vs_bot)
         _ensure_cv(g); CHESS[c] = g
         return jsonify(_ch_view(g, sub))
 
@@ -8073,6 +8086,7 @@ def api_mafia_create():
     sub, tok = auth_sub()
     if not rate_hit("mafc", sub, 12, 60):
         abort(429)
+    d0 = request.get_json(silent=True) or {}
     nm = _ma_names(tok)
     now = time.time()
     with META_LOCK:
@@ -8088,6 +8102,7 @@ def api_mafia_create():
         g = dict(code=c, players=[sub], names={sub: nm}, seen={sub: now}, size=MAF_MAXP, host=sub,
                  v=1, upd=now, round=1, cid=0)
         _ma_reset_game(g)
+        g["public"] = _want_public(d0, False)
         _ensure_cv(g); MAFIA[c] = g
         return jsonify(_ma_view(g, sub))
 
@@ -8405,6 +8420,156 @@ def api_mafia_quit():
             else:
                 _ma_touch(g)
     return jsonify(ok=True)
+
+
+# ---------------------------------------------------------------
+#  Açıq otaqlar: hamının görüb qoşula biləcəyi video və oyun otaqları
+#  Oyun otağı yalnız oyun başlamamış ("wait") və boş yer olanda siyahıda görünür.
+#  Video otağı yalnız host "açıq et" deyəndə, kilidli deyilsə və host onlayn olanda görünür.
+# ---------------------------------------------------------------
+OPEN_TTL = 3.0            # siyahı bu müddət ərzində keşdən verilir (çox sorğu serveri yormasın)
+OPEN_HOST_SEEN = 40       # host bu qədər saniyədir səssizdirsə, otaq siyahıdan düşür
+_OPEN_CACHE = [0.0, None]
+OPEN_STORES = ("domino", "durak", "uno", "chess", "mafia")
+
+
+def _want_public(d0, vs_bot):
+    """Oyun yaradılanda 'public' bayrağı: kompüterlə oyun açıq ola bilməz."""
+    return bool(isinstance(d0, dict) and d0.get("public")) and not vs_bot
+
+
+def _clean_title(s):
+    s = re.sub(r"[\x00-\x1f\x7f<>]", "", str(s or ""))
+    return re.sub(r"\s+", " ", s).strip()[:40]
+
+
+def _open_snapshot(now):
+    """Bütün açıq otaqların ümumi görüntüsü (baxanın süzgəci sonra tətbiq olunur)."""
+    stores = {"domino": DOMINO, "durak": DURAK, "uno": UNO, "chess": CHESS, "mafia": MAFIA}
+    games = []
+    for kind in OPEN_STORES:
+        for code, g in list(stores[kind].items()):
+            try:
+                if not g.get("public") or g.get("status") != "wait" or g.get("bot"):
+                    continue
+                ps = list(g.get("players") or [])
+                if not ps or any(isinstance(p, str) and p.startswith("bot") for p in ps):
+                    continue
+                size = int(g.get("size") or 2)
+                if len(ps) >= size:
+                    continue
+                host = g.get("host") if g.get("host") in ps else ps[0]
+                if now - (g.get("seen") or {}).get(host, 0) > OPEN_HOST_SEEN:
+                    continue
+                nm = (g.get("names") or {}).get(host) or {}
+                games.append(dict(kind=kind, code=code, size=size, joined=len(ps), ts=g.get("upd") or now,
+                                  perevod=bool(g.get("perevod")) if kind == "durak" else None,
+                                  min=MAF_MIN if kind == "mafia" else None,
+                                  host=dict(name=nm.get("name") or "", username=nm.get("username") or "",
+                                            avatar=nm.get("avatar") or ""),
+                                  _sub=host, _ps=ps))
+            except Exception:
+                continue
+    videos = []
+    for code, r in list(ROOMS.items()):
+        try:
+            pub = r.get("pub")
+            if not pub or r.get("locked"):
+                continue
+            alive = sum(1 for ts in r["peers"].values() if now - ts < PEER_TTL)
+            host = r.get("host")
+            if alive < 1 or not host or now - r["peers"].get(host, 0) > PEER_TTL:
+                continue
+            if len(r["members"]) >= MAX_MEMBERS:
+                continue
+            videos.append(dict(code=code, title=pub.get("title") or "", n=alive, playing=bool(r.get("video")),
+                               ts=pub.get("ts") or now,
+                               host=dict(name=pub.get("name") or "", username=pub.get("username") or "",
+                                         avatar=pub.get("avatar") or ""),
+                               _sub=pub.get("sub")))
+        except Exception:
+            continue
+    games.sort(key=lambda x: -x["ts"])
+    videos.sort(key=lambda x: -x["ts"])
+    return dict(games=games, video=videos)
+
+
+def _open_viewer():
+    tok = request.headers.get("X-Token", "")[:100]
+    if not tok:
+        return None
+    try:
+        return auth_sub()[0]
+    except HTTPException:
+        return None
+
+
+@app.route("/api/open/rooms")
+def api_open_rooms():
+    now = time.time()
+    with META_LOCK:
+        if _OPEN_CACHE[1] is None or now - _OPEN_CACHE[0] > OPEN_TTL:
+            _OPEN_CACHE[1] = _open_snapshot(now)
+            _OPEN_CACHE[0] = now
+        snap = _OPEN_CACHE[1]
+    me = _open_viewer()
+    hidden = set()
+    if me:
+        try:
+            for row in dbq("SELECT blocker, blocked FROM blocks WHERE blocker=? OR blocked=?", (me, me), many=True):
+                hidden.add(row["blocked"] if row["blocker"] == me else row["blocker"])
+        except Exception:
+            pass
+
+    def ok(x):
+        if me and (x.get("_sub") == me or me in (x.get("_ps") or ())):
+            return False                # öz otağını siyahıda göstərmə
+        return x.get("_sub") not in hidden
+
+    def clean(x):
+        return {k: v for k, v in x.items() if not k.startswith("_") and v is not None}
+
+    return jsonify(video=[clean(x) for x in snap["video"] if ok(x)][:30],
+                   games=[clean(x) for x in snap["games"] if ok(x)][:60])
+
+
+@app.route("/api/open/video", methods=["POST"])
+def api_open_video():
+    """Host video otağını açıq siyahıya qoyur / siyahıdan çıxarır."""
+    sub, tok = auth_sub()
+    if tok.startswith(GUEST_TOK):
+        return jsonify(error="guest"), 403
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    pid = str(d.get("id", ""))[:20]
+    if not code or not pid:
+        abort(400)
+    if not rate_hit("openv", sub, 30, 600):
+        abort(429)
+    with META_LOCK:
+        r = ROOMS.get(code)
+    if r is None:
+        abort(404)
+    with _ensure_cv(r):
+        if pid not in r["members"]:
+            abort(403)
+        verify_pid(r, pid)
+        if r.get("host") != pid:
+            abort(403)                  # yalnız host açıq edə bilər
+        if d.get("public"):
+            if r["locked"]:
+                return jsonify(error="locked"), 409
+            idn = ident_for(tok, "")
+            old = r.get("pub") or {}
+            title = _clean_title(d["title"]) if "title" in d else old.get("title", "")
+            r["pub"] = dict(title=title, sub=sub, name=idn["name"], username=idn["username"],
+                            avatar=idn["avatar"], ts=old.get("ts") or time.time())
+        else:
+            r.pop("pub", None)
+        _OPEN_CACHE[1] = None
+        r["_cv"].notify_all()
+        pub = r.get("pub")
+        return jsonify(public=bool(pub), title=(pub or {}).get("title", ""))
 
 
 if __name__ == "__main__":

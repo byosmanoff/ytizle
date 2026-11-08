@@ -2902,6 +2902,28 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
   #uno .ukh:hover{transform:translateY(calc(var(--y,0px) - 12px)) rotate(var(--r,0deg));z-index:4}
   #uno .ukh.ok:hover{transform:translateY(calc(var(--y,0px) - 26px)) rotate(var(--r,0deg));z-index:4}
 }
+
+/* ===== Açıq otaqlar ===== */
+#openCard .ohead{display:flex;align-items:center;gap:8px}
+#openCard .ohead h2{flex:1;margin:0}
+#openCard .orefresh{width:34px;height:34px}
+#openCard .orefresh.spin i{animation:ospin .8s linear infinite}
+@keyframes ospin{to{transform:rotate(360deg)}}
+#openCard .osec{margin-top:14px}
+#openCard .osec h3{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:14px;font-weight:700;color:var(--muted)}
+.orow{display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;border-radius:14px;background:var(--seat);box-shadow:inset 0 0 0 1px var(--line)}
+.orow .oav{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--rose-deep) center/cover no-repeat;color:#fff;font-weight:800;font-size:16px}
+.orow .oav i{font-size:17px}
+.orow .oi{flex:1;min-width:0}
+.orow .oi b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .oi small{display:block;margin-top:2px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow .pbtn{padding:9px 16px}
+.oempty{padding:12px;border-radius:14px;font-size:13px;color:var(--muted);text-align:center;box-shadow:inset 0 0 0 1px var(--line)}
+.pubrow{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:13px;line-height:1.35;cursor:pointer;color:var(--muted);text-align:left}
+.pubrow input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--rose-deep)}
+.mticket .vpubrow{color:#7a5b74}
+.vtitle{width:100%;margin-top:8px;padding:10px 12px;border-radius:12px;font-size:14px}
+#codebar #pubbtn.on{background:var(--rose-deep);color:#fff}
 </style>
 <style id="perf-css">
 /* ===================== PERFORMANS (telefonda scroll donmaları) ===================== */
@@ -3016,12 +3038,19 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <div class="stat"><b id="str">0</b><small><i class="fa-solid fa-door-open" aria-hidden="true"></i>otaq</small></div>
     <div class="stat now"><b id="stl">0</b><small><i class="fa-solid fa-circle live-dot" aria-hidden="true"></i>indi izləyir</small></div>
   </div>
+  <div class="card" id="openCard" data-t="home">
+    <div class="ohead"><h2><i class="fa-solid fa-earth-europe" aria-hidden="true"></i>Açıq otaqlar</h2><button type="button" class="ib orefresh" id="openRefresh" aria-label="Yenilə" title="Yenilə"><i class="fa-solid fa-rotate" aria-hidden="true"></i></button></div>
+    <div class="hint">Video otaqları hamıya açıqdır, istəsən içəridən kilidlə. Oyun otağı üçün otaq yaradanda «Açıq otaq» seç.</div>
+    <div class="osec"><h3><i class="fa-solid fa-clapperboard" aria-hidden="true"></i>Açıq video otaqları</h3><div id="openVideo" aria-live="polite"></div></div>
+    <div class="osec"><h3><i class="fa-solid fa-gamepad" aria-hidden="true"></i>Açıq oyun otaqları</h3><div id="openGames" aria-live="polite"></div></div>
+  </div>
   <div class="seg subseg" id="gseg" data-t="games" role="group" aria-label="Oyunlar, reytinq, turnirlər"><button type="button" data-sub="games" class="on">Oyunlar</button><button type="button" data-sub="rank">Reytinq</button><button type="button" data-sub="tour">Turnirlər</button></div>
   <div class="card" id="domCard" data-s="games">
     <h2><i class="fa-solid fa-dice" aria-hidden="true"></i>Domino</h2>
     <div class="hint">Domino 101: dostunla onlayn oyna, ilk 101 xala çatan qalib gəlir.</div>
     <div class="glab">Oyunçu sayı</div>
     <div class="gseg" id="domSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <label class="pubrow"><input type="checkbox" id="domPub"><span>Açıq otaq: hamı görüb qoşula bilsin</span></label>
     <button class="pbtn" id="domNew" style="width:100%;padding:13px;margin-top:10px">Domino otağı aç</button>
     <button class="pbtn alt" id="domBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="domResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -3036,6 +3065,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <div class="hint">Dostunla onlayn durak oyna. Kartı ilk bitirən çıxır, son kart qalan axmaq olur.</div>
     <div class="glab">Oyunçu sayı</div>
     <div class="gseg" id="durSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <label class="pubrow"><input type="checkbox" id="durPub"><span>Açıq otaq: hamı görüb qoşula bilsin</span></label>
     <button class="pbtn" id="durNew" style="width:100%;padding:13px;margin-top:10px">Durak otağı aç</button>
     <button class="pbtn alt" id="durBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="durResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -3050,6 +3080,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <div class="hint">Dostunla onlayn Uno oyna. Rəngə və ya rəqəmə uyğun kart at, bütün kartlarını ilk bitirən qalib olur.</div>
     <div class="glab">Oyunçu sayı</div>
     <div class="gseg" id="unoSize" role="group" aria-label="Oyunçu sayı"><button type="button" data-n="2">2 nəfər</button><button type="button" data-n="3">3 nəfər</button><button type="button" data-n="4">4 nəfər</button></div>
+    <label class="pubrow"><input type="checkbox" id="unoPub"><span>Açıq otaq: hamı görüb qoşula bilsin</span></label>
     <button class="pbtn" id="unoNew" style="width:100%;padding:13px;margin-top:14px">Uno otağı aç</button>
     <button class="pbtn alt" id="unoBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="unoResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -3062,6 +3093,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   <div class="card" id="chCard" data-s="games">
     <h2><i class="fa-solid fa-chess-knight" aria-hidden="true"></i>Şahmat</h2>
     <div class="hint">Dostunla onlayn şahmat: otaq aç, kodu göndər, ağ və qara təsadüfi düşür.</div>
+    <label class="pubrow"><input type="checkbox" id="chPub"><span>Açıq otaq: hamı görüb qoşula bilsin</span></label>
     <button class="pbtn" id="chNew" style="width:100%;padding:13px;margin-top:10px">Şahmat otağı aç</button>
     <button class="pbtn alt" id="chBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="chResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -3074,6 +3106,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   <div class="card" id="mafCard" data-s="games">
     <h2><i class="fa-solid fa-masks-theater" aria-hidden="true"></i>Mafia</h2>
     <div class="hint">Gizli rollar, gecə hərəkətləri və gündüz səsverməsi. Dostlarınla və ya kompüterlə oyna.</div>
+    <label class="pubrow"><input type="checkbox" id="mafPub"><span>Açıq otaq: hamı görüb qoşula bilsin</span></label>
     <button class="pbtn" id="mafNew" style="width:100%;padding:13px;margin-top:10px">Mafia otağı aç</button>
     <button class="pbtn alt" id="mafBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
     <button class="pbtn alt" id="mafResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
@@ -4042,7 +4075,7 @@ let sk = (function(){
 let since = 0, pc = 0, connected = false, offline = false, sendQ = Promise.resolve();
 let isLocked = false, roomEpoch = null, leader = false, remoteSt = null, navAt = 0, lastAt = 0;
 const hist = [];
-let myRole = 'viewer', hostOnly = false, rv = -1, roleMap = {};
+let myRole = 'viewer', hostOnly = false, rv = -1, roleMap = {}, isPub = false;
 const CTRL_T = ['play', 'pause', 'seek', 'sync', 'load', 'wv', 'q'];
 const canCtl = () => !hostOnly || myRole !== 'viewer';
 const vid = $('vid'), web = $('web');
@@ -4172,9 +4205,31 @@ function updateLockUI(){
   $('lock').innerHTML = isLocked ? ICON_LOCK : ICON_OPEN;
   const t = isLocked ? 'Otaq kilidlidir, açmaq üçün bas' : 'Otağı kilidlə';
   $('lock').setAttribute('aria-label', t); $('lock').title = t;
+  updatePubUI();
+}
+function updatePubUI(){
+  const b = $('pubbtn'); if(!b) return;
+  const can = myRole === 'host' && !!token && !(window.wtIsGuest && window.wtIsGuest());
+  if(!can) isPub = false;
+  b.hidden = !can;
+  b.classList.toggle('on', isPub);
+  const t = isPub ? 'Otaq hamıya açıqdır, bağlamaq üçün bas' : 'Otağı hamıya aç';
+  b.setAttribute('aria-label', t); b.title = t;
+}
+async function pubCall(v, title, quiet){
+  try{
+    const body = {room, id: me, public: !!v};
+    if(title != null) body.title = String(title).trim().slice(0, 40);
+    const r = await api('/api/open/video', {method: 'POST', body: JSON.stringify(body)});
+    if(r.status === 409 || r.status === 403){ if(!quiet) sysMsg(r.status === 409 ? 'Kilidli otaq açıq ola bilməz' : 'Açıq etmək üçün hesabla daxil ol'); return; }
+    if(!r.ok) throw new Error('pub ' + r.status);
+    isPub = !!(await r.json()).public; updatePubUI();
+    if(!quiet) sysMsg(isPub ? 'Otaq indi açıq siyahıdadır' : 'Otaq açıq siyahıdan çıxarıldı');
+  }catch(e){ if(!quiet) sysMsg('Açıq siyahıya əlavə olunmadı'); }
 }
 function applyLock(v){
   if(v === isLocked) return;
+  if(v){ isPub = false; updatePubUI(); }
   isLocked = v; updateLockUI();
   sysMsg(v ? 'Otaq kilidləndi, yeni nəfər girə bilməz' : 'Otaq açıldı');
 }
@@ -4296,6 +4351,7 @@ function syncJoin(){   /* kod yazılıbsa "Otaq aç" solğunlaşır */
 function lockJoin(v){ joinBusy = v; $('create').disabled = v; $('enter').disabled = v; if(!v) syncJoin(); }
 
 async function enterRoom(code, create){
+  const wantPub = !!(create && token && !(window.wtIsGuest && window.wtIsGuest()));
   myName = (account && account.name) || (function(){ try{ return localStorage.getItem('wt_guest_name') || 'Qonaq'; }catch(e){ return 'Qonaq'; } })();
   lockJoin(true);
   loadIce();
@@ -4329,7 +4385,7 @@ async function enterRoom(code, create){
       const d = await r.json();
       since = d.seq;
       roomEpoch = d.epoch;
-      isLocked = !!d.locked;
+      isLocked = !!d.locked; isPub = !!d.pub;
       myRole = d.role || 'viewer'; hostOnly = !!d.hostonly; rv = typeof d.rv === 'number' ? d.rv : -1; roleMap = {};
       joinVideo = typeof d.video === 'string' ? d.video : null; joinVpos = d.vpos || null;
       room = code;
@@ -4341,6 +4397,7 @@ async function enterRoom(code, create){
     }
   }
   joinMsg(''); track({kind: 'room', room});
+  if(wantPub) setTimeout(function(){ pubCall(true, '', true); }, 500);
   tearMenuTicket();                                  // bilet cırılır, altında otaq açılır
   $('menu').style.display = 'none';
   $('app').style.display = 'flex';
@@ -5457,7 +5514,7 @@ async function leaveRoom(){
     }), 2000);
   }catch(e){}
   // vəziyyəti sıfırla
-  flushWatch(); myRole = 'viewer'; hostOnly = false; rv = -1; roleMap = {};
+  flushWatch(); myRole = 'viewer'; hostOnly = false; rv = -1; roleMap = {}; isPub = false;
   $('rolebox').hidden = true; document.body.classList.remove('viewer-lock'); $('lock').hidden = false;
   room = ''; since = 0; pc = 0; connected = false; offline = false; isLocked = false; roomEpoch = null; peerSet = new Map(); peerList = [];
   queue = []; qRender(); $('qbox').hidden = true;
@@ -6824,6 +6881,7 @@ function applyRoles(d){
 }
 function updateRoleUI(){
   $('lock').hidden = myRole === 'viewer';
+  updatePubUI();
   document.body.classList.toggle('viewer-lock', !canCtl() && (kind === 'yt' || kind === 'file' || kind === 'web'));
   if(!$('rolebox').hidden) renderRoles();
 }
@@ -7813,7 +7871,27 @@ boot();
     'Kəs və yüklə':['Kırp ve yükle','Crop and upload'],
     'Şəkli sil':['Fotoğrafı sil','Remove photo'],
     'Şəkil əməliyyatlarını aç':['Fotoğraf işlemlerini aç','Open photo actions'],
-    'Şəkil əməliyyatları':['Fotoğraf işlemleri','Photo actions']
+    'Şəkil əməliyyatları':['Fotoğraf işlemleri','Photo actions'],
+    'Açıq otaqlar':['Açık odalar','Open rooms'],
+    'Açıq video otaqları':['Açık video odaları','Open video rooms'],
+    'Açıq oyun otaqları':['Açık oyun odaları','Open game rooms'],
+    'Video otaqları hamıya açıqdır, istəsən içəridən kilidlə. Oyun otağı üçün otaq yaradanda «Açıq otaq» seç.':['Video odaları herkese açıktır, istersen içeriden kilitle. Oyun odası için oda oluştururken «Açık oda»yı seç.','Video rooms are open to everyone; lock yours from inside if you like. For a game room, tick “Open room” when you create it.'],
+    'Hələ açıq video otağı yoxdur':['Henüz açık video odası yok','No open video rooms yet'],
+    'Hələ açıq oyun otağı yoxdur':['Henüz açık oyun odası yok','No open game rooms yet'],
+    'Qoşul':['Katıl','Join'],
+    'Yenilə':['Yenile','Refresh'],
+    'Açıq otaq: hamı görüb qoşula bilsin':['Açık oda: herkes görüp katılabilsin','Open room: anyone can see and join'],
+    'Otağın adı (ixtiyari)':['Odanın adı (isteğe bağlı)','Room name (optional)'],
+    'Otağı hamıya aç':['Odayı herkese aç','Open room to everyone'],
+    'Otaq hamıya açıqdır, bağlamaq üçün bas':['Oda herkese açık, kapatmak için bas','Room is open to everyone, tap to close it'],
+    'Otaq indi açıq siyahıdadır':['Oda artık açık listede','Room is now in the open list'],
+    'Otaq açıq siyahıdan çıxarıldı':['Oda açık listeden çıkarıldı','Room removed from the open list'],
+    'Açıq siyahıya əlavə olunmadı':['Açık listeye eklenemedi','Could not add to the open list'],
+    'Açıq etmək üçün hesabla daxil ol':['Açık yapmak için hesapla giriş yap','Sign in to make a room open'],
+    'Kilidli otaq açıq ola bilməz':['Kilitli oda açık olamaz','A locked room cannot be open'],
+    'Video oynayır':['Video oynuyor','Playing a video'],
+    'Siyahı yüklənmədi':['Liste yüklenemedi','Could not load the list'],
+    'Bu otağa qoşulmaq mümkün olmadı':['Bu odaya katılınamadı','Could not join this room']
   };
   Object.keys(EXTRA).forEach(function(k){ D[k] = EXTRA[k]; });
   var O = new WeakMap(), AT = ['placeholder','title','aria-label'], busy = false, lang = 'az';
@@ -8897,7 +8975,7 @@ window.wtInviteBox = function(o){
     cardMsg('');
     try{
       var r = isCreate
-        ? await api('/api/chess/create', {method: 'POST', body: bot ? '{"bot":true}' : '{}'})
+        ? await api('/api/chess/create', {method: 'POST', body: bot ? '{"bot":true}' : JSON.stringify({public: window.wtPub('ch')})})
         : await api('/api/chess/join', {method: 'POST', body: JSON.stringify({room: code})});
       if(r.ok){ open(await r.json()); return true; }
       if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
@@ -9495,7 +9573,7 @@ window.wtInviteBox = function(o){
     cardMsg('');
     try{
       var r = isCreate
-        ? await api('/api/domino/create', {method: 'POST', body: JSON.stringify(bot ? {bot: true, size: domSize} : {size: domSize})})
+        ? await api('/api/domino/create', {method: 'POST', body: JSON.stringify(bot ? {bot: true, size: domSize} : {size: domSize, public: window.wtPub('dom')})})
         : await api('/api/domino/join', {method: 'POST', body: JSON.stringify({room: code})});
       if(r.ok){ open(await r.json()); return true; }
       if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
@@ -9757,7 +9835,7 @@ window.wtInviteBox = function(o){
     if(busy) return; busy = true;
     try{
       var r = isCreate
-        ? await api('/api/durak/create', {method: 'POST', body: JSON.stringify({size: du.sizeN, perevod: perevodOn(), bot: !!vsBot})})
+        ? await api('/api/durak/create', {method: 'POST', body: JSON.stringify({size: du.sizeN, perevod: perevodOn(), bot: !!vsBot, public: !vsBot && window.wtPub('dur')})})
         : await api('/api/durak/join', {method: 'POST', body: JSON.stringify({room: code})});
       var j = {}; try{ j = await r.json(); }catch(e){}
       if(r.ok){
@@ -10316,7 +10394,7 @@ window.wtInviteBox = function(o){
     if(busy) return; busy = true;
     try{
       var r = isCreate
-        ? await api('/api/uno/create', {method: 'POST', body: JSON.stringify({size: un.sizeN, bot: !!vsBot})})
+        ? await api('/api/uno/create', {method: 'POST', body: JSON.stringify({size: un.sizeN, bot: !!vsBot, public: !vsBot && window.wtPub('uno')})})
         : await api('/api/uno/join', {method: 'POST', body: JSON.stringify({room: code})});
       var j = {}; try{ j = await r.json(); }catch(e){}
       if(r.ok){
@@ -10722,7 +10800,7 @@ window.wtInviteBox = function(o){
     if(busy) return false; busy = true; var okk = false;
     try{
       var r = isCreate
-        ? await api('/api/mafia/create', {method: 'POST', body: '{}'})
+        ? await api('/api/mafia/create', {method: 'POST', body: JSON.stringify({public: window.wtPub('maf')})})
         : await api('/api/mafia/join', {method: 'POST', body: JSON.stringify({room: code})});
       var j = {}; try{ j = await r.json(); }catch(e){}
       if(r.ok){
@@ -12079,6 +12157,95 @@ async function callPending(){
   window.addEventListener('wt:languagechange', paint);
   window.addEventListener('resize', function(){ pop.hidden = true; });
   paint();
+})();
+</script>
+<script>
+/* Açıq otaqlar: hamının görüb qoşula biləcəyi video və oyun otaqları */
+(function(){
+  var vBox = document.getElementById('openVideo'), gBox = document.getElementById('openGames');
+  if(!vBox || !gBox) return;
+  var btn = document.getElementById('openRefresh'), last = null, busy = false;
+  var KIND = {
+    domino: ['Domino', 'fa-dice', 'wtJoinDomino'],
+    durak:  ['Durak', 'fa-layer-group', 'wtJoinDurak'],
+    uno:    ['Uno', 'fa-clone', 'wtJoinUno'],
+    chess:  ['Şahmat', 'fa-chess-knight', 'wtJoinChess'],
+    mafia:  ['Mafia', 'fa-masks-theater', 'wtJoinMafia']
+  };
+  function lg(){ return (window.wtLang && window.wtLang()) || 'az'; }
+  function L(az, tr, en){ var l = lg(); return l === 'tr' ? tr : l === 'en' ? en : az; }
+  function T(x){ return window.wtT ? window.wtT(x) : x; }
+  function el(tag, cls, txt){ var e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
+  function avOk(u){ return /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d{1,12}$/.test(String(u || '')); }
+
+  /* oyun yaradanda "açıq otaq" qutusu işarəlidirmi */
+  window.wtPub = function(k){ var c = document.getElementById(k + 'Pub'); return !!(c && c.checked); };
+
+  function hostName(h){ return (h && h.name) || L('Qonaq', 'Misafir', 'Guest'); }
+  function mkRow(left, title, sub, onJoin){
+    var r = el('div', 'orow'), mid = el('div', 'oi');
+    mid.appendChild(el('b', '', title)); mid.appendChild(el('small', '', sub));
+    var b = el('button', 'pbtn', 'Qoşul'); b.type = 'button';
+    b.onclick = function(){ b.disabled = true; try{ onJoin(); }catch(e){ if(window.wtToast) window.wtToast(T('Bu otağa qoşulmaq mümkün olmadı')); } setTimeout(function(){ b.disabled = false; load(); }, 2500); };
+    r.appendChild(left); r.appendChild(mid); r.appendChild(b);
+    return r;
+  }
+  function avatarEl(h){
+    var a = el('div', 'oav');
+    if(h && avOk(h.avatar)) a.style.backgroundImage = 'url("' + h.avatar + '")';
+    else a.textContent = (hostName(h).trim().charAt(0) || '?').toUpperCase();
+    return a;
+  }
+  function empty(txt){ return el('div', 'oempty', txt); }
+
+  function render(d){
+    vBox.textContent = ''; gBox.textContent = '';
+    var v = (d && d.video) || [], g = (d && d.games) || [];
+    if(!v.length) vBox.appendChild(empty('Hələ açıq video otağı yoxdur'));
+    v.forEach(function(x){
+      var name = hostName(x.host);
+      var title = x.title || (L(name + ' otağı', name + ' odası', name + "'s room"));
+      var sub = x.n + ' ' + L('nəfər izləyir', 'kişi izliyor', 'watching');
+      if(x.playing) sub += ' · ' + T('Video oynayır');
+      vBox.appendChild(mkRow(avatarEl(x.host), title, sub, function(){
+        if(typeof enterRoom === 'function' && !(typeof joinBusy !== 'undefined' && joinBusy)) enterRoom(String(x.code), false);
+      }));
+    });
+    if(!g.length) gBox.appendChild(empty('Hələ açıq oyun otağı yoxdur'));
+    g.forEach(function(x){
+      var k = KIND[x.kind]; if(!k) return;
+      var ic = el('div', 'oav'); var i = el('i', 'fa-solid ' + k[1]); i.setAttribute('aria-hidden', 'true'); ic.appendChild(i);
+      var sub = hostName(x.host) + ' · ' + x.joined + ' / ' + x.size;
+      if(x.kind === 'mafia' && x.min) sub += ' · ' + L('ən azı ' + x.min + ' nəfər', 'en az ' + x.min + ' kişi', 'min. ' + x.min + ' players');
+      gBox.appendChild(mkRow(ic, T(k[0]), sub, function(){
+        var f = window[k[2]]; if(typeof f === 'function') f(String(x.code));
+      }));
+    });
+  }
+
+  async function load(){
+    if(busy) return; busy = true;
+    if(btn) btn.classList.add('spin');
+    try{
+      var r = await fetch('/api/open/rooms', {headers: {'X-Token': (typeof token !== 'undefined' && token) || ''}, cache: 'no-store'});
+      if(!r.ok) throw new Error('open ' + r.status);
+      last = await r.json(); render(last);
+    }catch(e){
+      if(!last){ vBox.textContent = ''; gBox.textContent = ''; vBox.appendChild(empty('Siyahı yüklənmədi')); }
+    }finally{
+      busy = false; if(btn) setTimeout(function(){ btn.classList.remove('spin'); }, 400);
+    }
+  }
+  function visible(){
+    var m = document.getElementById('menu');
+    return !document.hidden && m && m.style.display !== 'none' && !!document.getElementById('openCard').offsetParent;
+  }
+  if(btn) btn.onclick = load;
+  setInterval(function(){ if(visible()) load(); }, 8000);
+  document.addEventListener('visibilitychange', function(){ if(visible()) load(); });
+  window.addEventListener('wt:languagechange', function(){ if(last) render(last); });
+  setTimeout(load, 800);
+
 })();
 </script>
 </body>
