@@ -381,6 +381,44 @@ def api_leave():
     return jsonify(ok=True)
 
 
+import subprocess
+import shutil
+
+
+def _ffmpeg_bin():
+    """ffmpeg yolunu tapır: sistemdə varsa onu, yoxsa imageio-ffmpeg paketindəki hazır faylı."""
+    p = shutil.which("ffmpeg")
+    if p:
+        return p
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
+
+
+def _needs_h264(path, ff):
+    """Video H.264 8-bit deyilsə (məs. telefonun HEVC/10-bit videosu) True qaytarır."""
+    try:
+        r = subprocess.run([ff, "-hide_banner", "-i", path], capture_output=True, text=True, timeout=30)
+    except Exception:
+        return False
+    m = re.search(r"Video:\s*(\w+)[^\n]*", r.stderr or "")
+    if not m:
+        return False
+    line = m.group(0)
+    return m.group(1) != "h264" or "yuv420p10" in line or "yuv420p" not in line
+
+
+def _to_h264(src, dst, ff):
+    vf = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
+    cmd = [ff, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
+           "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26",
+           "-pix_fmt", "yuv420p", "-vf", vf, "-c:a", "aac", "-b:a", "128k",
+           "-movflags", "+faststart", "-f", "mp4", dst]
+    subprocess.run(cmd, check=True, capture_output=True, timeout=900)
+
+
 @app.route("/api/upload", methods=["POST"])
 def api_upload():
     """Videonu birbaşa diskə axıdır (multipart və əlavə kopya yoxdur): sürətli və yaddaşa az yük."""
@@ -435,6 +473,26 @@ def api_upload():
             pass
         abort(400)
     os.replace(tmp, path)
+    ff = _ffmpeg_bin()
+    if ff and ext in (".mp4", ".mov") and _needs_h264(path, ff):
+        # HEVC/10-bit video bəzi kompüterlərdə qara ekran verir: hamı üçün H.264-ə çeviririk
+        base = name.rsplit(".", 1)[0]
+        conv = os.path.join(d, base + ".conv")
+        try:
+            _to_h264(path, conv, ff)
+            final = os.path.join(d, base + ".mp4")
+            os.replace(conv, final)
+            if final != path:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            name, path = base + ".mp4", final
+        except Exception:
+            try:
+                os.remove(conv)
+            except OSError:
+                pass   # çevirmə alınmadısa orijinal qalır
     for old in os.listdir(d):   # otaqda həmişə yalnız ən son video qalır
         if old != name:
             try:
