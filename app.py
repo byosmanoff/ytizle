@@ -1526,10 +1526,12 @@ def code_email_html(code, title, intro, lang="az"):
     """Saytın biletə bənzər dizaynında məktub (cədvəl + inline CSS: Gmail/Outlook-da işləsin deyə)."""
     F = "'Bricolage Grotesque',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
     return (
-        '<!DOCTYPE html><html lang="' + lang + '"><head><meta charset="utf-8">'
+        '<!DOCTYPE html><html lang="' + lang + '" style="background:#150a1d;"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">'
-        '</head><body style="margin:0;padding:0;background:#150a1d;">'
+        '<style>html,body{margin:0!important;padding:0!important;width:100%!important;min-width:100%!important;background:#150a1d!important}'
+        '.gmail_default,u+.body{background:#150a1d!important;margin:0!important}</style>'
+        '</head><body class="body" bgcolor="#150a1d" style="margin:0;padding:0;background:#150a1d;width:100%;min-width:100%;">'
         '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + L["pre"] + code + '</div>'
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#150a1d" '
         'style="background:#150a1d;background-image:linear-gradient(180deg,#2b1630 0%,#150a1d 45%,#2a0f24 100%);">'
