@@ -9427,12 +9427,12 @@ window.wtInviteBox = function(o){
     var bd = $('dboard'); if(!bd) return;
     var p = $('dbazar');
     if(!p){ p = document.createElement('div'); p.id = 'dbazar'; p.hidden = true; p.setAttribute('role', 'group'); p.setAttribute('aria-label', 'Bazar'); bd.appendChild(p); }
-    var open = s.status === 'play' && s.turn === 'me' && !!s.can_draw && s.stock > 0;
+    var open = s.status === 'play' && s.turn === 'me' && !!s.can_draw && !(s.moves && s.moves.length) && s.stock > 0;
     if(!open){ p.hidden = true; p.innerHTML = ''; return; }
     var n = s.stock, cnt = Math.min(n, 14), rows = cnt > 7 ? 2 : 1;
     var bh = bd.clientHeight || 200;
     var sz = Math.max(15, Math.min(30, Math.floor((bh - 92 - (rows - 1) * 8) / (rows * 2))));
-    p.hidden = false;
+    p.hidden = false; p.style.pointerEvents = '';
     p.innerHTML = '<div class="bz-t">Bazardan bir daş çəkin</div><div class="bz-n">Bazar: <b>' + n + '</b></div><div class="bz-g"></div>';
     var g = p.lastChild;
     for(var i = 0; i < cnt; i++){
@@ -9445,8 +9445,11 @@ window.wtInviteBox = function(o){
   function takeBazar(el){
     var s = dom.s;
     if(!s || s.status !== 'play') return;
-    if(!s.can_draw){ flash(s.turn !== 'me' ? 'Hələ sənin növbən deyil' : 'Bazar boşdur'); return; }
+    if(s.turn !== 'me'){ flash('Hələ sənin növbən deyil'); return; }
+    if(s.moves && s.moves.length){ flash('Qoyacaq daşın var, bazardan çəkmək olmaz'); return; }
+    if(!s.can_draw){ flash('Bazar boşdur'); return; }
     if(busy) return;
+    var bz = $('dbazar'); if(bz) bz.style.pointerEvents = 'none';
     flyToHand(el); el.style.visibility = 'hidden';
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
     act('draw');
