@@ -9195,7 +9195,7 @@ window.wtInviteBox = function(o){
       arms.R.push(endBtn('R'));
     }
     dom.arms = n ? arms : null;
-    fit();
+    fit(true);
     if(grew){ var le = ch.querySelector('.tile.last'); if(le){ try{ flyIn(le); }catch(fe){ dom.flying = false; le.style.visibility = ''; } } }
   }
 
@@ -9251,7 +9251,7 @@ window.wtInviteBox = function(o){
     walk(arms.R, 'R'); walk(arms.L, 'L');
     return recs;
   }
-  function fit(){
+  function fit(anim){
     var arms = dom.arms, bd = $('dboard'), ch = $('dchain');
     if(!arms || !bd || !ch) return;
     var CW = bd.clientWidth, CH = bd.clientHeight;
@@ -9266,6 +9266,8 @@ window.wtInviteBox = function(o){
       if(ok){ best = sz; recs = rs; break; }
     }
     if(!recs) recs = layout(arms, best, W);
+    var oldR = {};
+    if(anim){ [].forEach.call(ch.querySelectorAll('.tile[data-k]'), function(t){ oldR[t.getAttribute('data-k')] = t.getBoundingClientRect(); }); }
     ch.innerHTML = '';
     recs.forEach(function(r){
       var it = r.it, el;
@@ -9281,8 +9283,36 @@ window.wtInviteBox = function(o){
       el.style.left = Math.round(CW / 2 + r.cx - r.w / 2) + 'px';
       el.style.top = Math.round(CH / 2 + r.cy - r.h / 2) + 'px';
       if(it.endBtn){ el.style.width = Math.round(r.w) + 'px'; el.style.height = Math.round(r.h) + 'px'; }
+      r.el = el;
       ch.appendChild(el);
     });
+    /* ilan dönüşü: yeni daş əvvəl 45° əyri düşür, sonra yeni istiqamətə dönür */
+    dom.pivot = null;
+    var lr = null;
+    recs.forEach(function(r){ if(!r.it.endBtn && r.it.cls && r.it.cls.indexOf('last') >= 0) lr = r; });
+    if(lr && !lr.it.dbl && recs.length > 1){
+      var pr = null, bd2 = 1e9;
+      recs.forEach(function(r){ if(r === lr || r.it.endBtn) return; var d = Math.hypot(r.cx - lr.cx, r.cy - lr.cy); if(d < bd2){ bd2 = d; pr = r; } });
+      if(pr && !pr.it.dbl && pr.vert !== lr.vert){
+        var Gp = 4, Lg = best * 2, psx = (lr.cx - pr.cx) >= 0 ? 1 : -1, psy = (lr.cy - pr.cy) >= 0 ? 1 : -1, mx, my, th;
+        if(!pr.vert){ mx = pr.cx + psx * (pr.w / 2 + Gp + Lg * .38); my = pr.cy + psy * Lg * .28; th = -45 * psx * psy; }
+        else{ mx = pr.cx + psx * Lg * .28; my = pr.cy + psy * (pr.h / 2 + Gp + Lg * .38); th = 45 * psx * psy; }
+        dom.pivot = {k: Math.min(lr.it.t[0], lr.it.t[1]) + '-' + Math.max(lr.it.t[0], lr.it.t[1]), dx: mx - lr.cx, dy: my - lr.cy, rot: th};
+      }
+    }
+    /* zəncir böyüyəndə / dönəndə qalan daşlar birdən tullanmır, yumşaq sürüşür */
+    if(anim && !reduced()){
+      recs.forEach(function(r){
+        if(r.it.endBtn || !r.el || !r.el.animate) return;
+        var kk = r.el.getAttribute('data-k'), orr = oldR[kk]; if(!orr) return;
+        var nr = r.el.getBoundingClientRect();
+        var dx = (orr.left + orr.width / 2) - (nr.left + nr.width / 2), dy = (orr.top + orr.height / 2) - (nr.top + nr.height / 2);
+        var k = Math.max(orr.width, orr.height) / Math.max(nr.width, nr.height);
+        var rn = ((orr.width > orr.height) !== (nr.width > nr.height)) ? 90 : 0;
+        if(Math.abs(dx) < .5 && Math.abs(dy) < .5 && Math.abs(k - 1) < .01 && !rn) return;
+        r.el.animate([{transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rn + 'deg) scale(' + k + ')'}, {transform: 'none'}], {duration: 600, easing: 'cubic-bezier(.3,.7,.3,1)'});
+      });
+    }
   }
   window.addEventListener('resize', function(){ if(dom.s && !$('domino').hidden) fit(); });
   if(window.ResizeObserver){
@@ -9312,13 +9342,19 @@ window.wtInviteBox = function(o){
     if(o.first != null && o.first >= 0 && visFirst(real) !== o.first) rot += 180;
     if(o.noRot) rot = 0;
     document.body.appendChild(g);
-    var dur = o.dur || 900, fin = false;
+    var dur = o.dur || (o.pivot ? 1250 : 900), fin = false;
     var done = function(){ if(fin) return; fin = true; if(g.parentNode) g.parentNode.removeChild(g); if(o.done) o.done(); };
-    var a = g.animate([
-      {transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(' + k + ')', offset: 0},
+    var t0 = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(' + k + ')';
+    var frames = o.pivot ? [
+      {transform: t0, offset: 0, easing: 'cubic-bezier(.25,.7,.3,1)'},
+      {transform: 'translate(' + o.pivot.dx + 'px,' + o.pivot.dy + 'px) rotate(' + o.pivot.rot + 'deg) scale(1.04)', offset: .56, easing: 'cubic-bezier(.45,0,.25,1)'},
+      {transform: 'none', offset: 1}
+    ] : [
+      {transform: t0, offset: 0},
       {transform: 'translate(' + (dx * .1) + 'px,' + (dy * .1 - 8) + 'px) rotate(' + (rot * .08) + 'deg) scale(1.12)', offset: .7},
       {transform: 'none', offset: 1}
-    ], {duration: dur, easing: 'cubic-bezier(.3,.6,.3,1)', fill: 'both'});
+    ];
+    var a = g.animate(frames, {duration: dur, easing: 'cubic-bezier(.3,.6,.3,1)', fill: 'both'});
     a.onfinish = done; a.oncancel = done;
     setTimeout(done, dur + 400);
     return true;
@@ -9342,7 +9378,8 @@ window.wtInviteBox = function(o){
         var l = $('dchain').querySelector('.tile[data-k="' + kk + '"]'); if(l) l.style.visibility = '';
       }
     };
-    if(!flyGhost(le, src, {first: first, noRot: !from, done: fin})) fin();
+    var pv = (dom.pivot && dom.pivot.k === kk) ? dom.pivot : null;
+    if(!flyGhost(le, src, {first: first, noRot: !from, pivot: pv, done: fin})) fin();
   }
   /* bazardan çəkilən daşlar: panelin yerindən əlindəki öz yerinə uçur */
   function drawFly(list){
