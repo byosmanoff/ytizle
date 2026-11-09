@@ -9407,6 +9407,18 @@ window.wtInviteBox = function(o){
   /* bazardan çəkilən daşlar: panelin yerindən əlindəki öz yerinə uçur */
   function drawFly(list){
     var srcs = dom.drawFrom || []; dom.drawFrom = null;
+    if(dom.preFlyAt){      /* daş toxunan kimi artıq uçub: əlində uçuşun sonunda görünsün, ikinci uçuş olmasın */
+      var rem = Math.max(0, 440 - (Date.now() - dom.preFlyAt)); dom.preFlyAt = 0;
+      dom.hideH = dom.hideH || {};
+      list.forEach(function(o){
+        var id = nid(); o.el.classList.remove('pop'); dom.hideH[o.key] = id; o.el.style.visibility = 'hidden';
+        setTimeout(function(){
+          if(dom.hideH && dom.hideH[o.key] === id){ delete dom.hideH[o.key]; }
+          var e = $('dhand').querySelector('[data-k="' + o.key + '"]'); if(e) e.style.visibility = '';
+        }, rem);
+      });
+      return;
+    }
     if(!srcs.length){ var r = $('dboard').getBoundingClientRect(); srcs = [{cx: r.left + r.width / 2, cy: r.top + r.height / 2, long: 44}]; }
     dom.hideH = dom.hideH || {};
     list.forEach(function(o, i){
@@ -9426,13 +9438,13 @@ window.wtInviteBox = function(o){
     });
   }
   /* bazar qutusu: toxunulan daş əlinə uçur */
-  function flyToHand(el){
-    var h = $('dhand'); if(!h || reduced() || !el.animate) return;
+  function flyToHand(el, k){
+    var h = $('dhand'); if(!h || reduced() || !el.animate) return false;
     var hr = h.getBoundingClientRect(), r = el.getBoundingClientRect();
     var g = el.cloneNode(true); g.classList.add('tileFly');
     g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.animation = 'none'; g.style.visibility = '';
     document.body.appendChild(g);
-    var dx = (hr.left + hr.width / 2) - (r.left + r.width / 2), dy = (hr.top + Math.min(hr.height, 70) / 2 + 8) - (r.top + r.height / 2);
+    var dx = (hr.left + hr.width / 2) - (r.left + r.width / 2) + (k || 0) * 26, dy = (hr.top + Math.min(hr.height, 70) / 2 + 8) - (r.top + r.height / 2);
     var fin = false, done = function(){ if(fin) return; fin = true; if(g.parentNode) g.parentNode.removeChild(g); };
     var a = g.animate([
       {transform: 'none', offset: 0},
@@ -9440,6 +9452,7 @@ window.wtInviteBox = function(o){
       {transform: 'translate(' + dx + 'px,' + dy + 'px) scale(1) rotate(0deg)', offset: 1}
     ], {duration: 420, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'both'});
     a.onfinish = done; a.oncancel = done; setTimeout(done, 900);
+    return true;
   }
 
   function renderHand(s){
@@ -9572,7 +9585,9 @@ window.wtInviteBox = function(o){
     var picks = take.map(function(x){ return Array.prototype.indexOf.call(x.parentNode.children, x); });
     dom.bzSel = [];
     dom.drawFrom = take.map(srcOf);
-    take.forEach(function(x){ x.style.visibility = 'hidden'; });
+    var flew = false;
+    take.forEach(function(x, i){ if(flyToHand(x, i)) flew = true; x.style.visibility = 'hidden'; });
+    dom.preFlyAt = flew ? Date.now() : 0;
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
     act('draw', {picks: picks});
   }
@@ -9722,7 +9737,7 @@ window.wtInviteBox = function(o){
       var r = await api('/api/domino/move', {method: 'POST', body: JSON.stringify(Object.assign({room: dom.code, action: kind}, extra || {}))});
       if(r.ok){ ok = true; apply(await r.json(), true); } else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
     }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
-    if(!ok){ dom.flyFrom = null; dom.drawFrom = null; }
+    if(!ok){ dom.flyFrom = null; dom.drawFrom = null; dom.preFlyAt = 0; var _bz = $('dbazar'); if(_bz){ _bz.hidden = true; _bz.innerHTML = ''; } }
     if(!ok && dom.s){ if(pred) dom.s = snap; dom.sfxDraw = false; render(); }
     dom.sfxDraw = false;
     busy = false;
