@@ -4791,14 +4791,28 @@ DOM_KEEP2 = 2    # 2 nəfərlik oyunda bazarda həmişə bu qədər daş qalır 
 
 
 def _dom_draw_n(g):
-    """Bir dəfəyə çəkiləcək daş sayı: həmişə tək-tək. 2 nəfərdə bazarda 2 daş qalır (çəkilmir), 3-4 nəfərdə bazar tam boşalana qədər."""
+    """Bir dəfəyə çəkiləcək daş sayı. 2 nəfərdə: 2-2 çəkilir, bazarda 2 daş qalır. 3-4 nəfərdə: tək-tək, bazar tam boşalana qədər."""
     n = len(g["stock"])
     if g.get("size", 2) == 2:
-        return 1 if n > DOM_KEEP2 else 0
+        return max(0, min(2, n - DOM_KEEP2))
     return 1 if n else 0
 
 
-def _dom_do_draw(g, who):
+def _dom_clean_picks(g, picks, k):
+    """Klientin seçdiyi bazar mövqeləri: k sayda, təkrarsız, stok daxilində olmalıdır. Düz deyilsə None (köhnə qayda: sondan çəkilir)."""
+    if not isinstance(picks, (list, tuple)) or len(picks) != k or k < 1:
+        return None
+    try:
+        ids = [int(x) for x in picks]
+    except (TypeError, ValueError):
+        return None
+    n = len(g["stock"])
+    if len(set(ids)) != k or any(i < 0 or i >= n for i in ids):
+        return None
+    return ids
+
+
+def _dom_do_draw(g, who, picks=None):
     hand = g["hands"][who]
     k = _dom_draw_n(g)
     has_mv = bool(_dom_moves(g, hand))
@@ -4806,8 +4820,13 @@ def _dom_do_draw(g, who):
         return False
     if not has_mv:
         _dom_lack(g, who)               # yalnız məcburən çəkəndə "bu rəqəmlər yoxdur" yadda saxlanır
-    for _ in range(k):
-        hand.append(g["stock"].pop())
+    ids = _dom_clean_picks(g, picks, k)
+    if ids:                             # oyunçu bazardan daşları özü seçib
+        for i in sorted(ids, reverse=True):
+            hand.append(g["stock"].pop(i))
+    else:
+        for _ in range(k):
+            hand.append(g["stock"].pop())
     hand.sort()
     g["note"] = {"who": who, "k": "draw"}
     _dom_settle(g)
@@ -4856,8 +4875,9 @@ def _dsim_rollout(hands, stock, l, r, turn, passes):
     while True:
         h = hands[turn]
         opts = _dsim_opts(h, l, r)
-        while not opts and len(stock) > DOM_KEEP2:      # tək-tək çəkir, bazarda 2 daş qalır
-            h.append(stock.pop())
+        while not opts and len(stock) > DOM_KEEP2:      # 2-2 çəkir, bazarda 2 daş qalır
+            for _ in range(min(2, len(stock) - DOM_KEEP2)):
+                h.append(stock.pop())
             opts = _dsim_opts(h, l, r)
         if not opts:
             passes += 1
@@ -5186,7 +5206,7 @@ def api_domino_move():
             if not _dom_do_play(g, sub, t, end):
                 abort(400)
         elif act == "draw":
-            if not _dom_do_draw(g, sub):   # hər sorğuda yalnız bir daş çəkilir
+            if not _dom_do_draw(g, sub, d.get("picks")):   # picks: bazardan özünün seçdiyi mövqelər
                 abort(400)
         else:
             abort(400)

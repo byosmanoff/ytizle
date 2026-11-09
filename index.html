@@ -2970,6 +2970,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 #dbazar .tile:nth-child(2n){animation-delay:.25s}
 #dbazar .tile:nth-child(3n){animation-delay:.5s}
 #dbazar .tile:active{transform:translateY(-5px) scale(1.06)}
+#dbazar .tile.bzsel{animation:none;transform:translateY(-8px) scale(1.12);box-shadow:0 0 0 3px #ffd166,0 8px 16px rgba(0,0,0,.5)}
 @keyframes dbzin{from{opacity:0;transform:translate(-50%,-46%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 /* çəkilən daş uçuş bitəndən sonra əlində görünür */
 #domino #dhand .tile.pop{animation:dfadein .28s .55s ease-out both}
@@ -9519,7 +9520,7 @@ window.wtInviteBox = function(o){
     var p = $('dbazar');
     if(!p){ p = document.createElement('div'); p.id = 'dbazar'; p.hidden = true; p.setAttribute('role', 'group'); p.setAttribute('aria-label', 'Bazar'); bd.appendChild(p); }
     var open = s.status === 'play' && s.turn === 'me' && !!s.can_draw && !(s.moves && s.moves.length) && s.stock > 0;
-    if(!open){ p.hidden = true; p.innerHTML = ''; return; }
+    if(!open){ p.hidden = true; p.innerHTML = ''; dom.bzSel = []; return; }
     /* daş hələ uçur: bazar qutusu uçuş bitəndən sonra açılsın (uçan daş qutunun üstündə görünməsin) */
     if(p.hidden && dom.hide && Object.keys(dom.hide).length){
       if(!dom.pileT0) dom.pileT0 = Date.now();
@@ -9542,8 +9543,9 @@ window.wtInviteBox = function(o){
         return;
       }
     }
-    p.hidden = false; p.style.pointerEvents = '';
-    p.innerHTML = '<div class="bz-t">Bazardan bir daş çəkin</div><div class="bz-n">Bazar: <b>' + n + '</b></div><div class="bz-g"></div>';
+    p.hidden = false; p.style.pointerEvents = ''; dom.bzSel = [];
+    var need0 = ((s.size || 2) === 2 && s.stock > 1) ? 2 : 1;
+    p.innerHTML = '<div class="bz-t">' + (need0 === 2 ? 'Bazardan 2 daş seçin (0/2)' : 'Bazardan bir daş çəkin') + '</div><div class="bz-n">Bazar: <b>' + n + '</b></div><div class="bz-g"></div>';
     var g = p.lastChild;
     for(var i = 0; i < cnt; i++){
       var el = tile(null, {v: true, back: true, s: sz});
@@ -9559,12 +9561,25 @@ window.wtInviteBox = function(o){
     if(s.moves && s.moves.length){ flash('Qoyacaq daşın var, bazardan çəkmək olmaz'); return; }
     if(!s.can_draw){ flash('Bazar boşdur'); return; }
     if(busy) return;
+    var need = ((s.size || 2) === 2 && s.stock > 1) ? 2 : 1;      /* 2 nəfərdə 2 daş özün seçirsən */
+    var sel = dom.bzSel || (dom.bzSel = []);
+    var at = sel.indexOf(el);
+    if(at >= 0){ sel.splice(at, 1); el.classList.remove('bzsel'); updBzHead(need); return; }
+    el.classList.add('bzsel'); sel.push(el);
+    if(sel.length < need){ try{ navigator.vibrate && navigator.vibrate(8); }catch(x){} updBzHead(need); return; }
     var bz = $('dbazar'); if(bz) bz.style.pointerEvents = 'none';
-    var take = [el];      /* hər toxunuşda yalnız toxunduğun daş götürülür */
+    var take = sel.slice(0, need);
+    var picks = take.map(function(x){ return Array.prototype.indexOf.call(x.parentNode.children, x); });
+    dom.bzSel = [];
     dom.drawFrom = take.map(srcOf);
     take.forEach(function(x){ x.style.visibility = 'hidden'; });
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
-    act('draw');
+    act('draw', {picks: picks});
+  }
+  function updBzHead(need){
+    var t = document.querySelector('#dbazar .bz-t'); if(!t) return;
+    var k = (dom.bzSel || []).length;
+    t.textContent = need === 2 ? ('Bazardan 2 daş seçin (' + k + '/2)') : 'Bazardan bir daş çəkin';
   }
 
   function renderAct(s){
