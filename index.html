@@ -9262,9 +9262,9 @@ window.wtInviteBox = function(o){
     var W = CW - 30, H = CH - 32;
     if(W <= 0 || H <= 0) return;
     /* ilk daş həmişə lövhənin ortasında qalır (zəncir gedişlər arası sürüşmür).
-       Daşın ən böyük ölçüsü elə məhdudlaşdırılır ki, hər qolda ən azı 2 daş + "+" işarəsi
+       Daşın ən böyük ölçüsü elə məhdudlaşdırılır ki, hər qolda ən azı 1 daş + "+" işarəsi
        dönmədən düz sıralansın; beləcə işarələr həmişə zəncirin ucunda görünür */
-    var smax = Math.max(8, Math.min(38, Math.floor((W / 2 - 12) / 7)));
+    var smax = Math.max(8, Math.min(38, Math.floor((W / 2 - 8) / 5)));
     var best = 8, recs = null;
     for(var sz = smax; sz >= 8; sz--){
       var rs = layout(arms, sz, W), ok = true;
