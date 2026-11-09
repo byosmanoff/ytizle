@@ -2969,7 +2969,8 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 #dbazar .tile:active{transform:translateY(-5px) scale(1.06)}
 @keyframes dbzin{from{opacity:0;transform:translate(-50%,-46%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 /* çəkilən daş uçuş bitəndən sonra əlində görünür */
-#domino #dhand .tile.pop{animation:dfadein .28s .34s ease-out both}
+#domino #dhand .tile.pop{animation:dfadein .28s .55s ease-out both}
+#domino #dhand .tile.pop ~ .tile.pop{animation-delay:.69s}
 @keyframes dfadein{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
 /* uçan daş */
 .tileFly{position:fixed;z-index:9999;margin:0;pointer-events:none;will-change:transform;transition:none;box-shadow:0 12px 22px rgba(0,0,0,.5),0 0 0 2px rgba(255,233,168,.9)}
@@ -9450,7 +9451,12 @@ window.wtInviteBox = function(o){
     if(!s.can_draw){ flash('Bazar boşdur'); return; }
     if(busy) return;
     var bz = $('dbazar'); if(bz) bz.style.pointerEvents = 'none';
-    flyToHand(el); el.style.visibility = 'hidden';
+    var take = [el];
+    if((s.size || 2) === 2 && s.stock > 1){      /* 2 nəfərdə server iki daş verir: ikisi də uçsun */
+      var sib = Array.prototype.filter.call(el.parentNode.children, function(x){ return x !== el && x.style.visibility !== 'hidden'; });
+      if(sib.length) take.push(sib[sib.length - 1]);
+    }
+    take.forEach(function(x, i){ setTimeout(function(){ flyToHand(x); }, i * 140); x.style.visibility = 'hidden'; });
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
     act('draw');
   }
