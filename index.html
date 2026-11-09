@@ -2978,6 +2978,15 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 /* uçan daş */
 .tileFly{position:fixed;z-index:9999;margin:0;pointer-events:none;will-change:transform;transition:none;box-shadow:0 12px 22px rgba(0,0,0,.5),0 0 0 2px rgba(255,233,168,.9)}
 @media (prefers-reduced-motion:reduce){#dbazar,#dbazar .tile{animation:none}}
+/* bazar qutusu lövhənin aşağısında, zənciri örtməsin */
+#dbazar{top:auto;bottom:8px;transform:translateX(-50%);background:linear-gradient(rgba(47,116,189,.90),rgba(29,79,138,.93))}
+@keyframes dbzin{from{opacity:0;transform:translate(-50%,14px) scale(.94)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+/* oyun sonu: nəticə kartı yumşaq açılır */
+#domino.dover #dres{animation:dresin .5s cubic-bezier(.2,.9,.3,1) both}
+#domino.dover #dres .dpts{animation:dptsin .6s .25s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes dresin{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes dptsin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#domino.dover #dres,#domino.dover #dres .dpts{animation:none}}
 </style>
 </head>
 <body>
@@ -9259,12 +9268,14 @@ window.wtInviteBox = function(o){
     if(!arms || !bd || !ch) return;
     var CW = bd.clientWidth, CH = bd.clientHeight;
     /* taxta haşiyə (5px) + künc yuvarlaqlığı + daş kölgəsi üçün təhlükəsiz boşluq */
-    var W = CW - 30, H = CH - 32;
+    var W = CW - 26, H = CH - 32;
     if(W <= 0 || H <= 0) return;
     /* ilk daş həmişə lövhənin ortasında qalır (zəncir gedişlər arası sürüşmür).
        Daşın ən böyük ölçüsü elə məhdudlaşdırılır ki, hər qolda ən azı 1 daş + "+" işarəsi
        dönmədən düz sıralansın; beləcə işarələr həmişə zəncirin ucunda görünür */
-    var smax = Math.max(8, Math.min(38, Math.floor((W / 2 - 8) / 5)));
+    /* mərkəz daşı qoşadırsa (şaquli) o daha dardır: daşlar bir az böyük ola bilər */
+    var cf = (arms.C && arms.C.dbl) ? 4.4 : 5;
+    var smax = Math.max(8, Math.min(38, Math.floor((W / 2 - 8) / cf)));
     var best = 8, recs = null;
     for(var sz = smax; sz >= 8; sz--){
       var rs = layout(arms, sz, W), ok = true;
