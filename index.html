@@ -2958,6 +2958,9 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 <style id="domFix">
 /* bazar həmişə görünən zolaq deyil: lazım olanda açılan qutu */
 #domino #dpile{display:none!important}
+#domino #dhand{min-height:98px}
+#domino #dmsg{min-height:22px}
+#domino #dends{min-height:18px}
 #dboard{position:relative}
 #dbazar{position:absolute;left:50%;top:50%;z-index:20;width:min(94%,430px);max-height:calc(100% - 10px);transform:translate(-50%,-50%);padding:9px 10px 11px;border-radius:16px;text-align:center;background:linear-gradient(#2f74bd,#1d4f8a);box-shadow:0 0 0 2px #0e2f57,0 12px 32px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.28);animation:dbzin .3s cubic-bezier(.2,1.2,.4,1) both;touch-action:manipulation;overflow:hidden}
 #dbazar .bz-t{font-weight:700;font-size:13px;line-height:1.25;color:#fff}
@@ -9258,25 +9261,19 @@ window.wtInviteBox = function(o){
     /* taxta haşiyə (5px) + künc yuvarlaqlığı + daş kölgəsi üçün təhlükəsiz boşluq */
     var W = CW - 30, H = CH - 32;
     if(W <= 0 || H <= 0) return;
+    /* ilk daş həmişə lövhənin ortasında qalır (zəncir gedişlər arası sürüşmür).
+       Daşın ən böyük ölçüsü elə məhdudlaşdırılır ki, hər qolda ən azı 2 daş + "+" işarəsi
+       dönmədən düz sıralansın; beləcə işarələr həmişə zəncirin ucunda görünür */
+    var smax = Math.max(8, Math.min(38, Math.floor((W / 2 - 12) / 7)));
     var best = 8, recs = null;
-    function extent(rs){
-      var a = 1e9, b = -1e9, c = 1e9, d = -1e9;
+    for(var sz = smax; sz >= 8; sz--){
+      var rs = layout(arms, sz, W), ok = true;
       for(var i = 0; i < rs.length; i++){
-        if(rs[i].l < a) a = rs[i].l; if(rs[i].r > b) b = rs[i].r;
-        if(rs[i].t < c) c = rs[i].t; if(rs[i].b > d) d = rs[i].b;
+        if(Math.max(Math.abs(rs[i].l), Math.abs(rs[i].r)) > W / 2 + 1 || Math.max(Math.abs(rs[i].t), Math.abs(rs[i].b)) > H / 2){ ok = false; break; }
       }
-      return {l: a, r: b, t: c, b: d};
-    }
-    for(var sz = 38; sz >= 8; sz--){
-      var rs = layout(arms, sz, W), ex = extent(rs);
-      /* sərhəd mərkəzə görə yox, zəncirin real ölçüsünə görə yoxlanır; sonra lövhənin ortasına çəkilir */
-      if(Math.max(Math.abs(ex.l), Math.abs(ex.r)) <= W / 2 + 1 && (ex.b - ex.t) <= H + 1){ best = sz; recs = rs; break; }
+      if(ok){ best = sz; recs = rs; break; }
     }
     if(!recs) recs = layout(arms, best, W);
-    (function(){
-      var ex = extent(recs), ox = -(ex.l + ex.r) / 2, oy = -(ex.t + ex.b) / 2;
-      recs.forEach(function(r){ r.cx += ox; r.cy += oy; r.l += ox; r.r += ox; r.t += oy; r.b += oy; });
-    })();
     var oldR = {};
     if(anim){ [].forEach.call(ch.querySelectorAll('.tile[data-k]'), function(t){ oldR[t.getAttribute('data-k')] = t.getBoundingClientRect(); }); }
     ch.innerHTML = '';
