@@ -9305,6 +9305,9 @@ window.wtInviteBox = function(o){
         var Gp = 4, Lg = best * 2, psx = (lr.cx - pr.cx) >= 0 ? 1 : -1, psy = (lr.cy - pr.cy) >= 0 ? 1 : -1, mx, my, th;
         if(!pr.vert){ mx = pr.cx + psx * (pr.w / 2 + Gp + Lg * .38); my = pr.cy + psy * Lg * .28; th = -45 * psx * psy; }
         else{ mx = pr.cx + psx * Lg * .28; my = pr.cy + psy * (pr.h / 2 + Gp + Lg * .38); th = 45 * psx * psy; }
+        /* 45° əyri daşın pivot nöqtəsi lövhənin kənarından çölə çıxmasın */
+        var ex = best * 1.1 + 4, lx = CW / 2 - 10 - ex, ly = CH / 2 - 10 - ex;
+        mx = Math.max(-lx, Math.min(lx, mx)); my = Math.max(-ly, Math.min(ly, my));
         dom.pivot = {k: Math.min(lr.it.t[0], lr.it.t[1]) + '-' + Math.max(lr.it.t[0], lr.it.t[1]), dx: mx - lr.cx, dy: my - lr.cy, rot: th};
       }
     }
@@ -9506,6 +9509,15 @@ window.wtInviteBox = function(o){
     if(!p){ p = document.createElement('div'); p.id = 'dbazar'; p.hidden = true; p.setAttribute('role', 'group'); p.setAttribute('aria-label', 'Bazar'); bd.appendChild(p); }
     var open = s.status === 'play' && s.turn === 'me' && !!s.can_draw && !(s.moves && s.moves.length) && s.stock > 0;
     if(!open){ p.hidden = true; p.innerHTML = ''; return; }
+    /* daş hələ uçur: bazar qutusu uçuş bitəndən sonra açılsın (uçan daş qutunun üstündə görünməsin) */
+    if(p.hidden && dom.hide && Object.keys(dom.hide).length){
+      if(!dom.pileT0) dom.pileT0 = Date.now();
+      if(Date.now() - dom.pileT0 < 2200){
+        if(!dom.pileWait) dom.pileWait = setTimeout(function(){ dom.pileWait = null; if(dom.s && !$('domino').hidden) renderPile(dom.s); }, 150);
+        return;
+      }
+    }
+    dom.pileT0 = 0;
     var n = s.stock, cnt = Math.min(n, 14), rows = cnt > 7 ? 2 : 1;
     var bh = bd.clientHeight || 200;
     var sz = Math.max(15, Math.min(30, Math.floor((bh - 92 - (rows - 1) * 8) / (rows * 2))));
