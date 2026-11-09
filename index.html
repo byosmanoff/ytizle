@@ -2955,6 +2955,26 @@ body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{ani
 html[lang="tr"] #mafia .mchip.me::after{content:"SEN"}
 html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
 </style>
+<style id="domFix">
+/* bazar həmişə görünən zolaq deyil: lazım olanda açılan qutu */
+#domino #dpile{display:none!important}
+#dboard{position:relative}
+#dbazar{position:absolute;left:50%;top:50%;z-index:20;width:min(94%,430px);max-height:calc(100% - 10px);transform:translate(-50%,-50%);padding:9px 10px 11px;border-radius:16px;text-align:center;background:linear-gradient(#2f74bd,#1d4f8a);box-shadow:0 0 0 2px #0e2f57,0 12px 32px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.28);animation:dbzin .3s cubic-bezier(.2,1.2,.4,1) both;touch-action:manipulation;overflow:hidden}
+#dbazar .bz-t{font-weight:700;font-size:13px;line-height:1.25;color:#fff}
+#dbazar .bz-n{font-size:12px;font-weight:700;color:#cfe4ff;margin:1px 0 7px;letter-spacing:.03em}
+#dbazar .bz-g{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 9px}
+#dbazar .tile{cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 0 #cdb7b0,0 3px 7px rgba(0,0,0,.45);animation:dwob 1.8s ease-in-out infinite}
+#dbazar .tile:nth-child(2n){animation-delay:.25s}
+#dbazar .tile:nth-child(3n){animation-delay:.5s}
+#dbazar .tile:active{transform:translateY(-5px) scale(1.06)}
+@keyframes dbzin{from{opacity:0;transform:translate(-50%,-46%) scale(.82)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+/* çəkilən daş uçuş bitəndən sonra əlində görünür */
+#domino #dhand .tile.pop{animation:dfadein .28s .34s ease-out both}
+@keyframes dfadein{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
+/* uçan daş */
+.tileFly{position:fixed;z-index:9999;margin:0;pointer-events:none;will-change:transform;transition:none;box-shadow:0 12px 22px rgba(0,0,0,.5),0 0 0 2px rgba(255,233,168,.9)}
+@media (prefers-reduced-motion:reduce){#dbazar,#dbazar .tile{animation:none}}
+</style>
 </head>
 <body>
 <div id="lightbox" hidden><img alt=""></div>
@@ -9164,7 +9184,7 @@ window.wtInviteBox = function(o){
     function mk(i){
       var t = s.board[i], dbl = t[0] === t[1];
       var isLast = s.last && same(s.last.t, [Math.min(t[0], t[1]), Math.max(t[0], t[1])]);
-      return {t: t, dbl: dbl, cls: isLast ? 'last' + (grew ? ' drop' : '') : ''};
+      return {t: t, dbl: dbl, cls: isLast ? 'last' : ''};
     }
     var arms = {C: n ? mk(ci) : null, L: [], R: []};
     for(var i = ci - 1; i >= 0; i--) arms.L.push(mk(i));
@@ -9175,6 +9195,7 @@ window.wtInviteBox = function(o){
     }
     dom.arms = n ? arms : null;
     fit();
+    if(grew){ var le = ch.querySelector('.tile.last'); if(le){ try{ flyIn(le); }catch(fe){ dom.flying = false; le.style.visibility = ''; } } }
   }
 
   /* Düzülüş: ortada düz cərgə, kənara çatanda 90° dönən qollar.
@@ -9252,6 +9273,7 @@ window.wtInviteBox = function(o){
       }else{
         el = tile(it.t, {v: r.vert, cls: it.cls, s: best});
         if(r.flip) el.classList.add('flip');
+        if(dom.flying && it.cls && it.cls.indexOf('last') >= 0) el.style.visibility = 'hidden';
       }
       el.style.left = Math.round(CW / 2 + r.cx - r.w / 2) + 'px';
       el.style.top = Math.round(CH / 2 + r.cy - r.h / 2) + 'px';
@@ -9264,6 +9286,73 @@ window.wtInviteBox = function(o){
     try{ new ResizeObserver(function(){ if(dom.s && !$('domino').hidden) fit(); }).observe($('dboard')); }catch(e){}
   }
 
+  /* ---- daş əldən masaya yumşaq uçur: uçan nüsxə hər şeyin üstündən keçir ---- */
+  function reduced(){ try{ return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+  function srcOf(el){ var r = el.getBoundingClientRect(); return {cx: r.left + r.width / 2, cy: r.top + r.height / 2, long: Math.max(r.width, r.height)}; }
+  function visFirst(el){
+    var hs = el.querySelectorAll('.hf'); if(hs.length < 2) return -1;
+    var h = el.classList.contains('flip') ? hs[1] : hs[0];
+    return h.querySelectorAll('i.on').length;
+  }
+  function flyGhost(real, src, o){
+    o = o || {};
+    var to = real.getBoundingClientRect();
+    if(!to.width || reduced() || !real.animate) return false;
+    var g = real.cloneNode(true);
+    g.classList.remove('drop', 'pop', 'sel', 'ok', 'dim');
+    g.classList.add('tileFly');
+    g.style.visibility = ''; g.style.right = 'auto'; g.style.bottom = 'auto';
+    g.style.left = to.left + 'px'; g.style.top = to.top + 'px';
+    var dx = src.cx - (to.left + to.width / 2), dy = src.cy - (to.top + to.height / 2);
+    var k = Math.max(.35, Math.min(2.2, src.long / Math.max(to.width, to.height)));
+    var rot = real.classList.contains('h') ? -90 : 0;
+    if(o.first != null && o.first >= 0 && visFirst(real) !== o.first) rot += 180;
+    if(o.noRot) rot = 0;
+    document.body.appendChild(g);
+    var dur = o.dur || 440, fin = false;
+    var done = function(){ if(fin) return; fin = true; if(g.parentNode) g.parentNode.removeChild(g); if(o.done) o.done(); };
+    var a = g.animate([
+      {transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(' + k + ')', offset: 0},
+      {transform: 'translate(' + (dx * .08) + 'px,' + (dy * .08 - 6) + 'px) rotate(' + (rot * .06) + 'deg) scale(1.1)', offset: .74},
+      {transform: 'none', offset: 1}
+    ], {duration: dur, easing: 'cubic-bezier(.22,.8,.25,1)', fill: 'both'});
+    a.onfinish = done; a.oncancel = done;
+    setTimeout(done, dur + 400);
+    return true;
+  }
+  function flyIn(le){
+    var from = dom.flyFrom; dom.flyFrom = null;
+    var src, first = -1;
+    if(from){ src = from; first = from.first; }
+    else{
+      var a = document.querySelector('#dpl .dchip.turn .dav') || document.querySelector('#dpl .dav') || $('dpl');
+      if(!a) return;
+      src = srcOf(a); src.long = Math.max(src.long, 34);
+    }
+    le.style.visibility = 'hidden'; dom.flying = true;
+    var ok = flyGhost(le, src, {first: first, noRot: !from, done: function(){
+      dom.flying = false;
+      var l = document.querySelector('#dchain .tile.last'); if(l) l.style.visibility = '';
+    }});
+    if(!ok){ dom.flying = false; le.style.visibility = ''; }
+  }
+  /* bazar qutusu: toxunulan daş əlinə uçur */
+  function flyToHand(el){
+    var h = $('dhand'); if(!h || reduced() || !el.animate) return;
+    var hr = h.getBoundingClientRect(), r = el.getBoundingClientRect();
+    var g = el.cloneNode(true); g.classList.add('tileFly');
+    g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.animation = 'none'; g.style.visibility = '';
+    document.body.appendChild(g);
+    var dx = (hr.left + hr.width / 2) - (r.left + r.width / 2), dy = (hr.top + Math.min(hr.height, 70) / 2 + 8) - (r.top + r.height / 2);
+    var fin = false, done = function(){ if(fin) return; fin = true; if(g.parentNode) g.parentNode.removeChild(g); };
+    var a = g.animate([
+      {transform: 'none', offset: 0},
+      {transform: 'translate(' + (dx * .12) + 'px,' + (dy * .12 - 16) + 'px) scale(1.25) rotate(-6deg)', offset: .22},
+      {transform: 'translate(' + dx + 'px,' + dy + 'px) scale(1) rotate(0deg)', offset: 1}
+    ], {duration: 420, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'both'});
+    a.onfinish = done; a.oncancel = done; setTimeout(done, 900);
+  }
+
   function renderHand(s){
     var h = $('dhand'); h.innerHTML = '';
     var mine = s.status === 'play' && s.turn === 'me';
@@ -9272,6 +9361,7 @@ window.wtInviteBox = function(o){
       var ok = mine && s.moves.some(function(m){ return same(m.t, t); });
       var key = t[0] + '-' + t[1]; keys[key] = 1;
       var el = tile(t, {v: true, s: 40, cls: (mine ? (ok ? 'ok' : 'dim') : '') + (dom.sel && same(dom.sel, t) ? ' sel' : '') + (old && !old[key] ? ' pop' : '')});
+      el.setAttribute('data-k', key);
       el.onclick = function(){ pick(t); };
       h.appendChild(el);
     });
@@ -9293,7 +9383,7 @@ window.wtInviteBox = function(o){
   }
 
   function renderRes(s){
-    var box = $('dres'), over = s.status === 'over', multi = (s.opps || []).length > 1;
+    var box = $('dres'), over = s.status === 'over' && !dom.hold, multi = (s.opps || []).length > 1;
     box.hidden = !over;
     $('domino').classList.toggle('dover', over);
     $('dhand').style.display = over ? 'none' : '';
@@ -9334,33 +9424,33 @@ window.wtInviteBox = function(o){
   /* ---- Bazar: masanın kənarında üzü aşağı daş yığını; hər toxunuşda bir daş götürülür ---- */
   function rnd(i){ var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
   function renderPile(s){
-    var p = $('dpile'); if(!p) return;
-    if(s.status !== 'play' || !(s.stock > 0)){ p.hidden = true; p.innerHTML = ''; return; }
+    var bd = $('dboard'); if(!bd) return;
+    var p = $('dbazar');
+    if(!p){ p = document.createElement('div'); p.id = 'dbazar'; p.hidden = true; p.setAttribute('role', 'group'); p.setAttribute('aria-label', 'Bazar'); bd.appendChild(p); }
+    var open = s.status === 'play' && s.turn === 'me' && !!s.can_draw && s.stock > 0;
+    if(!open){ p.hidden = true; p.innerHTML = ''; return; }
+    var n = s.stock, cnt = Math.min(n, 14), rows = cnt > 7 ? 2 : 1;
+    var bh = bd.clientHeight || 200;
+    var sz = Math.max(15, Math.min(30, Math.floor((bh - 92 - (rows - 1) * 8) / (rows * 2))));
     p.hidden = false;
-    var n = s.stock || 0, can = !!s.can_draw;
-    p.classList.toggle('can', can);
-    var h = '<div class="pl"><span>' + (can ? 'Bazardan daş çək' : 'Bazar') + '</span> <b>' + n + '</b></div>';
-    var cnt = Math.min(n, 26);
+    p.innerHTML = '<div class="bz-t">Bazardan bir daş çəkin</div><div class="bz-n">Bazar: <b>' + n + '</b></div><div class="bz-g"></div>';
+    var g = p.lastChild;
     for(var i = 0; i < cnt; i++){
-      var f = rnd(i + 1), top = 4 + rnd(i + 50) * 16, rot = Math.round((rnd(i + 99) - .5) * 120);
-      h += '<div class="pt" style="--k:' + (i % 9) + ';left:calc(84px + (100% - 84px - 34px) * ' + f.toFixed(3) + ');top:' + top.toFixed(1) + 'px;z-index:' + (i + 1) + ';transform:rotate(' + rot + 'deg)"></div>';
+      var el = tile(null, {v: true, back: true, s: sz});
+      el.setAttribute('role', 'button'); el.setAttribute('aria-label', 'Daş çək');
+      el.onclick = function(){ takeBazar(this); };
+      g.appendChild(el);
     }
-    p.innerHTML = h;
   }
-  function p_all(){ return Array.prototype.slice.call($('dpile').querySelectorAll('.pt')); }
-  $('dpile').addEventListener('click', function(e){
-    var el = e.target.closest ? e.target.closest('.pt') : null;
-    if(!el) return;
+  function takeBazar(el){
     var s = dom.s;
     if(!s || s.status !== 'play') return;
-    if(!s.can_draw || busy){ if($('ddraw').onclick) $('ddraw').onclick({target: el}); return; }
-    el.classList.add('taken');
-    if((s.size || 2) === 2 && s.stock > 2){      /* 2 nəfərdə iki daş çəkilir: ikinci daş da yığından düşür */
-      var ts = p_all(); for(var q = ts.length - 1; q >= 0; q--){ if(ts[q] !== el && !ts[q].classList.contains('taken')){ ts[q].classList.add('taken'); break; } }
-    }
+    if(!s.can_draw){ flash(s.turn !== 'me' ? 'Hələ sənin növbən deyil' : 'Bazar boşdur'); return; }
+    if(busy) return;
+    flyToHand(el); el.style.visibility = 'hidden';
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
-    $('ddraw').onclick({target: el});
-  });
+    act('draw');
+  }
 
   function renderAct(s){
     var b = $('ddraw');
@@ -9431,7 +9521,7 @@ window.wtInviteBox = function(o){
     }
     if(s.status === 'over' && prev.status !== 'over'){
       var res = s.match ? s.match : s.result;
-      setTimeout(function(){ S.play(res === 'me' ? 'win' : (res === 'opp' ? 'lose' : 'tie')); }, snd ? 380 : 0);
+      setTimeout(function(){ S.play(res === 'me' ? 'win' : (res === 'opp' ? 'lose' : 'tie')); }, (nb > pb && s.reason !== 'left') ? 1500 : (snd ? 380 : 0));
     }else if(prev.turn !== 'me' && s.turn === 'me' && s.status === 'play'){
       setTimeout(function(){ S.play('turn'); }, snd ? 260 : 0);
     }
@@ -9442,7 +9532,12 @@ window.wtInviteBox = function(o){
     if(prev && s.v < prev.v) return;                         // köhnə cavab
     var changed = force || !prev || s.v !== prev.v || onlKey(s) !== onlKey(prev);
     dom.v = s.v; dom.s = s;
-    if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; }
+    if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flyFrom = null; }
+    if(prev && prev.status === 'play' && s.status === 'over' && s.round === prev.round && s.reason !== 'left' && (s.board || []).length > (prev.board || []).length){
+      dom.hold = true; clearTimeout(dom.holdT);
+      dom.holdT = setTimeout(function(){ dom.hold = false; if(dom.s && !$('domino').hidden) render(); }, 1900);
+      if(s.result !== 'me' && s.reason === 'out') flash(((s.opps || []).length > 1 ? (s.winner_name || 'Rəqib') : 'Rəqib') + ' son daşı qoydu');
+    }
     if(dom.sel && !s.hand.some(function(t){ return same(t, dom.sel); })) dom.sel = null;
     if(s.turn !== 'me') dom.sel = null;
     if(prev && s.v !== prev.v){
@@ -9477,6 +9572,13 @@ window.wtInviteBox = function(o){
     if(busy || !dom.code) return;
     busy = true;
     var snap = dom.s, pred = null;
+    if(kind === 'play' && extra && extra.t){
+      dom.flyFrom = null;
+      try{
+        var he = $('dhand').querySelector('[data-k="' + extra.t[0] + '-' + extra.t[1] + '"]');
+        if(he){ var hs = srcOf(he); hs.first = extra.t[0]; dom.flyFrom = hs; }
+      }catch(fe){}
+    }
     if(kind === 'play' && snap){
       pred = predictPlay(snap, extra.t, extra.end);
       if(pred){ dom.s = pred; dom.sel = null; if(window.wtSfx) wtSfx.play('place'); render(); }
@@ -9490,6 +9592,7 @@ window.wtInviteBox = function(o){
       var r = await api('/api/domino/move', {method: 'POST', body: JSON.stringify(Object.assign({room: dom.code, action: kind}, extra || {}))});
       if(r.ok){ ok = true; apply(await r.json(), true); } else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
     }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
+    if(!ok){ dom.flyFrom = null; }
     if(!ok && dom.s){ if(pred) dom.s = snap; dom.sfxDraw = false; render(); }
     dom.sfxDraw = false;
     busy = false;
@@ -9551,7 +9654,7 @@ window.wtInviteBox = function(o){
   }
 
   function open(s){
-    dom.gen++; dom.code = s.code; dom.v = 0; dom.s = null; dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null;
+    dom.gen++; dom.code = s.code; dom.v = 0; dom.s = null; dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flying = false; dom.flyFrom = null;
     dom.flashTx = ''; busy = false;
     $('domino').hidden = false;
     $('dhand').style.display = '';
@@ -9561,7 +9664,7 @@ window.wtInviteBox = function(o){
   function close(leave){
     var c = dom.code, st = dom.s && dom.s.status;
     voice.leave();
-    dom.gen++; dom.code = ''; dom.s = null; clearTimeout(dom.bt);
+    dom.gen++; dom.code = ''; dom.s = null; clearTimeout(dom.bt); dom.hold = false; clearTimeout(dom.holdT);
     $('domino').hidden = true;
     if(leave && c){
       api('/api/domino/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
