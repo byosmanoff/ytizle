@@ -9309,13 +9309,13 @@ window.wtInviteBox = function(o){
     if(o.first != null && o.first >= 0 && visFirst(real) !== o.first) rot += 180;
     if(o.noRot) rot = 0;
     document.body.appendChild(g);
-    var dur = o.dur || 440, fin = false;
+    var dur = o.dur || 900, fin = false;
     var done = function(){ if(fin) return; fin = true; if(g.parentNode) g.parentNode.removeChild(g); if(o.done) o.done(); };
     var a = g.animate([
       {transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(' + k + ')', offset: 0},
-      {transform: 'translate(' + (dx * .08) + 'px,' + (dy * .08 - 6) + 'px) rotate(' + (rot * .06) + 'deg) scale(1.1)', offset: .74},
+      {transform: 'translate(' + (dx * .1) + 'px,' + (dy * .1 - 8) + 'px) rotate(' + (rot * .08) + 'deg) scale(1.12)', offset: .7},
       {transform: 'none', offset: 1}
-    ], {duration: dur, easing: 'cubic-bezier(.22,.8,.25,1)', fill: 'both'});
+    ], {duration: dur, easing: 'cubic-bezier(.3,.6,.3,1)', fill: 'both'});
     a.onfinish = done; a.oncancel = done;
     setTimeout(done, dur + 400);
     return true;
@@ -9524,7 +9524,7 @@ window.wtInviteBox = function(o){
     }
     if(s.status === 'over' && prev.status !== 'over'){
       var res = s.match ? s.match : s.result;
-      setTimeout(function(){ S.play(res === 'me' ? 'win' : (res === 'opp' ? 'lose' : 'tie')); }, (nb > pb && s.reason !== 'left') ? 1500 : (snd ? 380 : 0));
+      setTimeout(function(){ S.play(res === 'me' ? 'win' : (res === 'opp' ? 'lose' : 'tie')); }, (nb > pb && s.reason !== 'left') ? 1000 : (snd ? 380 : 0));
     }else if(prev.turn !== 'me' && s.turn === 'me' && s.status === 'play'){
       setTimeout(function(){ S.play('turn'); }, snd ? 260 : 0);
     }
@@ -9538,7 +9538,7 @@ window.wtInviteBox = function(o){
     if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flyFrom = null; }
     if(prev && prev.status === 'play' && s.status === 'over' && s.round === prev.round && s.reason !== 'left' && (s.board || []).length > (prev.board || []).length){
       dom.hold = true; clearTimeout(dom.holdT);
-      dom.holdT = setTimeout(function(){ dom.hold = false; if(dom.s && !$('domino').hidden) render(); }, 1900);
+      dom.holdT = setTimeout(function(){ dom.hold = false; if(dom.s && !$('domino').hidden) render(); }, 2500);
       if(s.result !== 'me' && s.reason === 'out') flash(((s.opps || []).length > 1 ? (s.winner_name || 'Rəqib') : 'Rəqib') + ' son daşı qoydu');
     }
     if(dom.sel && !s.hand.some(function(t){ return same(t, dom.sel); })) dom.sel = null;
