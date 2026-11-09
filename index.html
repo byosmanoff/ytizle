@@ -9560,11 +9560,7 @@ window.wtInviteBox = function(o){
     if(!s.can_draw){ flash('Bazar boşdur'); return; }
     if(busy) return;
     var bz = $('dbazar'); if(bz) bz.style.pointerEvents = 'none';
-    var take = [el];
-    if((s.size || 2) === 2 && s.stock > 1){      /* 2 nəfərdə server iki daş verir: ikisi də uçsun */
-      var sib = Array.prototype.filter.call(el.parentNode.children, function(x){ return x !== el && x.style.visibility !== 'hidden'; });
-      if(sib.length) take.push(sib[sib.length - 1]);
-    }
+    var take = [el];      /* hər toxunuşda yalnız toxunduğun daş götürülür */
     dom.drawFrom = take.map(srcOf);
     take.forEach(function(x){ x.style.visibility = 'hidden'; });
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}

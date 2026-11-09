@@ -4791,10 +4791,10 @@ DOM_KEEP2 = 2    # 2 nəfərlik oyunda bazarda həmişə bu qədər daş qalır 
 
 
 def _dom_draw_n(g):
-    """Bir dəfəyə çəkiləcək daş sayı. 2 nəfərdə: 2-2 çəkilir, bazarda 2 daş qalır. 3-4 nəfərdə: tək-tək, bazar tam boşalana qədər."""
+    """Bir dəfəyə çəkiləcək daş sayı: həmişə tək-tək. 2 nəfərdə bazarda 2 daş qalır (çəkilmir), 3-4 nəfərdə bazar tam boşalana qədər."""
     n = len(g["stock"])
     if g.get("size", 2) == 2:
-        return max(0, min(2, n - DOM_KEEP2))
+        return 1 if n > DOM_KEEP2 else 0
     return 1 if n else 0
 
 
@@ -4856,9 +4856,8 @@ def _dsim_rollout(hands, stock, l, r, turn, passes):
     while True:
         h = hands[turn]
         opts = _dsim_opts(h, l, r)
-        while not opts and len(stock) > DOM_KEEP2:      # 2-2 çəkir, bazarda 2 daş qalır
-            for _ in range(min(2, len(stock) - DOM_KEEP2)):
-                h.append(stock.pop())
+        while not opts and len(stock) > DOM_KEEP2:      # tək-tək çəkir, bazarda 2 daş qalır
+            h.append(stock.pop())
             opts = _dsim_opts(h, l, r)
         if not opts:
             passes += 1
