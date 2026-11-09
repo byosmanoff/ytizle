@@ -9255,17 +9255,28 @@ window.wtInviteBox = function(o){
     var arms = dom.arms, bd = $('dboard'), ch = $('dchain');
     if(!arms || !bd || !ch) return;
     var CW = bd.clientWidth, CH = bd.clientHeight;
-    var W = CW - 16, H = CH - 18;
+    /* taxta haşiyə (5px) + künc yuvarlaqlığı + daş kölgəsi üçün təhlükəsiz boşluq */
+    var W = CW - 30, H = CH - 32;
     if(W <= 0 || H <= 0) return;
     var best = 8, recs = null;
-    for(var sz = 38; sz >= 8; sz--){
-      var rs = layout(arms, sz, W), ok = true;
+    function extent(rs){
+      var a = 1e9, b = -1e9, c = 1e9, d = -1e9;
       for(var i = 0; i < rs.length; i++){
-        if(Math.max(Math.abs(rs[i].l), Math.abs(rs[i].r)) > W / 2 + 1 || Math.max(Math.abs(rs[i].t), Math.abs(rs[i].b)) > H / 2){ ok = false; break; }
+        if(rs[i].l < a) a = rs[i].l; if(rs[i].r > b) b = rs[i].r;
+        if(rs[i].t < c) c = rs[i].t; if(rs[i].b > d) d = rs[i].b;
       }
-      if(ok){ best = sz; recs = rs; break; }
+      return {l: a, r: b, t: c, b: d};
+    }
+    for(var sz = 38; sz >= 8; sz--){
+      var rs = layout(arms, sz, W), ex = extent(rs);
+      /* sərhəd mərkəzə görə yox, zəncirin real ölçüsünə görə yoxlanır; sonra lövhənin ortasına çəkilir */
+      if(Math.max(Math.abs(ex.l), Math.abs(ex.r)) <= W / 2 + 1 && (ex.b - ex.t) <= H + 1){ best = sz; recs = rs; break; }
     }
     if(!recs) recs = layout(arms, best, W);
+    (function(){
+      var ex = extent(recs), ox = -(ex.l + ex.r) / 2, oy = -(ex.t + ex.b) / 2;
+      recs.forEach(function(r){ r.cx += ox; r.cy += oy; r.l += ox; r.r += ox; r.t += oy; r.b += oy; });
+    })();
     var oldR = {};
     if(anim){ [].forEach.call(ch.querySelectorAll('.tile[data-k]'), function(t){ oldR[t.getAttribute('data-k')] = t.getBoundingClientRect(); }); }
     ch.innerHTML = '';
