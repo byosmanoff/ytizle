@@ -9274,7 +9274,9 @@ window.wtInviteBox = function(o){
       }else{
         el = tile(it.t, {v: r.vert, cls: it.cls, s: best});
         if(r.flip) el.classList.add('flip');
-        if(dom.flying && it.cls && it.cls.indexOf('last') >= 0) el.style.visibility = 'hidden';
+        var kk = Math.min(it.t[0], it.t[1]) + '-' + Math.max(it.t[0], it.t[1]);
+        el.setAttribute('data-k', kk);
+        if(dom.hide && dom.hide[kk]) el.style.visibility = 'hidden';
       }
       el.style.left = Math.round(CW / 2 + r.cx - r.w / 2) + 'px';
       el.style.top = Math.round(CH / 2 + r.cy - r.h / 2) + 'px';
@@ -9321,6 +9323,7 @@ window.wtInviteBox = function(o){
     setTimeout(done, dur + 400);
     return true;
   }
+  function nid(){ dom.fid = (dom.fid || 0) + 1; return dom.fid; }
   function flyIn(le){
     var from = dom.flyFrom; dom.flyFrom = null;
     var src, first = -1;
@@ -9330,12 +9333,37 @@ window.wtInviteBox = function(o){
       if(!a) return;
       src = srcOf(a); src.long = Math.max(src.long, 34);
     }
-    le.style.visibility = 'hidden'; dom.flying = true;
-    var ok = flyGhost(le, src, {first: first, noRot: !from, done: function(){
-      dom.flying = false;
-      var l = document.querySelector('#dchain .tile.last'); if(l) l.style.visibility = '';
-    }});
-    if(!ok){ dom.flying = false; le.style.visibility = ''; }
+    var kk = le.getAttribute('data-k'), id = nid();
+    dom.hide = dom.hide || {};
+    dom.hide[kk] = id; le.style.visibility = 'hidden';
+    var fin = function(){
+      if(dom.hide && dom.hide[kk] === id){
+        delete dom.hide[kk];
+        var l = $('dchain').querySelector('.tile[data-k="' + kk + '"]'); if(l) l.style.visibility = '';
+      }
+    };
+    if(!flyGhost(le, src, {first: first, noRot: !from, done: fin})) fin();
+  }
+  /* bazardan çəkilən daşlar: panelin yerindən əlindəki öz yerinə uçur */
+  function drawFly(list){
+    var srcs = dom.drawFrom || []; dom.drawFrom = null;
+    if(!srcs.length){ var r = $('dboard').getBoundingClientRect(); srcs = [{cx: r.left + r.width / 2, cy: r.top + r.height / 2, long: 44}]; }
+    dom.hideH = dom.hideH || {};
+    list.forEach(function(o, i){
+      var src = srcs[Math.min(i, srcs.length - 1)], id = nid();
+      o.el.classList.remove('pop');
+      dom.hideH[o.key] = id; o.el.style.visibility = 'hidden';
+      var fin = function(){
+        if(dom.hideH && dom.hideH[o.key] === id){
+          delete dom.hideH[o.key];
+          var e = $('dhand').querySelector('[data-k="' + o.key + '"]'); if(e) e.style.visibility = '';
+        }
+      };
+      setTimeout(function(){
+        var el = $('dhand').querySelector('[data-k="' + o.key + '"]');
+        if(!el || !flyGhost(el, src, {noRot: true, dur: 720, done: fin})) fin();
+      }, i * 170);
+    });
   }
   /* bazar qutusu: toxunulan daş əlinə uçur */
   function flyToHand(el){
@@ -9357,16 +9385,19 @@ window.wtInviteBox = function(o){
   function renderHand(s){
     var h = $('dhand'); h.innerHTML = '';
     var mine = s.status === 'play' && s.turn === 'me';
-    var old = dom.handKeys, keys = {};
+    var old = dom.handKeys, keys = {}, fresh = [];
     s.hand.forEach(function(t){
       var ok = mine && s.moves.some(function(m){ return same(m.t, t); });
       var key = t[0] + '-' + t[1]; keys[key] = 1;
       var el = tile(t, {v: true, s: 40, cls: (mine ? (ok ? 'ok' : 'dim') : '') + (dom.sel && same(dom.sel, t) ? ' sel' : '') + (old && !old[key] ? ' pop' : '')});
       el.setAttribute('data-k', key);
+      if(dom.hideH && dom.hideH[key]) el.style.visibility = 'hidden';
+      if(old && !old[key]) fresh.push({el: el, key: key});
       el.onclick = function(){ pick(t); };
       h.appendChild(el);
     });
     dom.handKeys = keys;
+    if(fresh.length) try{ drawFly(fresh); }catch(fe){ fresh.forEach(function(o){ o.el.style.visibility = ''; }); }
   }
 
   function renderMsg(){
@@ -9433,6 +9464,16 @@ window.wtInviteBox = function(o){
     var n = s.stock, cnt = Math.min(n, 14), rows = cnt > 7 ? 2 : 1;
     var bh = bd.clientHeight || 200;
     var sz = Math.max(15, Math.min(30, Math.floor((bh - 92 - (rows - 1) * 8) / (rows * 2))));
+    var g0 = !p.hidden && p.querySelector('.bz-g');
+    if(g0){
+      var vis = Array.prototype.filter.call(g0.children, function(x){ return x.style.visibility !== 'hidden'; });
+      if(vis.length >= cnt){
+        for(var q = vis.length - 1; q >= cnt; q--) vis[q].style.visibility = 'hidden';
+        var nb = p.querySelector('.bz-n b'); if(nb) nb.textContent = n;
+        p.style.pointerEvents = '';
+        return;
+      }
+    }
     p.hidden = false; p.style.pointerEvents = '';
     p.innerHTML = '<div class="bz-t">Bazardan bir daş çəkin</div><div class="bz-n">Bazar: <b>' + n + '</b></div><div class="bz-g"></div>';
     var g = p.lastChild;
@@ -9456,7 +9497,8 @@ window.wtInviteBox = function(o){
       var sib = Array.prototype.filter.call(el.parentNode.children, function(x){ return x !== el && x.style.visibility !== 'hidden'; });
       if(sib.length) take.push(sib[sib.length - 1]);
     }
-    take.forEach(function(x, i){ setTimeout(function(){ flyToHand(x); }, i * 140); x.style.visibility = 'hidden'; });
+    dom.drawFrom = take.map(srcOf);
+    take.forEach(function(x){ x.style.visibility = 'hidden'; });
     try{ navigator.vibrate && navigator.vibrate(15); }catch(x){}
     act('draw');
   }
@@ -9541,7 +9583,7 @@ window.wtInviteBox = function(o){
     if(prev && s.v < prev.v) return;                         // köhnə cavab
     var changed = force || !prev || s.v !== prev.v || onlKey(s) !== onlKey(prev);
     dom.v = s.v; dom.s = s;
-    if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flyFrom = null; }
+    if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flyFrom = null; dom.hide = {}; dom.hideH = {}; dom.drawFrom = null; }
     if(prev && prev.status === 'play' && s.status === 'over' && s.round === prev.round && s.reason !== 'left' && (s.board || []).length > (prev.board || []).length){
       dom.hold = true; clearTimeout(dom.holdT);
       dom.holdT = setTimeout(function(){ dom.hold = false; if(dom.s && !$('domino').hidden) render(); }, 2500);
@@ -9601,7 +9643,7 @@ window.wtInviteBox = function(o){
       var r = await api('/api/domino/move', {method: 'POST', body: JSON.stringify(Object.assign({room: dom.code, action: kind}, extra || {}))});
       if(r.ok){ ok = true; apply(await r.json(), true); } else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
     }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
-    if(!ok){ dom.flyFrom = null; }
+    if(!ok){ dom.flyFrom = null; dom.drawFrom = null; }
     if(!ok && dom.s){ if(pred) dom.s = snap; dom.sfxDraw = false; render(); }
     dom.sfxDraw = false;
     busy = false;
@@ -9663,7 +9705,7 @@ window.wtInviteBox = function(o){
   }
 
   function open(s){
-    dom.gen++; dom.code = s.code; dom.v = 0; dom.s = null; dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flying = false; dom.flyFrom = null;
+    dom.gen++; dom.code = s.code; dom.v = 0; dom.s = null; dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flying = false; dom.flyFrom = null; dom.hide = {}; dom.hideH = {}; dom.drawFrom = null;
     dom.flashTx = ''; busy = false;
     $('domino').hidden = false;
     $('dhand').style.display = '';
