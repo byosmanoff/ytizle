@@ -4257,7 +4257,9 @@ function setVp(box, span, u, av, name){
 }
 
 function handle(m){
-  if(m.t === 'typing'){ learnPeerName(m.name); showTyping(m.name); }
+  if(m.t === 'edit'){ if(window.wtRemoteEdit) window.wtRemoteEdit(m); }
+  else if(m.t === 'del'){ if(window.wtRemoteDel) window.wtRemoteDel(m); }
+  else if(m.t === 'typing'){ learnPeerName(m.name); showTyping(m.name); }
   else if(m.t === 'fly'){ if(REACTS.includes(m.e)) flyEmoji(m.e); }
   else if(m.t === 'react'){ if(typeof m.from === 'string' && m.from) rxApply(m.id, m.from, MSG_REACTS.includes(m.e) ? m.e : ''); }
   else if(m.t === 'chat'){
@@ -5070,6 +5072,7 @@ function addMsg(name, text, mine, o){
   if(o.img && (o.local || IMG_URL_RE.test(o.img))) d.appendChild(imgBox(o.img, !!o.sens, mine));
   if(text){ const s = document.createElement('span'); s.dataset.nt = ''; s.textContent = text; d.appendChild(s); }
   const meta = document.createElement('div'); meta.className = 'meta';
+  if(o.ed){ const ed = document.createElement('span'); ed.className = 'ed'; ed.textContent = 'redaktə olundu'; meta.appendChild(ed); }
   const tm = document.createElement('span'); tm.textContent = fmtTime(o.ts); meta.appendChild(tm);
   if(mine){
     const lb = document.createElement('span'); lb.className = 'lab';
@@ -5122,7 +5125,7 @@ function setReply(id){
   $('rbName').textContent = replyTo.name; $('rbText').textContent = replyTo.text;
   $('replybar').hidden = false; $('msg').focus();
 }
-function clearReply(){ replyTo = null; $('replybar').hidden = true; }
+function clearReply(){ replyTo = null; $('replybar').hidden = true; if(window.wtCancelEdit) window.wtCancelEdit(); }
 $('rbX').onclick = clearReply;
 
 /* sağa sürüşdür: yanıt ver */
@@ -5261,6 +5264,7 @@ $('imgfile').onchange = async () => {
 function sendChat(){
   const t = $('msg').value.trim();
   if(!t) return;
+  if(window.wtEditing && window.wtEditing()){ window.wtCommitEdit(t); return; }
   const id = newId();
   const rp = replyTo ? {id: replyTo.id, name: replyTo.name, text: replyTo.text} : null;
   const myU = (account && account.username) || '', myV = myAvVer();
@@ -7032,10 +7036,10 @@ async function loadChatHistory(){
     const list = (await r.json()).msgs || [];
     if(!list.length) return;
     list.forEach(m => {
-      if(m.id && msgEls.has(m.id)) return;
+      if(m.id && (msgEls.has(m.id) || (window.wtHidden && window.wtHidden(m.id)))) return;
       const mine = !!m.mine;
       addMsg(String(m.name || 'Qonaq').slice(0, 20), typeof m.text === 'string' ? m.text : '', mine,
-        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl, ts: m.ts, hist: true});
+        {id: m.id, reply: m.reply, u: m.u, av: m.av, img: m.img, sens: m.sens, vf: m.vf === 1, rl: m.rl, ts: m.ts, ed: !!m.ed, hist: true});
       if(mine && m.id) ownState.set(m.id, 3);
       if(m.id) rxLoad(m.id, m.rx, m.my);
     });
@@ -12549,6 +12553,177 @@ async function callPending(){
   window.addEventListener('wt:languagechange', function(){ if(last) render(last); });
   setTimeout(load, 800);
 
+})();
+</script>
+
+<style>
+#msgmenu{position:fixed;z-index:71;min-width:196px;padding:6px;border-radius:16px;background:var(--seat-2);box-shadow:0 12px 36px rgba(0,0,0,.5),inset 0 0 0 1px var(--line);animation:mmin .14s ease-out}
+#msgmenu[hidden]{display:none}
+@keyframes mmin{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+#msgmenu button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:11px;background:transparent;color:var(--text);font-size:15px;font-weight:600;text-align:left}
+#msgmenu button:hover,#msgmenu button:active{background:rgba(255,255,255,.1)}
+#msgmenu button i{width:18px;text-align:center;font-size:15px;color:var(--muted)}
+#msgmenu button.dng,#msgmenu button.dng i{color:#ff6b81}
+#msheet{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,3,12,.6)}
+#msheet[hidden]{display:none}
+#msheet .sh{width:min(100%,460px);max-height:70dvh;overflow-y:auto;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;background:var(--velvet-2);box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1px 0 var(--line)}
+#msheet h4{font-size:16px;font-weight:700;margin:2px 4px 10px}
+#msheet .sb{display:flex;align-items:center;gap:12px;width:100%;margin-top:6px;padding:13px 14px;border-radius:13px;background:var(--seat);color:var(--text);font-weight:600;text-align:left}
+#msheet .sb:active{background:var(--seat-2)}
+#msheet .sb.dng{color:#ff6b81}
+#msheet .sb.cn{justify-content:center;background:transparent;color:var(--muted)}
+#msheet .sb .fa{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--rose-deep);color:#fff;font-weight:800;flex:none}
+#msheet .sb small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+#msheet .none{padding:14px 6px;color:var(--muted);font-size:14px}
+.m.editing{box-shadow:0 0 0 2px var(--amber)}
+.meta .ed{font-style:italic;opacity:.85}
+</style>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var menu = null, sheet = null, editId = null;
+  function toast(t){ if(window.wtToast) window.wtToast(t); }
+  function ic(c){ return '<i class="fa-solid ' + c + '" aria-hidden="true"></i>'; }
+
+  /* ---- yalnız məndə silinənlər (otaq üzrə yadda qalır) ---- */
+  function hk(){ return 'wtHid:' + room; }
+  function hidSet(){ try{ return new Set(JSON.parse(localStorage.getItem(hk()) || '[]')); }catch(e){ return new Set(); } }
+  window.wtHidden = function(id){ return hidSet().has(id); };
+  function hideLocal(id){ try{ var s = hidSet(); s.add(id); localStorage.setItem(hk(), JSON.stringify(Array.from(s).slice(-500))); }catch(e){} }
+  function removeEl(id){
+    var el = msgEls.get(id); if(el) el.remove();
+    msgEls.delete(id); rxs.delete(id); ownState.delete(id);
+    if(editId === id) window.wtCancelEdit();
+    if(typeof refreshLabels === 'function') refreshLabels();
+  }
+
+  /* ---- redaktə ---- */
+  function textSpan(el){ return el.querySelector(':scope > span[data-nt]'); }
+  function markEd(el){
+    var meta = el.querySelector(':scope > .meta');
+    if(meta && !meta.querySelector('.ed')){ var e = document.createElement('span'); e.className = 'ed'; e.textContent = 'redaktə olundu'; meta.insertBefore(e, meta.firstChild); }
+  }
+  function applyEdit(id, t){
+    var el = msgEls.get(id), s = el && textSpan(el); if(!s) return;
+    s.textContent = t; el.dataset.text = t; markEd(el);
+  }
+  function doneEdit(){
+    $('msg').value = ''; $('replybar').hidden = true;
+    [].forEach.call(document.querySelectorAll('.m.editing'), function(e){ e.classList.remove('editing'); });
+  }
+  window.wtEditing = function(){ return editId !== null; };
+  window.wtCancelEdit = function(){ if(editId === null) return; editId = null; doneEdit(); };
+  window.wtCommitEdit = function(t){
+    var id = editId, el = msgEls.get(id); editId = null;
+    if(el && t !== el.dataset.text){ t = t.slice(0, 400); applyEdit(id, t); send({t: 'edit', id: id, text: t}); }
+    doneEdit();
+  };
+  function startEdit(id){
+    var el = msgEls.get(id); if(!el || !el.classList.contains('me') || !textSpan(el)) return;
+    window.wtCancelEdit(); if(typeof clearReply === 'function') clearReply();
+    editId = id; $('msg').value = el.dataset.text;
+    $('rbName').textContent = 'Redaktə'; $('rbText').textContent = el.dataset.text.slice(0, 80);
+    $('replybar').hidden = false; el.classList.add('editing'); $('msg').focus();
+  }
+  window.wtRemoteEdit = function(m){
+    if(typeof m.id !== 'string' || typeof m.text !== 'string') return;
+    var el = msgEls.get(m.id); if(el && !el.classList.contains('me')) applyEdit(m.id, m.text.slice(0, 400));
+  };
+  window.wtRemoteDel = function(m){
+    if(typeof m.id !== 'string') return;
+    var el = msgEls.get(m.id); if(el && !el.classList.contains('me')) removeEl(m.id);
+  };
+
+  /* ---- alt panel (silmə / yönləndirmə) ---- */
+  function openSheet(title, rows){
+    if(!sheet){
+      sheet = document.createElement('div'); sheet.id = 'msheet'; sheet.hidden = true;
+      sheet.addEventListener('click', function(e){ if(e.target === sheet) sheet.hidden = true; });
+      document.body.appendChild(sheet);
+    }
+    sheet.textContent = '';
+    var box = document.createElement('div'); box.className = 'sh';
+    var h = document.createElement('h4'); h.textContent = title; box.appendChild(h);
+    rows.forEach(function(r){ box.appendChild(r); });
+    var cn = document.createElement('button'); cn.type = 'button'; cn.className = 'sb cn'; cn.textContent = 'Ləğv et';
+    cn.onclick = function(){ sheet.hidden = true; }; box.appendChild(cn);
+    sheet.appendChild(box); sheet.hidden = false;
+  }
+  function sbtn(html, cls, fn){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'sb ' + (cls || ''); b.innerHTML = html;
+    b.onclick = fn; return b;
+  }
+  function askDelete(id){
+    var el = msgEls.get(id); if(!el) return;
+    var rows = [];
+    if(el.classList.contains('me')) rows.push(sbtn(ic('fa-trash') + ' Hər iki tərəfdən sil', 'dng', function(){ sheet.hidden = true; removeEl(id); send({t: 'del', id: id}); }));
+    rows.push(sbtn(ic('fa-eye-slash') + ' Yalnız məndən sil', 'dng', function(){ sheet.hidden = true; hideLocal(id); removeEl(id); }));
+    openSheet('Mesaj silinsin?', rows);
+  }
+
+  /* ---- yönləndirmə: dostun şəxsi mesajına ---- */
+  async function forwardMsg(id){
+    var el = msgEls.get(id); if(!el) return;
+    if(!token || (account && account.guest)){ toast('Yönləndirmək üçün hesabla daxil ol'); return; }
+    var txt = '↪ ' + (el.dataset.name || '') + ': ' + (el.dataset.text || '');
+    var rows = [], list = [];
+    try{ var r = await api('/api/friends'); if(r.ok) list = (await r.json()).friends || []; }catch(e){}
+    if(!list.length){ var n = document.createElement('div'); n.className = 'none'; n.textContent = 'Hələ dostun yoxdur.'; rows.push(n); }
+    list.forEach(function(p){
+      var b = sbtn('<span class="fa"></span><span><b></b><small></small></span>', '', async function(){
+        sheet.hidden = true;
+        try{ await dmCall('/api/dm/send', {method: 'POST', body: JSON.stringify({to: p.username, text: txt.slice(0, 1000)})}); toast('Yönləndirildi'); }
+        catch(e){ toast('Yönləndirilmədi, yenidən cəhd et'); }
+      });
+      b.querySelector('.fa').textContent = ((p.name || p.username || '?').trim().charAt(0) || '?').toUpperCase();
+      b.querySelector('b').textContent = p.name || p.username;
+      b.querySelector('small').textContent = '@' + p.username;
+      rows.push(b);
+    });
+    openSheet('Kimə yönləndirək?', rows);
+  }
+
+  /* ---- kopyala ---- */
+  async function copyText(t){
+    try{ await navigator.clipboard.writeText(t); }
+    catch(e){ var a = document.createElement('textarea'); a.value = t; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try{ document.execCommand('copy'); }catch(_){} a.remove(); }
+    toast('Kopyalandı');
+  }
+
+  /* ---- basılı tutanda çıxan menyu ---- */
+  function closeMenu(){ if(menu) menu.hidden = true; }
+  function openMenu(id, anchor){
+    var el = msgEls.get(id); if(!el) return;
+    var mine = el.classList.contains('me'), hasTxt = !!textSpan(el);
+    var items = [['fa-reply', 'Yanıt ver', function(){ window.wtCancelEdit(); setReply(id); }]];
+    if(hasTxt) items.push(['fa-copy', 'Kopyala', function(){ copyText(el.dataset.text || ''); }]);
+    if(hasTxt) items.push(['fa-share', 'Yönləndir', function(){ forwardMsg(id); }]);
+    if(mine && hasTxt) items.push(['fa-pen', 'Redaktə et', function(){ startEdit(id); }]);
+    items.push(['fa-trash', 'Sil', function(){ askDelete(id); }, 1]);
+    if(!menu){ menu = document.createElement('div'); menu.id = 'msgmenu'; menu.hidden = true; document.body.appendChild(menu); }
+    menu.textContent = '';
+    items.forEach(function(it){
+      var b = document.createElement('button'); b.type = 'button'; b.className = it[3] ? 'dng' : '';
+      b.innerHTML = ic(it[0]) + '<span></span>'; b.lastChild.textContent = it[1];
+      b.onclick = function(){ closeMenu(); if(typeof rxClose === 'function') rxClose(); it[2](); };
+      menu.appendChild(b);
+    });
+    menu.hidden = false;
+    var r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight, vh = window.innerHeight;
+    var top = r.bottom + 8;
+    if(top + mh > vh - 8){ var pt = rxPick && !rxPick.hidden ? rxPick.getBoundingClientRect().top : r.top; top = Math.max(8, pt - mh - 8); }
+    var left = mine ? r.right - mw : r.left;
+    menu.style.top = top + 'px'; menu.style.left = Math.max(8, Math.min(left, window.innerWidth - mw - 8)) + 'px';
+  }
+  var baseOpen = window.rxOpen;
+  window.rxOpen = function(id, anchor){
+    baseOpen(id, anchor);
+    if(rxPick && !rxPick.hidden) openMenu(id, anchor); else closeMenu();
+  };
+  document.addEventListener('pointerdown', function(e){ if(menu && !menu.hidden && !e.target.closest('#msgmenu')) closeMenu(); }, true);
+  $('chat').addEventListener('scroll', closeMenu, {passive: true});
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeMenu(); if(sheet) sheet.hidden = true; } });
+  $('send').onclick = function(){ sendChat(); };
 })();
 </script>
 </body>
