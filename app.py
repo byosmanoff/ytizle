@@ -330,6 +330,24 @@ def api_send():
             while len(rx_all) > RX_MAX_MSGS:
                 rx_all.pop(next(iter(rx_all)))
             msg = {"t": "react", "id": mid, "e": e, "from": key}   # yalnız yoxlanmış sahələr yayılır
+        if msg.get("t") in ("edit", "del"):   # mesajı redaktə etmək / hər iki tərəfdən silmək: yalnız sahibi
+            mid = msg.get("id")
+            if not isinstance(mid, str) or not (0 < len(mid) <= 40):
+                abort(400)
+            hh = next((x for x in r["hist"] if x.get("id") == mid), None)
+            if hh is None or hh.get("pid") != pid:
+                return jsonify(ok=True, dropped=True)   # tapılmadı, köhnəlib və ya başqasının mesajıdır
+            if msg["t"] == "del":
+                r["hist"].remove(hh)
+                r.get("reacts", {}).pop(mid, None)
+                msg = {"t": "del", "id": mid}
+            else:
+                txt = msg.get("text")
+                if not isinstance(txt, str) or not txt.strip() or not hh.get("text"):
+                    return jsonify(ok=True, dropped=True)   # boş mətn və ya şəkil mesajı redaktə olunmur
+                txt = txt.strip()[:400]
+                hh["text"], hh["ed"] = txt, True
+                msg = {"t": "edit", "id": mid, "text": txt}   # yalnız yoxlanmış sahələr yayılır
         if msg.get("t") == "chat":
             msg.pop("rl", None)   # rol nişanı yalnız serverdən gəlir, saxtalaşdırmaq olmur
             if role_of(r, pid) in ("host", "mod"):
