@@ -2664,8 +2664,43 @@ html body #pbox.fromdm .lv-card{width:100%;max-width:520px;margin:0 auto;flex:1 
 #pbox.fromdm #pbuser{font-size:16px}
 #pbox.fromdm .pbmedia{margin-top:24px}
 #pbox.fromdm .pbgrid{max-height:none;overflow:visible}
-#pbox.fromdm .lv-btns{flex-direction:column;margin-top:24px}
-#pbox.fromdm #pbClose{display:none}
+
+/* ===== Telegram üslubunda profil səhifəsi (yalnız DM-dən açılanda) ===== */
+.pbinfo,.pbrow{display:contents}
+.pbrow small,.t-msg{display:none}
+#pbox.fromdm .pbbar{background:transparent;box-shadow:none;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 0}
+#pbox.fromdm .pbbar b{display:none}
+#pbox.fromdm #pbBack{background:transparent;width:44px;height:44px;font-size:19px}
+html body #pbox.fromdm .lv-card{display:flex;flex-direction:column;align-items:stretch;padding:0 14px calc(24px + env(safe-area-inset-bottom,0px))}
+#pbox.fromdm .pcard .av.big{order:0;width:144px;height:144px;font-size:60px;margin:6px auto 14px;box-shadow:0 14px 40px -12px rgba(0,0,0,.6)}
+#pbox.fromdm .pcard h2{order:1;font-size:25px;margin:0 0 2px}
+#pbox.fromdm #pbpresence{order:2;font-size:15px;margin:2px 0 0;min-height:0}
+#pbox.fromdm #pbrel{order:3;font-size:14px;margin:2px 0 0;min-height:0}
+#pbox.fromdm .lv-btns{order:4;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin:22px 0 14px}
+#pbox.fromdm .lv-btns button{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:74px;padding:10px 4px;border-radius:18px;background:rgba(255,255,255,.08);color:var(--text);font-size:13px;font-weight:600;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);border:0;line-height:1.15}
+#pbox.fromdm .lv-btns button[hidden]{display:none!important}
+#pbox.fromdm .lv-btns button::before{font-family:"Font Awesome 6 Free";font-weight:900;font-size:21px;line-height:1}
+#pbox.fromdm #pbClose::before{content:"\f075"}
+#pbox.fromdm #pbAct::before{content:"\f234"}
+#pbox.fromdm #pbBlock::before{content:"\f05e"}
+#pbox.fromdm #pbReport::before{content:"\f024"}
+#pbox.fromdm #pbClose,#pbox.fromdm #pbAct{color:var(--rose)}
+#pbox.fromdm #pbBlock{color:#ff8fae}
+#pbox.fromdm #pbReport{color:var(--text);background:rgba(255,255,255,.08)}
+#pbox.fromdm #pbClose .t-close{display:none}
+#pbox.fromdm #pbClose .t-msg{display:inline}
+#pbox.fromdm #pbAct:disabled{opacity:.6}
+#pbox.fromdm .pbinfo{order:5;display:block;background:rgba(255,255,255,.06);border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);text-align:left}
+#pbox.fromdm .pbrow{display:block;padding:13px 18px}
+#pbox.fromdm .pbrow+.pbrow{border-top:1px solid rgba(255,255,255,.07)}
+#pbox.fromdm .pbrow:has(> :empty){display:none}
+#pbox.fromdm .pbrow small{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
+#pbox.fromdm #pbuser{font-size:17px;color:var(--text);margin:0;min-height:0}
+#pbox.fromdm #pbbio{font-size:16px;margin:0;opacity:1}
+#pbox.fromdm .pbmedia{order:6;margin-top:14px}
+#pbox.fromdm .pbmedia h3{display:inline-block;font-size:14px;font-weight:700;color:var(--rose);background:rgba(255,255,255,.09);padding:9px 18px;border-radius:999px;margin:0 0 12px}
+#pbox.fromdm .pbmedia .pbnone{font-size:14px;padding:10px 6px}
+#pbox.fromdm .pbgrid{gap:3px;border-radius:14px}
 @media (prefers-reduced-motion:no-preference){
   html body #pbox.fromdm:not([hidden]){animation:pfIn .26s cubic-bezier(.2,.9,.3,1) both}
   @keyframes pfIn{from{transform:translateX(100%)}to{transform:none}}
@@ -2933,6 +2968,22 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 body.mob *:not(.lv-card):not(#tabbar),body.mob *::before,body.mob *::after{-webkit-backdrop-filter:none;backdrop-filter:none}
 body.mob{--lg-drop:0 6px 16px -8px rgba(0,0,0,.5)}
 body.mob #dmchat .dmh,body.mob #dmform,body.mob #dmrec,body.mob #dmrbar{background:rgba(52,30,70,.96)}
+
+/* ===== Telegram üslubunda söhbət ekranı ===== */
+html body #dmchat .dmh,html body.mob #dmchat .dmh{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 6px;position:relative;z-index:2}
+#dmchat .dmh #dmback,#dmchat .dmh #dmcall{flex:none;width:48px;height:48px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:17px;background:rgba(255,255,255,.11);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 8px 18px -10px rgba(0,0,0,.7);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#dmchat .dmpill{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px 0 4px;border-radius:999px;background:rgba(255,255,255,.11);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 8px 18px -10px rgba(0,0,0,.7);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#dmchat .dmpill .av{width:40px;height:40px;font-size:17px}
+#dmchat .dmpill .tx b{font-size:16px;line-height:1.15}
+#dmchat .dmpill .tx small{display:block;font-size:12.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body #dmmsgs{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240' fill='none' stroke='%23ffffff' stroke-opacity='.075' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M40 54C20 40 22 22 34 22c4 0 6 3 6 5 0-2 2-5 6-5 12 0 14 18-6 32z'/><path d='M150 16l5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z'/><circle cx='208' cy='78' r='9'/><circle cx='226' cy='60' r='2.5'/><path d='M18 112q10-14 20 0t20 0 20 0'/><path d='M128 104l42-20-15 40-8-16z M162 88l-15 20'/><path d='M30 196a14 14 0 0 1 4-27 20 20 0 0 1 38 4 12 12 0 0 1 0 23z'/><path d='M176 148a22 22 0 1 0 22 30 18 18 0 0 1-22-30z'/><circle cx='112' cy='214' r='4'/><circle cx='112' cy='200' r='6'/><circle cx='125' cy='210' r='6'/><circle cx='99' cy='210' r='6'/><circle cx='120' cy='224' r='6'/><circle cx='104' cy='224' r='6'/><path d='M216 186v22M205 197h22'/><path d='M88 52l8 8-8 8-8-8z'/><circle cx='80' cy='150' r='3'/><path d='M60 120h6M63 117v6'/></svg>");background-size:240px 240px;background-position:center top;padding-top:12px}
+#dmmsgs .dmempty{margin:auto;width:min(310px,86%);padding:26px 20px 28px;border-radius:26px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 18px 40px -20px rgba(0,0,0,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--text);font-size:16px;font-weight:600;line-height:1.45}
+#dmmsgs .dmempty i{font-size:58px;margin-bottom:14px}
+html body #dmform,html body.mob #dmform{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;gap:8px;padding:6px 10px calc(10px + env(safe-area-inset-bottom,0px));align-items:flex-end}
+#dmform .dmfield{flex:1;min-width:0;display:flex;align-items:flex-end;min-height:52px;padding:0 4px 0 6px;border-radius:26px;background:rgba(38,21,55,.94);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 10px 24px -14px rgba(0,0,0,.8)}
+#dmform .dmfield #dmin{order:1;flex:1;min-width:0;min-height:52px;padding:14px 8px 14px 12px;background:transparent;box-shadow:none;border-radius:0}
+#dmform .dmfield #dmattach{order:2;width:46px;height:52px;border-radius:50%;background:transparent;box-shadow:none;font-size:20px;color:var(--muted)}
+#dmform #dmmic,#dmform #dmsend{flex:none;width:52px;height:52px;border-radius:50%;font-size:20px;color:#fff;background:linear-gradient(160deg,#ff8aa8,#e8567d);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),0 10px 22px -8px rgba(232,86,125,.75)}
 body.mob #menu.pager-on>#tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(30,16,41,.95)}
 /* 2) Oyun kartları: ağır SVG şəkli böyüdülmür (transform qatı yoxdur), kənarda qalan kartlar çəkilmir */
 #domCard::before,#durCard::before,#unoCard::before,#chCard::before,#mafCard::before{transform:none;will-change:auto}
@@ -3467,12 +3518,14 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   <div class="lv-card pcard">
     <div class="av big" id="pbav">?</div>
     <h2 id="pbname" data-nt></h2>
-    <div id="pbuser" data-nt></div>
-    <div id="pbbio" data-nt></div>
+    <div class="pbinfo">
+      <div class="pbrow" id="pbrowUser"><div id="pbuser" data-nt></div><small>İstifadəçi adı</small></div>
+      <div class="pbrow" id="pbrowBio"><div id="pbbio" data-nt></div><small>Haqqında</small></div>
+    </div>
     <div id="pbpresence" role="status"></div>
     <div id="pbrel" role="status"></div>
     <div class="lv-btns">
-      <button id="pbClose">Bağla</button>
+      <button id="pbClose"><span class="t-close">Bağla</span><span class="t-msg">Mesaj</span></button>
       <button id="pbAct" hidden></button>
       <button id="pbBlock" class="danger" hidden>Blok et</button>
       <button id="pbReport" hidden>Şikayət et</button>
@@ -11568,8 +11621,8 @@ window.wtInviteBox = function(o){
 <div id="dmchat" hidden role="dialog" aria-modal="true" aria-label="Şəxsi mesajlar">
   <div class="dmh">
     <button type="button" class="ib" id="dmback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-    <div class="av" id="dmav"></div>
-    <div class="tx"><b id="dmname"></b><small id="dmuser"></small></div>
+    <div class="dmpill"><div class="av" id="dmav"></div>
+    <div class="tx"><b id="dmname"></b><small id="dmuser"></small></div></div>
     <button type="button" class="ib" id="dmcall" aria-label="Zəng et" title="Zəng et"><i class="fa-solid fa-phone" aria-hidden="true"></i></button>
   </div>
   <div id="dmmsgs" aria-live="polite"></div>
@@ -11579,9 +11632,11 @@ window.wtInviteBox = function(o){
     <button type="button" id="dmrbX" aria-label="Yanıtı ləğv et" title="Yanıtı ləğv et"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   </div>
   <div id="dmform">
-    <button type="button" class="dmib" id="dmattach" aria-label="Şəkil, video əlavə et" title="Şəkil, video əlavə et"><i class="fa-solid fa-paperclip" aria-hidden="true"></i></button>
-    <input type="file" id="dmfile" accept="image/*,video/*,audio/*" hidden>
-    <textarea id="dmin" rows="1" maxlength="1000" placeholder="Mesaj yaz..." aria-label="Mesaj" autocomplete="off" enterkeyhint="send"></textarea>
+    <div class="dmfield">
+      <button type="button" class="dmib" id="dmattach" aria-label="Şəkil, video əlavə et" title="Şəkil, video əlavə et"><i class="fa-solid fa-paperclip" aria-hidden="true"></i></button>
+      <input type="file" id="dmfile" accept="image/*,video/*,audio/*" hidden>
+      <textarea id="dmin" rows="1" maxlength="1000" placeholder="Mesaj yaz..." aria-label="Mesaj" autocomplete="off" enterkeyhint="send"></textarea>
+    </div>
     <button type="button" class="dmib" id="dmmic" aria-label="Səs yaz" title="Səs yaz"><i class="fa-solid fa-microphone" aria-hidden="true"></i></button>
     <button type="button" id="dmsend" aria-label="Göndər" title="Göndər"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
   </div>
@@ -11865,7 +11920,7 @@ function dmGoToMsg(id){
 function dmFillMedia(){
   var card = document.querySelector('#pbox .lv-card'); if(!card) return;
   var wrap = document.getElementById('pbmedia');
-  if(!wrap){ wrap = document.createElement('div'); wrap.id = 'pbmedia'; wrap.className = 'pbmedia'; card.insertBefore(wrap, card.querySelector('.lv-btns')); }
+  if(!wrap){ wrap = document.createElement('div'); wrap.id = 'pbmedia'; wrap.className = 'pbmedia'; card.appendChild(wrap); }
   wrap.textContent = '';
   var items = DM.msgs.filter(function(m){ return !m.pending && !m.failed && m.url && /^(image|video|audio)$/.test(m.kind || ''); }).reverse();
   var h = document.createElement('h3'); h.textContent = 'Media' + (items.length ? ' · ' + items.length : ''); wrap.appendChild(h);
