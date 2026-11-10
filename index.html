@@ -11990,6 +11990,7 @@ async function dmPull(first){
     var d = await dmCall('/api/dm/thread?u=' + encodeURIComponent(peer.username) + '&after=' + DM.lastId);
     if(!DM.peer || DM.peer.username !== peer.username) return;
     var add = (d.msgs || []).filter(function(m){ return m.id > DM.lastId; }), ch = false;
+    try{ if(typeof dmApplyRemote === 'function' && dmApplyRemote(d)) ch = true; }catch(_){}
     add.forEach(function(m){
       if(!m.mine) DM.typUntil = 0;
       // geri qayıdan mətn mesajı artıq yerli (gözləyən) nüsxə ilə təkrarlanmasın
@@ -12724,6 +12725,303 @@ async function callPending(){
   $('chat').addEventListener('scroll', closeMenu, {passive: true});
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeMenu(); if(sheet) sheet.hidden = true; } });
   $('send').onclick = function(){ sendChat(); };
+})();
+</script>
+
+<style>
+/* ===== DM: basılı tutanda menyu + reaksiyalar ===== */
+#dmrxpick{position:fixed;z-index:275;display:flex;gap:2px;padding:6px 8px;border-radius:999px;background:var(--seat-2);box-shadow:0 8px 28px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+#dmrxpick[hidden]{display:none}
+#dmrxpick button{display:grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;background:transparent;transition:transform .12s ease}
+#dmrxpick button:active{transform:scale(1.25)}
+#dmrxpick button.on{background:rgba(255,255,255,.16)}
+#dmrxpick img{display:block;width:30px;height:30px;pointer-events:none}
+#dmmenu{position:fixed;z-index:276;min-width:196px;padding:6px;border-radius:16px;background:var(--seat-2);box-shadow:0 12px 36px rgba(0,0,0,.5),inset 0 0 0 1px var(--line);animation:mmin .14s ease-out}
+#dmmenu[hidden]{display:none}
+#dmmenu button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:11px;background:transparent;color:var(--text);font-size:15px;font-weight:600;text-align:left}
+#dmmenu button:hover,#dmmenu button:active{background:rgba(255,255,255,.1)}
+#dmmenu button i{width:18px;text-align:center;font-size:15px;color:var(--muted)}
+#dmmenu button.dng,#dmmenu button.dng i{color:#ff6b81}
+#dmsheet{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,3,12,.6)}
+#dmsheet[hidden]{display:none}
+#dmsheet .sh{width:min(100%,460px);max-height:70dvh;overflow-y:auto;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;background:var(--velvet-2);box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1px 0 var(--line)}
+#dmsheet h4{font-size:16px;font-weight:700;margin:2px 4px 10px}
+#dmsheet .sb{display:flex;align-items:center;gap:12px;width:100%;margin-top:6px;padding:13px 14px;border-radius:13px;background:var(--seat);color:var(--text);font-weight:600;text-align:left}
+#dmsheet .sb:active{background:var(--seat-2)}
+#dmsheet .sb.dng{color:#ff6b81}
+#dmsheet .sb.cn{justify-content:center;background:transparent;color:var(--muted)}
+#dmsheet .sb .fa{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--rose-deep);color:#fff;font-weight:800;flex:none}
+#dmsheet .sb small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+#dmsheet .none{padding:14px 6px;color:var(--muted);font-size:14px}
+#dmmsgs .dmb.hasrx{margin-bottom:16px}
+#dmmsgs .dmb.th .rxs{right:auto;left:10px}
+#dmmsgs .dmb.dmediting{box-shadow:0 0 0 2px var(--amber)}
+#dmmsgs .dmb time em{font-style:italic;margin-right:5px}
+@media (pointer:coarse){#dmmsgs .dmb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
+</style>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var pick = null, menu = null, sheet = null, edit = null, holdOpen = false;
+  function toast(t){ if(window.wtToast) window.wtToast(t); }
+  function ic(c){ return '<i class="fa-solid ' + c + '" aria-hidden="true"></i>'; }
+  function msgById(id){ return DM.msgs.find(function(m){ return String(m.id) === String(id); }); }
+  function isText(m){ return (m.kind || 'text') === 'text'; }
+  function hk(){ return 'wtDmHid:' + (DM.peer ? DM.peer.username : ''); }
+  function hidSet(){ try{ return new Set(JSON.parse(localStorage.getItem(hk()) || '[]')); }catch(e){ return new Set(); } }
+  function hideLocal(id){ try{ var s = hidSet(); s.add(String(id)); localStorage.setItem(hk(), JSON.stringify(Array.from(s).slice(-500))); }catch(e){} }
+  function repaint(m){ var el = document.querySelector('#dmmsgs [data-id="' + m.id + '"]'); if(el) dmPaint(el, m); }
+  function errText(e){ return e && e.message === 'off' ? 'Server bu əmri hələ dəstəkləmir' : ((e && e.message && e.message !== 'xəta') ? e.message : 'Alınmadı, yenidən cəhd et'); }
+
+  /* ---- yerli silinənləri gizlət ---- */
+  var _render = dmRender;
+  dmRender = function(k){
+    if(DM.peer){ var h = hidSet(); if(h.size) DM.msgs = DM.msgs.filter(function(m){ return !h.has(String(m.id)); }); }
+    return _render(k);
+  };
+
+  /* ---- "redaktə olundu" yazısı ---- */
+  var _fill = dmFillTime;
+  dmFillTime = function(t, m){
+    _fill(t, m);
+    if(m.ed && !m.failed){ var e = document.createElement('em'); e.textContent = 'redaktə olundu'; t.insertBefore(e, t.firstChild); }
+  };
+
+  /* ---- reaksiyalar qabarcığın altında ---- */
+  function dmRx(el, m){
+    var old = el.querySelector(':scope > .rxs'); if(old) old.remove();
+    var r = m.rx, has = !!(r && (r.me || r.th));
+    el.classList.toggle('hasrx', has);
+    if(!has) return;
+    var cnt = new Map();
+    [r.me, r.th].forEach(function(e){ if(e) cnt.set(e, (cnt.get(e) || 0) + 1); });
+    var row = document.createElement('div'); row.className = 'rxs';
+    MSG_REACTS.forEach(function(e){
+      var n = cnt.get(e); if(!n) return;
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'rx' + (r.me === e ? ' mine' : '');
+      c.appendChild(appleImg(e));
+      if(n > 1){ var sp = document.createElement('span'); sp.textContent = String(n); c.appendChild(sp); }
+      c.setAttribute('aria-label', e + ' ' + n);
+      c.onclick = function(ev){ ev.stopPropagation(); react(m.id, e); };
+      row.appendChild(c);
+    });
+    el.appendChild(row);
+  }
+  async function react(id, e){
+    var m = msgById(id); if(!m || !DM.peer || typeof m.id !== 'number') return;
+    var prev = m.rx ? Object.assign({}, m.rx) : null, mine = prev && prev.me, ne = mine === e ? '' : e;
+    m.rx = Object.assign({}, prev || {}, {me: ne}); repaint(m);
+    try{ await dmCall('/api/dm/react', {method: 'POST', body: JSON.stringify({to: DM.peer.username, id: m.id, e: ne})}); }
+    catch(err){ m.rx = prev; repaint(m); toast(errText(err)); }
+  }
+
+  var _paint = dmPaint;
+  dmPaint = function(el, m){
+    _paint(el, m);
+    if(!el.classList.contains('dmb')) return;
+    if(isText(m)){
+      for(var n = el.firstChild; n; n = n.nextSibling){ if(n.nodeType === 3){ if(n.nodeValue !== m.text) n.nodeValue = m.text; break; } }
+    }
+    dmRx(el, m);
+  };
+
+  /* ---- uzun basma ---- */
+  function bindHold(d){
+    var t = null, sx = 0, sy = 0, fired = false;
+    var stop = function(){ if(t){ clearTimeout(t); t = null; } };
+    d.addEventListener('pointerdown', function(e){
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      if(e.target.closest('audio,video,.dmq,.rx')) return;
+      stop(); fired = false; sx = e.clientX; sy = e.clientY;
+      t = setTimeout(function(){
+        t = null;
+        var m = msgById(d.dataset.id);
+        if(!m || m.pending || m.failed || typeof m.id !== 'number') return;
+        fired = true;
+        try{ window.getSelection().removeAllRanges(); }catch(_){}
+        try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){}
+        openAll(m, d);
+      }, 420);
+    });
+    d.addEventListener('pointermove', function(e){ if(t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) stop(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(n){ d.addEventListener(n, stop); });
+    d.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    d.addEventListener('click', function(e){ if(fired){ fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  }
+  var _bub = dmBubble;
+  dmBubble = function(m){
+    var d = _bub(m);
+    if(d.classList.contains('dmb')){ bindHold(d); dmRx(d, m); }
+    return d;
+  };
+
+  /* ---- reaksiya paneli + menyu ---- */
+  function closeAll(){ if(pick) pick.hidden = true; if(menu) menu.hidden = true; }
+  function openAll(m, d){
+    var mine = !!m.mine, text = isText(m);
+    if(!pick){
+      pick = document.createElement('div'); pick.id = 'dmrxpick'; pick.hidden = true;
+      pick.setAttribute('role', 'group'); pick.setAttribute('aria-label', 'Reaksiya seç');
+      MSG_REACTS.forEach(function(e){
+        var b = document.createElement('button'); b.type = 'button'; b.dataset.e = e; b.setAttribute('aria-label', 'Reaksiya ' + e);
+        b.appendChild(appleImg(e));
+        b.onclick = function(){ var id = pick.dataset.id; closeAll(); react(id, e); };
+        pick.appendChild(b);
+      });
+      document.body.appendChild(pick);
+    }
+    if(!menu){ menu = document.createElement('div'); menu.id = 'dmmenu'; menu.hidden = true; document.body.appendChild(menu); }
+    pick.dataset.id = m.id;
+    var my = m.rx && m.rx.me;
+    pick.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.e === my); });
+    var items = [['fa-reply', 'Yanıt ver', function(){ dmSetReply(m); }]];
+    if(text) items.push(['fa-copy', 'Kopyala', function(){ copyText(m.text); }]);
+    if(text) items.push(['fa-share', 'Yönləndir', function(){ forwardMsg(m); }]);
+    if(mine && text) items.push(['fa-pen', 'Redaktə et', function(){ startEdit(m); }]);
+    items.push(['fa-trash', 'Sil', function(){ askDelete(m); }, 1]);
+    menu.textContent = '';
+    items.forEach(function(it){
+      var b = document.createElement('button'); b.type = 'button'; b.className = it[3] ? 'dng' : '';
+      b.innerHTML = ic(it[0]) + '<span></span>'; b.lastChild.textContent = it[1];
+      b.onclick = function(){ closeAll(); it[2](); };
+      menu.appendChild(b);
+    });
+    pick.hidden = false; menu.hidden = false;
+    var r = d.getBoundingClientRect(), vh = window.innerHeight, vw = window.innerWidth;
+    var pw = pick.offsetWidth, ph = pick.offsetHeight, mw = menu.offsetWidth, mh = menu.offsetHeight;
+    var ptop = r.top - ph - 6;
+    if(ptop < 8) ptop = Math.min(r.bottom + 6, vh - ph - 8);
+    var pleft = mine ? r.right - pw : r.left;
+    pick.style.top = ptop + 'px'; pick.style.left = Math.max(8, Math.min(pleft, vw - pw - 8)) + 'px';
+    var top = r.bottom + 8;
+    if(top + mh > vh - 8) top = Math.max(8, pick.getBoundingClientRect().top - mh - 8);
+    var left = mine ? r.right - mw : r.left;
+    menu.style.top = top + 'px'; menu.style.left = Math.max(8, Math.min(left, vw - mw - 8)) + 'px';
+  }
+  document.addEventListener('pointerdown', function(e){
+    if((pick && !pick.hidden || menu && !menu.hidden) && !e.target.closest('#dmrxpick,#dmmenu')) closeAll();
+  }, true);
+  $('dmmsgs').addEventListener('scroll', closeAll, {passive: true});
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeAll(); if(sheet) sheet.hidden = true; } });
+  var _close = closeDm;
+  closeDm = function(){ closeAll(); if(sheet) sheet.hidden = true; return _close(); };
+
+  /* ---- kopyala ---- */
+  async function copyText(t){
+    try{ await navigator.clipboard.writeText(t); }
+    catch(e){ var a = document.createElement('textarea'); a.value = t; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try{ document.execCommand('copy'); }catch(_){} a.remove(); }
+    toast('Kopyalandı');
+  }
+
+  /* ---- alt panel ---- */
+  function openSheet(title, rows){
+    if(!sheet){
+      sheet = document.createElement('div'); sheet.id = 'dmsheet'; sheet.hidden = true;
+      sheet.addEventListener('click', function(e){ if(e.target === sheet) sheet.hidden = true; });
+      document.body.appendChild(sheet);
+    }
+    sheet.textContent = '';
+    var box = document.createElement('div'); box.className = 'sh';
+    var h = document.createElement('h4'); h.textContent = title; box.appendChild(h);
+    rows.forEach(function(r){ box.appendChild(r); });
+    var cn = document.createElement('button'); cn.type = 'button'; cn.className = 'sb cn'; cn.textContent = 'Ləğv et';
+    cn.onclick = function(){ sheet.hidden = true; }; box.appendChild(cn);
+    sheet.appendChild(box); sheet.hidden = false;
+  }
+  function sbtn(html, cls, fn){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'sb ' + (cls || ''); b.innerHTML = html; b.onclick = fn; return b;
+  }
+
+  /* ---- yönləndir ---- */
+  async function forwardMsg(m){
+    if(!token || (account && account.guest)){ toast('Yönləndirmək üçün hesabla daxil ol'); return; }
+    var who = m.mine ? ((account && (account.name || account.username)) || 'Sən') : ((DM.peer && (DM.peer.name || DM.peer.username)) || '');
+    var txt = '↪ ' + who + ': ' + m.text;
+    var rows = [], list = [];
+    try{ var r = await api('/api/friends'); if(r.ok) list = (await r.json()).friends || []; }catch(e){}
+    if(!list.length){ var n = document.createElement('div'); n.className = 'none'; n.textContent = 'Hələ dostun yoxdur.'; rows.push(n); }
+    list.forEach(function(p){
+      var b = sbtn('<span class="fa"></span><span><b></b><small></small></span>', '', async function(){
+        sheet.hidden = true;
+        try{ await dmCall('/api/dm/send', {method: 'POST', body: JSON.stringify({to: p.username, text: txt.slice(0, 1000)})}); toast('Yönləndirildi'); }
+        catch(e){ toast('Yönləndirilmədi, yenidən cəhd et'); }
+      });
+      b.querySelector('.fa').textContent = ((p.name || p.username || '?').trim().charAt(0) || '?').toUpperCase();
+      b.querySelector('b').textContent = p.name || p.username;
+      b.querySelector('small').textContent = '@' + p.username;
+      rows.push(b);
+    });
+    openSheet('Kimə yönləndirək?', rows);
+  }
+
+  /* ---- sil ---- */
+  function askDelete(m){
+    var rows = [];
+    if(m.mine) rows.push(sbtn(ic('fa-trash') + ' Hər iki tərəfdən sil', 'dng', async function(){
+      sheet.hidden = true;
+      try{
+        await dmCall('/api/dm/delete', {method: 'POST', body: JSON.stringify({to: DM.peer.username, id: m.id})});
+        DM.msgs = DM.msgs.filter(function(x){ return x !== m; }); dmRender(true);
+      }catch(e){ toast(errText(e)); }
+    }));
+    rows.push(sbtn(ic('fa-eye-slash') + ' Yalnız məndən sil', 'dng', function(){
+      sheet.hidden = true; hideLocal(m.id); dmRender(true);
+    }));
+    openSheet('Mesaj silinsin?', rows);
+  }
+
+  /* ---- redaktə ---- */
+  var _clr = dmClearReply, _set = dmSetReply, _submit = dmSubmit;
+  function cancelEdit(){
+    if(!edit) return;
+    edit = null;
+    [].forEach.call(document.querySelectorAll('#dmmsgs .dmediting'), function(e){ e.classList.remove('dmediting'); });
+    var t = $('dmin'); t.value = ''; dmGrow(); $('dmrbar').hidden = true;
+  }
+  function startEdit(m){
+    if(!m.mine || !isText(m)) return;
+    _clr(); cancelEdit();
+    edit = {id: m.id};
+    var t = $('dmin'); t.value = m.text; dmGrow();
+    $('dmrbName').textContent = 'Redaktə'; $('dmrbText').textContent = m.text.replace(/\s+/g, ' ').slice(0, 80);
+    $('dmrbar').hidden = false;
+    var el = document.querySelector('#dmmsgs [data-id="' + m.id + '"]'); if(el) el.classList.add('dmediting');
+    try{ t.focus(); }catch(_){}
+  }
+  dmClearReply = function(){ if(edit){ cancelEdit(); return; } _clr(); };
+  dmSetReply = function(m){ cancelEdit(); _set(m); };
+  dmSubmit = function(){
+    if(!edit) return _submit();
+    var v = $('dmin').value.trim(); if(!v) return;
+    var m = msgById(edit.id); cancelEdit();
+    if(!m || v === m.text) return;
+    commitEdit(m, v.slice(0, 1000));
+  };
+  async function commitEdit(m, v){
+    try{
+      await dmCall('/api/dm/edit', {method: 'POST', body: JSON.stringify({to: DM.peer.username, id: m.id, text: v})});
+      m.text = v; m.ed = 1; repaint(m);
+    }catch(e){ toast(errText(e)); }
+  }
+  $('dmrbX').onclick = function(){ dmClearReply(); };
+  $('dmsend').onclick = function(){ dmSubmit(); };
+
+  /* ---- serverdən gələn dəyişikliklər (qarşı tərəf redaktə/sildi/reaksiya verdi) ---- */
+  window.dmApplyRemote = function(d){
+    var ch = false;
+    (d.changed || []).forEach(function(c){
+      var m = msgById(c.id); if(!m || m.pending) return;
+      if(typeof c.text === 'string' && c.text !== m.text){ m.text = c.text; ch = true; }
+      if(c.ed && !m.ed){ m.ed = 1; ch = true; }
+      if(c.rx !== undefined && JSON.stringify(c.rx) !== JSON.stringify(m.rx || null)){ m.rx = c.rx; ch = true; }
+    });
+    if(Array.isArray(d.deleted) && d.deleted.length){
+      var s = new Set(d.deleted.map(String)), n = DM.msgs.length;
+      DM.msgs = DM.msgs.filter(function(m){ return !s.has(String(m.id)); });
+      if(DM.msgs.length !== n) ch = true;
+    }
+    return ch;
+  };
 })();
 </script>
 </body>
