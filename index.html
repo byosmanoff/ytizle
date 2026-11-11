@@ -13025,5 +13025,13 @@ async function callPending(){
   };
 })();
 </script>
+<style>
+/* Dostlar: ad/istifadəçi adı tam görünsün, düymələr altda; mətn üst-üstə düşməsin */
+.fr .tx span:not(.presence){display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fres .fr{flex-wrap:wrap;row-gap:8px}
+#fres .fr .tx{flex:1 1 calc(100% - 56px)}
+#fres .fr .tx + *{margin-left:50px}
+#fres .fr .ftag{align-self:center}
+</style>
 </body>
 </html>
