@@ -4715,6 +4715,8 @@ DOM_IDLE = 3 * 3600          # bu qədər hərəkətsiz qalan oyun silinir
 DOM_MAX = 200
 DOM_TARGET = 101             # ilk bu xala çatan oyunu qazanır
 DOM_CLAIM = 60               # rəqib bu qədər saniyə yoxdursa, oyunu bitirmək olar
+DOM_MSG_LEN = 200            # oyun daxili söhbət: bir mesajın maksimum uzunluğu
+DOM_CHAT_KEEP = 50           # otaqda saxlanan son mesajların sayı
 
 
 def _dom_isbot(p):
@@ -5190,6 +5192,8 @@ def _dom_view(g, sub):
         last=({"t": g["last"]["t"]} if g["last"] else None), reason=g["reason"], target=DOM_TARGET, bot=bool(g.get("bot")),
     )
     out["vc"], out["vk"] = _gv_view("domino", g)
+    out["chat"] = [dict(id=m["id"], name=m["name"], text=m["t"], mine=(m["f"] == sub))
+                   for m in g.get("chat", [])]
     if g["note"]:
         nn = g["names"].get(g["note"]["who"]) or {}
         out["note"] = {"mine": g["note"]["who"] == sub, "k": g["note"]["k"], "name": nn.get("name", "")}
@@ -5375,6 +5379,31 @@ def api_domino_move():
             abort(400)
         _dom_touch(g)
         return jsonify(_dom_view(g, sub))
+
+
+@app.route("/api/domino/chat", methods=["POST"])
+def api_domino_chat():
+    """Oyun daxili söhbət: otaqdakı bütün oyunçulara görünür. Kompüterlə oyunda söhbət yoxdur."""
+    sub, tok = auth_sub()
+    if not rate_hit("domm", sub, 20, 30):
+        abort(429)
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    text = re.sub(r"\s+", " ", str(d.get("text") or "")).strip()[:DOM_MSG_LEN]
+    if not text:
+        abort(400)
+    g = _dom_get(code, sub)
+    with _ensure_cv(g):
+        g["seen"][sub] = time.time()
+        if g.get("bot"):
+            abort(400)
+        g["cid"] = g.get("cid", 0) + 1
+        msg = dict(id=g["cid"], f=sub, name=(g["names"].get(sub) or {}).get("name", ""), t=text)
+        ch = g.setdefault("chat", [])
+        ch.append(msg)
+        del ch[:-DOM_CHAT_KEEP]
+        _dom_touch(g)
+        return jsonify(ok=True, msg=dict(id=msg["id"], text=text))
 
 
 @app.route("/api/domino/again", methods=["POST"])
