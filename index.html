@@ -9971,7 +9971,9 @@ window.wtInviteBox = function(o){
     if(!s || s.status !== 'play' || s.turn !== 'me') return;
     var m = s.moves.filter(function(m){ return same(m.t, t); })[0];
     if(!m){ flash('Bu daş yerinə düşmür'); return; }
-    if(m.e.length === 1){ dom.sel = null; act('play', {t: t, end: m.e[0]}); return; }
+    /* iki açıq uc eyni rəqəmdirsə, seçim mənasızdır: daş avtomatik yerləşir */
+    var sameEnds = m.e.length > 1 && s.board.length && s.board[0][0] === s.board[s.board.length - 1][1];
+    if(m.e.length === 1 || sameEnds){ dom.sel = null; act('play', {t: t, end: m.e[0]}); return; }
     dom.sel = same(dom.sel, t) ? null : t;
     renderBoard(s); renderHand(s);
   }
