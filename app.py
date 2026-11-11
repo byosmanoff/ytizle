@@ -681,6 +681,9 @@ CREATE TABLE IF NOT EXISTS dm(id INTEGER PRIMARY KEY AUTOINCREMENT, from_sub TEX
   text TEXT NOT NULL, ts REAL NOT NULL, read INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS dm_pair ON dm(from_sub, to_sub, id);
 CREATE INDEX IF NOT EXISTS dm_to ON dm(to_sub, read);
+CREATE TABLE IF NOT EXISTS dm_rx(msg_id INTEGER NOT NULL, sub TEXT NOT NULL, e TEXT NOT NULL, PRIMARY KEY(msg_id, sub));
+CREATE TABLE IF NOT EXISTS dm_del(msg_id INTEGER PRIMARY KEY, a TEXT NOT NULL, b TEXT NOT NULL, ts REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS dm_del_pair ON dm_del(a, b, ts);
 CREATE TABLE IF NOT EXISTS presence(sub TEXT PRIMARY KEY, seen REAL NOT NULL, status TEXT);
 CREATE TABLE IF NOT EXISTS watch(sub TEXT NOT NULL, day TEXT NOT NULL, secs REAL NOT NULL DEFAULT 0, tog REAL NOT NULL DEFAULT 0,
   PRIMARY KEY(sub, day));
@@ -724,6 +727,10 @@ CREATE TABLE IF NOT EXISTS push_cfg(k TEXT PRIMARY KEY, v TEXT NOT NULL);
                 c.execute("ALTER TABLE dm ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0")
             if "reply_to" not in dcols:   # yanıt verilən mesajın id-si (WhatsApp tipli reply)
                 c.execute("ALTER TABLE dm ADD COLUMN reply_to INTEGER")
+            if "edited" not in dcols:   # mesaj redaktə olunub
+                c.execute("ALTER TABLE dm ADD COLUMN edited INTEGER NOT NULL DEFAULT 0")
+            if "upd" not in dcols:   # son dəyişiklik (redaktə/reaksiya) vaxtı: qarşı tərəfə sinxron üçün
+                c.execute("ALTER TABLE dm ADD COLUMN upd REAL NOT NULL DEFAULT 0")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_username ON users(username)")
             cols = [r[1] for r in c.execute("PRAGMA table_info(creds)")]
             if "want" not in cols:   # qeydiyyatda seçilən istifadəçi adı (e-poçt təsdiqlənəndə verilir)
@@ -1817,6 +1824,9 @@ def merge_users(old, new):
     dbq("UPDATE dm SET from_sub=? WHERE from_sub=?", (new, old))
     dbq("UPDATE dm SET to_sub=? WHERE to_sub=?", (new, old))
     dbq("DELETE FROM dm WHERE from_sub=to_sub")
+    dbq("UPDATE OR IGNORE dm_rx SET sub=? WHERE sub=?", (new, old))
+    dbq("DELETE FROM dm_rx WHERE sub=?", (old,))
+    dbq("DELETE FROM dm_rx WHERE msg_id NOT IN (SELECT id FROM dm)")
     dbq("DELETE FROM users WHERE sub=?", (old,))
 
 
@@ -2249,6 +2259,8 @@ def api_account_delete():
     dbq("DELETE FROM plans WHERE owner=?", (sub,))
     dbq("DELETE FROM friends WHERE a=? OR b=?", (sub, sub))
     dbq("DELETE FROM dm WHERE from_sub=? OR to_sub=?", (sub, sub))
+    dbq("DELETE FROM dm_rx WHERE sub=? OR msg_id NOT IN (SELECT id FROM dm)", (sub,))
+    dbq("DELETE FROM dm_del WHERE a=? OR b=?", (sub, sub))
     dbq("DELETE FROM users WHERE sub=?", (sub,))
     LOGIN_FAILS.pop(key, None)
     return jsonify(ok=True)
@@ -2871,7 +2883,8 @@ os.makedirs(DM_MEDIA_DIR, exist_ok=True)
 DM_MIME = {".jpg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".webp": "image/webp",
            ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
            ".weba": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav"}
-DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to"
+DM_COLS = "id, from_sub, text, ts, read, delivered, kind, media, dur, reply_to, edited"
+DM_REACTS = ("\u2764\ufe0f", "\U0001F602", "\U0001F62E", "\U0001F62D", "\U0001F44D", "\U0001F525", "\U0001F44F")
 
 
 def _dm_clean(raw):
@@ -2897,10 +2910,25 @@ def _dm_preview(kind, text):
     return text
 
 
-def _dm_msg(r, me):
+def _dm_rx_map(ids, me):
+    """{mesaj_id: {"me": emoji, "th": emoji}} — mənim və qarşı tərəfin reaksiyası."""
+    out = {}
+    ids = [int(i) for i in ids]
+    for i in range(0, len(ids), 400):
+        chunk = ids[i:i + 400]
+        for r in dbq("SELECT msg_id, sub, e FROM dm_rx WHERE msg_id IN (%s)" % ",".join("?" * len(chunk)), chunk, many=True):
+            out.setdefault(r["msg_id"], {})["me" if r["sub"] == me else "th"] = r["e"]
+    return out
+
+
+def _dm_msg(r, me, rx=None):
     kind = r["kind"] or "text"
     m = dict(id=r["id"], text=r["text"], ts=int(r["ts"] * 1000), mine=(r["from_sub"] == me), kind=kind,
              status=_dm_status(r))
+    if r["edited"]:
+        m["ed"] = 1
+    if rx and rx.get(r["id"]):
+        m["rx"] = rx[r["id"]]
     if kind in ("image", "video", "audio") and r["media"]:
         m["url"] = "/dmf/" + r["media"]
     if kind in ("audio", "video", "call"):
@@ -3055,9 +3083,32 @@ def api_dm_thread():
     st = dbq("SELECT MAX(CASE WHEN read=1 THEN id END) AS seen, "
              "MAX(CASE WHEN delivered=1 OR read=1 THEN id END) AS dlv FROM dm WHERE from_sub=? AND to_sub=?",
              (sub, other), one=True)
-    msgs = [_dm_msg(r, sub) for r in rows]
+    rx = _dm_rx_map([r["id"] for r in rows], sub)
+    msgs = [_dm_msg(r, sub, rx) for r in rows]
     typing = (time.time() - DM_TYPING.get((other, sub), 0)) < 5
-    resp = jsonify(msgs=msgs, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing)
+    # redaktə / reaksiya / silinmə sinxronu: "since"-dən sonra dəyişən, artıq göndərilmiş mesajlar
+    changed, deleted = [], []
+    try:
+        since = float(request.args.get("since") or 0)
+    except ValueError:
+        since = 0
+    now = time.time() - 2   # kiçik üst-üstə düşmə: sorğu ilə yazma arasında itki olmasın
+    if since > 0 and after > 0:
+        crow = dbq("SELECT id, text, kind, edited FROM dm WHERE upd>? AND id<=? AND "
+                   "((from_sub=? AND to_sub=?) OR (from_sub=? AND to_sub=?)) LIMIT 200",
+                   (since, after, sub, other, other, sub), many=True)
+        crx = _dm_rx_map([r["id"] for r in crow], sub)
+        for r in crow:
+            c = dict(id=r["id"], rx=crx.get(r["id"]) or {})
+            if (r["kind"] or "text") == "text":
+                c["text"] = r["text"]
+            if r["edited"]:
+                c["ed"] = 1
+            changed.append(c)
+        deleted = [r["msg_id"] for r in dbq("SELECT msg_id FROM dm_del WHERE ts>? AND ((a=? AND b=?) OR (a=? AND b=?)) LIMIT 200",
+                                            (since, sub, other, other, sub), many=True)]
+    resp = jsonify(msgs=msgs, seen_upto=int((st and st["seen"]) or 0), deliv_upto=int((st and st["dlv"]) or 0), typing=typing,
+                   changed=changed, deleted=deleted, now=now)
     resp.headers["Cache-Control"] = "no-store"
     return resp
 
@@ -3089,6 +3140,94 @@ def api_dm_send():
     idn = ident_for(tok)
     notify_user(other, "dm", payload=dict(u=idn["username"]), push=_dm_push(other, sub, idn, text[:100]))
     return jsonify(msg=_dm_msg(row, sub))
+
+
+def _dm_own_row(sub, other, raw, mine_only):
+    """Mesaj bu iki nəfərin yazışmasındandırsa sətri qaytarır (mine_only: yalnız mənim göndərdiyim)."""
+    try:
+        mid = int(raw)
+    except (TypeError, ValueError):
+        return None
+    r = dbq("SELECT id, from_sub, to_sub, kind, media FROM dm WHERE id=?", (mid,), one=True)
+    if not r or {r["from_sub"], r["to_sub"]} != {sub, other}:
+        return None
+    if mine_only and r["from_sub"] != sub:
+        return None
+    return r
+
+
+@app.route("/api/dm/edit", methods=["POST"])
+def api_dm_edit():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    other = _user_by_name(d.get("to"))
+    if other == sub:
+        abort(400)
+    text = _dm_clean(d.get("text"))
+    if not text:
+        return jsonify(error="Mesaj boşdur"), 400
+    bad = _dm_check_pair(sub, other)
+    if bad:
+        return bad
+    if not rate_hit("dmx", sub, 120, 60):
+        return jsonify(error="Çox tez cəhd edirsən, bir az gözlə"), 429
+    r = _dm_own_row(sub, other, d.get("id"), True)
+    if not r or (r["kind"] or "text") != "text":
+        return jsonify(error="Bu mesajı redaktə etmək olmaz"), 404
+    dbq("UPDATE dm SET text=?, edited=1, upd=? WHERE id=? AND from_sub=?", (text, time.time(), r["id"], sub))
+    return jsonify(ok=True, text=text)
+
+
+@app.route("/api/dm/delete", methods=["POST"])
+def api_dm_delete():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    other = _user_by_name(d.get("to"))
+    if other == sub:
+        abort(400)
+    if not rate_hit("dmx", sub, 120, 60):
+        return jsonify(error="Çox tez cəhd edirsən, bir az gözlə"), 429
+    r = _dm_own_row(sub, other, d.get("id"), True)
+    if not r:
+        return jsonify(error="Mesaj tapılmadı"), 404
+    dbq("DELETE FROM dm WHERE id=? AND from_sub=?", (r["id"], sub))
+    dbq("DELETE FROM dm_rx WHERE msg_id=?", (r["id"],))
+    dbq("INSERT OR REPLACE INTO dm_del(msg_id, a, b, ts) VALUES(?,?,?,?)", (r["id"], sub, other, time.time()))
+    if r["media"]:   # media faylını da sil (başqa mesaj eyni fayla istinad etmirsə)
+        name = os.path.basename(str(r["media"]))
+        if re.fullmatch(r"[0-9a-f]{32}\.[a-z0-9]{3,4}", name) and not dbq("SELECT 1 FROM dm WHERE media=?", (name,), one=True):
+            try:
+                os.remove(os.path.join(DM_MEDIA_DIR, name))
+            except OSError:
+                pass
+    return jsonify(ok=True)
+
+
+@app.route("/api/dm/react", methods=["POST"])
+def api_dm_react():
+    sub, _ = auth_sub()
+    d = request.get_json(silent=True) or {}
+    other = _user_by_name(d.get("to"))
+    if other == sub:
+        abort(400)
+    bad = _dm_check_pair(sub, other)
+    if bad:
+        return bad
+    if not rate_hit("dmx", sub, 120, 60):
+        return jsonify(error="Çox tez cəhd edirsən, bir az gözlə"), 429
+    r = _dm_own_row(sub, other, d.get("id"), False)
+    if not r or (r["kind"] or "text") == "call":
+        return jsonify(error="Mesaj tapılmadı"), 404
+    e = str(d.get("e") or "")
+    if e:
+        e = next((x for x in DM_REACTS if x == e or x.replace("\ufe0f", "") == e.replace("\ufe0f", "")), "")
+        if not e:
+            return jsonify(error="Belə reaksiya yoxdur"), 400
+        dbq("INSERT OR REPLACE INTO dm_rx(msg_id, sub, e) VALUES(?,?,?)", (r["id"], sub, e))
+    else:
+        dbq("DELETE FROM dm_rx WHERE msg_id=? AND sub=?", (r["id"], sub))
+    dbq("UPDATE dm SET upd=? WHERE id=?", (time.time(), r["id"]))
+    return jsonify(ok=True)
 
 
 @app.route("/api/dm/typing", methods=["POST"])

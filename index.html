@@ -11964,7 +11964,7 @@ async function openDm(p){
   if(!token) return;
   if(account && account.guest){ frNote('Mesaj yazmaq üçün hesabla daxil ol.'); return; }
   DM.peer = {username: p.username, name: p.name, avatar: p.avatar, badge: p.badge};
-  DM.msgs = []; DM.lastId = 0; dmClearReply();
+  DM.msgs = []; DM.lastId = 0; DM.since = 0; dmClearReply();
   var av = document.getElementById('dmav'); av.style.backgroundImage = ''; av.textContent = initial(p.name);
   if(p.avatar && AV_RE.test(p.avatar)){ av.style.backgroundImage = 'url("' + p.avatar + '")'; av.textContent = ''; }
   document.getElementById('dmname').textContent = p.name;
@@ -11987,8 +11987,9 @@ function closeDm(){
 async function dmPull(first){
   var peer = DM.peer; if(!peer) return;
   try{
-    var d = await dmCall('/api/dm/thread?u=' + encodeURIComponent(peer.username) + '&after=' + DM.lastId);
+    var d = await dmCall('/api/dm/thread?u=' + encodeURIComponent(peer.username) + '&after=' + DM.lastId + '&since=' + (DM.since || 0));
     if(!DM.peer || DM.peer.username !== peer.username) return;
+    if(typeof d.now === 'number') DM.since = d.now;
     var add = (d.msgs || []).filter(function(m){ return m.id > DM.lastId; }), ch = false;
     try{ if(typeof dmApplyRemote === 'function' && dmApplyRemote(d)) ch = true; }catch(_){}
     add.forEach(function(m){
