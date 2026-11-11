@@ -3680,6 +3680,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     <button class="ib" id="dback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
     <div class="dt"><b>Domino</b><small id="dcode"></small></div>
     <button class="ib sfxb" id="dsfx" aria-label="Səs" title="Səs"></button>
+    <button class="ib" id="dchatb" aria-label="Söhbət" title="Söhbət" type="button"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i><span class="dcbd" id="dchatbd" hidden></span></button>
     <button class="ib" id="dshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
     <button class="ib" id="dquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
   </div>
@@ -9549,7 +9550,7 @@ window.wtInviteBox = function(o){
     box.hidden = !over;
     $('domino').classList.toggle('dover', over);
     $('dhand').style.display = over ? 'none' : '';
-    if(!over){ box.innerHTML = ''; box.className = ''; try{ $('domino').scrollTop = 0; }catch(e){} return; }
+    if(!over){ stopAuto(); box.innerHTML = ''; box.className = ''; try{ $('domino').scrollTop = 0; }catch(e){} return; }
     var wn = multi ? esc(s.winner_name || '?') : 'Rəqib';
     var win = s.match ? s.match === 'me' : s.result === 'me';
     var lose = s.match ? s.match === 'opp' : s.result === 'opp';
@@ -9580,7 +9581,8 @@ window.wtInviteBox = function(o){
       oh.hand.forEach(function(t){ row.appendChild(tile(t, {v: true, s: 22})); });
       L.appendChild(row);
     });
-    $('dagain').onclick = function(){ again(); };
+    $('dagain').onclick = function(){ stopAuto(); again(); };
+    autoNext(s);
   }
 
   /* ---- Bazar: masanın kənarında üzü aşağı daş yığını; hər toxunuşda bir daş götürülür ---- */
@@ -9696,11 +9698,151 @@ window.wtInviteBox = function(o){
     e.innerHTML = t;
   }
 
+
+  /* ---- növbəti raund 3 saniyədən sonra avtomatik başlayır ---- */
+  var AUTO_MS = 3000;
+  function stopAuto(){ clearTimeout(dom.autoT); clearInterval(dom.autoI); dom.autoT = dom.autoI = null; dom.autoR = null; }
+  function autoLbl(){
+    var b = $('dagain'), s = dom.s;
+    if(!b || !s || dom.autoR !== s.round) return;
+    var n = Math.max(0, Math.ceil((dom.autoAt - Date.now()) / 1000));
+    b.textContent = 'Növbəti raund · ' + (s.round + 1) + (n > 0 ? ' (' + n + ')' : '');
+    if(n <= 0){ clearInterval(dom.autoI); dom.autoI = null; }
+  }
+  function autoNext(s){
+    /* bütün oyun bitibsə (101 xal) və ya rəqib çıxıbsa: avtomatik başlamır, düyməyə özün basırsan */
+    if(s.match || s.reason === 'left'){ stopAuto(); return; }
+    if(dom.autoR !== s.round){
+      stopAuto();
+      dom.autoR = s.round; dom.autoAt = Date.now() + AUTO_MS;
+      dom.autoT = setTimeout(function fire(){
+        dom.autoT = null;
+        var c = dom.s;
+        if(!c || c.status !== 'over' || c.round !== dom.autoR || c.match || dom.hold || $('domino').hidden) return;
+        if(busy){ dom.autoT = setTimeout(fire, 400); return; }
+        again();
+      }, AUTO_MS);
+      dom.autoI = setInterval(autoLbl, 250);
+    }
+    autoLbl();
+  }
+
+  /* ---- oyun daxili söhbət ---- */
+  var chat = {list: [], unread: 0, open: false, el: null, tmp: 0, cool: false, init: false};
+  var QUICK = ['Salam!', 'Uğurlar!', 'Sağ ol!', 'Yaxşı oyun idi!', 'Əla gediş!', 'Tez ol 😄', 'Bir oyun da?'];
+  function chatReset(){ chat.list = []; chat.unread = 0; chat.init = false; chatHide(); renderChatBtn(); }
+  function chatIn(s){
+    var arr = s.chat;
+    if(!Array.isArray(arr)) return;
+    var have = {}, fresh = 0, last = null;
+    chat.list.forEach(function(m){ if(!m.local) have[m.id] = 1; });
+    arr.forEach(function(m){
+      if(!m || m.id == null || have[m.id]) return;
+      have[m.id] = 1;
+      if(m.mine){
+        for(var i = 0; i < chat.list.length; i++){ if(chat.list[i].local && chat.list[i].text === m.text){ chat.list.splice(i, 1); break; } }
+      }else{ fresh++; last = m; }
+      chat.list.push({id: m.id, name: String(m.name || ''), text: String(m.text || '').slice(0, 300), mine: !!m.mine});
+    });
+    if(chat.list.length > 100) chat.list = chat.list.slice(-100);
+    if(!chat.init){ chat.init = true; fresh = 0; }       // otağa girəndə köhnə mesajlar "oxunmamış" sayılmır
+    if(fresh && !chat.open){
+      chat.unread += fresh;
+      try{ navigator.vibrate && navigator.vibrate(25); }catch(e){}
+      if(last) flash((last.name ? last.name + ': ' : '') + String(last.text || '').slice(0, 40));
+    }
+    if(arr.length || fresh){ renderChatBtn(); if(chat.open) renderChat(false); }
+  }
+  function renderChatBtn(){
+    var b = $('dchatb'), bd = $('dchatbd'); if(!b) return;
+    b.hidden = !!(dom.s && dom.s.bot);                   // kompüterlə oyunda söhbət yoxdur
+    bd.hidden = !chat.unread || chat.open;
+    bd.textContent = chat.unread > 9 ? '9+' : String(chat.unread);
+  }
+  function chatEl(){
+    if(chat.el) return chat.el;
+    var el = document.createElement('div'); el.id = 'dchatsh'; el.hidden = true;
+    el.innerHTML = '<div class="dcsh" role="dialog" aria-label="Söhbət">' +
+      '<div class="dcgrab"></div>' +
+      '<div class="dchd"><h4>Söhbət</h4><button type="button" class="dcx" id="dcx" aria-label="Bağla"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>' +
+      '<div class="dcms" id="dcms"></div>' +
+      '<div class="dcq" id="dcq"></div>' +
+      '<div class="dcf"><input id="dcin" type="text" maxlength="200" placeholder="Mesaj yaz..." autocomplete="off" autocorrect="off" enterkeyhint="send" aria-label="Mesaj yaz"><button type="button" class="dcsend" id="dcsend" disabled>Göndər</button></div>' +
+      '</div>';
+    document.body.appendChild(el);
+    var q = el.querySelector('#dcq');
+    QUICK.forEach(function(t){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'dcc'; b.textContent = t;
+      b.onclick = function(){ chatSend(t); };
+      q.appendChild(b);
+    });
+    var inp = el.querySelector('#dcin'), sb = el.querySelector('#dcsend');
+    inp.addEventListener('input', function(){ sb.disabled = !inp.value.trim(); });
+    inp.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); chatSend(inp.value); } });
+    sb.onclick = function(){ chatSend(inp.value); };
+    el.querySelector('#dcx').onclick = function(){ chatHide(); };
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && chat.open) chatHide(); });
+    chat.el = el;
+    return el;
+  }
+  function renderChat(force){
+    var box = $('dcms'); if(!box) return;
+    var near = force || (box.scrollHeight - box.scrollTop - box.clientHeight < 80);
+    box.textContent = '';
+    if(!chat.list.length){
+      var em = document.createElement('div'); em.className = 'dcem'; em.textContent = 'Hələ mesaj yoxdur. Salam de 👋'; box.appendChild(em);
+    }
+    var prev = null;
+    chat.list.forEach(function(m){
+      var row = document.createElement('div'); row.className = 'dcm' + (m.mine ? ' me' : '') + (m.local && m.pending ? ' pend' : '');
+      if(!m.mine && m.name && prev !== m.name){ var n = document.createElement('small'); n.textContent = m.name; row.appendChild(n); }
+      var t = document.createElement('span'); t.textContent = m.text; row.appendChild(t);
+      box.appendChild(row);
+      prev = m.mine ? '' : m.name;
+    });
+    if(near) box.scrollTop = box.scrollHeight;
+  }
+  function chatShow(){
+    if(!dom.code || (dom.s && dom.s.bot)) return;
+    var el = chatEl(); el.hidden = false; chat.open = true; chat.unread = 0;
+    renderChatBtn(); renderChat(true);
+  }
+  function chatHide(){
+    chat.open = false;
+    if(chat.el){ chat.el.hidden = true; var i = $('dcin'); if(i) try{ i.blur(); }catch(e){} }
+    renderChatBtn();
+  }
+  async function chatSend(text){
+    text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if(!text || !dom.code || chat.cool) return;
+    chat.cool = true; setTimeout(function(){ chat.cool = false; }, 500);
+    var inp = $('dcin'); if(inp){ inp.value = ''; var sb = $('dcsend'); if(sb) sb.disabled = true; }
+    var tmp = {id: 'l' + (++chat.tmp), name: '', text: text, mine: true, local: true, pending: true};
+    chat.list.push(tmp); renderChat(true);
+    var ok = false;
+    try{
+      var r = await api('/api/domino/chat', {method: 'POST', body: JSON.stringify({room: dom.code, text: text})});
+      if(r.ok){
+        ok = true; tmp.pending = false;
+        var j = null; try{ j = await r.json(); }catch(e){}
+        if(j && j.msg && j.msg.id != null){
+          var i = chat.list.indexOf(tmp);
+          if(chat.list.some(function(x){ return !x.local && x.id === j.msg.id; })){ if(i >= 0) chat.list.splice(i, 1); }
+          else if(i >= 0) chat.list[i] = {id: j.msg.id, name: '', text: String(j.msg.text || text).slice(0, 300), mine: true};
+        }
+      }else{ flash((window.wtErr && window.wtErr(r)) || 'Mesaj göndərilmədi'); }
+    }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
+    if(!ok){ var k = chat.list.indexOf(tmp); if(k >= 0) chat.list.splice(k, 1); }
+    if(chat.open) renderChat(true);
+  }
+  $('dchatb').onclick = function(){ if(chat.open) chatHide(); else chatShow(); };
+
   function render(){
     var s = dom.s; if(!s) return;
     $('dcode').textContent = 'KOD: ' + s.code.toUpperCase() + (s.round ? '\nRAUND ' + s.round : '');
     renderStrip(s); renderBoard(s); renderHand(s); renderPile(s); renderMsg(); renderRes(s); renderAct(s); renderExtra(s);
     $('dshare').hidden = !!s.bot;
+    renderChatBtn();
   }
 
   /* ---- vəziyyət ---- */
@@ -9734,6 +9876,7 @@ window.wtInviteBox = function(o){
     if(prev && s.v < prev.v) return;                         // köhnə cavab
     var changed = force || !prev || s.v !== prev.v || onlKey(s) !== onlKey(prev);
     dom.v = s.v; dom.s = s;
+    try{ chatIn(s); }catch(ce){}
     if(prev && s.round !== prev.round){ dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flyFrom = null; dom.hide = {}; dom.hideH = {}; dom.drawFrom = null; }
     if(prev && prev.status === 'play' && s.status === 'over' && s.round === prev.round && s.reason !== 'left' && (s.board || []).length > (prev.board || []).length){
       dom.hold = true; clearTimeout(dom.holdT);
@@ -9856,6 +9999,7 @@ window.wtInviteBox = function(o){
   }
 
   function open(s){
+    chatReset(); stopAuto();
     dom.gen++; dom.code = s.code; dom.v = 0; dom.s = null; dom.sel = null; dom.boardN = -1; dom.handKeys = null; dom.stk = null; dom.hold = false; clearTimeout(dom.holdT); dom.flying = false; dom.flyFrom = null; dom.hide = {}; dom.hideH = {}; dom.drawFrom = null;
     dom.flashTx = ''; busy = false;
     $('domino').hidden = false;
@@ -9865,7 +10009,7 @@ window.wtInviteBox = function(o){
   }
   function close(leave){
     var c = dom.code, st = dom.s && dom.s.status;
-    voice.leave();
+    voice.leave(); chatHide(); stopAuto();
     dom.gen++; dom.code = ''; dom.s = null; clearTimeout(dom.bt); dom.hold = false; clearTimeout(dom.holdT);
     $('domino').hidden = true;
     if(leave && c){
@@ -13035,5 +13179,37 @@ async function callPending(){
 </style>
 <style>#dcode{white-space:pre-line}</style>
 <style>#dboard:has(#dwait:not([hidden])){height:auto;min-height:0;overflow:visible;flex:none}#dboard #dwait:not([hidden]){position:static;height:auto;max-height:none;overflow:visible;padding-bottom:18px}</style>
+<style>
+/* Domino: oyun daxili söhbət paneli */
+#dchatb{position:relative}
+#dchatb .dcbd{position:absolute;top:1px;right:1px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#ff5a6e;color:#fff;font-size:11px;font-weight:800;line-height:1;display:grid;place-items:center;box-shadow:0 0 0 2px #06261a}
+#dchatb[hidden],#dchatb .dcbd[hidden]{display:none!important}
+#dchatsh{position:fixed;inset:0;z-index:78;pointer-events:none;-webkit-user-select:text;user-select:text}
+#dchatsh[hidden]{display:none!important}
+#dchatsh .dcsh{pointer-events:auto;position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;height:min(52dvh,460px);display:flex;flex-direction:column;
+  background:#123f30;color:#f3ecd8;border-radius:24px 24px 0 0;padding:8px 14px calc(12px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -14px 40px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);animation:dcup .22s ease-out both}
+@keyframes dcup{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+#dchatsh .dcgrab{flex:none;width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);margin:2px auto 8px}
+#dchatsh .dchd{flex:none;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+#dchatsh .dchd h4{font-size:24px;font-weight:800;letter-spacing:-.01em}
+#dchatsh .dcx{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:16px}
+#dchatsh .dcms{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 0}
+#dchatsh .dcem{color:#9fc7b2;text-align:center;padding:24px 0;font-size:15px}
+#dchatsh .dcm{display:flex;flex-direction:column;align-items:flex-start;margin-bottom:8px}
+#dchatsh .dcm.me{align-items:flex-end}
+#dchatsh .dcm small{font-size:13px;font-weight:700;color:#f3c969;margin:0 0 3px 4px}
+#dchatsh .dcm span{max-width:82%;padding:9px 15px;border-radius:18px;background:#175240;font-size:17px;line-height:1.3;overflow-wrap:anywhere;white-space:pre-wrap}
+#dchatsh .dcm.me span{background:#d4a52e;color:#1b1405;font-weight:600}
+#dchatsh .dcm.pend span{opacity:.6}
+#dchatsh .dcq{flex:none;display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#dchatsh .dcq::-webkit-scrollbar{display:none}
+#dchatsh .dcc{flex:none;padding:10px 16px;border-radius:999px;background:#175240;color:#f3ecd8;font-size:15px;font-weight:700;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+#dchatsh .dcf{flex:none;display:flex;gap:10px;align-items:stretch}
+#dchatsh #dcin{flex:1;min-width:0;padding:13px 16px;border-radius:16px;background:rgba(0,0,0,.28);color:#f3ecd8;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+#dchatsh #dcin::placeholder{color:#7fa592}
+#dchatsh #dcin:focus{box-shadow:inset 0 0 0 2px #d4a52e}
+#dchatsh .dcsend{padding:0 20px;border-radius:16px;background:#d4a52e;color:#1b1405;font-weight:800}
+</style>
 </body>
 </html>
