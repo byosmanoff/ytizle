@@ -4832,8 +4832,14 @@ def _dom_next(g, sub):
     return ps[(ps.index(sub) + 1) % len(ps)]
 
 
+DOM_WHITE_LAST = 10   # əlində yalnız ağ qoşa (0-0) qalıbsa, onun xalı 0 yox, bu qədər sayılır
+
+
 def _dom_sum(g, p):
-    return sum(a + b for a, b in g["hands"].get(p, []))
+    h = g["hands"].get(p, [])
+    if len(h) == 1 and list(h[0]) == [0, 0]:    # tək ağ qoşa qalıb: 10 xal (bütün domino oyunlarında)
+        return DOM_WHITE_LAST
+    return sum(a + b for a, b in h)
 
 
 def _dom_finish(g, winner, reason):

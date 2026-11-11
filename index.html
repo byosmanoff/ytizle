@@ -9572,7 +9572,7 @@ window.wtInviteBox = function(o){
       return '<i style="background:' + colors[i % colors.length] + ';--cx:' + Math.cos(ang)*dist + 'px;--cy:' + (Math.sin(ang)*dist - 30) + 'px;animation-delay:' + (i*0.04) + 's"></i>';
     }).join('') + '</div>' : '';
     box.className = 'res-show ' + (win ? 'win' : (lose ? 'lose' : 'draw'));
-    box.innerHTML = conf + '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + title + '</h3>' + scoreHtml + pts + '<p>' + why + '</p><div class="dleftw"></div><button class="pbtn" id="dagain">' + (s.match ? 'Yeni oyun' : 'Növbəti raund') + '</button>';
+    box.innerHTML = conf + '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + title + '</h3>' + scoreHtml + pts + '<p>' + why + '</p><div class="dleftw"></div><button class="pbtn" id="dagain">' + (s.match ? 'Yeni oyun' : 'Növbəti raund · ' + (s.round + 1)) + '</button>';
     var L = box.querySelector('.dleftw');
     (s.opp_hands || []).forEach(function(oh){
       if(multi){ var lb = document.createElement('div'); lb.className = 'dlab'; lb.textContent = oh.name; L.appendChild(lb); }
@@ -9698,7 +9698,7 @@ window.wtInviteBox = function(o){
 
   function render(){
     var s = dom.s; if(!s) return;
-    $('dcode').textContent = 'KOD: ' + s.code.toUpperCase();
+    $('dcode').textContent = 'KOD: ' + s.code.toUpperCase() + (s.round ? ' · RAUND ' + s.round : '');
     renderStrip(s); renderBoard(s); renderHand(s); renderPile(s); renderMsg(); renderRes(s); renderAct(s); renderExtra(s);
     $('dshare').hidden = !!s.bot;
   }
