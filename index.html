@@ -9698,7 +9698,7 @@ window.wtInviteBox = function(o){
 
   function render(){
     var s = dom.s; if(!s) return;
-    $('dcode').textContent = 'KOD: ' + s.code.toUpperCase() + (s.round ? ' · RAUND ' + s.round : '');
+    $('dcode').textContent = 'KOD: ' + s.code.toUpperCase() + (s.round ? '\nRAUND ' + s.round : '');
     renderStrip(s); renderBoard(s); renderHand(s); renderPile(s); renderMsg(); renderRes(s); renderAct(s); renderExtra(s);
     $('dshare').hidden = !!s.bot;
   }
@@ -13033,5 +13033,7 @@ async function callPending(){
 #fres .fr .tx + *{margin-left:50px}
 #fres .fr .ftag{align-self:center}
 </style>
+<style>#dcode{white-space:pre-line}</style>
+<style>#dboard:has(#dwait:not([hidden])){height:auto;min-height:0;overflow:visible;flex:none}#dboard #dwait:not([hidden]){position:static;height:auto;max-height:none;overflow:visible;padding-bottom:18px}</style>
 </body>
 </html>
