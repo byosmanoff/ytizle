@@ -1478,6 +1478,15 @@ body:not(.mob) #rolebox,body:not(.mob) #planbox,body:not(.mob) #dlgbox{backgroun
 #uncolor [data-x]{background:rgba(255,255,255,.12);color:var(--text);border-radius:14px;padding:8px 18px;font-size:14px;font-weight:600}
 @media (max-height:700px){.upile .ukc{--w:56px}.ustk{width:56px;height:84px}.udraw .ucnt{top:42px}.ukh .ukc{--w:54px}.ukh{margin-left:calc(var(--ov,.3)*var(--cw,54px)*-1)}#unhand{min-height:112px;padding-top:22px}.ufx .big{font-size:70px}}
 @media (prefers-reduced-motion:reduce){.ukc.land-me,.ukc.land-op,.udir i,.udraw.can .ustk,.uuno,.unologo i,#untable .uring,#uno.myturn #unhand,#uno .dchip.turn,.ukh.new,.ufx,.uripple,.uconf i{animation:none!important}}
+
+/* ===== UNO səliqə düzəlişləri ===== */
+#uno .dpl.multi{align-items:stretch}
+#uno .dpl.multi .dchip{justify-content:center}
+.umini{justify-content:center;min-height:14px}
+/* kart sayğacı kartın mərkəzini (UNO loqosunu) örtməsin: künc nişanı */
+.udraw .ucnt{left:auto;right:-10px;top:auto;bottom:-8px;transform:none;min-width:26px;padding:2px 7px;font-size:12px;border:1px solid rgba(255,255,255,.25)}
+#uno .udraw .ucnt{left:auto;top:auto;bottom:-8px;right:-10px;font-size:12px;min-width:26px}
+.ukc.back .mid{font-size:calc(var(--w)*.24);white-space:nowrap}
 #durhand .dkh.sel .dkc{transform:translateY(-9px);box-shadow:0 0 0 3px var(--amber),0 10px 18px rgba(0,0,0,.45)}
 
 /* ================= DOMINO ================= */
@@ -10916,10 +10925,11 @@ window.wtInviteBox = function(o){
   }
   function chip(s, i){
     var p = s.players[i], play = s.status !== 'wait', turn = s.status === 'play' && s.turn === i;
+    var live = s.status === 'play';
     var mini = '';
-    if(play && !p.me){ for(var q = 0, m = Math.min(p.n, 9); q < m; q++) mini += '<span class="umb"></span>'; }
+    if(live && !p.me){ for(var q = 0, m = Math.min(p.n, 9); q < m; q++) mini += '<span class="umb"></span>'; }
     var small = (p.me ? '' : '<span class="donl' + (p.online ? ' on' : '') + '"></span>') +
-      (!play ? '' : p.n + ' ' + esc(window.wtCardW(p.n)) + (p.n === 1 ? ' <b class="uuno">UNO!</b>' : ''));
+      (!play ? '' : p.n + ' ' + esc(window.wtCardW(p.n)) + (live && p.n === 1 ? ' <b class="uuno">UNO!</b>' : ''));
     return '<div class="dchip' + (turn ? ' turn' : '') + '"><div class="dav">' + av(p) + '</div><div class="dwho">' +
       (p.me ? '<b>' + esc(T('Sən')) + '</b>' : '<b data-nt>' + esc(window.wtBot(p.name)) + '</b>') + '<small>' + small + '</small>' + (mini ? '<span class="umini">' + mini + '</span>' : '') + '</div></div>';
   }
