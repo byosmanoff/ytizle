@@ -2836,6 +2836,85 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 #chess #cbd{box-shadow:0 18px 40px rgba(0,0,0,.55),0 0 0 3px rgba(255,240,215,.08),0 0 0 6px rgba(94,60,28,.85),0 0 38px rgba(217,164,91,.18)}
 #chess .cp.b,#chess .pc.b{color:#1d150d}
 
+/* Uzun nərd: tünd ağac taxta, krem və qəhvəyi daşlar */
+#nerd{position:fixed;left:0;top:0;width:100%;height:var(--H,100dvh);transform:translateY(var(--VT,0px));overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;z-index:75;display:flex;flex-direction:column;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));overflow:hidden;
+  --velvet:#14100c;--seat:#2b2118;--seat-2:#3a2c1f;--rose:#d9a45b;--rose-deep:#a8742f;--amber:#f2cf86;--muted:#bcad98;--line:rgba(255,240,215,.1);
+  background:radial-gradient(120% 70% at 50% 0%,#3d2b1c 0%,#1a130d 62%,#100b07 100%)}
+#nerd[hidden],#nerd [hidden]{display:none!important}
+#nerd .pbtn{color:#1d1409}
+#nerd .pbtn:hover:not(:disabled){background:#bd8640}
+#nerd .dhead{display:flex;align-items:center;gap:10px;flex:none}
+#nerd .dt{flex:1;min-width:0;line-height:1.15}
+#nerd .dt b{display:block;font-size:20px}
+#nerd .dt small{color:var(--muted);font-size:13px;letter-spacing:.08em}
+#nerd input{-webkit-user-select:text;user-select:text}
+#nerd .npl{display:flex;align-items:center;gap:10px;flex:none;padding:7px 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s}
+#nerd .npl.turn{box-shadow:inset 0 0 0 2px var(--amber)}
+#nerd .nav{width:34px;height:34px;border-radius:50%;background:var(--rose-deep);display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
+#nerd .nav img{width:100%;height:100%;object-fit:cover}
+#nerd .nwho{flex:1;min-width:0}
+#nerd .nwho b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nerd .nwho small{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden}
+#nerd .ndot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6d5f4d;flex:none}
+#nerd .ndot.on{background:#5be08a}
+#nerd .nsw{display:inline-block;width:13px;height:13px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+#nerd .nsw.w{background:radial-gradient(circle at 35% 30%,#fff,#d9ccb0)}
+#nerd .nsw.b{background:radial-gradient(circle at 35% 30%,#6b5646,#1a110b);box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+#nerd .nsc{font-weight:800;font-size:20px}
+#nwrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;container-type:size;touch-action:none;overscroll-behavior:none}
+#nbd{width:min(100cqw,calc((100cqh - 54px)/.8));container-type:inline-size;box-sizing:border-box;padding:6px;border-radius:14px;display:flex;flex-direction:column;gap:3cqw;
+  background:linear-gradient(160deg,#5b3d22,#3a2514);box-shadow:0 18px 40px rgba(0,0,0,.55),0 0 0 3px rgba(255,240,215,.08),0 0 0 6px rgba(94,60,28,.85),0 0 38px rgba(217,164,91,.18)}
+#nbd .nrow{display:flex;height:38cqw}
+#nbd .npt{flex:1;min-width:0;position:relative;display:flex;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#nbd .nrow.top .npt{flex-direction:column}
+#nbd .nrow.bot .npt{flex-direction:column-reverse}
+#nbd .npt:nth-child(6){margin-right:2.4cqw}
+#nbd .npt::before{content:"";position:absolute;inset:0 5%;background:var(--tc);pointer-events:none}
+#nbd .npt:nth-child(odd){--tc:#d2b17c}
+#nbd .npt:nth-child(even){--tc:#80512a}
+#nbd .nrow.top .npt::before{clip-path:polygon(0 0,100% 0,50% 92%)}
+#nbd .nrow.bot .npt::before{clip-path:polygon(0 100%,100% 100%,50% 8%)}
+#nbd .npt.last::before{filter:brightness(1.18) saturate(1.15)}
+#nbd .npt.tgt{background:rgba(255,205,110,.2);border-radius:8px}
+#nbd .npt.tgt::after{content:"";position:absolute;left:50%;width:3.4cqw;height:3.4cqw;margin-left:-1.7cqw;border-radius:50%;background:rgba(255,224,140,.95);box-shadow:0 0 10px rgba(255,205,110,.9);z-index:3;pointer-events:none}
+#nbd .nrow.top .npt.tgt::after{top:1.2cqw}
+#nbd .nrow.bot .npt.tgt::after{bottom:1.2cqw}
+#nbd .nck{position:relative;z-index:1;width:7.2cqw;height:7.2cqw;border-radius:50%;flex:none;display:grid;place-items:center;font-size:3.6cqw;font-weight:800;font-style:normal;box-shadow:0 .5cqw 1cqw rgba(0,0,0,.55),inset 0 0 0 .35cqw rgba(0,0,0,.18)}
+#nbd .nck i{font-style:normal}
+#nbd .nck.w{background:radial-gradient(circle at 35% 30%,#fff,#e9dfc9 60%,#b9a98a);color:#3a2514}
+#nbd .nck.b{background:radial-gradient(circle at 35% 30%,#76604f,#2a1e16 60%,#120c08);color:#f2e6d0}
+#nbd .npt.src .nck:last-child{box-shadow:0 0 0 .7cqw rgba(255,211,107,.75),0 .5cqw 1cqw rgba(0,0,0,.55)}
+#nbd .npt.sel .nck:last-child{transform:scale(1.14);box-shadow:0 0 0 .9cqw #ffd36b,0 .8cqw 1.6cqw rgba(0,0,0,.6);z-index:2}
+#noff{width:min(100%,340px);display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.07);color:var(--text);font-weight:700;font-size:14px;box-shadow:inset 0 0 0 1px var(--line);flex:none;-webkit-tap-highlight-color:transparent}
+#noff.tgt{background:var(--rose-deep);color:#1d1409;box-shadow:0 0 0 2px #ffd36b,0 0 16px rgba(255,205,110,.55)}
+#nwait{margin:auto;text-align:center;padding:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:8px;max-height:100%;width:100%;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+#nwait>i{font-size:28px;color:var(--amber)}
+#nwait b{font-size:38px;letter-spacing:.18em;color:var(--text);margin:2px 0 6px;padding-left:.18em}
+#ndice{flex:none;min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px}
+#ndice .ncap{font-size:13px;color:var(--muted);margin-left:4px}
+#nroll{padding:14px 30px;font-size:18px;border-radius:16px;display:inline-flex;align-items:center;gap:10px}
+.ndie{width:46px;height:46px;border-radius:11px;background:linear-gradient(145deg,#fffaf0,#e8dcc4);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:7px;box-sizing:border-box;box-shadow:0 3px 8px rgba(0,0,0,.5);transition:opacity .2s}
+.ndie b{border-radius:50%;place-self:center;width:8px;height:8px}
+.ndie b.on{background:#2a1e16}
+.ndie.used{opacity:.3;filter:grayscale(1)}
+.ndie.new{animation:nroll .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes nroll{0%{transform:rotate(-200deg) scale(.4);opacity:0}70%{transform:rotate(12deg) scale(1.1)}100%{transform:none;opacity:1}}
+#nmsg{flex:none;min-height:22px;text-align:center;color:var(--amber);font-weight:600;font-size:15px}
+#nres{flex:none;text-align:center;padding:14px;border-radius:20px;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px var(--line);position:relative;overflow:hidden}
+#nres h3{font-size:22px;margin-bottom:4px}
+#nres p{color:var(--muted);font-size:14px;margin-bottom:10px}
+#nres .pbtn{width:100%;padding:13px}
+#nres.win{background:linear-gradient(160deg,rgba(45,204,122,.18),rgba(255,255,255,.06));box-shadow:inset 0 0 0 1px rgba(45,204,122,.35)}
+#nres.lose{background:linear-gradient(160deg,rgba(232,86,125,.16),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(232,86,125,.3)}
+#nres .res-ic{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 8px;border-radius:50%;font-size:24px;background:rgba(255,255,255,.12)}
+#nres.win .res-ic{color:#ffd166;background:rgba(255,209,102,.16)}
+#nres.lose .res-ic{color:#ffb3c1;background:rgba(255,122,156,.14)}
+#nres .res-score{display:flex;justify-content:center;gap:18px;margin:8px 0 4px;font-weight:800}
+#nres .res-score span{font-size:26px;color:var(--amber)}
+#nres .res-score small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+@media (prefers-reduced-motion:reduce){.ndie.new{animation:none}}
+
 /* Durak: qış mavisi masa, mavi kart kürəyi */
 #durak{--velvet:#091523;--seat:#112640;--seat-2:#18365a;--rose:#6cc3ff;--rose-deep:#2f86d1;--amber:#ffd27a;--muted:#9db6d3;--line:rgba(255,255,255,.1);
   background:radial-gradient(120% 70% at 50% 0%,#1f4a7a 0%,#0e2540 55%,#08121f 100%)}
@@ -3197,6 +3276,18 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
     </div>
     <div id="chMsg" role="status"></div>
   </div>
+  <div class="card" id="nrdCard" data-s="games">
+    <h2><i class="fa-solid fa-dice" aria-hidden="true"></i>Uzun nərd</h2>
+    <div class="hint">Dostunla onlayn uzun nərd: otaq aç, kodu göndər. Və ya kompüterlə oyna.</div>
+    <button class="pbtn" id="nrdNew" style="width:100%;padding:13px;margin-top:10px">Nərd otağı aç</button>
+    <button class="pbtn alt" id="nrdBot" style="width:100%;padding:13px;margin-top:10px">Kompüterlə oyna</button>
+    <button class="pbtn alt" id="nrdResume" hidden style="width:100%;padding:13px;margin-top:10px">Oyuna qayıt</button>
+    <div class="frow" style="gap:10px;margin-top:10px">
+      <input id="nrdCodeIn" placeholder="KOD" maxlength="12" autocapitalize="characters" autocomplete="off" aria-label="Nərd kodu">
+      <button class="pbtn alt" id="nrdEnter">Gir</button>
+    </div>
+    <div id="nrdMsg" role="status"></div>
+  </div>
   <div class="card" id="mafCard" data-s="games">
     <h2><i class="fa-solid fa-masks-theater" aria-hidden="true"></i>Mafia</h2>
     <div class="hint">Gizli rollar, gecə hərəkətləri və gündüz səsverməsi. Dostlarınla və ya kompüterlə oyna.</div>
@@ -3212,7 +3303,7 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   </div>
   <div class="card" id="lbCard" data-s="rank">
     <h2><i class="fa-solid fa-trophy" aria-hidden="true"></i>Reytinq</h2>
-    <div class="seg" id="lbGame" role="group" aria-label="Oyun"><button type="button" data-g="all" class="on">Hamısı</button><button type="button" data-g="domino">Domino</button><button type="button" data-g="chess">Şahmat</button><button type="button" data-g="durak">Durak</button><button type="button" data-g="mafia">Mafia</button><button type="button" data-g="uno">Uno</button></div>
+    <div class="seg" id="lbGame" role="group" aria-label="Oyun"><button type="button" data-g="all" class="on">Hamısı</button><button type="button" data-g="domino">Domino</button><button type="button" data-g="chess">Şahmat</button><button type="button" data-g="durak">Durak</button><button type="button" data-g="mafia">Mafia</button><button type="button" data-g="uno">Uno</button><button type="button" data-g="nerd">Nərd</button></div>
     <div class="seg" id="lbPer" role="group" aria-label="Dövr"><button type="button" data-p="week" class="on">Bu həftə</button><button type="button" data-p="all">Hər zaman</button></div>
     <div class="lbnote" id="lbNote"></div>
     <div id="lbList"></div>
@@ -3683,6 +3774,37 @@ html[lang="en"] #mafia .mchip.me::after{content:"YOU"}
   <div class="cpl" id="cme"></div>
   <div id="cmsg" role="status"></div>
   <div id="cres" hidden></div>
+</div>
+<div id="nerd" hidden role="dialog" aria-modal="true" aria-label="Uzun nərd">
+  <div class="dhead">
+    <button class="ib" id="nback" aria-label="Geri" title="Geri"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <div class="dt"><b>Uzun nərd</b><small id="ncode"></small></div>
+    <button class="ib" id="nshare" aria-label="Paylaş" title="Paylaş"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
+    <button class="ib" id="nquit" aria-label="Oyundan çıx" title="Oyundan çıx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button>
+  </div>
+  <div class="npl" id="nopp"></div>
+  <div id="nwrap">
+    <div id="nbd"></div>
+    <button id="noff" type="button" hidden></button>
+    <div id="nwait" hidden>
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Rəqib gözlənilir...</span>
+      <small>Kodu rəqibinə göndər:</small>
+      <b id="nwcode"></b>
+      <button class="pbtn" id="nwshare">Dəvət linkini göndər</button>
+      <div class="ginv">
+        <div class="gt">İstifadəçi adı ilə dəvət et</div>
+        <div class="frow"><input id="ninvU" placeholder="@istifadəçi adı" maxlength="21" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="İstifadəçi adı"><button class="pbtn alt" id="ninvGo" type="button">Dəvət et</button></div>
+        <div class="gt" id="ninvFrT" hidden style="margin-top:12px">Dostlarını çağır</div>
+        <div class="gfr" id="ninvFr"></div>
+        <div class="gmsg" id="ninvMsg" role="status"></div>
+      </div>
+    </div>
+  </div>
+  <div id="ndice"></div>
+  <div class="npl" id="nme"></div>
+  <div id="nmsg" role="status"></div>
+  <div id="nres" hidden></div>
 </div>
 <div id="domino" hidden role="dialog" aria-modal="true" aria-label="Domino">
   <div class="dhead">
@@ -5892,7 +6014,7 @@ wtBindGuestAuth();
 function loginMsg(t){ $('joinmsg').textContent = t; }
 const AUTH_PATHS = ['/api/google', '/api/login', '/api/register', '/api/verify', '/api/resend', '/api/forgot', '/api/reset'];
 /* ---- Qonaq sessiyası: yalnız oyun sorğuları üçün müvəqqəti token ---- */
-const GUEST_API = /^\/api\/(domino|chess|durak|uno|mafia|gvoice)\//;
+const GUEST_API = /^\/api\/(domino|chess|nerd|durak|uno|mafia|gvoice)\//;
 function wtGuestTok(){ try{ return localStorage.getItem('wt_gtok') || ''; }catch(e){ return ''; } }
 let _gPromise = null;
 function wtGuestEnsure(force){
@@ -5951,7 +6073,8 @@ async function initGoogle(){
   s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
   s.onload = () => {
     if(!window.google || !google.accounts || !google.accounts.id){ gInit = false; loginMsg('Google yüklənmədi, yenidən yoxla.'); return; }
-    google.accounts.id.initialize({client_id: cid, callback: onGoogle, auto_select: false});
+    google.accounts.id.initialize({client_id: cid, callback: onGoogle, auto_select: false,
+      use_fedcm_for_button: true, use_fedcm_for_prompt: true, button_auto_select: false});
     google.accounts.id.renderButton($('gbtn'), {theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with',
       width: Math.min(316, $('gbtn').parentElement.clientWidth || 316)});
   };
@@ -6155,7 +6278,7 @@ function showMenu(){
   renderName();
   lastFr = ''; lastInv = '';
   loadHistory(); loadStats(); showInstall(); loadFavs(); loadBoard(); loadTourneys();
-  try{ if(window.wtVerifyDomino) window.wtVerifyDomino(); if(window.wtVerifyChess) window.wtVerifyChess(); }catch(e){}
+  try{ if(window.wtVerifyDomino) window.wtVerifyDomino(); if(window.wtVerifyChess) window.wtVerifyChess(); if(window.wtVerifyNerd) window.wtVerifyNerd(); }catch(e){}
   $('mquote').textContent = '“' + DAILY[Math.floor(Date.now() / 864e5) % DAILY.length] + '”';
   fetch('/api/stats', {cache: 'no-store'}).then(r => r.json()).then(d => { $('stl').textContent = d.people; }).catch(() => {});
   setTimeout(function(){ try{ window.wtShowGuide(false); }catch(e){} }, 600);
@@ -6368,6 +6491,7 @@ async function sendPresence(){
   try{
     if(document.getElementById('domino') && !document.getElementById('domino').hidden) st = 'Domino oynayır';
     else if(document.getElementById('chess') && !document.getElementById('chess').hidden) st = 'Şahmat oynayır';
+    else if(document.getElementById('nerd') && !document.getElementById('nerd').hidden) st = 'Nərd oynayır';
     else if(document.getElementById('mafia') && !document.getElementById('mafia').hidden) st = 'Mafia oynayır';
     else if(document.getElementById('app') && document.getElementById('app').style.display !== 'none' && typeof room === 'string' && room) st = 'Birlikdə izləyir';
   }catch(e){}
@@ -6653,12 +6777,12 @@ function renderInvites(list, games){
     if(i.avatar && /^\/api\/avatar\/[a-z0-9._]{3,20}\?v=\d+$/.test(i.avatar)){ av.style.backgroundImage = 'url("' + i.avatar + '")'; av.textContent = ''; }
     const tx = document.createElement('div'); tx.className = 'tx';
     const b = document.createElement('b'); b.textContent = i.name + (i.username ? ' (@' + i.username + ')' : '');
-    const sp = document.createElement('span'); sp.textContent = i.voice ? 'səni səsli söhbətə dəvət edir' : i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : i.game === 'uno' ? 'səni Uno oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
+    const sp = document.createElement('span'); sp.textContent = i.voice ? 'səni səsli söhbətə dəvət edir' : i.game === 'nerd' ? 'səni Nərd oyununa dəvət edir' : i.game === 'chess' ? 'səni Şahmat oyununa dəvət edir' : i.game === 'durak' ? 'səni Durak oyununa dəvət edir' : i.game === 'mafia' ? 'səni Mafia oyununa dəvət edir' : i.game === 'uno' ? 'səni Uno oyununa dəvət edir' : 'səni Domino oyununa dəvət edir';
     tx.appendChild(b); tx.appendChild(sp);
     const go = document.createElement('button'); go.className = 'go'; go.textContent = 'Qoşul';
     const no = document.createElement('button'); no.className = 'no'; no.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'; no.setAttribute('aria-label', 'Rədd et');
     const drop = () => { api('/api/game/invite/dismiss', {method: 'POST', body: JSON.stringify({id: i.id})}).catch(() => {}); c.remove(); };
-    go.onclick = () => { drop(); const f = i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : i.game === 'mafia' ? window.wtJoinMafia : i.game === 'uno' ? window.wtJoinUno : window.wtJoinDomino; if(f) f(i.room); };
+    go.onclick = () => { drop(); const f = i.game === 'nerd' ? window.wtJoinNerd : i.game === 'chess' ? window.wtJoinChess : i.game === 'durak' ? window.wtJoinDurak : i.game === 'mafia' ? window.wtJoinMafia : i.game === 'uno' ? window.wtJoinUno : window.wtJoinDomino; if(f) f(i.room); };
     no.onclick = drop;
     c.appendChild(av); c.appendChild(tx); c.appendChild(go); c.appendChild(no);
     box.appendChild(c);
@@ -7461,10 +7585,10 @@ async function loadFavs(){
 }
 
 /* ---------- Reytinq ---------- */
-const GAME_AZ = {domino: 'Domino', chess: 'Şahmat', durak: 'Durak', mafia: 'Mafia', uno: 'Uno', all: 'Hamısı'};
+const GAME_AZ = {domino: 'Domino', chess: 'Şahmat', nerd: 'Nərd', durak: 'Durak', mafia: 'Mafia', uno: 'Uno', all: 'Hamısı'};
 let lbGame = 'all', lbPer = 'week';
 function Lx(az, tr, en){ const l = window.wtLang ? window.wtLang() : 'az'; return l === 'tr' ? tr : l === 'en' ? en : az; }
-const GN = {domino: ['Domino', 'Domino', 'Domino'], chess: ['Şahmat', 'Satranç', 'Chess'], durak: ['Durak', 'Durak', 'Durak'], mafia: ['Mafia', 'Mafya', 'Mafia'], uno: ['Uno', 'Uno', 'Uno']};
+const GN = {domino: ['Domino', 'Domino', 'Domino'], chess: ['Şahmat', 'Satranç', 'Chess'], nerd: ['Nərd', 'Tavla', 'Backgammon'], durak: ['Durak', 'Durak', 'Durak'], mafia: ['Mafia', 'Mafya', 'Mafia'], uno: ['Uno', 'Uno', 'Uno']};
 function gname(g){ const a = GN[g]; return a ? Lx(a[0], a[1], a[2]) : g; }
 function segBind(id, key, fn){
   $(id).addEventListener('click', e => {
@@ -7798,14 +7922,14 @@ boot();
 (function(){
   var y0 = 0;
   function isOpen(){
-    var a = document.getElementById('domino'), b = document.getElementById('chess');
-    return !!((a && !a.hidden) || (b && !b.hidden));
+    var a = document.getElementById('domino'), b = document.getElementById('chess'), n = document.getElementById('nerd');
+    return !!((a && !a.hidden) || (b && !b.hidden) || (n && !n.hidden));
   }
   document.addEventListener('touchstart', function(e){ if(e.touches && e.touches.length) y0 = e.touches[0].clientY; }, {passive: true});
   function noZoomMove(e){
     if(!isOpen()) return;
     var t = e.target;
-    if(!t || !t.closest || !t.closest('#domino, #chess')) return;
+    if(!t || !t.closest || !t.closest('#domino, #chess, #nerd')) return;
     if(e.touches.length > 1){ e.preventDefault(); return; }
     /* Domino ekranı məzmun ekrandan hündürdürsə (məs. oyun bitəndə nəticə paneli) sürüşməyə icazə ver */
     var dmw = t.closest('#domino');
@@ -7819,9 +7943,9 @@ boot();
     e.preventDefault();
   }
   /* Əvvəl listener bütün sənəddə idi və passive:false olduğu üçün tətbiqin HƏR yerində scroll hər barmaq hərəkətində JS-i gözləyirdi. İndi yalnız Domino/Şahmat pəncərələrindədir. */
-  ['domino', 'chess'].forEach(function(id){ var el0 = document.getElementById(id); if(el0) el0.addEventListener('touchmove', noZoomMove, {passive: false}); });
+  ['domino', 'chess', 'nerd'].forEach(function(id){ var el0 = document.getElementById(id); if(el0) el0.addEventListener('touchmove', noZoomMove, {passive: false}); });
   document.addEventListener('gesturestart', function(e){ if(isOpen()) e.preventDefault(); });
-  ['domino', 'chess'].forEach(function(id){
+  ['domino', 'chess', 'nerd'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.addEventListener('scroll', function(){ el.scrollTop = 0; el.scrollLeft = 0; });
   });
@@ -8020,6 +8144,7 @@ boot();
   [/^KOD ([A-Z0-9]+)$/, 'KOD $1', 'CODE $1'],
     [/^Kod: (.+)$/, 'Kod: $1', 'Code: $1'],
     [/^Şahmat oynayaq! Kod: (.+)$/, 'Satranç oynayalım! Kod: $1', 'Let\'s play chess! Code: $1'],
+    [/^Nərd oynayaq! Kod: (.+)$/, 'Tavla oynayalım! Kod: $1', 'Let\'s play backgammon! Code: $1'],
     [/^Domino oynayaq! Kod: (.+)$/, 'Domino oynayalım! Kod: $1', 'Let\'s play dominoes! Code: $1'],
     [/^Səsli: (.+)$/, 'Sesli: $1', 'Voice: $1'],
     [/^(.+) səsli otaqdadır$/, '$1 sesli odada', '$1 is in voice'],
@@ -9139,6 +9264,343 @@ window.wtInviteBox = function(o){
     }, 500);
   }
   window.wtJoinChess = function(c){ enter(clean(c), false); };
+  refreshResume();
+})();
+
+/* ---------- Uzun nərd otağı (2 nəfər, onlayn və ya kompüterlə) ---------- */
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var LS = 'wt_nerd';
+  var nd = {code: '', v: 0, s: null, sel: null, gen: 0, flashT: null, flashTx: '', bt: null, newRoll: false};
+  var busy = false, pending = '';
+  var inv = window.wtInviteBox({game: 'nerd', user: 'ninvU', go: 'ninvGo', fr: 'ninvFr', ft: 'ninvFrT', msg: 'ninvMsg', code: function(){ return nd.code; }});
+  var REASON = {done: 'Bütün daşlar çıxarıldı', mars: 'Mars! Rəqibin heç daşı çıxmayıb (2 xal)', resign: 'Təslim oldu'};
+  var TOP = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], BOT = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+  var PIPS = {1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9]};
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
+  function clean(c){ return String(c || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30); }
+  function avatar(p){ return p && p.avatar ? '<img loading="lazy" decoding="async" src="' + esc(p.avatar) + '" alt="">' : esc(((p && p.name) || '?').slice(0, 1).toUpperCase()); }
+  function remember(c){ try{ if(c) localStorage.setItem(LS, c); else localStorage.removeItem(LS); }catch(e){} refreshResume(); }
+  function saved(){ try{ return localStorage.getItem(LS) || ''; }catch(e){ return ''; } }
+  function refreshResume(){ var b = $('nrdResume'); if(b) b.hidden = !saved(); }
+  var vrBusy = false;
+  async function verifyResume(){
+    var c = saved();
+    if(!c || vrBusy || !(token || (window.wtIsGuest && window.wtIsGuest())) || nd.code === c) return;
+    vrBusy = true;
+    try{
+      var r = await api('/api/nerd/check?room=' + encodeURIComponent(c));
+      if(r.status === 404 && saved() === c && nd.code !== c) remember('');
+    }catch(e){}
+    vrBusy = false;
+  }
+  window.wtVerifyNerd = verifyResume;
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') verifyResume(); });
+  function cardMsg(t){ var e = $('nrdMsg'); if(e) e.textContent = t || ''; }
+  function flash(t){
+    nd.flashTx = t; clearTimeout(nd.flashT);
+    nd.flashT = setTimeout(function(){ nd.flashTx = ''; if(nd.s) renderMsg(); }, 2800);
+    renderMsg();
+  }
+  function uniqSources(s){
+    var out = [];
+    s.moves.forEach(function(m){ if(out.indexOf(m[0]) < 0) out.push(m[0]); });
+    return out;
+  }
+
+  function renderStrips(s){
+    var oc = s.color === 'w' ? 'b' : 'w', o = s.opp, m = s.me || {};
+    $('nopp').classList.toggle('turn', s.turn === 'opp');
+    $('nme').classList.toggle('turn', s.turn === 'me');
+    function info(col, off, pip){ return '<span class="nsw ' + col + '"></span>' + off + '/15 çıxdı · yol ' + pip; }
+    if(!o){
+      $('nopp').innerHTML = '<div class="nav">?</div><div class="nwho"><b>Rəqib</b><small>Rəqib gözlənilir...</small></div>';
+    }else{
+      $('nopp').innerHTML = '<div class="nav">' + avatar(o) + '</div><div class="nwho"><b data-nt>' + esc(window.wtBot(o.name)) + '</b><small><span class="ndot' + (s.opp_online ? ' on' : '') + '"></span>' +
+        (s.status === 'wait' ? '' : info(oc, s.off.opp, s.pip.opp)) + '</small></div><div class="nsc">' + s.score.opp + '</div>';
+    }
+    $('nme').innerHTML = '<div class="nav">' + avatar(m) + '</div><div class="nwho"><b data-nt>' + esc(m.name || 'Sən') + '</b><small>' +
+      (s.status === 'wait' ? '' : info(s.color, s.off.me, s.pip.me)) + '</small></div><div class="nsc">' + s.score.me + '</div>';
+  }
+
+  function ptHtml(s, p, tg, mv, lastSet){
+    var nm = s.mine[p], no = s.oppb[p], n = nm || no, col = nm ? s.color : (s.color === 'w' ? 'b' : 'w');
+    var cls = 'npt' + (mv[p] && s.turn === 'me' ? ' src' : '') + (nd.sel === p ? ' sel' : '') + (tg[p] ? ' tgt' : '') + (lastSet[p] ? ' last' : '');
+    var h = '', shown = Math.min(n, 5), i;
+    for(i = 0; i < shown; i++) h += '<span class="nck ' + col + '">' + (i === shown - 1 && n > 5 ? '<i>' + n + '</i>' : '') + '</span>';
+    return '<div class="' + cls + '" data-p="' + p + '">' + h + '</div>';
+  }
+
+  function renderBoard(s){
+    var bd = $('nbd'), wait = $('nwait'), off = $('noff');
+    var isWait = s.status === 'wait';
+    wait.hidden = !isWait; bd.hidden = isWait; off.hidden = isWait;
+    if(isWait){ $('nwcode').textContent = s.code.toUpperCase(); inv.refresh(); return; }
+    var tg = {}, mv = {}, lastSet = {};
+    s.moves.forEach(function(m){ mv[m[0]] = 1; if(nd.sel === m[0]) tg[m[1]] = 1; });
+    var tr = s.cur || (s.last ? s.last.mv : null);
+    if(tr) tr.forEach(function(m){ lastSet[m[0]] = 1; if(m[1] < 24) lastSet[m[1]] = 1; });
+    var top = '', bot = '';
+    TOP.forEach(function(p){ top += ptHtml(s, p, tg, mv, lastSet); });
+    BOT.forEach(function(p){ bot += ptHtml(s, p, tg, mv, lastSet); });
+    bd.innerHTML = '<div class="nrow top">' + top + '</div><div class="nrow bot">' + bot + '</div>';
+    off.classList.toggle('tgt', !!tg[24]);
+    off.innerHTML = tg[24] ? '<i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Daşı çıxar' : 'Çıxarılan daşların: ' + s.off.me + '/15';
+  }
+
+  function dieHtml(n, cls){
+    var on = PIPS[n] || [], h = '';
+    for(var i = 1; i <= 9; i++) h += '<b' + (on.indexOf(i) >= 0 ? ' class="on"' : '') + '></b>';
+    return '<span class="ndie ' + cls + '">' + h + '</span>';
+  }
+
+  function renderDice(s){
+    var box = $('ndice');
+    if(s.status !== 'play'){ box.innerHTML = ''; return; }
+    if(s.can_roll){
+      box.innerHTML = '<button class="pbtn" id="nroll" type="button"><i class="fa-solid fa-dice" aria-hidden="true"></i> Zər at</button>';
+      $('nroll').onclick = function(){ post('move', {action: 'roll'}); };
+      return;
+    }
+    var h = '', cap = '', list, rem = (s.dice || []).slice();
+    if(s.roll){
+      list = s.roll[0] === s.roll[1] ? [s.roll[0], s.roll[0], s.roll[0], s.roll[0]] : s.roll.slice();
+      list.forEach(function(d){
+        var i = rem.indexOf(d), used = i < 0;
+        if(!used) rem.splice(i, 1);
+        h += dieHtml(d, (used ? 'used' : '') + (nd.newRoll ? ' new' : ''));
+      });
+      cap = s.turn === 'me' ? '' : 'Rəqib atdı';
+    }else if(s.lastroll && s.lastroll.roll && s.lastroll.roll.length){
+      var r = s.lastroll.roll;
+      list = r[0] === r[1] ? [r[0], r[0], r[0], r[0]] : r.slice();
+      list.forEach(function(d){ h += dieHtml(d, 'used'); });
+      cap = (s.lastroll.mine ? 'Sən atdın' : 'Rəqib atdı') + (s.lastroll.passed ? ': gediş yoxdur' : '');
+    }
+    nd.newRoll = false;
+    box.innerHTML = h + (cap ? '<span class="ncap">' + esc(cap) + '</span>' : '');
+  }
+
+  function renderMsg(){
+    var s = nd.s, e = $('nmsg');
+    if(!s){ e.textContent = ''; return; }
+    if(nd.flashTx){ e.textContent = nd.flashTx; return; }
+    var t = '';
+    if(s.status === 'play'){
+      if(s.turn === 'me') t = s.can_roll ? 'Sənin növbən: zər at' : (s.moves.length ? 'Daşı seç, sonra getdiyi yerə toxun' : '');
+      else if(s.bot) t = 'Kompüter düşünür...';
+      else t = s.opp_online ? 'Rəqibin növbəsi...' : 'Rəqib əlaqədə deyil';
+    }
+    e.textContent = t;
+  }
+
+  function renderRes(s){
+    var box = $('nres'), over = s.status === 'over';
+    box.hidden = !over;
+    if(!over){ box.innerHTML = ''; box.className = ''; return; }
+    var win = s.result === 'me';
+    var title = win ? 'Qazandın!' : 'Rəqib qazandı';
+    var ic = win ? 'fa-trophy' : 'fa-heart-crack';
+    var scoreHtml = '<div class="res-score"><div><span>' + s.score.me + '</span><small>Sən</small></div><div><span>' + s.score.opp + '</span><small>' + (s.bot ? 'Kompüter' : 'Rəqib') + '</small></div></div>';
+    box.className = win ? 'win' : 'lose';
+    box.innerHTML = '<div class="res-ic"><i class="fa-solid ' + ic + '" aria-hidden="true"></i></div><h3>' + title + '</h3>' + scoreHtml + '<p>' + esc(REASON[s.reason] || '') + '</p><button class="pbtn" id="nagain">Yenidən oyna (rənglər dəyişir)</button>';
+    $('nagain').onclick = function(){ again(); };
+  }
+
+  function render(){
+    var s = nd.s; if(!s) return;
+    $('ncode').textContent = 'KOD: ' + s.code.toUpperCase();
+    renderStrips(s); renderBoard(s); renderDice(s); renderMsg(); renderRes(s);
+    $('nshare').hidden = !!s.bot;
+  }
+
+  function sfx(prev, s){
+    var S = window.wtSfx; if(!S) return;
+    if(prev.status === 'wait' || s.round !== prev.round){ if(s.status === 'play') S.play('start'); return; }
+    var l0 = prev.last ? JSON.stringify(prev.last.mv) : '', l1 = s.last ? JSON.stringify(s.last.mv) : '';
+    var c0 = prev.cur ? JSON.stringify(prev.cur) : '', c1 = s.cur ? JSON.stringify(s.cur) : '';
+    if(s.status === 'play' && (l0 !== l1 || c0 !== c1)){ if(nd.mySfx) nd.mySfx = false; else S.play('move'); }
+    if(s.status === 'over' && prev.status !== 'over'){
+      setTimeout(function(){ S.play(s.result === 'me' ? 'win' : 'lose'); }, 300);
+    }
+  }
+
+  function apply(s){
+    var prev = nd.s;
+    if(prev && s.v < prev.v) return;
+    var changed = !prev || s.v !== prev.v || s.opp_online !== prev.opp_online;
+    nd.v = s.v; nd.s = s;
+    if(prev && s.round !== prev.round) nd.sel = null;
+    if(s.roll && (!prev || !prev.roll)) nd.newRoll = true;
+    if(prev && s.v !== prev.v){ try{ sfx(prev, s); }catch(e){} }
+    if(s.turn !== 'me' || !s.moves.length) nd.sel = null;
+    else{
+      var src = uniqSources(s);
+      if(src.length === 1) nd.sel = src[0];
+      else if(nd.sel != null && src.indexOf(nd.sel) < 0) nd.sel = null;
+    }
+    if(prev && s.v !== prev.v && prev.turn !== 'me' && s.turn === 'me'){ try{ navigator.vibrate && navigator.vibrate(40); }catch(e){} }
+    if(s.lastroll && s.lastroll.passed && (!prev || !prev.lastroll || JSON.stringify(prev.lastroll) !== JSON.stringify(s.lastroll) || prev.v !== s.v) && prev && s.v !== prev.v){
+      flash(s.lastroll.mine ? 'Gedişin yoxdur, növbə keçdi' : (s.bot ? 'Kompüterin gedişi yoxdur' : 'Rəqibin gedişi yoxdur'));
+    }
+    if(changed) render();
+    remember(s.status === 'wait' ? '' : s.code);
+    if(s.bot && s.status === 'play' && s.turn === 'opp') scheduleBot();
+  }
+
+  function scheduleBot(){
+    clearTimeout(nd.bt);
+    var g = nd.gen, delay = (nd.s && nd.s.roll ? 950 : 450) + Math.random() * 350;
+    nd.bt = setTimeout(async function(){
+      if(nd.gen !== g || !nd.code) return;
+      if(busy){ scheduleBot(); return; }
+      busy = true;
+      try{
+        var r = await api('/api/nerd/bot', {method: 'POST', body: JSON.stringify({room: nd.code})});
+        if(nd.gen === g && r.ok) apply(await r.json());
+      }catch(e){ if(nd.gen === g) setTimeout(scheduleBot, 1500); }
+      busy = false;
+    }, delay);
+  }
+
+  async function post(path, body){
+    if(busy || !nd.code) return;
+    busy = true;
+    try{
+      var r = await api('/api/nerd/' + path, {method: 'POST', body: JSON.stringify(Object.assign({room: nd.code}, body || {}))});
+      if(r.ok) apply(await r.json()); else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
+    }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
+    busy = false;
+  }
+  function again(){ if(nd.s) post('again', {round: nd.s.round}); }
+
+  function send(from, to){
+    var s = nd.s; if(!s) return;
+    var ds = s.moves.filter(function(m){ return m[0] === from && m[1] === to; }).map(function(m){ return m[2]; });
+    if(!ds.length) return;
+    var d = Math.min.apply(null, ds);   /* çıxarmada ən kiçik uyğun zər işlənir */
+    nd.sel = null;
+    try{ if(window.wtSfx) window.wtSfx.play('move'); nd.mySfx = true; }catch(e){}
+    post('move', {action: 'move', p: from, d: d});
+  }
+
+  function tap(p){
+    var s = nd.s;
+    if(!s || s.status !== 'play' || s.turn !== 'me' || busy || !s.moves.length) return;
+    if(nd.sel != null && s.moves.some(function(m){ return m[0] === nd.sel && m[1] === p; })){ send(nd.sel, p); return; }
+    if(p < 24 && s.moves.some(function(m){ return m[0] === p; })){ nd.sel = (nd.sel === p ? null : p); renderBoard(s); return; }
+    var src = [];
+    s.moves.forEach(function(m){ if(m[1] === p && src.indexOf(m[0]) < 0) src.push(m[0]); });
+    if(src.length === 1){ send(src[0], p); return; }
+    nd.sel = null; renderBoard(s);
+  }
+  $('nbd').addEventListener('click', function(e){ var q = e.target.closest('.npt'); if(q) tap(+q.getAttribute('data-p')); });
+  $('noff').addEventListener('click', function(){ tap(24); });
+
+  async function poll(gen){
+    var fails = 0;
+    while(nd.gen === gen){
+      try{
+        var r = await wtPollFetch('/api/nerd/poll?room=' + encodeURIComponent(nd.code) + '&v=' + nd.v);
+        if(nd.gen !== gen) return;
+        if(r.status === 404){ close(false); remember(''); cardMsg('Oyun bitib və ya tapılmadı'); return; }
+        if(!r.ok) throw new Error(String(r.status));
+        if(fails > 0){ try{ window.wtReconnectBanner('Yenidən qoşuldu', true); setTimeout(function(){ window.wtReconnectBanner(''); }, 1800); }catch(x){} }
+        var jd = await r.json(); fails = 0;
+        try{ apply(jd); }catch(ae){ try{ console.error('nerd render', ae); if(typeof jd.v === 'number' && jd.v > nd.v) nd.v = jd.v; }catch(x){} await new Promise(function(z){ setTimeout(z, 700); }); }
+      }catch(e){
+        if(nd.gen !== gen) return;
+        fails++;
+        try{ window.wtReconnectBanner('Əlaqə kəsildi, yenidən cəhd...'); }catch(x){}
+        if(!token && !(window.wtIsGuest && window.wtIsGuest())){ close(false); return; }
+        await new Promise(function(z){ setTimeout(z, Math.min(5000, 1000 * fails)); });
+      }
+    }
+  }
+
+  function open(s){
+    clearTimeout(nd.bt);
+    nd.gen++; nd.code = s.code; nd.v = 0; nd.s = null; nd.sel = null; nd.flashTx = ''; busy = false; nd.newRoll = false;
+    $('nerd').hidden = false;
+    apply(s);
+    poll(nd.gen);
+  }
+  function close(leave){
+    var c = nd.code, st = nd.s && nd.s.status;
+    clearTimeout(nd.bt);
+    nd.gen++; nd.code = ''; nd.s = null;
+    $('nerd').hidden = true;
+    if(leave && c) api('/api/nerd/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
+    if(st === 'wait' || st === 'over') remember('');
+  }
+
+  async function enter(code, isCreate, bot){
+    cardMsg('');
+    try{
+      var r = isCreate
+        ? await api('/api/nerd/create', {method: 'POST', body: bot ? '{"bot":true}' : '{}'})
+        : await api('/api/nerd/join', {method: 'POST', body: JSON.stringify({room: code})});
+      if(r.ok){ open(await r.json()); return true; }
+      if(r.status === 404){ remember(''); cardMsg('Belə oyun tapılmadı. Kodu yoxla.'); }
+      else if(r.status === 403) cardMsg('Bu otaq doludur');
+      else if(r.status === 429) cardMsg('Çox sorğu göndərdin, bir az gözlə');
+      else cardMsg('Əlaqə problemi, yenidən cəhd et');
+    }catch(e){ cardMsg('Əlaqə problemi, yenidən cəhd et'); }
+    return false;
+  }
+
+  async function share(){
+    var s = nd.s; if(!s) return;
+    var url = location.origin + '/?nerd=' + encodeURIComponent(s.code.toUpperCase());
+    var text = wtT('Nərd oynayaq! Kod: ' + s.code.toUpperCase());
+    try{ if(navigator.share){ await navigator.share({title: wtT('Uzun nərd'), text: text, url: url}); return; } }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(url); flash('Link kopyalandı'); }
+    catch(e){ flash('Kod: ' + s.code.toUpperCase()); }
+  }
+
+  $('nrdNew').onclick = function(){ enter('', true); };
+  $('nrdBot').onclick = function(){ enter('', true, true); };
+  $('nrdEnter').onclick = function(){
+    var c = clean($('nrdCodeIn').value);
+    if(!c){ cardMsg('Nərd kodunu yaz'); return; }
+    enter(c, false);
+  };
+  $('nrdCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('nrdEnter').click(); } });
+  $('nrdResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
+  $('nback').onclick = function(){ close(nd.s && (nd.s.status === 'wait' || nd.s.bot)); };
+  $('nshare').onclick = share;
+  $('nwshare').onclick = share;
+  $('nquit').onclick = function(){
+    var s = nd.s, c = nd.code;
+    if(!s || !c) return;
+    var playing = s.status === 'play';
+    var msg = playing ? 'Oyundan çıxmaq istəyirsən? Oyun sənin üçün bitəcək.' : 'Oyundan çıxmaq istəyirsən?';
+    wtConfirm(msg, {ok: 'Oyundan çıx', danger: true}).then(async function(y){
+      if(!y || nd.code !== c) return;
+      if(playing){ try{ await api('/api/nerd/move', {method: 'POST', body: JSON.stringify({room: c, action: 'resign'})}); }catch(e){} }
+      close(true); remember('');
+    });
+  };
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible' && nd.code && !$('nerd').hidden){ nd.gen++; var g = nd.gen; nd.v = 0; poll(g); }
+  });
+
+  try{
+    var q = new URLSearchParams(location.search).get('nerd');
+    if(q){ pending = clean(q); history.replaceState(null, '', location.pathname); }
+  }catch(e){}
+  if(pending){
+    var tries = 0, iv = setInterval(function(){
+      tries++;
+      var menuOn = false;
+      try{ menuOn = getComputedStyle($('menu')).display !== 'none'; }catch(e){}
+      if((token || (window.wtIsGuest && window.wtIsGuest())) && account && menuOn){ clearInterval(iv); var c = pending; pending = ''; enter(c, false); }
+      else if(tries > 120) clearInterval(iv);
+    }, 500);
+  }
+  window.wtJoinNerd = function(c){ enter(clean(c), false); };
   refreshResume();
 })();
 
