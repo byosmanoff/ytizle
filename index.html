@@ -2964,7 +2964,7 @@ body:not(.mob) #dmchat .dmh,body:not(.mob) #dmform,body:not(.mob) #dmrec,body:no
 
 /* Kompüterdə (geniş ekran) oyunlar ortada dar sütunda qalsın, fon isə tam ekran olaraq qalır */
 @media (min-width:900px){
-  #durak,#uno,#domino,#chess,#mafia{
+  #durak,#uno,#domino,#chess,#nerd,#mafia{
     padding-left:max(12px,calc((100% - 780px) / 2));
     padding-right:max(12px,calc((100% - 780px) / 2));
   }
@@ -3077,6 +3077,54 @@ body.mob #menu.pager-on>#tabbar{-webkit-backdrop-filter:none;backdrop-filter:non
 #domCard::before,#durCard::before,#unoCard::before,#chCard::before,#mafCard::before{transform:none;will-change:auto}
 body.mob #domCard::after,body.mob #durCard::after,body.mob #unoCard::after,body.mob #chCard::after,body.mob #mafCard::after{
   background:linear-gradient(170deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 38%,rgba(14,6,22,.5) 100%)}
+/* ================= NƏRD KARTI: digər oyun kartları kimi (Oyunlar bölməsi) ================= */
+#nrdCard{position:relative;overflow:hidden;isolation:isolate;background:var(--lg-fill);box-shadow:var(--lg-edge),var(--lg-drop),inset 0 0 0 1px rgba(217,164,91,.35)}
+#nrdCard::before{content:"";position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center;background-repeat:no-repeat;transform:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 520' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236a4626'/%3E%3Cstop offset='1' stop-color='%231a110a'/%3E%3C/linearGradient%3E%3CradialGradient id='c' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.6' stop-color='%23e9dfc9'/%3E%3Cstop offset='1' stop-color='%23b9a98a'/%3E%3C/radialGradient%3E%3CradialGradient id='k' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%2386705e'/%3E%3Cstop offset='.6' stop-color='%232a1e16'/%3E%3Cstop offset='1' stop-color='%23120c08'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='400' height='520' fill='url(%23g)'/%3E%3Cg opacity='.38'%3E%3Cpolygon points='2,520 64,520 33,340' fill='%23d2b17c'/%3E%3Cpolygon points='2,0 64,0 33,150' fill='%2380512a'/%3E%3Cpolygon points='68,520 130,520 99,340' fill='%2380512a'/%3E%3Cpolygon points='68,0 130,0 99,150' fill='%23d2b17c'/%3E%3Cpolygon points='134,520 196,520 165,340' fill='%23d2b17c'/%3E%3Cpolygon points='134,0 196,0 165,150' fill='%2380512a'/%3E%3Cpolygon points='200,520 262,520 231,340' fill='%2380512a'/%3E%3Cpolygon points='200,0 262,0 231,150' fill='%23d2b17c'/%3E%3Cpolygon points='266,520 328,520 297,340' fill='%23d2b17c'/%3E%3Cpolygon points='266,0 328,0 297,150' fill='%2380512a'/%3E%3Cpolygon points='332,520 394,520 363,340' fill='%2380512a'/%3E%3Cpolygon points='332,0 394,0 363,150' fill='%23d2b17c'/%3E%3C/g%3E%3Ccircle cx='330' cy='80' r='120' fill='%23ffc46b' opacity='.14'/%3E%3Cg%3E%3Ccircle cx='70' cy='470' r='24' fill='url(%23c)'/%3E%3Ccircle cx='70' cy='424' r='24' fill='url(%23c)'/%3E%3Ccircle cx='70' cy='378' r='24' fill='url(%23c)'/%3E%3Ccircle cx='330' cy='470' r='24' fill='url(%23k)'/%3E%3Ccircle cx='330' cy='424' r='24' fill='url(%23k)'/%3E%3C/g%3E%3Cg transform='translate(300 150) rotate(18)'%3E%3Crect x='-34' y='-34' width='68' height='68' rx='13' fill='%23fffaf0'/%3E%3Ccircle cx='-15' cy='-15' r='6' fill='%232a1e16'/%3E%3Ccircle cx='15' cy='-15' r='6' fill='%232a1e16'/%3E%3Ccircle cx='0' cy='0' r='6' fill='%232a1e16'/%3E%3Ccircle cx='-15' cy='15' r='6' fill='%232a1e16'/%3E%3Ccircle cx='15' cy='15' r='6' fill='%232a1e16'/%3E%3C/g%3E%3Cg transform='translate(105 230) rotate(-14)'%3E%3Crect x='-34' y='-34' width='68' height='68' rx='13' fill='%23fffaf0'/%3E%3Ccircle cx='-14' cy='-14' r='6' fill='%232a1e16'/%3E%3Ccircle cx='14' cy='14' r='6' fill='%232a1e16'/%3E%3C/g%3E%3C/svg%3E")}
+#nrdCard::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(170deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 38%,rgba(14,6,22,.5) 100%);
+  -webkit-backdrop-filter:blur(3px) saturate(150%);backdrop-filter:blur(3px) saturate(150%);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4),inset 0 0 28px rgba(255,255,255,.06)}
+body:not(.mob) #nrdCard::after{background:linear-gradient(170deg,rgba(255,255,255,.12),rgba(14,6,22,.5))}
+#nrdCard .hint{color:rgba(255,255,255,.86);text-shadow:0 1px 3px rgba(0,0,0,.55)}
+#nrdCard h2{text-shadow:0 1px 4px rgba(0,0,0,.55)}
+#nrdCard .frow input{background:rgba(14,6,22,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+#nrdCard .pbtn:not(.alt){background:linear-gradient(135deg,#b8832f,#dba95e);color:#1d1409}
+#nrdMsg{min-height:0}
+#nrdMsg:empty{display:none}
+
+/* ================= NƏRD OYUNU: dizayn düzəlişləri ================= */
+#nerd .pbtn.alt{background:#f1e3c4;color:#2a1b0c}
+#nerd .pbtn.alt:hover:not(:disabled){background:#e6d3ab}
+#nerd .pbtn:disabled{opacity:.5}
+#nerd .ginv input{background:rgba(20,12,6,.7);box-shadow:inset 0 0 0 1px rgba(255,240,215,.16);color:var(--text)}
+#nerd .ginv input::placeholder{color:#9a8b76}
+#ndice:empty{display:none}
+#nbd .nck.b{box-shadow:0 .5cqw 1cqw rgba(0,0,0,.55),inset 0 0 0 .35cqw rgba(255,255,255,.14)}
+#nres{padding:12px 14px}
+#nres .res-ic{width:44px;height:44px;font-size:20px;margin-bottom:6px}
+#nres h3{font-size:20px;margin-bottom:0}
+#nres .res-score{margin:4px 0 2px}
+#nres p{margin-bottom:8px}
+#nerd .npl{background:rgba(255,240,215,.07)}
+#nerd .npl.turn{background:rgba(242,207,134,.12)}
+#nbd .nrow{position:relative;border-radius:8px;background:linear-gradient(180deg,#2c1b0f,#1d1209);box-shadow:inset 0 0 1.8cqw rgba(0,0,0,.7)}
+#nbd .nrow::after{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 1.2cqw);width:2.4cqw;pointer-events:none;background:linear-gradient(90deg,#3b2514,#6e4929 50%,#3b2514);box-shadow:inset 0 0 1cqw rgba(0,0,0,.5)}
+#nbd .npt:focus-visible{outline:2px solid #ffd36b;outline-offset:-2px;border-radius:6px}
+#nbd .npt.src::before{filter:brightness(1.12)}
+#nbd .nck{transition:transform .12s ease,box-shadow .12s ease}
+#ndice{gap:12px}
+.ndie.new{transform-origin:center}
+#nres{width:100%;max-width:420px;align-self:center;box-sizing:border-box}
+@media (max-height:700px){
+  #nres{padding:8px 12px}
+  #nres .res-ic{width:36px;height:36px;font-size:16px;margin-bottom:4px}
+  #nres h3{font-size:18px;margin-bottom:0}
+  #nres p{margin-bottom:6px}
+  #nres .res-score{margin:2px 0}
+  #nres .res-score span{font-size:20px}
+  #nres .pbtn{padding:10px}
+}
+
 /* content-visibility:auto silindi: səhifə açılanda və Oyunlar tabına keçəndə kartlar boş çəkilir, scroll sıçrayırdı */
 /* 3) Scroll zamanı üzən emojilər dayanır, GPU yalnız scroll-a işləyir */
 body.scrolling .floaties span,body.scrolling .mticket,body.scrolling .live i{animation-play-state:paused!important}
@@ -7724,7 +7772,7 @@ boot();
   var PAGES = ['home','friends','games','settings'];
   var map = [['.mticket','home'],['#menumsg','home'],['.stats','home'],['#pwacard','home'],['#plansCard','home'],['#statsCard','home'],
     ['#friendsCard','friends'],['#dmCard','friends'],
-    ['#domCard','games'],['#durCard','games'],['#unoCard','games'],['#chCard','games'],['#mafCard','games'],['#lbCard','games'],['#trCard','games'],
+    ['#domCard','games'],['#durCard','games'],['#unoCard','games'],['#chCard','games'],['#nrdCard','games'],['#mafCard','games'],['#lbCard','games'],['#trCard','games'],
     ['#setCards','settings']];
   map.forEach(function(m){
     var el = menu.querySelector(m[0]); if(!el) return;
@@ -9311,8 +9359,8 @@ window.wtInviteBox = function(o){
 
   function renderStrips(s){
     var oc = s.color === 'w' ? 'b' : 'w', o = s.opp, m = s.me || {};
-    $('nopp').classList.toggle('turn', s.turn === 'opp');
-    $('nme').classList.toggle('turn', s.turn === 'me');
+    $('nopp').classList.toggle('turn', s.status === 'play' && s.turn === 'opp');
+    $('nme').classList.toggle('turn', s.status === 'play' && s.turn === 'me');
     function info(col, off, pip){ return '<span class="nsw ' + col + '"></span>' + off + '/15 çıxdı · yol ' + pip; }
     if(!o){
       $('nopp').innerHTML = '<div class="nav">?</div><div class="nwho"><b>Rəqib</b><small>Rəqib gözlənilir...</small></div>';
@@ -9329,7 +9377,8 @@ window.wtInviteBox = function(o){
     var cls = 'npt' + (mv[p] && s.turn === 'me' ? ' src' : '') + (nd.sel === p ? ' sel' : '') + (tg[p] ? ' tgt' : '') + (lastSet[p] ? ' last' : '');
     var h = '', shown = Math.min(n, 5), i;
     for(i = 0; i < shown; i++) h += '<span class="nck ' + col + '">' + (i === shown - 1 && n > 5 ? '<i>' + n + '</i>' : '') + '</span>';
-    return '<div class="' + cls + '" data-p="' + p + '">' + h + '</div>';
+    var act = s.turn === 'me' && (mv[p] || tg[p]);
+    return '<div class="' + cls + '" data-p="' + p + '" role="button" aria-label="' + (p + 1) + (n ? ' (' + n + ')' : '') + '"' + (act ? ' tabindex="0"' : '') + '>' + h + '</div>';
   }
 
   function renderBoard(s){
@@ -9469,8 +9518,12 @@ window.wtInviteBox = function(o){
     busy = true;
     try{
       var r = await api('/api/nerd/' + path, {method: 'POST', body: JSON.stringify(Object.assign({room: nd.code}, body || {}))});
-      if(r.ok) apply(await r.json()); else flash((window.wtErr && window.wtErr(r)) || 'Alınmadı');
-    }catch(e){ flash('Əlaqə problemi, internetini yoxla'); }
+      if(r.ok){
+        var j = await r.json();
+        if(body && body.action === 'move'){ try{ if(window.wtSfx) window.wtSfx.play('move'); }catch(x){} }
+        apply(j); nd.mySfx = false;
+      }else{ nd.mySfx = false; flash((window.wtErr && window.wtErr(r)) || 'Alınmadı'); }
+    }catch(e){ nd.mySfx = false; flash('Əlaqə problemi, internetini yoxla'); }
     busy = false;
   }
   function again(){ if(nd.s) post('again', {round: nd.s.round}); }
@@ -9481,7 +9534,7 @@ window.wtInviteBox = function(o){
     if(!ds.length) return;
     var d = Math.min.apply(null, ds);   /* çıxarmada ən kiçik uyğun zər işlənir */
     nd.sel = null;
-    try{ if(window.wtSfx) window.wtSfx.play('move'); nd.mySfx = true; }catch(e){}
+    nd.mySfx = true;
     post('move', {action: 'move', p: from, d: d});
   }
 
@@ -9489,13 +9542,18 @@ window.wtInviteBox = function(o){
     var s = nd.s;
     if(!s || s.status !== 'play' || s.turn !== 'me' || busy || !s.moves.length) return;
     if(nd.sel != null && s.moves.some(function(m){ return m[0] === nd.sel && m[1] === p; })){ send(nd.sel, p); return; }
-    if(p < 24 && s.moves.some(function(m){ return m[0] === p; })){ nd.sel = (nd.sel === p ? null : p); renderBoard(s); return; }
+    if(p < 24 && s.moves.some(function(m){ return m[0] === p; })){ nd.sel = (nd.sel === p && uniqSources(s).length > 1 ? null : p); renderBoard(s); return; }
     var src = [];
     s.moves.forEach(function(m){ if(m[1] === p && src.indexOf(m[0]) < 0) src.push(m[0]); });
     if(src.length === 1){ send(src[0], p); return; }
     nd.sel = null; renderBoard(s);
   }
   $('nbd').addEventListener('click', function(e){ var q = e.target.closest('.npt'); if(q) tap(+q.getAttribute('data-p')); });
+  $('nbd').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var q = e.target.closest && e.target.closest('.npt'); if(!q) return;
+    e.preventDefault(); tap(+q.getAttribute('data-p'));
+  });
   $('noff').addEventListener('click', function(){ tap(24); });
 
   async function poll(gen){
@@ -9532,7 +9590,7 @@ window.wtInviteBox = function(o){
     nd.gen++; nd.code = ''; nd.s = null;
     $('nerd').hidden = true;
     if(leave && c) api('/api/nerd/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
-    if(st === 'wait' || st === 'over') remember('');
+    if(leave || st === 'wait' || st === 'over') remember('');
   }
 
   async function enter(code, isCreate, bot){
@@ -13038,7 +13096,7 @@ async function callPending(){
   }).observe(document.body, {childList: true, subtree: true});
   /* Oyun kartlarının arxa fon şəkillərini əvvəlcədən deşifrə et: Oyunlar bölməsinə keçəndə gec açılmasın */
   function warm(){
-    ['domCard', 'durCard', 'unoCard', 'chCard', 'mafCard'].forEach(function(id, i){
+    ['domCard', 'durCard', 'unoCard', 'chCard', 'nrdCard', 'mafCard'].forEach(function(id, i){
       setTimeout(function(){
         try{
           var el = document.getElementById(id); if(!el) return;
