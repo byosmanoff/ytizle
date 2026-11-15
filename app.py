@@ -3954,7 +3954,7 @@ self.addEventListener('push',e=>{
   let d={};try{d=e.data.json();}catch(x){}
   e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{
     if(!d.force&&l.some(c=>c.visibilityState==='visible'))return;
-    const o={body:d.body||'',icon:'/icon-192.png',badge:'/icon-192.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/',u:d.u||'',rt:d.rt||''}};
+    const o={body:d.body||'',icon:'/icon-192.png',badge:'/badge-96.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/',u:d.u||'',rt:d.rt||''}};
     if(d.rt&&d.u)o.actions=[{action:'reply',type:'text',title:'Cavab ver',placeholder:'Mesaj yaz...'}];
     return self.registration.showNotification(d.title||'Birlikdə İzlə',o);
   }));
@@ -3970,7 +3970,7 @@ self.addEventListener('notificationclick',e=>{
   n.close();
   if(e.action==='reply'&&e.reply&&dt.rt){
     e.waitUntil(fetch('/api/dm/quickreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:dt.rt,text:e.reply})})
-      .then(r=>{if(!r.ok)throw 0;return self.registration.showNotification(n.title,{body:'Sən: '+e.reply,icon:'/icon-192.png',badge:'/icon-192.png',tag:n.tag,silent:true,data:{url:u,u:dt.u||''}});})
+      .then(r=>{if(!r.ok)throw 0;return self.registration.showNotification(n.title,{body:'Sən: '+e.reply,icon:'/icon-192.png',badge:'/badge-96.png',tag:n.tag,silent:true,data:{url:u,u:dt.u||''}});})
       .catch(()=>openChat(dt,u)));
     return;
   }
@@ -4029,6 +4029,50 @@ def make_icon(n):
            + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
     ICONS[n] = png
     return png
+
+
+def make_badge(n=96):
+    """Android bildiriş badge-i: şəffaf fonda ağ ürək, play üçbucağı kəsik (yalnız alfa kanalı oxunur)."""
+    key = ("badge", n)
+    if key in ICONS:
+        return ICONS[key]
+    S, sc, cy = 3, 0.40, 0.52
+    A, B, C = (0.44, 0.40), (0.44, 0.62), (0.63, 0.51)
+
+    def inside_tri(px, py):
+        def sg(p1, p2):
+            return (px - p2[0]) * (p1[1] - p2[1]) - (p1[0] - p2[0]) * (py - p2[1])
+        d1, d2, d3 = sg(A, B), sg(B, C), sg(C, A)
+        return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
+
+    raw = bytearray()
+    for y in range(n):
+        raw.append(0)
+        for x in range(n):
+            hit = 0
+            for sy in range(S):
+                for sx in range(S):
+                    px, py = (x + (sx + .5) / S) / n, (y + (sy + .5) / S) / n
+                    u, v = (px - .5) / sc, -(py - cy) / sc
+                    if not inside_tri(px, py) and (u * u + v * v - 1) ** 3 - u * u * v ** 3 <= 0:
+                        hit += 1
+            raw += bytes((255, 255, 255, hit * 255 // (S * S)))
+
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+
+    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", n, n, 8, 6, 0, 0, 0))
+           + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+    ICONS[key] = png
+    return png
+
+
+@app.route("/badge-96.png")
+def pwa_badge():
+    resp = Response(make_badge(96), mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=604800"
+    return resp
 
 
 @app.route("/manifest.webmanifest")
