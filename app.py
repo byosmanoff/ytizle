@@ -7175,7 +7175,7 @@ _un_load()
 # ---------------------------------------------------------------
 GV = {}              # (oyun, kod) -> {"mem": {vid: {name, muted, ts}}, "q": [mesajlar], "s": say}
 GV_TTL = 45          # long-poll bu müddətdən uzun yoxdursa, iştirakçı "səsdə" sayılmır
-GV_KINDS = ("domino", "chess", "durak", "mafia", "uno")
+GV_KINDS = ("domino", "chess", "durak", "mafia", "uno", "nerd")
 GV_SIG = ("offer", "answer", "ice")
 
 
@@ -8166,6 +8166,7 @@ def _nd_view(g, sub):
         dice=[], roll=None, mine=[], oppb=[], off=dict(me=0, opp=0), pip=dict(me=0, opp=0),
         last=None, lastroll=None, pts=g.get("pts", 1),
     )
+    out["vc"], out["vk"] = _gv_view("nerd", g)
     if st != "wait" and col:
         mp, op = g["pos"][col], g["pos"][oc]
         out["mine"] = list(mp)
@@ -8270,7 +8271,7 @@ def api_nerd_create():
             abort(503)
         g = dict(code=c, players=[sub], names={sub: nm}, col={}, pos={}, off={"w": 0, "b": 0}, turn="w",
                  dice=[], roll=None, rolled=False, hu=0, mv=[], fresh={"w": True, "b": True}, last=None,
-                 lastroll=None, win=None, reason="", pts=1, status="wait", v=1, round=1, score={},
+                 lastroll=None, win=None, reason="", pts=1, status="wait", v=1, vk=0, round=1, score={},
                  seen={sub: now}, upd=now)
         if vs_bot:
             g["players"].append("bot")
@@ -8278,6 +8279,7 @@ def api_nerd_create():
             g["seen"]["bot"] = now
             g["bot"] = True
             _nd_reset(g)
+        g["public"] = _want_public(d0, vs_bot)
         _ensure_cv(g)
         NERD[c] = g
         return jsonify(_nd_view(g, sub))
@@ -8316,6 +8318,10 @@ def api_nerd_poll():
         v = int(request.args.get("v", "0"))
     except ValueError:
         abort(400)
+    try:
+        vk = int(request.args["vk"]) if "vk" in request.args else None
+    except ValueError:
+        abort(400)
     deadline = time.time() + 20
     g = _nd_get(code, sub)
     with _ensure_cv(g):
@@ -8324,7 +8330,7 @@ def api_nerd_poll():
             g["seen"][sub] = now
             _nd_touch(g)
         g["seen"][sub] = now
-        while g["v"] == v:
+        while g["v"] == v and (vk is None or g.get("vk", 0) == vk):
             left = deadline - time.time()
             if left <= 0:
                 break
@@ -9263,7 +9269,7 @@ def api_mafia_quit():
 OPEN_TTL = 3.0            # siyahı bu müddət ərzində keşdən verilir (çox sorğu serveri yormasın)
 OPEN_HOST_SEEN = 40       # host bu qədər saniyədir səssizdirsə, otaq siyahıdan düşür
 _OPEN_CACHE = [0.0, None]
-OPEN_STORES = ("domino", "durak", "uno", "chess", "mafia")
+OPEN_STORES = ("domino", "durak", "uno", "chess", "mafia", "nerd")
 
 
 def _want_public(d0, vs_bot):
@@ -9278,7 +9284,7 @@ def _clean_title(s):
 
 def _open_snapshot(now):
     """Bütün açıq otaqların ümumi görüntüsü (baxanın süzgəci sonra tətbiq olunur)."""
-    stores = {"domino": DOMINO, "durak": DURAK, "uno": UNO, "chess": CHESS, "mafia": MAFIA}
+    stores = {"domino": DOMINO, "durak": DURAK, "uno": UNO, "chess": CHESS, "mafia": MAFIA, "nerd": NERD}
     games = []
     for kind in OPEN_STORES:
         for code, g in list(stores[kind].items()):
