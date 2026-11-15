@@ -9332,7 +9332,7 @@ window.wtInviteBox = function(o){
   };
   $('chCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('chEnter').click(); } });
   $('chResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
-  $('cback').onclick = function(){ close(ch.s && (ch.s.status === 'wait' || ch.s.bot)); };
+  $('cback').onclick = function(){ close(!!(ch.s && ch.s.status === 'wait')); };
   $('cshare').onclick = share;
   $('cwshare').onclick = share;
   $('cquit').onclick = function(){
@@ -9647,7 +9647,7 @@ window.wtInviteBox = function(o){
     nd.gen++; nd.code = ''; nd.s = null;
     $('nerd').hidden = true;
     if(leave && c) api('/api/nerd/leave', {method: 'POST', body: JSON.stringify({room: c})}).catch(function(){});
-    if(leave || st === 'wait' || st === 'over') remember('');
+    if(st === 'wait' || st === 'over') remember('');
   }
 
   async function enter(code, isCreate, bot){
@@ -9684,7 +9684,7 @@ window.wtInviteBox = function(o){
   };
   $('nrdCodeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); $('nrdEnter').click(); } });
   $('nrdResume').onclick = function(){ var c = saved(); if(c) enter(c, false); };
-  $('nback').onclick = function(){ close(nd.s && (nd.s.status === 'wait' || nd.s.bot)); };
+  $('nback').onclick = function(){ close(!!(nd.s && nd.s.status === 'wait')); };
   $('nshare').onclick = share;
   $('nwshare').onclick = share;
   $('nquit').onclick = function(){
