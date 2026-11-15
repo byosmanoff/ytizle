@@ -2391,6 +2391,44 @@ def push_to_user(sub, payload):
         pass
 
 
+def push_broadcast(payload):
+    """Bütün qeydiyyatlı cihazlara eyni bildirişi göndərir (admin yayımı). Heç vaxt istisna atmır."""
+    try:
+        if not vapid_keys():
+            return
+        from concurrent.futures import ThreadPoolExecutor
+        rows = dbq("SELECT endpoint,p256dh,auth FROM push_subs", (), many=True)
+        data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()[:3000]
+
+        def one(r):
+            try:
+                resp = requests.post(r["endpoint"], data=_push_encrypt(r, data), timeout=8, headers={
+                    "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream",
+                    "TTL": "86400", "Urgency": "high", "Authorization": _vapid_auth(r["endpoint"])})
+                if resp.status_code in (404, 410):
+                    dbq("DELETE FROM push_subs WHERE endpoint=?", (r["endpoint"],))
+            except Exception:
+                pass
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            list(ex.map(one, rows))
+    except Exception:
+        pass
+
+
+@app.route("/api/admin/broadcast", methods=["POST"])
+def admin_broadcast():
+    admin_guard()
+    d = request.get_json(silent=True) or {}
+    title = clean_text(d.get("title"), 60)
+    body = clean_text(d.get("body"), 180)
+    if not title or not body:
+        return jsonify(error="empty"), 400
+    n = dbq("SELECT COUNT(*) FROM push_subs", (), one=True)[0]
+    payload = dict(title=title, body=body, tag="broadcast-" + str(int(time.time())), url="/", force=True)
+    threading.Thread(target=push_broadcast, args=(payload,), daemon=True).start()
+    return _nostore(jsonify(ok=True, devices=n))
+
+
 @app.route("/api/push/key")
 def api_push_key():
     k = vapid_keys()
@@ -3915,7 +3953,7 @@ self.addEventListener('fetch',e=>{
 self.addEventListener('push',e=>{
   let d={};try{d=e.data.json();}catch(x){}
   e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{
-    if(l.some(c=>c.visibilityState==='visible'))return;
+    if(!d.force&&l.some(c=>c.visibilityState==='visible'))return;
     const o={body:d.body||'',icon:'/icon-192.png',badge:'/icon-192.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/',u:d.u||'',rt:d.rt||''}};
     if(d.rt&&d.u)o.actions=[{action:'reply',type:'text',title:'Cavab ver',placeholder:'Mesaj yaz...'}];
     return self.registration.showNotification(d.title||'Birlikdə İzlə',o);

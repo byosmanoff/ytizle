@@ -78,6 +78,17 @@
   </section>
 
   <section>
+    <h2>Bildiriş göndər (hamıya)</h2>
+    <form class="banform" id="bcForm" style="flex-direction:column;align-items:stretch">
+      <input id="bcTitle" placeholder="Başlıq (məs. Turnir başlayır 🏆)" maxlength="60" autocomplete="off" required>
+      <input id="bcBody" placeholder="Mətn (məs. Birlikdə izlə turniri bu gün saat 20:00-da)" maxlength="180" autocomplete="off" required>
+      <button type="submit">Hamıya göndər</button>
+    </form>
+    <div class="muted" id="bcMsg" style="margin-top:8px"></div>
+    <div class="muted" style="font-size:12px;margin-top:6px">Bildiriş yalnız icazə verən və cihazı qeydiyyatda olan istifadəçilərə çatır. Göndərməzdən əvvəl mətni yoxla, geri qaytarmaq olmur.</div>
+  </section>
+
+  <section>
     <h2>IP blok (ban)</h2>
     <form class="banform" id="banForm">
       <input id="banIp" placeholder="IP ünvanı (məs. 1.2.3.4)" autocomplete="off" required>
@@ -331,6 +342,20 @@ document.getElementById('bkFile').onchange = async e => {
     m.textContent = r.ok ? 'Bərpa olundu' : (d.error || 'Alınmadı'); loadBackups();
   }catch(x){ m.textContent = 'Alınmadı'; }
   e.target.value = '';
+};
+
+document.getElementById('bcForm').onsubmit = async e => {
+  e.preventDefault();
+  const t = document.getElementById('bcTitle').value.trim(), b = document.getElementById('bcBody').value.trim();
+  const m = document.getElementById('bcMsg');
+  if(!t || !b) return;
+  if(!confirm('Bu bildiriş bütün istifadəçilərə göndərilsin?\n\n' + t + '\n' + b)) return;
+  m.textContent = 'Göndərilir...';
+  try{
+    const r = await postJson('/api/admin/broadcast', {title: t, body: b});
+    if(r.ok){ m.textContent = 'Göndərildi: ' + r.data.devices + ' cihaza'; e.target.reset(); }
+    else m.textContent = 'Alınmadı';
+  }catch(x){ m.textContent = 'Alınmadı'; }
 };
 
 (async () => {
