@@ -2600,6 +2600,9 @@ body.guest-mode .guest-only{display:block!important}
 .lbrow .pt{font-weight:800;font-size:15px}
 #lbCard .seg,#trCard .seg{margin:6px 0 4px}
 #lbCard .seg button{padding:8px 2px;font-size:12px}
+#lbGame{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#lbGame::-webkit-scrollbar{display:none}
+#lbGame button{flex:0 0 auto;padding:8px 12px;white-space:nowrap}
 .lbnote{color:var(--muted);font-size:12px;margin:6px 2px}
 .trrow{flex-wrap:wrap}.trrow .tx{flex:1;min-width:140px;font-weight:700;font-size:14px}
 .trrow .pbtn{padding:7px 12px;font-size:13px}
@@ -8222,7 +8225,7 @@ boot();
   Object.keys(EXTRA).forEach(function(k){ D[k] = EXTRA[k]; });
   var O = new WeakMap(), AT = ['placeholder','title','aria-label'], busy = false, lang = 'az';
   /* istifadəçi məzmunu içində yalnız bu ümumi etiketlər tərcümə olunur */
-  var GEN = {'Qonaq': 1, 'Qarşı tərəf': 1, 'Mən': 1, 'İzləyici': 1, 'Host': 1, 'Moderator': 1};
+  var GEN = {'Sən': 1, 'Qonaq': 1, 'Qarşı tərəf': 1, 'Mən': 1, 'İzləyici': 1, 'Host': 1, 'Moderator': 1};
   var MON = 'yan|fev|mar|apr|may|iyn|iyl|avq|sen|okt|noy|dek'.split('|');
   var MO = {
     tr: ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],
@@ -8231,6 +8234,8 @@ boot();
   var DATE_RE = new RegExp('^(?:(Baz|B\\.e|Ç\\.a|Çər|C\\.a|Cüm|Şən), )?(\\d{1,2}) (' + MON.join('|') + ')(, \\d{1,2}:\\d{2})?$');
   /* dəyişən hissəli mətnlər: [regex, türkcə, ingiliscə], $1.. tutulan hissələrdir */
   var PATS = [
+    [/^(\d+)\/15 çıxdı · yol (\d+)$/, '$1/15 çıkarıldı · yol $2', '$1/15 borne off · $2 pips'],
+    [/^Çıxarılan daşların: (\d+)\/15$/, 'Çıkarılan taşların: $1/15', 'Borne off: $1/15'],
     [/^(.+) oyunu qazandı$/, '$1 oyunu kazandı', '$1 won the game'],
     [/^(.+) qazandı$/, '$1 kazandı', '$1 won'],
     [/^(.+) oynayır\.\.\.$/, '$1 oynuyor...', '$1 is playing...'],
@@ -8315,6 +8320,28 @@ boot();
     Object.keys(B).forEach(function(k){ if(!D[k]) D[k] = B[k]; });
     var C = {"Qonaq kimi davam et": ["Misafir olarak devam et", "Continue as guest"], "Adın (qonaq)": ["Adın (misafir)", "Your name (guest)"], "Uno otağı aç": ["Uno odası aç", "Open an Uno room"], "Hesab yarat": ["Hesap oluştur", "Create account"], "Profil şəklini redaktə et": ["Profil fotoğrafını düzenle", "Edit profile photo"], "Şəkli sürüşdürərək yerini dəyiş, yaxınlaşdırmanı tənzimlə.": ["Fotoğrafı kaydırarak konumunu değiştir, yakınlaştırmayı ayarla.", "Drag the photo to reposition it and adjust the zoom."], "Yaxınlaşdırma": ["Yakınlaştırma", "Zoom"], "Kəs və yüklə": ["Kırp ve yükle", "Crop and upload"], "Artıq hesabım var — daxil ol": ["Zaten hesabım var — giriş yap", "I already have an account — sign in"], "Şəkli sil": ["Fotoğrafı sil", "Remove photo"], "Profil şəklini kim görə bilər?": ["Profil fotoğrafını kim görebilir?", "Who can see your profile photo?"], "Hər kəs": ["Herkes", "Everyone"], "Heç kim": ["Hiç kimse", "Nobody"], "Standart seçim: Hər kəs.": ["Varsayılan seçim: Herkes.", "Default: Everyone."], "Son görülmə və onlayn statusunu kim görə bilər?": ["Son görülme ve çevrimiçi durumunu kim görebilir?", "Who can see your last seen and online status?"], "Onlayn statusu son görülmə ilə eyni gizlilik qaydasına tabedir. Standart seçim: Hər kəs.": ["Çevrimiçi durumu, son görülme ile aynı gizlilik kuralına tabidir. Varsayılan seçim: Herkes.", "Online status follows the same privacy rule as last seen. Default: Everyone."], "Blokladığın istifadəçilər": ["Engellediğin kullanıcılar", "Users you blocked"], "Yüklənir...": ["Yükleniyor...", "Loading..."], "Blok et": ["Engelle", "Block"], "Kodu dostuna göndər:": ["Kodu arkadaşına gönder:", "Send the code to your friend:"], "Pas keç": ["Pas geç", "Pass"], "Aparıcı": ["Sunucu", "Host"], "Botları sil": ["Botları sil", "Remove bots"], "Kodu paylaş": ["Kodu paylaş", "Share the code"], "Başlıyaq": ["Başlayalım", "Let's start"], "Daha sonra": ["Daha sonra", "Later"], "Durak kodu": ["Durak kodu", "Durak code"], "Uno kodu": ["Uno kodu", "Uno code"], "Mafia kodu": ["Mafya kodu", "Mafia code"], "Dövr": ["Dönem", "Period"], "Yeni dostluq sorğusu": ["Yeni arkadaşlık isteği", "New friend request"], "Kəsiləcək profil şəkli": ["Kırpılacak profil fotoğrafı", "Profile photo to crop"], "Şəkil əməliyyatlarını aç": ["Fotoğraf işlemlerini aç", "Open photo actions"], "Şəkil əməliyyatları": ["Fotoğraf işlemleri", "Photo actions"], "Profil şəklinin gizliliyi": ["Profil fotoğrafı gizliliği", "Profile photo privacy"], "Son görülmə və onlayn statusunun gizliliyi": ["Son görülme ve çevrimiçi durumu gizliliği", "Last seen and online status privacy"], "Mesaj": ["Mesaj", "Message"], "Cavab ver": ["Cevapla", "Answer"]};
     Object.keys(C).forEach(function(k){ if(!D[k]) D[k] = C[k]; }); })();
+  /* Uzun nərd (tavla) mətnləri */
+  (function(){ var N = {
+    'Uzun nərd': ['Uzun tavla', 'Long backgammon'],
+    'Nərd': ['Tavla', 'Backgammon'],
+    'Nərd otağı aç': ['Tavla odası aç', 'Open backgammon room'],
+    'Nərd kodu': ['Tavla kodu', 'Backgammon code'],
+    'Dostunla onlayn uzun nərd: otaq aç, kodu göndər. Və ya kompüterlə oyna.': ['Arkadaşınla online uzun tavla: oda aç, kodu gönder. Ya da bilgisayarla oyna.', 'Play long backgammon online with a friend: open a room and send the code. Or play the computer.'],
+    'Nərd kodunu yaz': ['Tavla kodunu yaz', 'Enter the backgammon code'],
+    'Daşı çıxar': ['Taşı çıkar', 'Bear off'],
+    'Zər at': ['Zar at', 'Roll dice'],
+    'Rəqib atdı': ['Rakip attı', 'Opponent rolled'],
+    'Sən atdın': ['Sen attın', 'You rolled'],
+    'Sən atdın: gediş yoxdur': ['Sen attın: hamle yok', 'You rolled: no moves'],
+    'Rəqib atdı: gediş yoxdur': ['Rakip attı: hamle yok', 'Opponent rolled: no moves'],
+    'Sənin növbən: zər at': ['Sıra sende: zar at', 'Your turn: roll the dice'],
+    'Daşı seç, sonra getdiyi yerə toxun': ['Taşı seç, sonra gideceği yere dokun', 'Pick a checker, then tap where it goes'],
+    'Bütün daşlar çıxarıldı': ['Tüm taşlar toplandı', 'All checkers borne off'],
+    'Mars! Rəqibin heç daşı çıxmayıb (2 xal)': ['Mars! Rakibin hiç taşı çıkmadı (2 puan)', 'Mars! The opponent bore off no checkers (2 pts)'],
+    'Gedişin yoxdur, növbə keçdi': ['Hamlen yok, sıra geçti', 'No moves, turn passed'],
+    'Kompüterin gedişi yoxdur': ['Bilgisayarın hamlesi yok', 'The computer has no moves'],
+    'Rəqibin gedişi yoxdur': ['Rakibin hamlesi yok', 'The opponent has no moves']
+  }; Object.keys(N).forEach(function(k){ D[k] = N[k]; }); })();
   /* tərcümə olunmuş mətn -> az açar (tərs lüğət, ilk istifadədə qurulur) */
   var REV = null;
   function revKey(v){
