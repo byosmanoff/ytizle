@@ -765,7 +765,7 @@ init_db()
 BACKUP_DIR = os.environ.get("DB_BACKUP_DIR", os.path.join(os.path.dirname(DB_PATH) or HERE, "backups"))
 BACKUP_HOURS = max(1, float(os.environ.get("BACKUP_HOURS", "6")))
 BACKUP_KEEP = max(1, int(os.environ.get("BACKUP_KEEP", "8")))
-GAMES = ("domino", "chess", "durak", "mafia", "uno")
+GAMES = ("domino", "chess", "durak", "mafia", "uno", "nerd")
 BAKU = 4 * 3600   # Bakı vaxtı UTC+4
 
 
@@ -839,6 +839,12 @@ def rec_game(kind, g):
                 record_game("chess", [w], [p for p in pl if p != w])
             else:
                 record_game("chess", draws=pl)
+        elif kind == "nerd":
+            if g.get("status") != "over" or not g.get("win"):
+                return
+            g["_rr"] = g.get("round")
+            w = g.get("win")
+            record_game("nerd", [w], [p for p in pl if p != w])
         elif kind == "durak":
             eng = g.get("eng")
             if g.get("status") != "over" or not eng or not eng.over:
@@ -1085,7 +1091,7 @@ def api_fav_remove():
 RL_RULES = (("/api/upload", 20, 3600), ("/api/dm/media", 60, 3600), ("/api/report", 20, 3600),
             ("/api/friend/request", 40, 600), ("/api/invite", 40, 600), ("/api/fav/", 90, 600),
             ("/api/tourney", 60, 600), ("/api/leaderboard", 120, 60))
-RL_SKIP = ("/poll", "/stream", "/presence", "/check", "/api/gvoice", "/api/domino/move", "/api/chess/move",
+RL_SKIP = ("/poll", "/stream", "/presence", "/check", "/api/gvoice", "/api/domino/move", "/api/chess/move", "/api/nerd/move", "/api/nerd/bot",
            "/api/durak/move", "/api/mafia/act", "/api/mafia/chat", "/api/durak/bot", "/api/domino/claim",
            "/api/uno/move", "/api/uno/bot")
 
@@ -1646,7 +1652,7 @@ def issue_token(sub):
 GUEST_PREFIX = "guest:"          # sub prefiksi (reytinqə düşmür)
 GUEST_TOK = "gst."               # token prefiksi ('.' urlsafe əlifbada yoxdur, real tokenlə toqquşmur)
 GUEST_TTL = 2 * 86400
-GUEST_OK = ("/api/guest/", "/api/domino/", "/api/chess/", "/api/durak/", "/api/uno/", "/api/mafia/", "/api/gvoice/", "/api/open/")
+GUEST_OK = ("/api/guest/", "/api/domino/", "/api/chess/", "/api/nerd/", "/api/durak/", "/api/uno/", "/api/mafia/", "/api/gvoice/", "/api/open/")
 
 
 @app.route("/api/guest/start", methods=["POST"])
@@ -2391,6 +2397,44 @@ def push_to_user(sub, payload):
         pass
 
 
+def push_broadcast(payload):
+    """Bütün qeydiyyatlı cihazlara eyni bildirişi göndərir (admin yayımı). Heç vaxt istisna atmır."""
+    try:
+        if not vapid_keys():
+            return
+        from concurrent.futures import ThreadPoolExecutor
+        rows = dbq("SELECT endpoint,p256dh,auth FROM push_subs", (), many=True)
+        data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()[:3000]
+
+        def one(r):
+            try:
+                resp = requests.post(r["endpoint"], data=_push_encrypt(r, data), timeout=8, headers={
+                    "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream",
+                    "TTL": "86400", "Urgency": "high", "Authorization": _vapid_auth(r["endpoint"])})
+                if resp.status_code in (404, 410):
+                    dbq("DELETE FROM push_subs WHERE endpoint=?", (r["endpoint"],))
+            except Exception:
+                pass
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            list(ex.map(one, rows))
+    except Exception:
+        pass
+
+
+@app.route("/api/admin/broadcast", methods=["POST"])
+def admin_broadcast():
+    admin_guard()
+    d = request.get_json(silent=True) or {}
+    title = clean_text(d.get("title"), 60)
+    body = clean_text(d.get("body"), 180)
+    if not title or not body:
+        return jsonify(error="empty"), 400
+    n = dbq("SELECT COUNT(*) FROM push_subs", (), one=True)[0]
+    payload = dict(title=title, body=body, tag="broadcast-" + str(int(time.time())), url="/", force=True)
+    threading.Thread(target=push_broadcast, args=(payload,), daemon=True).start()
+    return _nostore(jsonify(ok=True, devices=n))
+
+
 @app.route("/api/push/key")
 def api_push_key():
     k = vapid_keys()
@@ -2559,6 +2603,8 @@ def _game_store(kind):
         return UNO
     if kind == "mafia":
         return MAFIA
+    if kind == "nerd":
+        return NERD
     return DOMINO if kind == "domino" else CHESS
 
 
@@ -2590,7 +2636,7 @@ def api_game_invite():
     kind = d.get("game")
     u = norm_username(d.get("username"))
     code = clean_room(d.get("room"))
-    if kind not in ("domino", "chess", "durak", "mafia", "uno") or not username_valid(u) or not code:
+    if kind not in ("domino", "chess", "durak", "mafia", "uno", "nerd") or not username_valid(u) or not code:
         abort(400)
     if not rate_hit("ginv", sub, 20, 600):
         abort(429)
@@ -3915,8 +3961,8 @@ self.addEventListener('fetch',e=>{
 self.addEventListener('push',e=>{
   let d={};try{d=e.data.json();}catch(x){}
   e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{
-    if(l.some(c=>c.visibilityState==='visible'))return;
-    const o={body:d.body||'',icon:'/icon-192.png',badge:'/icon-192.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/',u:d.u||'',rt:d.rt||''}};
+    if(!d.force&&l.some(c=>c.visibilityState==='visible'))return;
+    const o={body:d.body||'',icon:'/icon-192.png',badge:'/badge-96.png',tag:d.tag||'wt',renotify:true,data:{url:d.url||'/',u:d.u||'',rt:d.rt||''}};
     if(d.rt&&d.u)o.actions=[{action:'reply',type:'text',title:'Cavab ver',placeholder:'Mesaj yaz...'}];
     return self.registration.showNotification(d.title||'Birlikdə İzlə',o);
   }));
@@ -3932,7 +3978,7 @@ self.addEventListener('notificationclick',e=>{
   n.close();
   if(e.action==='reply'&&e.reply&&dt.rt){
     e.waitUntil(fetch('/api/dm/quickreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:dt.rt,text:e.reply})})
-      .then(r=>{if(!r.ok)throw 0;return self.registration.showNotification(n.title,{body:'Sən: '+e.reply,icon:'/icon-192.png',badge:'/icon-192.png',tag:n.tag,silent:true,data:{url:u,u:dt.u||''}});})
+      .then(r=>{if(!r.ok)throw 0;return self.registration.showNotification(n.title,{body:'Sən: '+e.reply,icon:'/icon-192.png',badge:'/badge-96.png',tag:n.tag,silent:true,data:{url:u,u:dt.u||''}});})
       .catch(()=>openChat(dt,u)));
     return;
   }
@@ -3991,6 +4037,50 @@ def make_icon(n):
            + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
     ICONS[n] = png
     return png
+
+
+def make_badge(n=96):
+    """Android bildiriş badge-i: şəffaf fonda ağ ürək, play üçbucağı kəsik (yalnız alfa kanalı oxunur)."""
+    key = ("badge", n)
+    if key in ICONS:
+        return ICONS[key]
+    S, sc, cy = 3, 0.40, 0.52
+    A, B, C = (0.44, 0.40), (0.44, 0.62), (0.63, 0.51)
+
+    def inside_tri(px, py):
+        def sg(p1, p2):
+            return (px - p2[0]) * (p1[1] - p2[1]) - (p1[0] - p2[0]) * (py - p2[1])
+        d1, d2, d3 = sg(A, B), sg(B, C), sg(C, A)
+        return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
+
+    raw = bytearray()
+    for y in range(n):
+        raw.append(0)
+        for x in range(n):
+            hit = 0
+            for sy in range(S):
+                for sx in range(S):
+                    px, py = (x + (sx + .5) / S) / n, (y + (sy + .5) / S) / n
+                    u, v = (px - .5) / sc, -(py - cy) / sc
+                    if not inside_tri(px, py) and (u * u + v * v - 1) ** 3 - u * u * v ** 3 <= 0:
+                        hit += 1
+            raw += bytes((255, 255, 255, hit * 255 // (S * S)))
+
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+
+    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", n, n, 8, 6, 0, 0, 0))
+           + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+    ICONS[key] = png
+    return png
+
+
+@app.route("/badge-96.png")
+def pwa_badge():
+    resp = Response(make_badge(96), mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=604800"
+    return resp
 
 
 @app.route("/manifest.webmanifest")
@@ -7085,7 +7175,7 @@ _un_load()
 # ---------------------------------------------------------------
 GV = {}              # (oyun, kod) -> {"mem": {vid: {name, muted, ts}}, "q": [mesajlar], "s": say}
 GV_TTL = 45          # long-poll bu müddətdən uzun yoxdursa, iştirakçı "səsdə" sayılmır
-GV_KINDS = ("domino", "chess", "durak", "mafia", "uno")
+GV_KINDS = ("domino", "chess", "durak", "mafia", "uno", "nerd")
 GV_SIG = ("offer", "answer", "ice")
 
 
@@ -7830,6 +7920,544 @@ def api_chess_leave():
             g.setdefault("gone", {})[sub] = time.time()
             _ch_touch(g)
     return jsonify(ok=True)
+
+
+# ---------------------------------------------------------------
+#  Uzun nərd: 2 nəfərlik onlayn oyun (kompüterə qarşı da). Bütün qaydalar serverdə yoxlanılır.
+#  Hər oyunçunun daşları öz yolunda 0..23 nömrələnir (0 = baş, 18..23 = ev, 24 = çıxarılıb).
+#  Rəqibin q nöqtəsi mənim yolumda (q+12)%24-ə düşür. İki tərəf də eyni istiqamətdə gedir.
+#  Qaydalar: hər növbədə başdan 1 daş (ilk növbədə 3-3, 4-4, 6-6 atılanda 2), rəqib daşı olan
+#  nöqtəyə düşmək olmaz, rəqibin qarşısında daş yoxdursa ardıcıl 6 nöqtə tutmaq olmaz,
+#  mümkünsə hər iki zər oynanmalıdır (yalnız biri mümkündürsə böyük zər), bütün daşlar
+#  evdə olanda çıxarmaq olar. Rəqibin heç daşı çıxmayıbsa qələbə 2 xal (mars).
+# ---------------------------------------------------------------
+NERD = {}
+ND_MAX = 200
+
+
+def _nd_opp(c):
+    return "b" if c == "w" else "w"
+
+
+def _nd_block(mine, opp, t):
+    """t nöqtəsini əhatə edən ardıcıl 6 öz nöqtəm varsa və rəqibin qarşıda daşı yoxdursa True (qadağan)."""
+    for s in range(t - 5, t + 1):
+        if all(mine[(s + k) % 24] > 0 for k in range(6)):
+            q0 = (s + 12) % 24
+            if q0 + 5 > 23:
+                return True
+            if not any(opp[q] > 0 for q in range(q0 + 6, 24)):
+                return True
+    return False
+
+
+def _nd_singles(mine, opp, dset, head_ok):
+    """Hazırkı vəziyyətdə tək gedişlər: (haradan, zər)."""
+    out = []
+    home = not any(mine[:18])
+    lo = 24
+    for i in range(24):
+        if mine[i]:
+            lo = i
+            break
+    for d in dset:
+        for p in range(24):
+            if not mine[p] or (p == 0 and not head_ok):
+                continue
+            t = p + d
+            if t <= 23:
+                if opp[(t + 12) % 24]:
+                    continue
+                mine[p] -= 1
+                mine[t] += 1
+                bad = _nd_block(mine, opp, t)
+                mine[t] -= 1
+                mine[p] += 1
+                if not bad:
+                    out.append((p, d))
+            elif home and (t == 24 or p == lo):
+                out.append((p, d))
+    return out
+
+
+def _nd_after(mine, p, d):
+    m2 = list(mine)
+    m2[p] -= 1
+    if p + d <= 23:
+        m2[p + d] += 1
+    return m2
+
+
+def _nd_maxlen(mine, opp, dice, hu, hm, memo):
+    key = (tuple(mine), dice, hu)
+    r = memo.get(key)
+    if r is not None:
+        return r
+    best = 0
+    if dice:
+        for p, d in _nd_singles(mine, opp, set(dice), hu < hm):
+            rest = list(dice)
+            rest.remove(d)
+            n = 1 + _nd_maxlen(_nd_after(mine, p, d), opp, tuple(rest), hu + (1 if p == 0 else 0), hm, memo)
+            if n > best:
+                best = n
+                if best == len(dice):
+                    break
+    memo[key] = best
+    return best
+
+
+def _nd_legal_moves(mine, opp, dice, hu, hm, memo=None):
+    """İcazəli (p, d) siyahısı: mümkün qədər çox zər oynanmalıdır, tək zər qalırsa böyüyü."""
+    dice = tuple(sorted(dice))
+    if not dice:
+        return []
+    singles = _nd_singles(mine, opp, set(dice), hu < hm)
+    if not singles:
+        return []
+    if memo is None:
+        memo = {}
+    lens = []
+    for p, d in singles:
+        rest = list(dice)
+        rest.remove(d)
+        lens.append(1 + _nd_maxlen(_nd_after(mine, p, d), opp, tuple(rest), hu + (1 if p == 0 else 0), hm, memo))
+    best = max(lens)
+    res = [mv for mv, n in zip(singles, lens) if n == best]
+    if best == 1 and len(set(dice)) == 2:
+        big = max(dice)
+        if any(d == big for _, d in res):
+            res = [m for m in res if m[1] == big]
+    return res
+
+
+def _nd_head_max(g, me):
+    r = g.get("roll")
+    return 2 if (g["fresh"][me] and r and r[0] == r[1] and r[0] in (3, 4, 6)) else 1
+
+
+def _nd_legal(g):
+    if g["status"] != "play" or not g["rolled"] or not g["dice"]:
+        return []
+    me = g["turn"]
+    return _nd_legal_moves(g["pos"][me], g["pos"][_nd_opp(me)], g["dice"], g["hu"], _nd_head_max(g, me))
+
+
+def _nd_sub(g, col):
+    return next((s for s, c in g["col"].items() if c == col), None)
+
+
+def _nd_endturn(g, passed=False):
+    me = g["turn"]
+    g["fresh"][me] = False
+    g["lastroll"] = dict(c=me, roll=list(g["roll"] or []), passed=passed)
+    g["last"] = dict(c=me, mv=[list(x) for x in g["mv"]])
+    g["turn"] = _nd_opp(me)
+    g["dice"] = []
+    g["roll"] = None
+    g["rolled"] = False
+    g["hu"] = 0
+    g["mv"] = []
+
+
+def _nd_end(g, win_sub, reason):
+    g["status"] = "over"
+    g["win"] = win_sub
+    g["reason"] = reason
+    pts = 1
+    wc = g["col"].get(win_sub)
+    if reason == "done" and wc and g["off"][_nd_opp(wc)] == 0:
+        pts = 2
+        g["reason"] = "mars"
+    g["pts"] = pts
+    sc = g["score"]
+    sc[win_sub] = sc.get(win_sub, 0) + pts
+    rec_game("nerd", g)
+
+
+def _nd_roll(g):
+    a, b = secrets.randbelow(6) + 1, secrets.randbelow(6) + 1
+    g["roll"] = [a, b]
+    g["dice"] = [a] * 4 if a == b else sorted([a, b])
+    g["rolled"] = True
+    g["hu"] = 0
+    g["mv"] = []
+    if not _nd_legal(g):
+        _nd_endturn(g, passed=True)
+
+
+def _nd_play(g, p, d):
+    me = g["turn"]
+    mine = g["pos"][me]
+    t = p + d
+    mine[p] -= 1
+    if t <= 23:
+        mine[t] += 1
+    else:
+        g["off"][me] += 1
+        t = 24
+    if p == 0:
+        g["hu"] += 1
+    g["dice"].remove(d)
+    g["mv"].append([p, t])
+    if g["off"][me] >= 15:
+        g["lastroll"] = dict(c=me, roll=list(g["roll"] or []), passed=False)
+        g["last"] = dict(c=me, mv=[list(x) for x in g["mv"]])
+        g["dice"] = []
+        g["rolled"] = False
+        _nd_end(g, _nd_sub(g, me), "done")
+        return
+    if not g["dice"] or not _nd_legal(g):
+        _nd_endturn(g)
+
+
+def _nd_reset(g, swap=False):
+    a, b = g["players"][0], g["players"][1]
+    if swap:
+        g["col"] = {a: g["col"][b], b: g["col"][a]}
+    else:
+        x = secrets.choice("wb")
+        g["col"] = {a: x, b: _nd_opp(x)}
+    st = [0] * 24
+    st[0] = 15
+    g.update(pos={"w": list(st), "b": list(st)}, off={"w": 0, "b": 0}, turn="w", dice=[], roll=None,
+             rolled=False, hu=0, mv=[], fresh={"w": True, "b": True}, last=None, lastroll=None,
+             win=None, reason="", pts=1, status="play")
+
+
+def _nd_cleanup(now):
+    for c in [c for c, g in NERD.items() if now - g["upd"] > DOM_IDLE]:
+        NERD.pop(c, None)
+
+
+def _nd_touch(g):
+    g["v"] += 1
+    g["upd"] = time.time()
+    rec_game("nerd", g)
+    _notify(g)
+
+
+def _nd_get(code, sub):
+    g = NERD.get(code)
+    if not g or sub not in g["players"]:
+        abort(404)
+    return g
+
+
+def _nd_view(g, sub):
+    opp = _dom_other(g, sub)
+    now = time.time()
+    st = g["status"]
+    col = g["col"].get(sub)
+    oc = _nd_opp(col) if col else None
+    mine_turn = st == "play" and g["turn"] == col
+
+    def conv(mover, p):
+        if mover == col:
+            return p
+        return 24 if p >= 24 else (p + 12) % 24
+
+    out = dict(
+        v=g["v"], code=g["code"], status=st, round=g["round"], color=col,
+        me=g["names"].get(sub), opp=g["names"].get(opp) if opp else None,
+        opp_online=bool(opp and (opp == "bot" or now - g["seen"].get(opp, 0) < 35)),
+        score=dict(me=g["score"].get(sub, 0), opp=g["score"].get(opp, 0) if opp else 0),
+        reason=g["reason"], bot=bool(g.get("bot")), turn=None, can_roll=False, moves=[],
+        dice=[], roll=None, mine=[], oppb=[], off=dict(me=0, opp=0), pip=dict(me=0, opp=0),
+        last=None, lastroll=None, pts=g.get("pts", 1),
+    )
+    out["vc"], out["vk"] = _gv_view("nerd", g)
+    if st != "wait" and col:
+        mp, op = g["pos"][col], g["pos"][oc]
+        out["mine"] = list(mp)
+        out["oppb"] = [op[(p + 12) % 24] for p in range(24)]
+        out["off"] = dict(me=g["off"][col], opp=g["off"][oc])
+        out["pip"] = dict(me=sum((24 - p) * n for p, n in enumerate(mp)), opp=sum((24 - p) * n for p, n in enumerate(op)))
+        out["turn"] = (("me" if mine_turn else "opp") if st == "play" else None)
+        out["can_roll"] = bool(mine_turn and not g["rolled"])
+        out["dice"] = list(g["dice"]) if g["rolled"] else []
+        out["roll"] = list(g["roll"]) if g["rolled"] and g["roll"] else None
+        if mine_turn and g["rolled"]:
+            out["moves"] = [[p, (p + d) if p + d <= 23 else 24, d] for p, d in _nd_legal(g)]
+        lt = g.get("last")
+        if lt:
+            out["last"] = dict(mine=lt["c"] == col, mv=[[conv(lt["c"], a), conv(lt["c"], b)] for a, b in lt["mv"]])
+        lr = g.get("lastroll")
+        if lr:
+            out["lastroll"] = dict(mine=lr["c"] == col, roll=lr["roll"], passed=lr["passed"])
+        if g["rolled"] and g["mv"]:
+            out["cur"] = [[conv(g["turn"], a), conv(g["turn"], b)] for a, b in g["mv"]]
+    if st == "over":
+        out["result"] = "me" if g["win"] == sub else "opp"
+    return out
+
+
+# ---- kompüter ----
+def _nd_eval(mine, opp):
+    pips = sum((24 - p) * n for p, n in enumerate(mine))
+    sc = -float(pips)
+    sc -= mine[0] * 1.2
+    run = 0
+    for p in range(24):
+        if mine[p]:
+            run += 1
+        else:
+            if run >= 2:
+                sc += run * run * 0.5
+            run = 0
+    if run >= 2:
+        sc += run * run * 0.5
+    sc += sum(1.5 for p in range(13, 19) if mine[p])
+    sc -= sum(max(0, n - 3) * 1.5 for p, n in enumerate(mine) if p)
+    return sc
+
+
+def _nd_bot_seq(g):
+    """Kompüter üçün bütün qanuni gediş ardıcıllıqlarından ən yaxşısını seçir: [(p, d), ...]."""
+    me = g["turn"]
+    mine, opp = list(g["pos"][me]), g["pos"][_nd_opp(me)]
+    hm = _nd_head_max(g, me)
+    memo = {}
+    seen = set()
+    finals = {}
+    budget = [4000]
+
+    def dfs(m, dice, hu, seq):
+        key = (tuple(m), dice, hu)
+        if key in seen:
+            return
+        seen.add(key)
+        budget[0] -= 1
+        mv = _nd_legal_moves(m, opp, dice, hu, hm, memo) if budget[0] > 0 else []
+        if not mv:
+            finals.setdefault(tuple(m), list(seq))
+            return
+        for p, d in mv:
+            rest = list(dice)
+            rest.remove(d)
+            seq.append((p, d))
+            dfs(_nd_after(m, p, d), tuple(rest), hu + (1 if p == 0 else 0), seq)
+            seq.pop()
+
+    dfs(mine, tuple(sorted(g["dice"])), g["hu"], [])
+    if not finals:
+        return []
+    best, bs = None, -1e9
+    for fm, seq in finals.items():
+        sc = _nd_eval(fm, opp) + 40 * (15 - sum(fm)) + random.random() * 0.6
+        if sc > bs:
+            bs, best = sc, seq
+    return best
+
+
+@app.route("/api/nerd/create", methods=["POST"])
+def api_nerd_create():
+    sub, tok = auth_sub()
+    if not rate_hit("ndc", sub, 12, 60):
+        abort(429)
+    d0 = request.get_json(silent=True) or {}
+    vs_bot = bool(d0.get("bot"))
+    nm = _dom_names(tok)
+    now = time.time()
+    with META_LOCK:
+        _nd_cleanup(now)
+        if len(NERD) >= ND_MAX:
+            abort(503)
+        for _ in range(50):
+            c = "".join(secrets.choice(CODE_CHARS) for _ in range(5))
+            if c not in NERD:
+                break
+        else:
+            abort(503)
+        g = dict(code=c, players=[sub], names={sub: nm}, col={}, pos={}, off={"w": 0, "b": 0}, turn="w",
+                 dice=[], roll=None, rolled=False, hu=0, mv=[], fresh={"w": True, "b": True}, last=None,
+                 lastroll=None, win=None, reason="", pts=1, status="wait", v=1, vk=0, round=1, score={},
+                 seen={sub: now}, upd=now)
+        if vs_bot:
+            g["players"].append("bot")
+            g["names"]["bot"] = dict(name="Kompüter", username="bot", avatar="", badge=None)
+            g["seen"]["bot"] = now
+            g["bot"] = True
+            _nd_reset(g)
+        g["public"] = _want_public(d0, vs_bot)
+        _ensure_cv(g)
+        NERD[c] = g
+        return jsonify(_nd_view(g, sub))
+
+
+@app.route("/api/nerd/join", methods=["POST"])
+def api_nerd_join():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    if not code:
+        abort(400)
+    nm = _dom_names(tok)
+    now = time.time()
+    with META_LOCK:
+        g = NERD.get(code)
+        if not g:
+            abort(404)
+        if sub not in g["players"]:
+            if len(g["players"]) >= 2:
+                return jsonify(error="full"), 403
+            g["players"].append(sub)
+            g["names"][sub] = nm
+            _nd_reset(g)
+            _nd_touch(g)
+        else:
+            g["names"][sub] = nm
+        g["seen"][sub] = now
+        return jsonify(_nd_view(g, sub))
+
+
+@app.route("/api/nerd/poll")
+def api_nerd_poll():
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    try:
+        v = int(request.args.get("v", "0"))
+    except ValueError:
+        abort(400)
+    try:
+        vk = int(request.args["vk"]) if "vk" in request.args else None
+    except ValueError:
+        abort(400)
+    deadline = time.time() + 20
+    g = _nd_get(code, sub)
+    with _ensure_cv(g):
+        now = time.time()
+        if now - g["seen"].get(sub, 0) > 30:
+            g["seen"][sub] = now
+            _nd_touch(g)
+        g["seen"][sub] = now
+        while g["v"] == v and (vk is None or g.get("vk", 0) == vk):
+            left = deadline - time.time()
+            if left <= 0:
+                break
+            g["_cv"].wait(timeout=left)
+            if NERD.get(code) is not g:
+                abort(404)
+            g["seen"][sub] = time.time()
+        resp = jsonify(_nd_view(g, sub))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/api/nerd/check")
+def api_nerd_check():
+    """Saxlanmış nərd oyunu hələ varmı? Heç nəyi dəyişmir."""
+    sub, tok = auth_sub()
+    code = clean_room(request.args.get("room"))
+    with META_LOCK:
+        g = NERD.get(code)
+        if not g or sub not in g["players"]:
+            abort(404)
+        return jsonify(ok=True, status=g["status"])
+
+
+@app.route("/api/nerd/move", methods=["POST"])
+def api_nerd_move():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    act = str(d.get("action", "move"))
+    g = _nd_get(code, sub)
+    with _ensure_cv(g):
+        g["seen"][sub] = time.time()
+        if g["status"] != "play":
+            return jsonify(_nd_view(g, sub))
+        me = g["col"][sub]
+        if act == "resign":
+            _nd_end(g, _nd_sub(g, _nd_opp(me)), "resign")
+        elif act == "roll":
+            if g["turn"] != me or g["rolled"]:
+                return jsonify(_nd_view(g, sub))
+            _nd_roll(g)
+        elif act == "move":
+            if g["turn"] != me or not g["rolled"]:
+                return jsonify(_nd_view(g, sub))
+            try:
+                p, dd = int(d.get("p")), int(d.get("d"))
+            except (TypeError, ValueError):
+                abort(400)
+            if (p, dd) not in _nd_legal(g):
+                abort(400)
+            _nd_play(g, p, dd)
+        else:
+            abort(400)
+        _nd_touch(g)
+        return jsonify(_nd_view(g, sub))
+
+
+@app.route("/api/nerd/again", methods=["POST"])
+def api_nerd_again():
+    sub, tok = auth_sub()
+    d = request.get_json(silent=True) or {}
+    code = clean_room(d.get("room"))
+    g = _nd_get(code, sub)
+    with _ensure_cv(g):
+        g["seen"][sub] = time.time()
+        try:
+            rd = int(d.get("round", 0))
+        except (TypeError, ValueError):
+            rd = 0
+        if g["status"] == "over" and rd == g["round"] and len(g["players"]) == 2:
+            g["round"] += 1
+            _nd_reset(g, swap=True)
+            _nd_touch(g)
+        return jsonify(_nd_view(g, sub))
+
+
+@app.route("/api/nerd/bot", methods=["POST"])
+def api_nerd_bot():
+    """Kompüterin növbəsi: əvvəl zər atır, sonrakı sorğuda bütün gedişləri oynayır."""
+    sub, tok = auth_sub()
+    if not rate_hit("ndb", sub, 240, 60):
+        abort(429)
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    g = _nd_get(code, sub)
+    with _ensure_cv(g):
+        g["seen"][sub] = time.time()
+        bc = g["col"].get("bot")
+        if not (g.get("bot") and g["status"] == "play" and g["turn"] == bc):
+            return jsonify(_nd_view(g, sub))
+        if not g["rolled"]:
+            _nd_roll(g)
+        else:
+            try:
+                seq = _nd_bot_seq(g)
+            except Exception:
+                seq = []
+            for p, dd in seq:
+                if g["status"] != "play" or g["turn"] != bc or (p, dd) not in _nd_legal(g):
+                    break
+                _nd_play(g, p, dd)
+            for _ in range(8):
+                if g["status"] != "play" or g["turn"] != bc or not g["rolled"]:
+                    break
+                mv = _nd_legal(g)
+                if not mv:
+                    break
+                p, dd = random.choice(mv)
+                _nd_play(g, p, dd)
+        _nd_touch(g)
+        return jsonify(_nd_view(g, sub))
+
+
+@app.route("/api/nerd/leave", methods=["POST"])
+def api_nerd_leave():
+    sub, tok = auth_sub()
+    code = clean_room((request.get_json(silent=True) or {}).get("room"))
+    with META_LOCK:
+        g = NERD.get(code)
+        if g and sub in g["players"] and (g["status"] == "wait" or g.get("bot")):
+            NERD.pop(code, None)
+        elif g and sub in g["players"]:
+            g["seen"][sub] = 0
+            g.setdefault("gone", {})[sub] = time.time()
+            _nd_touch(g)
+    return jsonify(ok=True)
+
 
 
 @app.route("/api/domino/bot", methods=["POST"])
@@ -8641,7 +9269,7 @@ def api_mafia_quit():
 OPEN_TTL = 3.0            # siyahı bu müddət ərzində keşdən verilir (çox sorğu serveri yormasın)
 OPEN_HOST_SEEN = 40       # host bu qədər saniyədir səssizdirsə, otaq siyahıdan düşür
 _OPEN_CACHE = [0.0, None]
-OPEN_STORES = ("domino", "durak", "uno", "chess", "mafia")
+OPEN_STORES = ("domino", "durak", "uno", "chess", "mafia", "nerd")
 
 
 def _want_public(d0, vs_bot):
@@ -8656,7 +9284,7 @@ def _clean_title(s):
 
 def _open_snapshot(now):
     """Bütün açıq otaqların ümumi görüntüsü (baxanın süzgəci sonra tətbiq olunur)."""
-    stores = {"domino": DOMINO, "durak": DURAK, "uno": UNO, "chess": CHESS, "mafia": MAFIA}
+    stores = {"domino": DOMINO, "durak": DURAK, "uno": UNO, "chess": CHESS, "mafia": MAFIA, "nerd": NERD}
     games = []
     for kind in OPEN_STORES:
         for code, g in list(stores[kind].items()):
